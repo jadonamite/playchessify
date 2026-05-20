@@ -22,7 +22,7 @@ export function web3AuthConnector(getWeb3Auth: () => Web3Auth) {
       }
     },
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next_-line @typescript-eslint/no-explicit-any
     async connect(_params: any = {}) {
       if (!instance) throw new Error('Web3Auth connector not set up')
       if (!instance.provider) {
@@ -30,7 +30,7 @@ export function web3AuthConnector(getWeb3Auth: () => Web3Auth) {
       }
       const accounts = await this.getAccounts()
       const chainId  = await this.getChainId()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next_-line @typescript-eslint/no-explicit-any
       return { accounts: accounts as any, chainId }
     },
 
