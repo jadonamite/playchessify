@@ -4,8 +4,15 @@ import { Redis } from '@upstash/redis'
 // client will throw on first use, which is the correct fail-loud behaviour.
 let _redis: Redis | null = null
 
-function key(chain: Chain, gameId: number): string {
-  return `chess:moves:${chain}:${gameId}`
+function getRedis(): Redis {
+  if (_redis) return _redis
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) {
+    throw new Error('[moves-store] UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set')
+  }
+  _redis = new Redis({ url, token })
+  return _redis
 }
 
 export type Chain = 'celo' | 'stacks'
@@ -19,15 +26,8 @@ export interface MoveRecord {
 
 const TTL_SECONDS = 60 * 60 * 24 * 30 // 30 days — long enough for any reasonable game
 
-function getRedis(): Redis {
-  if (_redis) return _redis
-  const url = process.env.UPSTASH_REDIS_REST_URL
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN
-  if (!url || !token) {
-    throw new Error('[moves-store] UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set')
-  }
-  _redis = new Redis({ url, token })
-  return _redis
+function key(chain: Chain, gameId: number): string {
+  return `chess:moves:${chain}:${gameId}`
 }
 
 /** Append a move to a game's history. Returns the new move count. */

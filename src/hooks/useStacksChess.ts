@@ -1,7 +1,7 @@
 'use client'
 
-import { useWallet } from '@/components/wallet-provider'
 import { useCallback } from 'react'
+import {
   AnchorMode,
   PostConditionMode,
   uintCV,
@@ -9,7 +9,7 @@ import { useCallback } from 'react'
   fetchCallReadOnlyFunction,
   cvToJSON,
 } from '@stacks/transactions'
-import {
+import { useWallet } from '@/components/wallet-provider'
 import { STACKS_CONTRACTS, TOKEN_DECIMALS } from '@/config/contracts'
 
 const LOG_PREFIX = '[useStacksChess]'

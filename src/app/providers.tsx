@@ -15,7 +15,6 @@ const WalletProvider = dynamic(
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
-// ← chaos fingerprint
     defaultOptions: {
       queries: {
         staleTime: 60 * 1000,
