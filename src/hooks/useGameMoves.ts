@@ -52,8 +52,11 @@ export function useGameMoves({ chain, gameId, enabled }: UseGameMovesOptions): U
       }
       const data = await res.json() as { moves: MoveRecord[] }
       const incoming = data.moves ?? []
-      // Only update state if the move count changed — avoids re-render churn.
-      setMoves((prev) => (prev.length === incoming.length ? prev : incoming))
+      // Monotonic guard: only accept the polled state if it has at least as
+      // many moves as we already know about locally. A poll that started
+      // before a local POST resolved can otherwise come back with a stale
+      // shorter list and revert the player's just-committed move.
+      setMoves((prev) => (incoming.length > prev.length ? incoming : prev))
       setError(null)
     } catch (err: any) {
       console.error(`${LOG_PREFIX} refresh failed`, err)

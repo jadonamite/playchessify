@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { Chess } from 'chess.js'
 import dynamic from 'next/dynamic'
@@ -72,6 +72,12 @@ export default function GameClient() {
   const [stacksDataLoaded, setStacksDataLoaded] = useState(false)
   const [statusModalType, setStatusModalType] = useState<GameStatusType>(null)
   const [statusModalMessage, setStatusModalMessage] = useState<string>('')
+
+  // Bot reply timer — cleared on unmount so setState never fires after teardown
+  const botReplyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => {
+    if (botReplyTimerRef.current) clearTimeout(botReplyTimerRef.current)
+  }, [])
 
   // Poll game data on Celo so WAITING → ACTIVE transitions surface without a refresh
   const { data: celoGameData } = useReadContract({
@@ -278,7 +284,9 @@ export default function GameClient() {
 
       // Bot: trigger bot reply after a beat
       if (isBotGame && !next.isGameOver()) {
-        setTimeout(() => {
+        if (botReplyTimerRef.current) clearTimeout(botReplyTimerRef.current)
+        botReplyTimerRef.current = setTimeout(() => {
+          botReplyTimerRef.current = null
           const afterPlayer = new Chess(next.fen())
           const botMove = getBestMove(afterPlayer, 3)
           if (botMove) {
