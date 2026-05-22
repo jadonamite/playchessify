@@ -203,11 +203,11 @@ export default function Features() {
             </BgIcon>
             <div style={{ ...innerStyle, justifyContent: 'flex-end' }}>
               <div style={titleStyle('var(--t1)')}>Supported</div>
-              <div style={descStyle}>MiniPay, Leather & Xverse supported. Multi-chain ready.</div>
+              <div style={descStyle}>MiniPay, MetaMask & any EVM wallet supported.</div>
               <div style={{ marginTop: 12 }}>
                 <span style={pillStyle('rgba(0,220,120,.12)', 'rgba(0,220,120,.28)', '#00dc78')}>MiniPay</span>
-                <span style={pillStyle('rgba(0,204,255,.12)', 'rgba(0,204,255,.28)', 'var(--c)')}>Leather</span>
-                <span style={pillStyle('rgba(255,255,255,.07)', 'rgba(255,255,255,.14)', 'var(--t2)')}>Xverse</span>
+                <span style={pillStyle('rgba(0,204,255,.12)', 'rgba(0,204,255,.28)', 'var(--c)')}>MetaMask</span>
+                <span style={pillStyle('rgba(255,255,255,.07)', 'rgba(255,255,255,.14)', 'var(--t2)')}>EVM</span>
               </div>
             </div>
           </div>

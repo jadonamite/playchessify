@@ -222,7 +222,7 @@ export default function ChainSelectModal({
               <ChainCard
                 name="Celo"
                 ecosystem="EVM • Ethereum Ecosystem"
-                description="Connect with MetaMask, WalletConnect, or any EVM-compatible wallet. MiniPay supported."
+                description="Connect with MiniPay, MetaMask, WalletConnect, or any EVM-compatible wallet."
                 accentColor="#35ee66"
                 accentGlow="rgba(53, 238, 102, 0.08)"
                 iconUrl="/celo-celo-logo.svg"
