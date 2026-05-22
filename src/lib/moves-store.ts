@@ -15,7 +15,7 @@ function getRedis(): Redis {
   return _redis
 }
 
-export type Chain = 'celo' | 'stacks'
+export type Chain = 'celo'
 
 export interface MoveRecord {
   san: string         // standard algebraic notation, e.g. "e4", "Nxe5", "O-O"

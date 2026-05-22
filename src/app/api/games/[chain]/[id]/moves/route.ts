@@ -4,7 +4,7 @@ import { appendMove, getMoves, type Chain, type MoveRecord } from '@/lib/moves-s
 const LOG_PREFIX = '[api/moves]'
 
 function parseChain(value: string): Chain | null {
-  return value === 'celo' || value === 'stacks' ? value : null
+  return value === 'celo' ? value : null
 }
 
 function parseGameId(value: string): number | null {

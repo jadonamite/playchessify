@@ -30,7 +30,7 @@ export async function initAppKit() {
     projectId,
     metadata: {
       name: 'Chessify Protocol',
-      description: 'Decentralized Chess on Stacks and Celo',
+      description: 'Decentralized Chess on Celo',
       url: typeof window !== 'undefined' ? window.location.origin : 'https://chessify.xyz',
       icons: ['/Piece.svg'],
     },

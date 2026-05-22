@@ -384,9 +384,7 @@ export default function GameClient() {
   }
 
   // ── game loading timeout ─────────────────────────────────────────────────
-  // Stacks blocks take ~10 min, so the loading state stays until the user
-  // cancels. We only show a "not found" hint after 30s to avoid false alarms
-  // for freshly created Stacks games.
+  // Show a "not found" hint after 8s if game data hasn't arrived.
   useEffect(() => {
     if (isBotGame) return
     if (gameData) return

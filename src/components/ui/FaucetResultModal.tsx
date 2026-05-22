@@ -100,7 +100,7 @@ interface FaucetResultModalProps {
   amount?: string
   errorMessage?: string
   cooldownRemaining?: string
-  chain?: 'celo' | 'stacks'
+  chain?: 'celo'
 }
 
 /* ── RESULT CONFIGS ── */

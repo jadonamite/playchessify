@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 const LOG_PREFIX = '[useGameMoves]'
 const POLL_INTERVAL_MS = 2_000
 
-export type Chain = 'celo' | 'stacks'
+export type Chain = 'celo'
 
 export interface MoveRecord {
   san: string
