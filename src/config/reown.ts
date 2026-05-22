@@ -36,8 +36,8 @@ export async function initAppKit() {
     },
     features: {
       analytics: true,
-      email: false,
-      socials: [],
+      email: true,
+      socials: ['google', 'x', 'github', 'discord', 'apple'],
     },
     themeMode: 'dark',
   })
