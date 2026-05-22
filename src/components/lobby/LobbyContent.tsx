@@ -6,8 +6,6 @@ import { useWallet } from '@/components/wallet-provider'
 import GlowButton from '@/components/ui/GlowButton'
 import ClayCard from '@/components/ui/ClayCard'
 import ComingSoonOverlay from '@/components/ui/ComingSoonOverlay'
-import { useStacksRead } from '@/hooks/useStacksRead'
-import { useStacksChess } from '@/hooks/useStacksChess'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/landing/Hero'
 import { CELO_CONTRACTS, TOKEN_DECIMALS } from '@/config/contracts'
@@ -38,11 +36,9 @@ function BgIcon({ children }: { children: React.ReactNode }) {
 }
 
 export default function LobbyContent() {
-  const { isConnected, isStacksConnected, activeChain, stacksAddress, address: celoAddress, connectWallet } = useWallet()
-  const { createGame: createStacksGame, joinGame: joinStacksGame } = useStacksChess()
+  const { isConnected, address: celoAddress, connectWallet } = useWallet()
   // @ts-expect-error - intentional unused isCeloPending
   const { createGame: createCeloGame, joinGame: joinCeloGame, isPending: isCeloPending } = useCeloChess()
-  const { getTokenBalance: getStacksBalance, getPlayerStats: getStacksStats } = useStacksRead()
   const router = useRouter()
 
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
@@ -66,7 +62,7 @@ export default function LobbyContent() {
     abi: CHESS_TOKEN_ABI,
     functionName: 'balanceOf',
     args: [celoAddress as `0x${string}`],
-    query: { enabled: activeChain === 'celo' && !!celoAddress }
+    query: { enabled: !!celoAddress }
   })
 
   const { data: celoStats } = useReadContract({
@@ -74,20 +70,11 @@ export default function LobbyContent() {
     abi: CHESS_GAME_ABI,
     functionName: 'playerStats',
     args: [celoAddress as `0x${string}`],
-    query: { enabled: activeChain === 'celo' && !!celoAddress }
+    query: { enabled: !!celoAddress }
   })
 
   useEffect(() => {
-    if (activeChain === 'stacks' && stacksAddress) {
-      getStacksBalance().then(b => setBalance((Number(b) / Math.pow(10, TOKEN_DECIMALS)).toFixed(2)))
-      getStacksStats(stacksAddress).then(s => {
-        if (s) {
-          setRating(Number(s.rating.value))
-          setWins(Number(s.wins.value))
-          setLosses(Number(s.losses.value))
-        }
-      })
-    } else if (activeChain === 'celo' && celoAddress) {
+    if (celoAddress) {
       if (celoBalance !== undefined) setBalance(formatUnits(celoBalance as bigint, TOKEN_DECIMALS))
       if (celoStats) {
         const s = celoStats as any
@@ -96,7 +83,7 @@ export default function LobbyContent() {
         setLosses(Number(s[1]))
       }
     }
-  }, [activeChain, stacksAddress, celoAddress, getStacksBalance, getStacksStats, celoBalance, celoStats])
+  }, [celoAddress, celoBalance, celoStats])
 
   const { games: openGames, isLoading: isLobbyLoading, refresh: refreshLobby } = useLobby()
 
@@ -105,29 +92,17 @@ export default function LobbyContent() {
     setIsPending(true)
     setCreateError(null)
     try {
-      let gameId: number | null = null
-
-      if (activeChain === 'stacks') {
-        const result = await createStacksGame(wager)
-        gameId = result.gameId
-      } else {
-        gameId = await createCeloGame(wager)
-      }
-
+      const gameId = await createCeloGame(wager)
       setIsCreateModalOpen(false)
-
       if (gameId !== null) {
-        console.info('[LobbyContent] game created, navigating', { gameId })
         router.push(`/app/game/${gameId}`)
       } else {
-        console.warn('[LobbyContent] createGame returned no gameId — falling back to lobby refresh')
         refreshLobby()
       }
     } catch (err: any) {
       const msg = err?.message?.includes('cancelled')
         ? 'Transaction cancelled.'
         : 'Failed to create game. Check your balance and try again.'
-      console.error('[LobbyContent] handleCreateGame failed:', err)
       setCreateError(msg)
     } finally {
       setIsPending(false)
@@ -138,12 +113,7 @@ export default function LobbyContent() {
     if (MAINTENANCE_MODE) return setIsComingSoonOpen(true)
     setIsPending(true)
     try {
-      if (activeChain === 'stacks') {
-        await joinStacksGame(gameId, matchWager)
-      } else {
-        await joinCeloGame(gameId, matchWager)
-      }
-      console.info('[LobbyContent] joined game, navigating', { gameId })
+      await joinCeloGame(gameId, matchWager)
       router.push(`/app/game/${gameId}`)
     } catch (err: any) {
       if (!err?.message?.includes('cancelled')) {
@@ -168,16 +138,15 @@ export default function LobbyContent() {
   const handleAction = (action: () => void) => MAINTENANCE_MODE ? setIsComingSoonOpen(true) : action()
 
   useEffect(() => {
-    // Redirect if not connected and not in a loading state
-    if (!isConnected && !isStacksConnected) {
+    if (!isConnected) {
       const timer = setTimeout(() => {
         router.replace('/')
-      }, 3000) // Give it a 3s grace period to detect existing sessions
+      }, 3000)
       return () => clearTimeout(timer)
     }
-  }, [isConnected, isStacksConnected, router])
+  }, [isConnected, router])
 
-  if (!isConnected && !isStacksConnected) {
+  if (!isConnected) {
     return (
       <main className="min-h-screen w-full max-w-[100vw] bg-[var(--bg)] flex items-center justify-center p-6 relative overflow-hidden box-border">
         <Navbar />
@@ -243,7 +212,7 @@ export default function LobbyContent() {
                         className="text-[11px] tracking-[0.2em] font-bold text-[var(--c)]"
                         style={{ fontFamily: 'var(--fd)' }}
                       >
-                        {activeChain?.toUpperCase() || 'NONE'}
+                        CELO
                       </span>
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1 bg-black/20 rounded-full border border-white/5">
@@ -441,7 +410,7 @@ export default function LobbyContent() {
                       {openGames.length === 0 && (
                         <div className="py-20 text-center border border-dashed border-white/10 rounded-2xl bg-black/40">
                           <p className="text-sm font-medium text-gray-500 tracking-wider">
-                            NO OPEN MATCHES ON {activeChain?.toUpperCase()}
+                            NO OPEN MATCHES ON CELO
                           </p>
                         </div>
                       )}
@@ -525,7 +494,7 @@ export default function LobbyContent() {
                   Need CHESS?
                 </h4>
                 <p className="text-[13px] text-gray-400 leading-relaxed">
-                  Top up your wallet with testnet tokens to start playing on {activeChain}.
+                  Top up your wallet with testnet tokens to start playing on Celo.
                 </p>
                 <div className="mt-4 w-full">
                   <GlowButton
