@@ -28,16 +28,15 @@ const KEYFRAMES = `
 export function Navbar() {
   const {
     isConnected, address,
-    isStacksConnected, stacksAddress,
-    activeChain, connectWallet, disconnectAll,
+    connectWallet, disconnectAll,
     showChainSelect, setShowChainSelect,
-    connect, connectStacks, connectSocial
+    connect, connectSocial
   } = useWallet()
 
-  const connected = isConnected || isStacksConnected
-  const displayAddress = activeChain === 'celo' ? address : stacksAddress
-  const chainLabel = activeChain === 'celo' ? 'CELO' : 'STX'
-  const chainColor = activeChain === 'celo' ? '#35ee66' : '#ff9900'
+  const connected = isConnected
+  const displayAddress = address
+  const chainLabel = 'CELO'
+  const chainColor = '#35ee66'
 
   const formatAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`
 
@@ -127,7 +126,6 @@ export function Navbar() {
         isOpen={showChainSelect}
         onClose={() => setShowChainSelect(false)}
         onSelectCelo={connect}
-        onSelectStacks={connectStacks}
         onSelectSocial={connectSocial}
       />
     </>
@@ -138,7 +136,7 @@ export function Navbar() {
 
 
 export default function Hero() {
-  const { isConnected, isStacksConnected, connectWallet } = useWallet()
+  const { isConnected, connectWallet } = useWallet()
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -224,10 +222,6 @@ export default function Hero() {
               <div style={{ fontFamily: 'var(--fd)', fontWeight: 800, fontSize: isMobile ? 14 : 18, color: 'var(--c)' }}>CHESS</div>
               <div style={{ fontFamily: 'var(--fd)', fontSize: 8, color: 'var(--t3)', letterSpacing: '.15em', marginTop: 4 }}>TOKEN</div>
             </div>
-            <div style={{ paddingLeft: isMobile ? 14 : 28, paddingRight: isMobile ? 14 : 28, borderRight: '1px solid var(--b1)' }}>
-              <div style={{ fontFamily: 'var(--fd)', fontWeight: 800, fontSize: isMobile ? 14 : 18, color: 'var(--c)' }}>Stacks</div>
-              <div style={{ fontFamily: 'var(--fd)', fontSize: 8, color: 'var(--t3)', letterSpacing: '.15em', marginTop: 4 }}>BLOCKCHAIN</div>
-            </div>
             <div style={{ paddingLeft: isMobile ? 14 : 28 }}>
               <div style={{ fontFamily: 'var(--fd)', fontWeight: 800, fontSize: isMobile ? 14 : 18, color: 'var(--c)' }}>Celo</div>
               <div style={{ fontFamily: 'var(--fd)', fontSize: 8, color: 'var(--t3)', letterSpacing: '.15em', marginTop: 4 }}>MAINNET</div>
@@ -235,7 +229,7 @@ export default function Hero() {
           </div>
 
           <div style={{ animation: 'fadeUp .6s cubic-bezier(.16,1,.3,1) .4s both' }}>
-            {!isConnected && !isStacksConnected ? (
+            {!isConnected ? (
               <GlowButton variant="brand" parallelogram size="lg" onClick={connectWallet} className="btn-brand-para-mobile">START PLAYING</GlowButton>
             ) : (
               <Link href="/app/lobby">
