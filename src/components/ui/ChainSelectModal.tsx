@@ -157,7 +157,6 @@ interface ChainSelectModalProps {
   isOpen: boolean
   onClose: () => void
   onSelectCelo: () => void
-  onSelectStacks: () => void
   onSelectSocial: () => void
 }
 
@@ -172,7 +171,6 @@ export default function ChainSelectModal({
   isOpen,
   onClose,
   onSelectCelo,
-  onSelectStacks,
   onSelectSocial,
 }: ChainSelectModalProps) {
   return (
@@ -218,7 +216,7 @@ export default function ChainSelectModal({
             </motion.div>
 
             {/* Chain Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
+            <div className="grid grid-cols-1 gap-5 w-full max-w-sm mx-auto">
 
               {/* Celo Card */}
               <ChainCard
@@ -232,20 +230,6 @@ export default function ChainSelectModal({
                 delay={0.2}
               >
                 <ChainPiece modelPath="/models/King.glb" color="#35ee66" emissive="#35ee66" scale={1.8} />
-              </ChainCard>
-
-              {/* Stacks Card */}
-              <ChainCard
-                name="Stacks"
-                ecosystem="Bitcoin L2 • BTC Ecosystem"
-                description="Connect with Leather or Xverse wallet. Secured by Bitcoin's proof-of-work."
-                accentColor="#ff9900"
-                accentGlow="rgba(255, 153, 0, 0.08)"
-                iconUrl="/stacks-stx-logo.svg"
-                onClick={onSelectStacks}
-                delay={0.3}
-              >
-                <ChainPiece modelPath="/models/QueenChess.glb" color="#ff9900" emissive="#ff9900" scale={1.5} />
               </ChainCard>
 
             </div>
