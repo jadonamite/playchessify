@@ -2,14 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAccount, usePublicClient } from 'wagmi'
-import { useWallet } from '@/components/wallet-provider'
-import { CELO_CONTRACTS, STACKS_CONTRACTS, HIRO_API, TOKEN_DECIMALS } from '@/config/contracts'
+import { CELO_CONTRACTS, TOKEN_DECIMALS } from '@/config/contracts'
 import { CHESS_GAME_ABI } from '@/config/abis'
 import { formatUnits } from 'viem'
 
 export type HistoryItem = {
   id: string
-  chain: 'celo' | 'stacks'
+  chain: 'celo'
   role: 'white' | 'black'
   opponent: string
   wager: string
@@ -19,12 +18,11 @@ export type HistoryItem = {
 
 export function useHistory() {
   const { address: celoAddress } = useAccount()
-  const { stacksAddress, activeChain } = useWallet()
   const publicClient = usePublicClient()
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  const fetchCeloHistory = useCallback(async () => {
+  const fetchHistory = useCallback(async () => {
     if (!celoAddress || !publicClient) return []
 
     try {
@@ -57,11 +55,10 @@ export function useHistory() {
         fromBlock: 0n
       })
 
-      const allCeloItems: HistoryItem[] = []
+      const items: HistoryItem[] = []
 
       for (const log of createdLogs) {
         const gameId = log.args.gameId?.toString() || '0'
-        // Fetch current game state to get opponent and status
         const gameData = await publicClient.readContract({
           address: CELO_CONTRACTS.game as `0x${string}`,
           abi: CHESS_GAME_ABI,
@@ -69,14 +66,14 @@ export function useHistory() {
           args: [BigInt(gameId)]
         }) as any
 
-        allCeloItems.push({
+        items.push({
           id: gameId,
           chain: 'celo',
           role: 'white',
           opponent: gameData.black === '0x0000000000000000000000000000000000000000' ? 'Waiting...' : gameData.black,
           wager: formatUnits(gameData.wager, TOKEN_DECIMALS),
           status: ['Waiting', 'Active', 'Finished', 'Cancelled', 'Draw'][gameData.status],
-          timestamp: Number(gameData.createdAt) // Using block number as proxy for now
+          timestamp: Number(gameData.createdAt),
         })
       }
 
@@ -89,89 +86,34 @@ export function useHistory() {
           args: [BigInt(gameId)]
         }) as any
 
-        allCeloItems.push({
+        items.push({
           id: gameId,
           chain: 'celo',
           role: 'black',
           opponent: gameData.white,
           wager: formatUnits(gameData.wager, TOKEN_DECIMALS),
           status: ['Waiting', 'Active', 'Finished', 'Cancelled', 'Draw'][gameData.status],
-          timestamp: Number(gameData.createdAt)
+          timestamp: Number(gameData.createdAt),
         })
       }
 
-      return allCeloItems
+      return items.sort((a, b) => b.timestamp - a.timestamp)
     } catch (err) {
-      console.error('Celo history fetch error:', err)
+      console.error('History fetch error:', err)
       return []
     }
   }, [celoAddress, publicClient])
 
-  const fetchStacksHistory = useCallback(async () => {
-    if (!stacksAddress) return []
-
-    try {
-      const res = await fetch(`${HIRO_API}/extended/v1/address/${stacksAddress}/transactions?limit=50`)
-      const data = await res.json()
-      
-      const gameContractId = `${STACKS_CONTRACTS.game.address}.${STACKS_CONTRACTS.game.name}`
-      
-      // Filter for successful contract calls to the game contract
-      const gameTxs = data.results.filter((tx: any) => 
-        tx.tx_status === 'success' && 
-        tx.tx_type === 'contract_call' &&
-        tx.contract_call.contract_id === gameContractId
-      )
-
-      const allStacksItems: HistoryItem[] = []
-
-      for (const tx of gameTxs) {
-        const func = tx.contract_call.function_name
-        if (func === 'create-game' || func === 'join-game') {
-          // In a real app, we'd fetch the game state from the node for each ID
-          // For now, we'll parse what we can from the TX
-          allStacksItems.push({
-            id: tx.tx_id.slice(0, 8),
-            chain: 'stacks',
-            role: func === 'create-game' ? 'white' : 'black',
-            opponent: 'On-Chain', 
-            wager: '...', // Need read-call to get exact wager
-            status: 'Recorded',
-            timestamp: tx.burn_block_height
-          })
-        }
-      }
-
-      return allStacksItems
-    } catch (err) {
-      console.error('Stacks history fetch error:', err)
-      return []
-    }
-  }, [stacksAddress])
-
   const refreshHistory = useCallback(async () => {
     setIsLoading(true)
-    const [celoItems, stacksItems] = await Promise.all([
-      fetchCeloHistory(),
-      fetchStacksHistory()
-    ])
-    
-    // Filter by active chain to avoid cross-chain UI leaks
-    const combined = [...celoItems, ...stacksItems]
-      .filter(item => item.chain === activeChain)
-      .sort((a, b) => b.timestamp - a.timestamp)
-      
-    setHistory(combined)
+    const items = await fetchHistory()
+    setHistory(items)
     setIsLoading(false)
-  }, [fetchCeloHistory, fetchStacksHistory, activeChain])
+  }, [fetchHistory])
 
   useEffect(() => {
     refreshHistory()
   }, [refreshHistory])
 
-  return {
-    history,
-    isLoading,
-    refreshHistory
-  }
+  return { history, isLoading, refreshHistory }
 }
