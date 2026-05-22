@@ -32,7 +32,7 @@ export async function initAppKit() {
       name: 'Chessify Protocol',
       description: 'Decentralized Chess on Celo',
       url: typeof window !== 'undefined' ? window.location.origin : 'https://chessify.xyz',
-      icons: ['/Piece.svg'],
+      icons: ['/playchessify.svg'],
     },
     features: {
       analytics: true,
