@@ -1,20 +1,19 @@
 'use client'
 
-import { useState, useEffect, Suspense, useCallback } from 'react'
+import { useState, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { Canvas } from '@react-three/fiber'
 import { Float, Environment, Text } from '@react-three/drei'
 import { useRouter } from 'next/navigation'
 import { useWallet } from '@/components/wallet-provider'
 import { useWriteContract } from 'wagmi'
-import { useStacksRead } from '@/hooks/useStacksRead'
 import GlowButton from '@/components/ui/GlowButton'
 import LoadingState from '@/components/ui/LoadingState'
 import FaucetResultModal, { type FaucetResultType } from '@/components/ui/FaucetResultModal'
 import { Navbar } from '@/components/landing/Hero'
 import { King, Pawn, Bishop, Knight } from '@/components/ui/ChessModels'
 import { CHESS_TOKEN_ABI } from '@/config/abis'
-import { CELO_CONTRACTS, STACKS_CONTRACTS, TOKEN_DECIMALS, FAUCET_AMOUNT } from '@/config/contracts'
+import { CELO_CONTRACTS, TOKEN_DECIMALS, FAUCET_AMOUNT } from '@/config/contracts'
 import { formatUnits } from 'viem'
 
 /* ── KEYFRAMES ── */
@@ -28,8 +27,6 @@ const KEYFRAMES = `
   50%      { transform: translateY(-8px); }
 }
 `
-
-
 
 /* ── 3D Background Scene ── */
 function FaucetScene() {
@@ -76,7 +73,7 @@ function FaucetScene() {
 }
 
 /* ── TOKEN DISPLAY ── */
-function TokenDisplay({ balance, chain }: { balance: string; chain: string }) {
+function TokenDisplay({ balance }: { balance: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -99,7 +96,7 @@ function TokenDisplay({ balance, chain }: { balance: string; chain: string }) {
         <div className="flex items-center gap-2 bg-black/40 py-1.5 px-3 rounded-full border border-white/10 shadow-inner">
           <div className="w-1.5 h-1.5 rounded-full bg-[var(--c)] animate-pulse" />
           <span className="text-[10px] tracking-[0.2em] font-bold text-[var(--c)]" style={{ fontFamily: 'var(--fd)' }}>
-            {chain.toUpperCase()}
+            CELO
           </span>
         </div>
       </div>
@@ -112,30 +109,14 @@ function TokenDisplay({ balance, chain }: { balance: string; chain: string }) {
    ═══════════════════════════════════════════ */
 export default function FaucetContent() {
   const router = useRouter()
-  const { isConnected, activeChain, address: celoAddress, stacksAddress, isStacksConnected, connectWallet } = useWallet()
-  const { getTokenBalance: getStacksBalance } = useStacksRead()
+  const { isConnected, address, connectWallet } = useWallet()
   const { writeContractAsync } = useWriteContract()
 
-
   const [isClaiming, setIsClaiming] = useState(false)
-  const [balance, setBalance] = useState('0.00')
+  const [balance] = useState('0.00')
   const [resultType, setResultType] = useState<FaucetResultType>(null)
   const [txHash, setTxHash] = useState<string>('')
   const [errorMessage, setErrorMessage] = useState<string>('')
-
-  const connected = activeChain === 'celo' ? isConnected : isStacksConnected
-  const userAddress = activeChain === 'celo' ? celoAddress : stacksAddress
-
-  /* ── Fetch Balance ── */
-  const refreshBalance = useCallback(async () => {
-    if (activeChain === 'stacks' && stacksAddress) {
-      const b = await getStacksBalance()
-      setBalance((Number(b) / Math.pow(10, TOKEN_DECIMALS)).toFixed(2))
-    }
-    // Celo balance is handled via wagmi hooks in the parent or read on mount
-  }, [activeChain, stacksAddress, getStacksBalance])
-
-  useEffect(() => { refreshBalance() }, [refreshBalance])
 
   /* ── Claim Handler: Celo ── */
   const claimCelo = async () => {
@@ -156,53 +137,16 @@ export default function FaucetContent() {
     return hash as string
   }
 
-  /* ── Claim Handler: Stacks ── */
-  const claimStacks = async () => {
-    if (!isStacksConnected) throw new Error('Stacks wallet not connected')
-    const { openContractCall } = await import('@stacks/connect')
-    const { AnchorMode, PostConditionMode } = await import('@stacks/transactions')
-    const { userSession } = await import('@stacks/connect').then(m => {
-      // Re-use existing session pattern
-      const { AppConfig, UserSession } = m
-      const appConfig = new AppConfig(['store_write', 'publish_data'])
-      return { userSession: new UserSession({ appConfig }) }
-    })
-
-    return new Promise<string>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('TIMEOUT')), 60_000)
-
-      openContractCall({
-        contractAddress: STACKS_CONTRACTS.token.address,
-        contractName: STACKS_CONTRACTS.token.name,
-        functionName: 'faucet-claim',
-        functionArgs: [],
-        anchorMode: AnchorMode.Any,
-        postConditionMode: PostConditionMode.Allow,
-        onFinish: (data: any) => {
-          clearTimeout(timer)
-          resolve(data.txId || data.txid || '')
-        },
-        onCancel: () => {
-          clearTimeout(timer)
-          reject(new Error('Transaction cancelled by user'))
-        },
-        userSession,
-      })
-    })
-  }
-
   /* ── Main Claim Action ── */
   const handleClaim = async () => {
-    if (!connected) return
+    if (!isConnected) return
     setIsClaiming(true)
     setErrorMessage('')
 
     try {
-      const hash = activeChain === 'celo' ? await claimCelo() : await claimStacks()
+      const hash = await claimCelo()
       setTxHash(hash || '')
       setResultType('success')
-      // Refresh balance after short delay
-      setTimeout(refreshBalance, 3000)
     } catch (err: any) {
       const msg = err?.message || 'Unknown error'
 
@@ -280,7 +224,7 @@ export default function FaucetContent() {
             <div className="p-6 md:p-10 flex flex-col gap-8">
 
               {/* Balance Display */}
-              <TokenDisplay balance={balance} chain={activeChain} />
+              <TokenDisplay balance={balance} />
 
               {/* Drip Amount */}
               <div className="flex flex-col gap-4">
@@ -323,14 +267,14 @@ export default function FaucetContent() {
               <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
               {/* Wallet Status & Claim Button */}
-              {!connected ? (
+              {!isConnected ? (
                 <div className="flex flex-col items-center gap-5 py-8">
                   <div className="w-16 h-16 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center">
                     <span className="text-2xl">🔒</span>
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-bold text-white/60 uppercase tracking-widest mb-1">Wallet Required</p>
-                    <p className="text-xs text-white/30">Connect your {activeChain === 'celo' ? 'Celo' : 'Stacks'} wallet to claim tokens</p>
+                    <p className="text-xs text-white/30">Connect your Celo wallet to claim tokens</p>
                   </div>
                   <GlowButton variant="brand" size="lg" parallelogram onClick={connectWallet}>
                     CONNECT WALLET
@@ -344,17 +288,10 @@ export default function FaucetContent() {
                   <div className="flex items-center gap-2 bg-black/30 py-2 px-5 rounded-full border border-white/10">
                     <div className="w-2 h-2 rounded-full bg-[#35ee66] animate-pulse" />
                     <span className="text-[10px] font-bold tracking-[0.15em] text-white/60 font-mono">
-                      {userAddress?.slice(0, 8)}...{userAddress?.slice(-6)}
+                      {address?.slice(0, 8)}...{address?.slice(-6)}
                     </span>
                   </div>
 
-                  {/* CLAIM BUTTON */}
-                  {/* <div
-                    style={{
-                      background: 'linear-gradient(135deg, #00ccff, #6a0dad, #00ccff)',
-                      animation: 'drip-pulse 3s ease-in-out infinite',
-                    }}
-                  > */}
                   <GlowButton
                     variant="brand"
                     size="lg"
@@ -364,10 +301,9 @@ export default function FaucetContent() {
                   >
                     CLAIM {faucetAmountFormatted} CHESS
                   </GlowButton>
-                  {/* </div> */}
 
                   <span className="text-[9px] font-bold tracking-[0.2em] text-white/25 uppercase">
-                    One claim per day • {activeChain === 'celo' ? 'Celo Network' : 'Stacks Network'}
+                    One claim per day • Celo Network
                   </span>
                 </div>
               )}
@@ -411,7 +347,7 @@ export default function FaucetContent() {
         txHash={txHash}
         amount={faucetAmountFormatted}
         errorMessage={errorMessage}
-        chain={activeChain}
+        chain="celo"
       />
     </main>
   )
