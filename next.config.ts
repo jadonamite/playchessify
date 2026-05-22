@@ -10,16 +10,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
     resolveAlias: {
-      // Stub for @wagmi/core's optional 'accounts' dependency (Tempo wallet connector).
+      // Stub for @wagmi/core's optional Tempo 'accounts' dependency.
       // Turbopack can't handle unresolvable dynamic imports — webpack silently fails them.
       accounts: './src/stubs/accounts.ts',
     },
   },
   transpilePackages: [
-    '@stacks/connect', 
-    '@stacks/transactions', 
-    '@stacks/auth', 
-    '@stacks/common', 
     'react-chessboard',
     '@reown/appkit',
     '@reown/appkit-adapter-wagmi',
