@@ -43,7 +43,7 @@ export function useGameMoves({ chain, gameId, enabled }: UseGameMovesOptions): U
   useEffect(() => { movesRef.current = moves }, [moves])
 
   const refresh = useCallback(async () => {
-    if (!chain || !gameId) return
+    if (!chain || gameId === undefined || gameId === null) return
     try {
       const res = await fetch(`/api/games/${chain}/${gameId}/moves`, { cache: 'no-store' })
       if (!res.ok) {
@@ -66,7 +66,7 @@ export function useGameMoves({ chain, gameId, enabled }: UseGameMovesOptions): U
 
   // Initial load + polling
   useEffect(() => {
-    if (!enabled || !chain || !gameId) return
+    if (!enabled || !chain || gameId === undefined || gameId === null) return
 
     setIsLoading(true)
     void refresh().finally(() => setIsLoading(false))
@@ -76,7 +76,7 @@ export function useGameMoves({ chain, gameId, enabled }: UseGameMovesOptions): U
   }, [enabled, chain, gameId, refresh])
 
   const submitMove = useCallback(async (san: string, player: string): Promise<boolean> => {
-    if (!chain || !gameId) return false
+    if (!chain || gameId === undefined || gameId === null) return false
 
     const moveNumber = movesRef.current.length + 1
     try {

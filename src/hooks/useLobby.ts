@@ -26,8 +26,8 @@ export function useLobby() {
       }) as bigint
 
       const result: Game[] = []
-      const start = Number(nonce)
-      const end = Math.max(1, start - 10)
+      const start = Number(nonce) - 1
+      const end = Math.max(0, start - 9)
 
       for (let i = start; i >= end; i--) {
         const g = await publicClient.readContract({
@@ -37,7 +37,7 @@ export function useLobby() {
           args: [BigInt(i)]
         }) as any
 
-        if (g && Number(g.status) === 0) {
+        if (g && Number(g.status) === 0 && g.white !== '0x0000000000000000000000000000000000000000') {
           result.push({
             id: i,
             creator: g.white,

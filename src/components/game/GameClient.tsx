@@ -81,7 +81,7 @@ export default function GameClient() {
     functionName: 'getGame',
     args: [BigInt(gameId)],
     query: {
-      enabled: !!gameId,
+      enabled: !isBotGame && gameId !== undefined && gameId !== null && !isNaN(gameId),
       refetchInterval: 5_000,
     }
   })
@@ -153,7 +153,7 @@ export default function GameClient() {
   } = useGameMoves({
     chain: 'celo',
     gameId,
-    enabled: !isBotGame && !!gameId && !!gameData,
+    enabled: !isBotGame && gameId !== undefined && gameId !== null && !isNaN(gameId) && !!gameData,
   })
 
   // ── board interaction ────────────────────────────────────────────────────
