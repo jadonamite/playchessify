@@ -7,8 +7,6 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useWallet } from '@/components/wallet-provider'
-import { useStacksChess } from '@/hooks/useStacksChess'
-import { useStacksRead } from '@/hooks/useStacksRead'
 import { useCeloChess } from '@/hooks/useCeloChess'
 // @ts-ignore - intentional unused variable
 import { useAccount, useReadContract } from 'wagmi'
@@ -50,11 +48,7 @@ export default function GameClient() {
   const isBotGame = params?.id === 'bot'
   const gameId = isBotGame ? 0 : Number(params?.id ?? 0)
 
-  // @ts-ignore - intentional
-  const { stacksAddress, isStacksConnected, activeChain, address: celoAddress, isConnected, connectWallet, setActiveChain } = useWallet()
-  const { submitMove: submitStacksMove, joinGame: joinStacks, resign: resignStacks, reportWin: reportStacksWin } = useStacksChess()
-  // @ts-ignore - intentional
-  const { getGame: getStacksGame, getPlayerStats: getStacksStats } = useStacksRead()
+  const { address: celoAddress, isConnected, connectWallet } = useWallet()
 
   const {
     submitMove: submitCeloMove,
@@ -70,7 +64,6 @@ export default function GameClient() {
   const [txPending, setTxPending] = useState(false)
   const [loadError, setLoadError] = useState(false)
   const [moveFrom, setMoveFrom] = useState<string>('')
-  const [stacksDataLoaded, setStacksDataLoaded] = useState(false)
   const [statusModalType, setStatusModalType] = useState<GameStatusType>(null)
   const [statusModalMessage, setStatusModalMessage] = useState<string>('')
   const [pendingPromotion, setPendingPromotion] = useState<{ from: string; to: string; color: 'white' | 'black' } | null>(null)
@@ -88,7 +81,7 @@ export default function GameClient() {
     functionName: 'getGame',
     args: [BigInt(gameId)],
     query: {
-      enabled: activeChain === 'celo' && !!gameId,
+      enabled: !!gameId,
       refetchInterval: 5_000,
     }
   })
@@ -97,7 +90,7 @@ export default function GameClient() {
   // when celoGameData arrives asynchronously (instead of being blocked
   // by the old dataLoaded guard).
   useEffect(() => {
-    if (activeChain === 'celo' && celoGameData) {
+    if (celoGameData) {
       const gd = celoGameData as any
       setGameData({
         player1: gd.white,
@@ -106,41 +99,7 @@ export default function GameClient() {
         status: gd.status.toString()
       })
     }
-  }, [celoGameData, activeChain])
-
-  // ── Stacks data — poll every 15s to catch WAITING → ACTIVE transitions.
-  // Stacks blocks take ~10 min, so 15s is a reasonable balance.
-  useEffect(() => {
-    if (activeChain !== 'stacks') return
-
-    const load = () => {
-      if (gameId) {
-        void getStacksGame(gameId).then((d: any) => {
-          if (!d) return
-          // Map raw Clarity CV structure to the typed GameData shape
-          setGameData({
-            player1: d.white?.value ?? '',
-            player2: d.black?.value ?? '',
-            wager: d.wager?.value ?? '0',
-            status: d.status?.value ?? '0',
-          })
-        })
-      }
-      if (stacksAddress) {
-        void getStacksStats(stacksAddress).then((s: any) => {
-          if (s) setPlayerStats({ wins: Number(s.wins?.value ?? 0), losses: Number(s.losses?.value ?? 0), rating: Number(s.rating?.value ?? 1200) })
-        })
-      }
-    }
-
-    if (!stacksDataLoaded) {
-      setStacksDataLoaded(true)
-      load()
-    }
-
-    const interval = setInterval(load, 15_000)
-    return () => clearInterval(interval)
-  }, [activeChain, stacksDataLoaded, gameId, stacksAddress, getStacksGame, getStacksStats])
+  }, [celoGameData])
 
   // ── derived ──────────────────────────────────────────────────────────────
 
@@ -153,14 +112,14 @@ export default function GameClient() {
     '4': 'DRAW',
   }
   const normalize = (a: string) => (a ?? '').toLowerCase()
-  const myAddress = normalize(activeChain === 'stacks' ? stacksAddress ?? '' : celoAddress ?? '')
+  const myAddress = normalize(celoAddress ?? '')
 
   const gameIsWaiting = gameData?.status === '0'
   const isCreator = !!gameData && normalize(gameData.player1) === myAddress && myAddress !== ''
   const isOpponent = !!gameData && normalize(gameData.player2) === myAddress && gameData.player2 !== '' && gameData.player2 !== ZERO_ADDR
   const isParticipant = isCreator || isOpponent
   // User navigated directly (e.g. via search) to a WAITING game they haven't joined
-  const canJoinFromPage = gameIsWaiting && !isParticipant && !isBotGame && (isConnected || isStacksConnected)
+  const canJoinFromPage = gameIsWaiting && !isParticipant && !isBotGame && isConnected
 
   // Color assignment: creator (player1) is white, opponent (player2) is black.
   // Mirrors the contract's assignment in chess-game.clar / ChessGame.sol.
@@ -175,7 +134,7 @@ export default function GameClient() {
     ? game.turn() === 'w'
     : (game.turn() === 'w' && myColor === 'white') || (game.turn() === 'b' && myColor === 'black')
 
-  const canAct = (isBotGame || isStacksConnected || isConnected) && !txPending && isParticipant
+  const canAct = (isBotGame || isConnected) && !txPending && isParticipant
   const gameOver = game.isGameOver()
   const turn = game.turn()
 
@@ -192,7 +151,7 @@ export default function GameClient() {
     submitMove: relaySubmitMove,
     error: relayError,
   } = useGameMoves({
-    chain: activeChain,
+    chain: 'celo',
     gameId,
     enabled: !isBotGame && !!gameId && !!gameData,
   })
@@ -292,7 +251,7 @@ export default function GameClient() {
       // PvP: sync to relay in background. The replay effect will resync from
       // authoritative state if the POST is rejected (409 conflict).
       if (!isBotGame) {
-        const player = activeChain === 'stacks' ? (stacksAddress ?? '') : (celoAddress ?? '')
+        const player = celoAddress ?? ''
         void relaySubmitMove(move.san, player).then((ok) => {
           if (!ok) {
             console.warn('[GameClient] relay rejected move — resyncing from authoritative state', { san: move.san })
@@ -327,7 +286,7 @@ export default function GameClient() {
       }
       return false
     }
-  }, [game, isBotGame, activeChain, stacksAddress, celoAddress, relaySubmitMove])
+  }, [game, isBotGame, celoAddress, relaySubmitMove])
 
   // ── v5 onPieceDrop: receives an object { piece, sourceSquare, targetSquare }
   const handlePieceDrop = useCallback(
@@ -400,22 +359,19 @@ export default function GameClient() {
 
   const handleMoveSubmit = async () => {
     await withTx(async () => {
-      if (activeChain === 'stacks') await submitStacksMove(gameId)
-      else await submitCeloMove(gameId)
+      await submitCeloMove(gameId)
     })
   }
 
   const handleResign = async () => {
     await withTx(async () => {
-      if (activeChain === 'stacks') await resignStacks(gameId)
-      else await resignCelo(gameId)
+      await resignCelo(gameId)
     })
   }
 
   const handleReportWin = async () => {
     await withTx(async () => {
-      if (activeChain === 'stacks') await reportStacksWin(gameId)
-      else await reportCeloWin(gameId)
+      await reportCeloWin(gameId)
     })
   }
 
@@ -423,15 +379,7 @@ export default function GameClient() {
     if (!gameData) return
     await withTx(async () => {
       const wagerInChess = Number(gameData.wager) / Math.pow(10, TOKEN_DECIMALS)
-      console.info('[GameClient] joining game from page', { gameId, wagerInChess })
-      if (activeChain === 'stacks') {
-        await joinStacks(gameId, wagerInChess)
-        // Reset loaded flag to re-fetch Stacks game data after the tx is broadcast
-        setStacksDataLoaded(false)
-      } else {
-        await joinCelo(gameId, wagerInChess)
-        // Celo: refetchInterval on useReadContract will pick up the ACTIVE state within 5s
-      }
+      await joinCelo(gameId, wagerInChess)
     })
   }
 
@@ -444,17 +392,9 @@ export default function GameClient() {
     if (gameData) return
     const timer = setTimeout(() => {
       setLoadError(true)
-    }, activeChain === 'stacks' ? 30_000 : 8_000)
+    }, 8_000)
     return () => clearTimeout(timer)
-  }, [isBotGame, gameData, activeChain])
-
-  // Reset transient state when the user switches chains so the next fetch
-  // runs from a clean slate (avoids stale Celo data leaking into a Stacks lookup).
-  useEffect(() => {
-    setGameData(null)
-    setLoadError(false)
-    setStacksDataLoaded(false)
-  }, [activeChain])
+  }, [isBotGame, gameData])
 
   // ── render ───────────────────────────────────────────────────────────────
 
@@ -472,19 +412,9 @@ export default function GameClient() {
         <div className="min-h-screen flex flex-col items-center justify-center gap-8 relative z-10">
           <LoadingState message={loadError ? `MATCH #${gameId} NOT FOUND` : `RETRIEVING MATCH DATA #${gameId}`} />
           {loadError && (
-            <>
-              <p className="text-[var(--t3)] text-xs font-bold tracking-widest text-center max-w-sm -mt-4">
-                Not found on <span className="text-[var(--c)]">{activeChain?.toUpperCase()}</span>. This match might live on the other network.
-              </p>
-              <GlowButton
-                variant="brand"
-                size="sm"
-                parallelogram
-                onClick={() => setActiveChain(activeChain === 'celo' ? 'stacks' : 'celo')}
-              >
-                SEARCH ON {activeChain === 'celo' ? 'STACKS' : 'CELO'}
-              </GlowButton>
-            </>
+            <p className="text-[var(--t3)] text-xs font-bold tracking-widest text-center max-w-sm -mt-4">
+              Match not found on Celo. Please check the match ID and try again.
+            </p>
           )}
           <Link href="/app/lobby">
             <GlowButton variant="ghost" size="sm" parallelogram>← BACK TO LOBBY</GlowButton>
@@ -642,7 +572,7 @@ export default function GameClient() {
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-[var(--c)] animate-pulse" />
                     <span className="text-[10px] text-[var(--t3)] tracking-widest uppercase font-bold">
-                      {activeChain === 'stacks' ? 'Confirming on Stacks...' : 'Watching for opponent...'}
+                      Watching for opponent...
                     </span>
                   </div>
                 </ClayCard>
@@ -713,7 +643,7 @@ export default function GameClient() {
               </ClayCard>
 
               {/* Network Sync */}
-              {(!isConnected && !isStacksConnected) && (
+              {!isConnected && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
