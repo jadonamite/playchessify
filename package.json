@@ -1,50 +1,25 @@
 {
-  "name": "chessify-protocol",
+  "name": "playchessify",
   "version": "0.1.2",
-  "description": "A decentralized chess protocol built on the Stacks blockchain.",
+  "description": "A decentralized chess protocol on Celo.",
   "type": "module",
-  "private": false,
+  "private": true,
   "author": "jadonamite",
   "license": "MIT",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
-  "files": [
-    "dist",
-    "contracts"
-  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:lib": "tsup src/lib/index.ts --format esm --dts --clean --tsconfig tsconfig.lib.json",
     "start": "next start",
-    "lint": "next lint",
-    "test": "vitest run",
-    "test:report": "vitest run -- --coverage --costs",
-    "test:watch": "chokidar \"tests/**/*.ts\" \"contracts/**/*.clar\" -c \"npm run test:report\""
+    "lint": "next lint"
   },
   "keywords": [
-    "stacks",
-    "bitcoin",
-    "clarity",
+    "celo",
     "chess",
     "web3",
     "protocol"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "dependencies": {
-    "@jadonamite/chessify-sdk": "^1.0.4",
-    "@jadonamite/fundxagon-sdk": "^1.0.4",
     "@jadonamite/plugins": "^1.0.0",
-    "@jadonamite/stacks-core": "^1.0.4",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-toast": "^1.2.15",
@@ -53,17 +28,6 @@
     "@react-three/fiber": "^9.6.0",
     "@reown/appkit": "^1.8.19",
     "@reown/appkit-adapter-wagmi": "^1.8.19",
-    "@stacks/auth": "^7.4.0",
-    "@stacks/bns": "^7.2.0",
-    "@stacks/common": "^7.3.1",
-    "@stacks/connect": "^8.2.6",
-    "@stacks/encryption": "^7.4.0",
-    "@stacks/network": "^7.3.1",
-    "@stacks/profile": "^7.4.0",
-    "@stacks/stacking": "^7.4.0",
-    "@stacks/storage": "^7.4.0",
-    "@stacks/transactions": "^7.4.0",
-    "@stacks/wallet-sdk": "^7.2.0",
     "@tanstack/react-query": "^5.99.0",
     "@types/three": "^0.184.0",
     "@upstash/redis": "^1.38.0",
@@ -84,27 +48,22 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "@stacks/clarinet-sdk": "^3.9.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^24.4.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
-    "chokidar-cli": "^3.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
-    "tsup": "^8.5.1",
-    "typescript": "^5",
-    "vitest": "^4.0.7",
-    "vitest-environment-clarinet": "^3.0.0"
+    "typescript": "^5"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jadonamite/Chessify.git"
+    "url": "git+https://github.com/jadonamite/playchessify.git"
   },
-  "homepage": "https://github.com/jadonamite/Chessify#readme",
+  "homepage": "https://github.com/jadonamite/playchessify#readme",
   "bugs": {
-    "url": "https://github.com/jadonamite/Chessify/issues"
+    "url": "https://github.com/jadonamite/playchessify/issues"
   }
 }
