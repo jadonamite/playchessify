@@ -84,8 +84,13 @@ export default function GameClient() {
   const [loadError, setLoadError] = useState(false)
 
   // Track end-game actions the local user initiated so we can derive result immediately.
-  const [didResign, setDidResign]       = useState(false)
-  const [wagerClaimed, setWagerClaimed] = useState(false)
+  const [didResign, setDidResign]         = useState(false)
+  const [wagerClaimed, setWagerClaimed]   = useState(false)
+  const [opponentTimedOut, setOpponentTimedOut] = useState(false)
+
+  // ── opponent turn timer (5 min) ─────────────────────────────────────────────
+  const TURN_TIMEOUT_SECS = 300
+  const [turnSecondsLeft, setTurnSecondsLeft] = useState(TURN_TIMEOUT_SECS)
 
   const { data: celoGameData } = useReadContract({
     address: CELO_CONTRACTS.game as `0x${string}`,
@@ -165,12 +170,15 @@ export default function GameClient() {
     else if (iLostByCheckmate) gameResult = 'lost'
     else if (didResign)   gameResult = 'lost'
     else if (game.isDraw() || game.isStalemate() || contractDraw) gameResult = 'draw'
+    else if (opponentTimedOut) gameResult = 'won'
     // Contract FINISHED but board not over → opponent resigned / was timed out
     else if (contractDone && !didResign) gameResult = 'won'
   }
 
   const resultMessage = gameResult === 'won'
-    ? (iWonByCheckmate ? 'Checkmate — the King has fallen.' : 'Opponent forfeited the match.')
+    ? (opponentTimedOut ? 'Opponent exceeded the 5-minute turn limit.'
+      : iWonByCheckmate ? 'Checkmate — the King has fallen.'
+      : 'Opponent forfeited the match.')
     : gameResult === 'lost'
     ? (iLostByCheckmate ? 'Your King has fallen.' : 'You resigned from the match.')
     : 'Tactical deadlock — neither side can proceed.'
@@ -214,6 +222,29 @@ export default function GameClient() {
     else if (replayed.inCheck()) showToast('King under direct assault — parry or evade!', 'check')
     else if (replayed.isDraw() || replayed.isStalemate()) showToast('Tactical deadlock — neither commander can proceed.', 'draw')
   }, [relayMoves, isBotGame, showToast]) // moveHistory intentionally omitted — read via ref
+
+  // ── opponent turn timer ─────────────────────────────────────────────────────
+
+  // Reset to 5 min on every new relay move (covers both my move and opponent's)
+  useEffect(() => {
+    if (isBotGame) return
+    setTurnSecondsLeft(TURN_TIMEOUT_SECS)
+    setOpponentTimedOut(false)
+  }, [relayMoves.length, isBotGame]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Countdown — only ticks when it's opponent's turn and game is live
+  useEffect(() => {
+    if (isBotGame || isMyTurn || gameOver || !contractActive || opponentTimedOut) return
+    const t = setInterval(() => setTurnSecondsLeft((s) => Math.max(0, s - 1)), 1000)
+    return () => clearInterval(t)
+  }, [isBotGame, isMyTurn, gameOver, contractActive, opponentTimedOut])
+
+  // Expiry → auto-show win overlay
+  useEffect(() => {
+    if (isBotGame || isMyTurn || turnSecondsLeft > 0 || opponentTimedOut || !contractActive) return
+    setOpponentTimedOut(true)
+    showToast('Opponent exceeded the 5-minute turn limit. Claim your win.', 'info', 6000)
+  }, [turnSecondsLeft, isBotGame, isMyTurn, opponentTimedOut, contractActive, showToast])
 
   // ── bot timer cleanup ────────────────────────────────────────────────────────
 
@@ -577,6 +608,15 @@ export default function GameClient() {
                             <span className="text-[10px] font-black tracking-[0.2em] text-amber-400 uppercase">Opponent&apos;s Turn</span>
                           </div>
                           <p className="text-[11px] text-[var(--t3)] leading-relaxed">Waiting for their move…</p>
+                          {/* Countdown */}
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-[9px] text-[var(--t3)] uppercase font-bold tracking-widest">Time limit</span>
+                            <span className={`text-sm font-black font-mono tabular-nums ${
+                              turnSecondsLeft < 60 ? 'text-red-400' : turnSecondsLeft < 120 ? 'text-amber-400' : 'text-[var(--t2)]'
+                            }`}>
+                              {Math.floor(turnSecondsLeft / 60)}:{String(turnSecondsLeft % 60).padStart(2, '0')}
+                            </span>
+                          </div>
                           <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5">
                             <div className={`w-1.5 h-1.5 rounded-full ${relayError ? 'bg-red-400' : 'bg-[var(--c)] animate-pulse'}`} />
                             <span className={`text-[9px] font-bold tracking-widest uppercase ${relayError ? 'text-red-400' : 'text-[var(--c)]'}`}>

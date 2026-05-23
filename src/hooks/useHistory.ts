@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAccount, usePublicClient } from 'wagmi'
-import { CELO_CONTRACTS, TOKEN_DECIMALS } from '@/config/contracts'
+import { CELO_CONTRACTS, CELO_CHAIN_ID, TOKEN_DECIMALS } from '@/config/contracts'
 import { CHESS_GAME_ABI } from '@/config/abis'
-import { formatUnits } from 'viem'
+import { formatUnits, type Abi } from 'viem'
 
 export type HistoryItem = {
   id: string
@@ -16,90 +16,65 @@ export type HistoryItem = {
   timestamp: number
 }
 
+const STATUS_LABELS = ['Waiting', 'Active', 'Finished', 'Cancelled', 'Draw']
+const ZERO = '0x0000000000000000000000000000000000000000'
+
 export function useHistory() {
   const { address: celoAddress } = useAccount()
-  const publicClient = usePublicClient()
+  const publicClient = usePublicClient({ chainId: CELO_CHAIN_ID })
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
   const fetchHistory = useCallback(async () => {
     if (!celoAddress || !publicClient) return []
-
     try {
-      const createdLogs = await publicClient.getLogs({
+      const gameNonce = await publicClient.readContract({
         address: CELO_CONTRACTS.game as `0x${string}`,
-        event: {
-          type: 'event',
-          name: 'GameCreated',
-          inputs: [
-            { name: 'gameId', type: 'uint256', indexed: true },
-            { name: 'white', type: 'address', indexed: true },
-            { name: 'wager', type: 'uint256', indexed: false }
-          ]
-        },
-        args: { white: celoAddress },
-        fromBlock: 0n
+        abi: CHESS_GAME_ABI as Abi,
+        functionName: 'gameNonce',
+      }) as bigint
+
+      const total = Number(gameNonce)
+      if (total === 0) return []
+
+      const ids = Array.from({ length: total }, (_, i) => BigInt(i + 1))
+      const results = await publicClient.multicall({
+        contracts: ids.map((id) => ({
+          address: CELO_CONTRACTS.game as `0x${string}`,
+          abi: CHESS_GAME_ABI as Abi,
+          functionName: 'getGame',
+          args: [id],
+        })),
+        allowFailure: true,
       })
 
-      const joinedLogs = await publicClient.getLogs({
-        address: CELO_CONTRACTS.game as `0x${string}`,
-        event: {
-          type: 'event',
-          name: 'GameJoined',
-          inputs: [
-            { name: 'gameId', type: 'uint256', indexed: true },
-            { name: 'black', type: 'address', indexed: true }
-          ]
-        },
-        args: { black: celoAddress },
-        fromBlock: 0n
-      })
-
+      const me = celoAddress.toLowerCase()
       const items: HistoryItem[] = []
 
-      for (const log of createdLogs) {
-        const gameId = log.args.gameId?.toString() || '0'
-        const gameData = await publicClient.readContract({
-          address: CELO_CONTRACTS.game as `0x${string}`,
-          abi: CHESS_GAME_ABI,
-          functionName: 'getGame',
-          args: [BigInt(gameId)]
-        }) as any
+      for (let i = 0; i < results.length; i++) {
+        const r = results[i]
+        if (r.status !== 'success') continue
+        const g = r.result as any
+        const white = (g.white as string).toLowerCase()
+        const black = (g.black as string).toLowerCase()
+        if (white !== me && black !== me) continue
 
+        const role: 'white' | 'black' = white === me ? 'white' : 'black'
+        const opponent: string = role === 'white' ? g.black : g.white
         items.push({
-          id: gameId,
+          id: String(i + 1),
           chain: 'celo',
-          role: 'white',
-          opponent: gameData.black === '0x0000000000000000000000000000000000000000' ? 'Waiting...' : gameData.black,
-          wager: formatUnits(gameData.wager, TOKEN_DECIMALS),
-          status: ['Waiting', 'Active', 'Finished', 'Cancelled', 'Draw'][gameData.status],
-          timestamp: Number(gameData.createdAt),
-        })
-      }
-
-      for (const log of joinedLogs) {
-        const gameId = log.args.gameId?.toString() || '0'
-        const gameData = await publicClient.readContract({
-          address: CELO_CONTRACTS.game as `0x${string}`,
-          abi: CHESS_GAME_ABI,
-          functionName: 'getGame',
-          args: [BigInt(gameId)]
-        }) as any
-
-        items.push({
-          id: gameId,
-          chain: 'celo',
-          role: 'black',
-          opponent: gameData.white,
-          wager: formatUnits(gameData.wager, TOKEN_DECIMALS),
-          status: ['Waiting', 'Active', 'Finished', 'Cancelled', 'Draw'][gameData.status],
-          timestamp: Number(gameData.createdAt),
+          role,
+          opponent: opponent.toLowerCase() === ZERO ? 'Waiting...' : opponent,
+          wager: formatUnits(g.wager as bigint, TOKEN_DECIMALS),
+          status: STATUS_LABELS[Number(g.status)] ?? 'Unknown',
+          timestamp: Number(g.createdAt),
         })
       }
 
       return items.sort((a, b) => b.timestamp - a.timestamp)
     } catch (err) {
-      console.error('History fetch error:', err)
+      console.error('[useHistory] fetch failed:', err)
       return []
     }
   }, [celoAddress, publicClient])
