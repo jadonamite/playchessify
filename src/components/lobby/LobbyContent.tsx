@@ -533,45 +533,107 @@ export default function LobbyContent() {
                 ClayCard already manages its own shell correctly.
                 The inner padding div keeps content away from the blur boundary.
               */}
-              <ClayCard className="overflow-hidden">
-                <div className="p-8 md:p-10">
-                  <h3 className="text-2xl font-black mb-6 uppercase italic">Create Match</h3>
-                  <div className="space-y-6 mb-10">
-                    <div>
-                      <label className="block text-xs font-bold text-[var(--t3)] uppercase tracking-widest mb-3">
-                        Wager Amount (CHESS)
-                      </label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[50, 100, 250, 500, 1000, 2500].map(amt => (
-                          <button
-                            key={amt}
-                            onClick={() => setWager(amt)}
-                            className={`py-3 rounded-xl border font-bold transition-all ${wager === amt
-                                ? 'bg-[var(--c)] text-black border-[var(--c)] shadow-[0_0_20px_rgba(0,204,255,0.3)]'
-                                : 'bg-[var(--b1)] text-[var(--t2)] border-[var(--b2)] hover:border-[var(--t3)]'
-                              }`}
-                          >
-                            {amt}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  {createError && (
-                    <p className="text-[10px] text-red-400 font-bold tracking-widest uppercase mb-4 text-center">
-                      {createError}
-                    </p>
-                  )}
-                  <div className="flex gap-4">
-                    <GlowButton
-                      fullWidth
-                      variant="brand"
-                      onClick={handleCreateGame}
-                      disabled={isPending}
+              <ClayCard className="overflow-hidden border border-white/10 bg-slate-950/90 backdrop-blur-2xl shadow-[0_24px_60px_rgba(0,0,0,0.8)] rounded-[32px]">
+                <div className="p-8 md:p-10 relative">
+                  {/* Close button */}
+                  {!isPending && (
+                    <button
+                      onClick={() => setIsCreateModalOpen(false)}
+                      className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors text-xl font-bold cursor-pointer"
                     >
-                      {isPending ? 'BROADCASTING...' : 'INITIALIZE GAME'}
-                    </GlowButton>
-                  </div>
+                      ×
+                    </button>
+                  )}
+
+                  {isPending ? (
+                    /* Confirmation / Loading State */
+                    <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                      <div className="relative mb-8">
+                        <div className="w-20 h-20 rounded-full border-4 border-cyan-500/10 border-t-cyan-400 animate-spin" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <svg className="w-8 h-8 text-cyan-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <h4 className="text-xl font-black uppercase tracking-wider text-white mb-3" style={{ fontFamily: 'var(--fd)' }}>
+                        Confirm in Wallet
+                      </h4>
+                      <p className="text-xs text-gray-400 max-w-xs leading-relaxed mb-2">
+                        Please approve the spend limit and confirm the transaction in your connected wallet.
+                      </p>
+                      <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest animate-pulse">
+                        Step 1: Approve Limit &rarr; Step 2: Initialize Game
+                      </p>
+                    </div>
+                  ) : (
+                    /* Wager Selection UI */
+                    <>
+                      <div className="flex justify-between items-baseline mb-6">
+                        <h3 className="text-2xl font-black uppercase tracking-tight text-white" style={{ fontFamily: 'var(--fd)' }}>
+                          SELECT WAGER
+                        </h3>
+                        <div className="text-right">
+                          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">YOUR BALANCE</span>
+                          <span className="text-sm font-black text-cyan-400">{balance} CHESS</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6 mb-8">
+                        <div>
+                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
+                            Wager Amount (CHESS)
+                          </label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[50, 100, 250, 500, 1000, 2500].map(amt => {
+                              const isInsufficient = (parseFloat(balance) || 0) < amt
+                              return (
+                                <button
+                                  key={amt}
+                                  onClick={() => setWager(amt)}
+                                  className={`py-3.5 rounded-2xl border font-black text-xs transition-all relative ${
+                                    wager === amt
+                                      ? 'bg-cyan-400 text-black border-cyan-400 shadow-[0_0_25px_rgba(34,211,238,0.45)]'
+                                      : isInsufficient
+                                      ? 'bg-black/20 text-red-500/50 border-red-950/20 cursor-not-allowed opacity-60'
+                                      : 'bg-black/40 text-gray-300 border-white/5 hover:border-white/10 hover:bg-black/60'
+                                  }`}
+                                >
+                                  {amt}
+                                  {isInsufficient && (
+                                    <span className="absolute bottom-1 right-2 text-[7px] text-red-500 font-bold">LACKING</span>
+                                  )}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      {createError && (
+                        <p className="text-[9px] text-red-400 font-bold tracking-widest uppercase mb-6 text-center border border-red-500/10 bg-red-500/5 py-2 rounded-xl">
+                          {createError}
+                        </p>
+                      )}
+
+                      {(parseFloat(balance) || 0) < wager && (
+                        <p className="text-[10px] text-red-400 font-bold tracking-widest uppercase mb-6 text-center">
+                          INSUFFICIENT BALANCE FOR THIS WAGER
+                        </p>
+                      )}
+
+                      <div className="flex gap-4">
+                        <GlowButton
+                          fullWidth
+                          variant="brand"
+                          onClick={handleCreateGame}
+                          disabled={(parseFloat(balance) || 0) < wager}
+                        >
+                          INITIALIZE GAME
+                        </GlowButton>
+                      </div>
+                    </>
+                  )}
                 </div>
               </ClayCard>
             </motion.div>

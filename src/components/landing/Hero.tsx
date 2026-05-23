@@ -10,6 +10,7 @@ import { useWallet } from '@/components/wallet-provider'
 import ChainSelectModal from '@/components/ui/ChainSelectModal'
 import { King, Queen, Bishop, Knight, Pawn } from '@/components/ui/ChessModels'
 import TypingHeroText from '@/components/ui/TypingHeroText'
+import { useRouter } from 'next/navigation'
 
 const KEYFRAMES = `
 @keyframes rspin       { to{transform:translate(-50%,-50%) rotate(360deg)} }
@@ -138,6 +139,13 @@ export function Navbar() {
 export default function Hero() {
   const { isConnected, connectWallet } = useWallet()
   const [isMobile, setIsMobile] = useState(false)
+  const router = useRouter()
+
+  useEffect(() => {
+    if (isConnected) {
+      router.push('/app/lobby')
+    }
+  }, [isConnected, router])
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)

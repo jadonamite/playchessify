@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic'
 import { wagmiAdapter, initAppKit } from '@/config/reown'
 
 import { ThemeProvider } from 'next-themes'
+import CenterToast from '@/components/ui/CenterToast'
 
 const WalletProvider = dynamic(
   () => import('@/components/wallet-provider').then(mod => mod.WalletProvider),
@@ -34,6 +35,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           {ready ? (
             <WalletProvider>
               {children}
+              <CenterToast />
             </WalletProvider>
           ) : (
             <>{children}</>

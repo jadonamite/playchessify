@@ -6,42 +6,84 @@ import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
 import { CELO_CONTRACTS, TOKEN_DECIMALS } from '@/config/contracts'
 import { parseUnits } from 'viem'
 import { useState, useCallback } from 'react'
+import { useToastStore } from '@/hooks/useToastStore'
 
 const LOG_PREFIX = '[useCeloChess]'
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export function useCeloChess() {
   const { address } = useAccount()
   const { writeContractAsync } = useWriteContract()
   const publicClient = usePublicClient()
   const [isPending, setIsPending] = useState(false)
+  const showToast = useToastStore((state) => state.showToast)
 
   // ── createGame ──────────────────────────────────────────────────────────────
-  // Returns the on-chain game ID extracted from the GameCreated event.
-  const createGame = useCallback(async (wagerAmount: number): Promise<number> => {
-    if (!address) throw new Error(`${LOG_PREFIX} createGame: wallet not connected`)
-    if (!publicClient) throw new Error(`${LOG_PREFIX} createGame: public client unavailable`)
+  const createGame = useCallback(async (wagerAmount: number): Promise<number | null> => {
+    if (!address) {
+      showToast('Wallet not connected', 'error')
+      throw new Error(`${LOG_PREFIX} createGame: wallet not connected`)
+    }
+    if (!publicClient) {
+      showToast('Blockchain node connection unavailable', 'error')
+      throw new Error(`${LOG_PREFIX} createGame: public client unavailable`)
+    }
 
     setIsPending(true)
     try {
       const amount = parseUnits(wagerAmount.toString(), TOKEN_DECIMALS)
 
-      // Step 1 — approve, wait for confirmation before proceeding
-      console.info(`${LOG_PREFIX} createGame: sending approve`, { wager: wagerAmount })
-      const approveTxHash = await writeContractAsync({
+      // Check current CHESS token balance
+      console.info(`${LOG_PREFIX} checking CHESS balance for ${address}`)
+      const balance = await publicClient.readContract({
         address: CELO_CONTRACTS.token as `0x${string}`,
         abi: CHESS_TOKEN_ABI,
-        functionName: 'approve',
-        args: [CELO_CONTRACTS.game as `0x${string}`, amount],
-      })
+        functionName: 'balanceOf',
+        args: [address as `0x${string}`],
+      }) as bigint
 
-      const approveReceipt = await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
-      if (approveReceipt.status !== 'success') {
-        throw new Error(`${LOG_PREFIX} createGame: approve tx reverted (${approveTxHash})`)
+      if (balance < amount) {
+        showToast(`Insufficient CHESS balance. You need ${wagerAmount} CHESS.`, 'error')
+        throw new Error(`${LOG_PREFIX} createGame: Insufficient balance`)
       }
-      console.info(`${LOG_PREFIX} createGame: approve confirmed`, { hash: approveTxHash })
+
+      // Check current allowance for the game contract
+      console.info(`${LOG_PREFIX} checking allowance for game contract`)
+      const allowance = await publicClient.readContract({
+        address: CELO_CONTRACTS.token as `0x${string}`,
+        abi: CHESS_TOKEN_ABI,
+        functionName: 'allowance',
+        args: [address as `0x${string}`, CELO_CONTRACTS.game as `0x${string}`],
+      }) as bigint
+
+      if (allowance < amount) {
+        // Step 1 — approve, wait for confirmation before proceeding
+        console.info(`${LOG_PREFIX} createGame: sending approve`, { wager: wagerAmount })
+        showToast('Please approve the CHESS token spending limit in your wallet...', 'info')
+        const approveTxHash = await writeContractAsync({
+          address: CELO_CONTRACTS.token as `0x${string}`,
+          abi: CHESS_TOKEN_ABI,
+          functionName: 'approve',
+          args: [CELO_CONTRACTS.game as `0x${string}`, amount],
+        })
+
+        const approveReceipt = await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
+        if (approveReceipt.status !== 'success') {
+          showToast('Approval transaction reverted.', 'error')
+          throw new Error(`${LOG_PREFIX} createGame: approve tx reverted (${approveTxHash})`)
+        }
+        console.info(`${LOG_PREFIX} createGame: approve confirmed`, { hash: approveTxHash })
+        showToast('Spending limit approved! Waiting to broadcast game creation...', 'info')
+        
+        // Add a sleep delay to prevent wallet provider nonce out-of-sync conflicts
+        await sleep(1500)
+      } else {
+        console.info(`${LOG_PREFIX} createGame: allowance already sufficient (${allowance} >= ${amount})`)
+      }
 
       // Step 2 — create game
       console.info(`${LOG_PREFIX} createGame: sending createGame`, { wager: wagerAmount })
+      showToast('Please confirm the match initialization in your wallet...', 'info')
       const createTxHash = await writeContractAsync({
         address: CELO_CONTRACTS.game as `0x${string}`,
         abi: CHESS_GAME_ABI,
@@ -51,6 +93,7 @@ export function useCeloChess() {
 
       const createReceipt = await publicClient.waitForTransactionReceipt({ hash: createTxHash })
       if (createReceipt.status !== 'success') {
+        showToast('Match creation transaction reverted.', 'error')
         throw new Error(`${LOG_PREFIX} createGame: createGame tx reverted (${createTxHash})`)
       }
 
@@ -62,6 +105,7 @@ export function useCeloChess() {
             const args = decoded.args as unknown as { gameId: bigint }
             const gameId = Number(args.gameId)
             console.info(`${LOG_PREFIX} createGame: success`, { gameId, hash: createTxHash })
+            showToast('Match initialized successfully!', 'success')
             return gameId
           }
         } catch {
@@ -70,41 +114,86 @@ export function useCeloChess() {
       }
 
       throw new Error(`${LOG_PREFIX} createGame: GameCreated event not found in receipt (${createTxHash})`)
-    } catch (err) {
+    } catch (err: any) {
       console.error(`${LOG_PREFIX} createGame failed:`, err)
+      const userCancelled = err?.message?.toLowerCase().includes('rejected') || err?.message?.toLowerCase().includes('user denied') || err?.message?.toLowerCase().includes('cancelled')
+      if (userCancelled) {
+        showToast('Transaction cancelled by user.', 'error')
+      } else if (!err?.message?.includes('Insufficient balance')) {
+        showToast('Blockchain interaction failed. Please check your transaction and try again.', 'error')
+      }
       throw err
     } finally {
       setIsPending(false)
     }
-  }, [address, writeContractAsync, publicClient])
+  }, [address, writeContractAsync, publicClient, showToast])
 
   // ── joinGame ────────────────────────────────────────────────────────────────
-  // Approves + joins, waits for both receipts before resolving.
   const joinGame = useCallback(async (gameId: number, wagerAmount: number): Promise<void> => {
-    if (!address) throw new Error(`${LOG_PREFIX} joinGame: wallet not connected`)
-    if (!publicClient) throw new Error(`${LOG_PREFIX} joinGame: public client unavailable`)
+    if (!address) {
+      showToast('Wallet not connected', 'error')
+      throw new Error(`${LOG_PREFIX} joinGame: wallet not connected`)
+    }
+    if (!publicClient) {
+      showToast('Blockchain node connection unavailable', 'error')
+      throw new Error(`${LOG_PREFIX} joinGame: public client unavailable`)
+    }
 
     setIsPending(true)
     try {
       const amount = parseUnits(wagerAmount.toString(), TOKEN_DECIMALS)
 
-      // Step 1 — approve
-      console.info(`${LOG_PREFIX} joinGame: sending approve`, { gameId, wager: wagerAmount })
-      const approveTxHash = await writeContractAsync({
+      // Check current CHESS token balance
+      console.info(`${LOG_PREFIX} checking CHESS balance for ${address}`)
+      const balance = await publicClient.readContract({
         address: CELO_CONTRACTS.token as `0x${string}`,
         abi: CHESS_TOKEN_ABI,
-        functionName: 'approve',
-        args: [CELO_CONTRACTS.game as `0x${string}`, amount],
-      })
+        functionName: 'balanceOf',
+        args: [address as `0x${string}`],
+      }) as bigint
 
-      const approveReceipt = await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
-      if (approveReceipt.status !== 'success') {
-        throw new Error(`${LOG_PREFIX} joinGame: approve tx reverted (${approveTxHash})`)
+      if (balance < amount) {
+        showToast(`Insufficient CHESS balance. You need ${wagerAmount} CHESS to join this match.`, 'error')
+        throw new Error(`${LOG_PREFIX} joinGame: Insufficient balance`)
       }
-      console.info(`${LOG_PREFIX} joinGame: approve confirmed`, { hash: approveTxHash })
+
+      // Check current allowance for the game contract
+      console.info(`${LOG_PREFIX} checking allowance for game contract`)
+      const allowance = await publicClient.readContract({
+        address: CELO_CONTRACTS.token as `0x${string}`,
+        abi: CHESS_TOKEN_ABI,
+        functionName: 'allowance',
+        args: [address as `0x${string}`, CELO_CONTRACTS.game as `0x${string}`],
+      }) as bigint
+
+      if (allowance < amount) {
+        // Step 1 — approve
+        console.info(`${LOG_PREFIX} joinGame: sending approve`, { gameId, wager: wagerAmount })
+        showToast('Please approve the CHESS token spending limit in your wallet...', 'info')
+        const approveTxHash = await writeContractAsync({
+          address: CELO_CONTRACTS.token as `0x${string}`,
+          abi: CHESS_TOKEN_ABI,
+          functionName: 'approve',
+          args: [CELO_CONTRACTS.game as `0x${string}`, amount],
+        })
+
+        const approveReceipt = await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
+        if (approveReceipt.status !== 'success') {
+          showToast('Approval transaction reverted.', 'error')
+          throw new Error(`${LOG_PREFIX} joinGame: approve tx reverted (${approveTxHash})`)
+        }
+        console.info(`${LOG_PREFIX} joinGame: approve confirmed`, { hash: approveTxHash })
+        showToast('Spending limit approved! Waiting to broadcast match join...', 'info')
+
+        // Add sleep delay
+        await sleep(1500)
+      } else {
+        console.info(`${LOG_PREFIX} joinGame: allowance already sufficient (${allowance} >= ${amount})`)
+      }
 
       // Step 2 — join
       console.info(`${LOG_PREFIX} joinGame: sending joinGame`, { gameId })
+      showToast('Please confirm the transaction to join this match in your wallet...', 'info')
       const joinTxHash = await writeContractAsync({
         address: CELO_CONTRACTS.game as `0x${string}`,
         abi: CHESS_GAME_ABI,
@@ -114,16 +203,24 @@ export function useCeloChess() {
 
       const joinReceipt = await publicClient.waitForTransactionReceipt({ hash: joinTxHash })
       if (joinReceipt.status !== 'success') {
+        showToast('Match joining transaction reverted.', 'error')
         throw new Error(`${LOG_PREFIX} joinGame: joinGame tx reverted (${joinTxHash})`)
       }
       console.info(`${LOG_PREFIX} joinGame: success`, { gameId, hash: joinTxHash })
-    } catch (err) {
+      showToast('Successfully joined the match!', 'success')
+    } catch (err: any) {
       console.error(`${LOG_PREFIX} joinGame failed:`, err)
+      const userCancelled = err?.message?.toLowerCase().includes('rejected') || err?.message?.toLowerCase().includes('user denied') || err?.message?.toLowerCase().includes('cancelled')
+      if (userCancelled) {
+        showToast('Transaction cancelled by user.', 'error')
+      } else if (!err?.message?.includes('Insufficient balance')) {
+        showToast('Blockchain interaction failed. Please check your transaction and try again.', 'error')
+      }
       throw err
     } finally {
       setIsPending(false)
     }
-  }, [address, writeContractAsync, publicClient])
+  }, [address, writeContractAsync, publicClient, showToast])
 
   // ── submitMove ──────────────────────────────────────────────────────────────
   const submitMove = useCallback(async (gameId: number) => {
