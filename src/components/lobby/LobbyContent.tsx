@@ -57,7 +57,7 @@ export default function LobbyContent() {
   const [wins, setWins] = useState(0)
   const [losses, setLosses] = useState(0)
 
-  const { data: celoBalance } = useReadContract({
+  const { data: celoBalance, isPending: isBalanceLoading } = useReadContract({
     address: CELO_CONTRACTS.token as `0x${string}`,
     abi: CHESS_TOKEN_ABI,
     functionName: 'balanceOf',
@@ -575,7 +575,13 @@ export default function LobbyContent() {
                         </h3>
                         <div className="text-right">
                           <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">YOUR BALANCE</span>
-                          <span className="text-sm font-black text-cyan-400">{balance} CHESS</span>
+                          <span className="text-sm font-black text-cyan-400">
+                            {isBalanceLoading ? (
+                              <span className="inline-block w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin align-middle" />
+                            ) : (
+                              `${balance} CHESS`
+                            )}
+                          </span>
                         </div>
                       </div>
 
@@ -586,23 +592,21 @@ export default function LobbyContent() {
                           </label>
                           <div className="grid grid-cols-3 gap-2">
                             {[50, 100, 250, 500, 1000, 2500].map(amt => {
-                              const isInsufficient = (parseFloat(balance) || 0) < amt
+                              const isInsufficient = !isBalanceLoading && (parseFloat(balance) || 0) < amt
                               return (
                                 <button
                                   key={amt}
-                                  onClick={() => setWager(amt)}
-                                  className={`py-3.5 rounded-2xl border font-black text-xs transition-all relative ${
+                                  onClick={() => !isInsufficient && setWager(amt)}
+                                  disabled={isInsufficient}
+                                  className={`py-3.5 rounded-2xl border font-black text-xs transition-all ${
                                     wager === amt
                                       ? 'bg-cyan-400 text-black border-cyan-400 shadow-[0_0_25px_rgba(34,211,238,0.45)]'
                                       : isInsufficient
-                                      ? 'bg-black/20 text-red-500/50 border-red-950/20 cursor-not-allowed opacity-60'
+                                      ? 'bg-black/20 text-gray-600 border-white/5 cursor-not-allowed opacity-40'
                                       : 'bg-black/40 text-gray-300 border-white/5 hover:border-white/10 hover:bg-black/60'
                                   }`}
                                 >
                                   {amt}
-                                  {isInsufficient && (
-                                    <span className="absolute bottom-1 right-2 text-[7px] text-red-500 font-bold">LACKING</span>
-                                  )}
                                 </button>
                               )
                             })}
@@ -616,10 +620,19 @@ export default function LobbyContent() {
                         </p>
                       )}
 
-                      {(parseFloat(balance) || 0) < wager && (
-                        <p className="text-[10px] text-red-400 font-bold tracking-widest uppercase mb-6 text-center">
-                          INSUFFICIENT BALANCE FOR THIS WAGER
-                        </p>
+                      {!isBalanceLoading && (parseFloat(balance) || 0) < wager && (
+                        <div className="flex flex-col items-center gap-3 mb-6 py-4 px-4 rounded-2xl border border-red-500/15 bg-red-500/5">
+                          <p className="text-[10px] text-red-400 font-bold tracking-[0.2em] uppercase text-center">
+                            Not enough CHESS for this wager
+                          </p>
+                          <GlowButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { setIsCreateModalOpen(false); router.push('/app/faucet') }}
+                          >
+                            CLAIM FROM FAUCET
+                          </GlowButton>
+                        </div>
                       )}
 
                       <div className="flex gap-4">
@@ -627,7 +640,7 @@ export default function LobbyContent() {
                           fullWidth
                           variant="brand"
                           onClick={handleCreateGame}
-                          disabled={(parseFloat(balance) || 0) < wager}
+                          disabled={isBalanceLoading || (parseFloat(balance) || 0) < wager}
                         >
                           INITIALIZE GAME
                         </GlowButton>
