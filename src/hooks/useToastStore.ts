@@ -1,6 +1,16 @@
 import { create } from 'zustand'
 
-export type ToastType = 'success' | 'error' | 'info'
+export type ToastType = 'success' | 'error' | 'info' | 'invalid' | 'check' | 'checkmate' | 'draw'
+
+const DEFAULT_DURATION: Record<ToastType, number> = {
+  success: 4000,
+  error: 4000,
+  info: 3000,
+  invalid: 2500,
+  check: 3000,
+  checkmate: 7000,
+  draw: 5000,
+}
 
 interface Toast {
   message: string
@@ -16,8 +26,8 @@ interface ToastState {
 
 export const useToastStore = create<ToastState>((set) => ({
   toast: null,
-  showToast: (message, type, duration = 4000) => {
-    set({ toast: { message, type, duration } })
+  showToast: (message, type, duration) => {
+    set({ toast: { message, type, duration: duration ?? DEFAULT_DURATION[type] } })
   },
   hideToast: () => set({ toast: null }),
 }))

@@ -8,20 +8,21 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useWallet } from '@/components/wallet-provider'
 import { useCeloChess } from '@/hooks/useCeloChess'
-// @ts-ignore - intentional unused variable
-import { useAccount, useReadContract } from 'wagmi'
+import { useReadContract } from 'wagmi'
 import { CHESS_GAME_ABI } from '@/config/abis'
 import { CELO_CONTRACTS, CELO_CHAIN_ID } from '@/config/contracts'
 import ClayCard from '@/components/ui/ClayCard'
 import GlowButton from '@/components/ui/GlowButton'
 import StatBadge from '@/components/ui/StatBadge'
 import LoadingState from '@/components/ui/LoadingState'
-import GameStatusModal, { GameStatusType } from '@/components/ui/GameStatusModal'
 import PromotionModal, { PromotionPiece } from '@/components/ui/PromotionModal'
 import { Navbar } from '@/components/landing/Hero'
 import { getBestMove } from '@/lib/chess-engine'
 import { TOKEN_DECIMALS } from '@/config/contracts'
 import { useGameMoves } from '@/hooks/useGameMoves'
+import { useToastStore } from '@/hooks/useToastStore'
+
+const BOT_SAVE_KEY = 'chess-bot-save'
 
 // Dynamically import Chessboard to avoid SSR issues
 const Chessboard = dynamic(() => import('react-chessboard').then(mod => mod.Chessboard), { ssr: false })
@@ -57,22 +58,53 @@ export default function GameClient() {
     reportWin: reportCeloWin
   } = useCeloChess()
 
-  const [game, setGame] = useState(() => new Chess())
+  const showToast = useToastStore((s) => s.showToast)
+
+  const [game, setGame] = useState(() => {
+    if (typeof window === 'undefined' || !isBotGame) return new Chess()
+    try {
+      const saved = localStorage.getItem(BOT_SAVE_KEY)
+      if (saved) {
+        const { fen } = JSON.parse(saved)
+        return new Chess(fen)
+      }
+    } catch { /* corrupt save — start fresh */ }
+    return new Chess()
+  })
+
   const [gameData, setGameData] = useState<GameData | null>(null)
   // @ts-expect-error - setPlayerStats populated via future useReadContract
   const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null)
-  const [moveHistory, setMoveHistory] = useState<string[]>([])
+
+  const [moveHistory, setMoveHistory] = useState<string[]>(() => {
+    if (typeof window === 'undefined' || !isBotGame) return []
+    try {
+      const saved = localStorage.getItem(BOT_SAVE_KEY)
+      if (saved) {
+        const { history } = JSON.parse(saved)
+        return Array.isArray(history) ? history : []
+      }
+    } catch { /* ignore */ }
+    return []
+  })
+
   const [txPending, setTxPending] = useState(false)
   const [loadError, setLoadError] = useState(false)
   const [moveFrom, setMoveFrom] = useState<string>('')
-  const [statusModalType, setStatusModalType] = useState<GameStatusType>(null)
-  const [statusModalMessage, setStatusModalMessage] = useState<string>('')
   const [pendingPromotion, setPendingPromotion] = useState<{ from: string; to: string; color: 'white' | 'black' } | null>(null)
 
   // Bot reply timer — cleared on unmount so setState never fires after teardown
   const botReplyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => () => {
     if (botReplyTimerRef.current) clearTimeout(botReplyTimerRef.current)
+  }, [])
+
+  const resetBotGame = useCallback(() => {
+    if (botReplyTimerRef.current) { clearTimeout(botReplyTimerRef.current); botReplyTimerRef.current = null }
+    localStorage.removeItem(BOT_SAVE_KEY)
+    setGame(new Chess())
+    setMoveHistory([])
+    setMoveFrom('')
   }, [])
 
   // Poll game data on Celo so WAITING → ACTIVE transitions surface without a refresh
@@ -188,16 +220,13 @@ export default function GameClient() {
     setMoveHistory(sanHistory)
 
     if (replayed.isCheckmate()) {
-      setStatusModalType('checkmate')
-      setStatusModalMessage('The King has fallen. End of line.')
+      showToast('The King has fallen. End of line.', 'checkmate')
     } else if (replayed.inCheck()) {
-      setStatusModalType('check')
-      setStatusModalMessage('Your King is under direct assault. You must parry or evade!')
+      showToast('Your King is under direct assault. You must parry or evade!', 'check')
     } else if (replayed.isDraw() || replayed.isStalemate()) {
-      setStatusModalType('draw')
-      setStatusModalMessage('Tactical deadlock achieved. Neither commander can proceed.')
+      showToast('Tactical deadlock achieved. Neither commander can proceed.', 'draw')
     }
-  }, [relayMoves, isBotGame, moveHistory])
+  }, [relayMoves, isBotGame, moveHistory, showToast])
 
   // Core move executor — synchronous local apply (so react-chessboard's drop
   // handler gets its boolean), then a fire-and-forget relay POST for PvP.
@@ -225,45 +254,45 @@ export default function GameClient() {
       const next = new Chess(game.fen())
       const move = next.move({ from: sourceSquare, to: targetSquare, promotion: promotion ?? 'q' })
       if (!move) {
-        setStatusModalType('invalid_move')
-        if (game.inCheck()) {
-          setStatusModalMessage('Invalid move: Your King is in check!')
-        } else {
-          setStatusModalMessage('Invalid move: You cannot move there.')
-        }
+        showToast(game.inCheck() ? 'Your King is in check — you must resolve it first.' : "You can't move there.", 'invalid')
         return false
       }
 
-      // Optimistic local commit — instant feedback for the mover
+      // Optimistic local commit
       setGame(next)
-      setMoveHistory(h => [...h, move.san])
+      const newHistory = [...moveHistory, move.san]
+      setMoveHistory(newHistory)
 
-      // Status banners from the new position
-      if (next.isCheckmate()) {
-        setStatusModalType('checkmate')
-        setStatusModalMessage('The King has fallen. End of line.')
-      } else if (next.inCheck()) {
-        setStatusModalType('check')
-        setStatusModalMessage('Your King is under direct assault. You must parry or evade!')
-      } else if (next.isDraw() || next.isStalemate()) {
-        setStatusModalType('draw')
-        setStatusModalMessage('Tactical deadlock achieved. Neither commander can proceed.')
+      // Persist bot game after every half-move
+      if (isBotGame) {
+        try {
+          localStorage.setItem(BOT_SAVE_KEY, JSON.stringify({ fen: next.fen(), history: newHistory }))
+        } catch { /* storage quota */ }
       }
 
-      // PvP: sync to relay in background. The replay effect will resync from
-      // authoritative state if the POST is rejected (409 conflict).
+      // Status notifications from the new position
+      if (next.isCheckmate()) {
+        showToast('The King has fallen. End of line.', 'checkmate')
+        if (isBotGame) localStorage.removeItem(BOT_SAVE_KEY)
+      } else if (next.inCheck()) {
+        showToast('King under direct assault — parry or evade!', 'check')
+      } else if (next.isDraw() || next.isStalemate()) {
+        showToast('Tactical deadlock — neither commander can proceed.', 'draw')
+        if (isBotGame) localStorage.removeItem(BOT_SAVE_KEY)
+      }
+
+      // PvP: sync to relay in background
       if (!isBotGame) {
         const player = celoAddress ?? ''
         void relaySubmitMove(move.san, player).then((ok) => {
           if (!ok) {
-            console.warn('[GameClient] relay rejected move — resyncing from authoritative state', { san: move.san })
-            setStatusModalType('invalid_move')
-            setStatusModalMessage('Move conflict with opponent — resyncing.')
+            console.warn('[GameClient] relay rejected move — resyncing', { san: move.san })
+            showToast('Move conflict with opponent — resyncing board.', 'invalid')
           }
         })
       }
 
-      // Bot: trigger bot reply after a beat
+      // Bot reply after a beat
       if (isBotGame && !next.isGameOver()) {
         if (botReplyTimerRef.current) clearTimeout(botReplyTimerRef.current)
         botReplyTimerRef.current = setTimeout(() => {
@@ -272,23 +301,32 @@ export default function GameClient() {
           const botMove = getBestMove(afterPlayer, 3)
           if (botMove) {
             afterPlayer.move(botMove)
-            setGame(new Chess(afterPlayer.fen()))
-            setMoveHistory(h => [...h, botMove.san])
+            const afterFen = afterPlayer.fen()
+            setGame(new Chess(afterFen))
+            setMoveHistory(h => {
+              const updated = [...h, botMove.san]
+              try { localStorage.setItem(BOT_SAVE_KEY, JSON.stringify({ fen: afterFen, history: updated })) } catch { /* ignore */ }
+              return updated
+            })
+            if (afterPlayer.isCheckmate()) {
+              showToast('The King has fallen. End of line.', 'checkmate')
+              localStorage.removeItem(BOT_SAVE_KEY)
+            } else if (afterPlayer.inCheck()) {
+              showToast('King under direct assault — parry or evade!', 'check')
+            } else if (afterPlayer.isDraw() || afterPlayer.isStalemate()) {
+              showToast('Tactical deadlock — neither commander can proceed.', 'draw')
+              localStorage.removeItem(BOT_SAVE_KEY)
+            }
           }
         }, 1200)
       }
       return true
     } catch (e) {
       console.error('[GameClient] executeMove failed:', e)
-      setStatusModalType('invalid_move')
-      if (game.inCheck()) {
-        setStatusModalMessage('Invalid move: Your King is in check!')
-      } else {
-        setStatusModalMessage('Invalid move: You cannot move there.')
-      }
+      showToast(game.inCheck() ? 'Your King is in check — resolve it first.' : "You can't move there.", 'invalid')
       return false
     }
-  }, [game, isBotGame, celoAddress, relaySubmitMove])
+  }, [game, moveHistory, isBotGame, celoAddress, relaySubmitMove, showToast])
 
   // ── v5 onPieceDrop: receives an object { piece, sourceSquare, targetSquare }
   const handlePieceDrop = useCallback(
@@ -579,40 +617,61 @@ export default function GameClient() {
               ) : (
                 // Normal in-game operations
                 <ClayCard className="p-6">
-                  <h3 className="text-[10px] font-black tracking-[0.2em] text-[var(--t3)] uppercase mb-4">Operations</h3>
+                  <h3 className="text-[10px] font-black tracking-[0.2em] text-[var(--t3)] uppercase mb-4">
+                    {isBotGame ? 'Training Session' : 'Operations'}
+                  </h3>
                   <div className="space-y-3">
-                    <GlowButton
-                      variant="brand"
-                      fullWidth
-                      parallelogram
-                      disabled={!canAct || gameOver || isBotGame}
-                      loading={txPending}
-                      onClick={handleMoveSubmit}
-                    >
-                      {isBotGame ? 'BOT SESSION ACTIVE' : 'BROADCAST MOVE'}
-                    </GlowButton>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <GlowButton
-                        variant="ghost"
-                        size="sm"
-                        disabled={!canAct || gameOver}
-                        loading={txPending}
-                        onClick={handleReportWin}
-                      >
-                        REPORT WIN
-                      </GlowButton>
-                      <GlowButton
-                        variant="ghost"
-                        size="sm"
-                        disabled={!canAct || gameOver}
-                        loading={txPending}
-                        className="text-red-400 !border-red-500/20 hover:!bg-red-500/10"
-                        onClick={handleResign}
-                      >
-                        RESIGN
-                      </GlowButton>
-                    </div>
+                    {isBotGame ? (
+                      <>
+                        <GlowButton
+                          variant="brand"
+                          fullWidth
+                          parallelogram
+                          onClick={resetBotGame}
+                        >
+                          {gameOver ? 'PLAY AGAIN' : 'NEW GAME'}
+                        </GlowButton>
+                        <p className="text-[10px] text-[var(--t3)] text-center leading-relaxed">
+                          {gameOver
+                            ? 'Game over — start a fresh match.'
+                            : 'Resets the board. Progress is saved on reload.'}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <GlowButton
+                          variant="brand"
+                          fullWidth
+                          parallelogram
+                          disabled={!canAct || gameOver}
+                          loading={txPending}
+                          onClick={handleMoveSubmit}
+                        >
+                          BROADCAST MOVE
+                        </GlowButton>
+                        <div className="grid grid-cols-2 gap-3">
+                          <GlowButton
+                            variant="ghost"
+                            size="sm"
+                            disabled={!canAct || gameOver}
+                            loading={txPending}
+                            onClick={handleReportWin}
+                          >
+                            REPORT WIN
+                          </GlowButton>
+                          <GlowButton
+                            variant="ghost"
+                            size="sm"
+                            disabled={!canAct || gameOver}
+                            loading={txPending}
+                            className="text-red-400 !border-red-500/20 hover:!bg-red-500/10"
+                            onClick={handleResign}
+                          >
+                            RESIGN
+                          </GlowButton>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </ClayCard>
               )}
@@ -662,12 +721,6 @@ export default function GameClient() {
           </div>
         </main>
       )}
-
-      <GameStatusModal
-        type={statusModalType}
-        message={statusModalMessage}
-        onClose={() => setStatusModalType(null)}
-      />
 
       <PromotionModal
         open={!!pendingPromotion}
