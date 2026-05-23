@@ -11,7 +11,7 @@ import { useCeloChess } from '@/hooks/useCeloChess'
 // @ts-ignore - intentional unused variable
 import { useAccount, useReadContract } from 'wagmi'
 import { CHESS_GAME_ABI } from '@/config/abis'
-import { CELO_CONTRACTS } from '@/config/contracts'
+import { CELO_CONTRACTS, CELO_CHAIN_ID } from '@/config/contracts'
 import ClayCard from '@/components/ui/ClayCard'
 import GlowButton from '@/components/ui/GlowButton'
 import StatBadge from '@/components/ui/StatBadge'
@@ -59,6 +59,7 @@ export default function GameClient() {
 
   const [game, setGame] = useState(() => new Chess())
   const [gameData, setGameData] = useState<GameData | null>(null)
+  // @ts-expect-error - setPlayerStats populated via future useReadContract
   const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null)
   const [moveHistory, setMoveHistory] = useState<string[]>([])
   const [txPending, setTxPending] = useState(false)
@@ -80,6 +81,7 @@ export default function GameClient() {
     abi: CHESS_GAME_ABI,
     functionName: 'getGame',
     args: [BigInt(gameId)],
+    chainId: CELO_CHAIN_ID,
     query: {
       enabled: !isBotGame && gameId !== undefined && gameId !== null && !isNaN(gameId),
       refetchInterval: 5_000,

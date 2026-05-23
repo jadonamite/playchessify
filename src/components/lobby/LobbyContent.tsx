@@ -8,7 +8,7 @@ import ClayCard from '@/components/ui/ClayCard'
 import ComingSoonOverlay from '@/components/ui/ComingSoonOverlay'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/landing/Hero'
-import { CELO_CONTRACTS, TOKEN_DECIMALS } from '@/config/contracts'
+import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID } from '@/config/contracts'
 import { useCeloChess } from '@/hooks/useCeloChess'
 import { useLobby } from '@/hooks/useLobby'
 import LoadingState from '@/components/ui/LoadingState'
@@ -62,6 +62,7 @@ export default function LobbyContent() {
     abi: CHESS_TOKEN_ABI,
     functionName: 'balanceOf',
     args: [celoAddress as `0x${string}`],
+    chainId: CELO_CHAIN_ID,
     query: { enabled: !!celoAddress }
   })
 
@@ -70,6 +71,7 @@ export default function LobbyContent() {
     abi: CHESS_GAME_ABI,
     functionName: 'playerStats',
     args: [celoAddress as `0x${string}`],
+    chainId: CELO_CHAIN_ID,
     query: { enabled: !!celoAddress }
   })
 

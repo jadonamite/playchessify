@@ -3,7 +3,7 @@
 import { useWriteContract, useAccount, usePublicClient } from 'wagmi'
 import { decodeEventLog } from 'viem'
 import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
-import { CELO_CONTRACTS, TOKEN_DECIMALS } from '@/config/contracts'
+import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID } from '@/config/contracts'
 import { parseUnits } from 'viem'
 import { useState, useCallback } from 'react'
 import { useToastStore } from '@/hooks/useToastStore'
@@ -14,7 +14,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 export function useCeloChess() {
   const { address } = useAccount()
   const { writeContractAsync } = useWriteContract()
-  const publicClient = usePublicClient()
+  const publicClient = usePublicClient({ chainId: CELO_CHAIN_ID })
   const [isPending, setIsPending] = useState(false)
   const showToast = useToastStore((state) => state.showToast)
 

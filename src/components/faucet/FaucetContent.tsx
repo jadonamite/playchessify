@@ -6,14 +6,14 @@ import { Canvas } from '@react-three/fiber'
 import { Float, Environment, Text } from '@react-three/drei'
 import { useRouter } from 'next/navigation'
 import { useWallet } from '@/components/wallet-provider'
-import { useWriteContract } from 'wagmi'
+import { useWriteContract, useReadContract, usePublicClient } from 'wagmi'
 import GlowButton from '@/components/ui/GlowButton'
 import LoadingState from '@/components/ui/LoadingState'
 import FaucetResultModal, { type FaucetResultType } from '@/components/ui/FaucetResultModal'
 import { Navbar } from '@/components/landing/Hero'
 import { King, Pawn, Bishop, Knight } from '@/components/ui/ChessModels'
 import { CHESS_TOKEN_ABI } from '@/config/abis'
-import { CELO_CONTRACTS, TOKEN_DECIMALS, FAUCET_AMOUNT } from '@/config/contracts'
+import { CELO_CONTRACTS, TOKEN_DECIMALS, FAUCET_AMOUNT, CELO_CHAIN_ID } from '@/config/contracts'
 import { formatUnits } from 'viem'
 
 /* ── KEYFRAMES ── */
@@ -111,30 +111,44 @@ export default function FaucetContent() {
   const router = useRouter()
   const { isConnected, address, connectWallet } = useWallet()
   const { writeContractAsync } = useWriteContract()
+  const publicClient = usePublicClient({ chainId: CELO_CHAIN_ID })
 
   const [isClaiming, setIsClaiming] = useState(false)
-  const [balance] = useState('0.00')
   const [resultType, setResultType] = useState<FaucetResultType>(null)
   const [txHash, setTxHash] = useState<string>('')
   const [errorMessage, setErrorMessage] = useState<string>('')
 
+  const { data: rawBalance, refetch: refetchBalance } = useReadContract({
+    address: CELO_CONTRACTS.token as `0x${string}`,
+    abi: CHESS_TOKEN_ABI,
+    functionName: 'balanceOf',
+    args: [address as `0x${string}`],
+    chainId: CELO_CHAIN_ID,
+    query: { enabled: !!address },
+  })
+  const balance = rawBalance !== undefined
+    ? formatUnits(rawBalance as bigint, TOKEN_DECIMALS)
+    : '—'
+
   /* ── Claim Handler: Celo ── */
   const claimCelo = async () => {
-    const TIMEOUT_MS = 60_000
+    const TIMEOUT_MS = 90_000
 
-    const txPromise = writeContractAsync({
+    const hash = await writeContractAsync({
       address: CELO_CONTRACTS.token as `0x${string}`,
       abi: CHESS_TOKEN_ABI,
       functionName: 'faucetClaim',
       args: [],
     })
 
+    const receiptPromise = publicClient!.waitForTransactionReceipt({ hash })
     const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error('TIMEOUT')), TIMEOUT_MS)
     )
 
-    const hash = await Promise.race([txPromise, timeoutPromise])
-    return hash as string
+    const receipt = await Promise.race([receiptPromise, timeoutPromise])
+    if (receipt.status !== 'success') throw new Error('Transaction reverted')
+    return hash
   }
 
   /* ── Main Claim Action ── */
@@ -147,6 +161,7 @@ export default function FaucetContent() {
       const hash = await claimCelo()
       setTxHash(hash || '')
       setResultType('success')
+      refetchBalance()
     } catch (err: any) {
       const msg = err?.message || 'Unknown error'
 
