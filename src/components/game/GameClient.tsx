@@ -187,7 +187,9 @@ export default function GameClient() {
   } = useGameMoves({
     chain: 'celo',
     gameId,
-    enabled: !isBotGame && gameId !== undefined && gameId !== null && !isNaN(gameId) && !!gameData,
+    // Don't block on gameData — relay can start polling as soon as we have a valid gameId.
+    // gameData arriving later won't affect move history already loaded from relay.
+    enabled: !isBotGame && gameId > 0,
   })
 
   // ── board interaction ────────────────────────────────────────────────────
@@ -281,13 +283,22 @@ export default function GameClient() {
         if (isBotGame) localStorage.removeItem(BOT_SAVE_KEY)
       }
 
-      // PvP: sync to relay in background
+      // PvP: sync to relay, then silently record on-chain for timeout tracking
       if (!isBotGame) {
         const player = celoAddress ?? ''
-        void relaySubmitMove(move.san, player).then((ok) => {
+        void relaySubmitMove(move.san, player).then(async (ok) => {
           if (!ok) {
             console.warn('[GameClient] relay rejected move — resyncing', { san: move.san })
             showToast('Move conflict with opponent — resyncing board.', 'invalid')
+            return
+          }
+          // Silent on-chain checkpoint — updates turn + lastMoveBlock for timeout enforcement.
+          // Runs after relay confirms so we don't block the chess UX.
+          try {
+            await submitCeloMove(gameId)
+          } catch {
+            // Non-critical: game continues via relay even if on-chain checkpoint fails.
+            console.warn('[GameClient] on-chain submitMove failed — gameplay unaffected')
           }
         })
       }
@@ -396,12 +407,6 @@ export default function GameClient() {
     setTxPending(true)
     try { await fn() } catch (e) { console.error('[GameClient] tx error:', e) } finally { setTxPending(false) }
   }, [txPending])
-
-  const handleMoveSubmit = async () => {
-    await withTx(async () => {
-      await submitCeloMove(gameId)
-    })
-  }
 
   const handleResign = async () => {
     await withTx(async () => {
@@ -614,76 +619,90 @@ export default function GameClient() {
                     </span>
                   </div>
                 </ClayCard>
-              ) : (
-                // Normal in-game operations
+              ) : isBotGame ? (
+                // Bot training session
                 <ClayCard className="p-6">
-                  <h3 className="text-[10px] font-black tracking-[0.2em] text-[var(--t3)] uppercase mb-4">
-                    {isBotGame ? 'Training Session' : 'Operations'}
-                  </h3>
+                  <h3 className="text-[10px] font-black tracking-[0.2em] text-[var(--t3)] uppercase mb-4">Training Session</h3>
                   <div className="space-y-3">
-                    {isBotGame ? (
-                      <>
-                        <GlowButton
-                          variant="brand"
-                          fullWidth
-                          parallelogram
-                          onClick={resetBotGame}
-                        >
-                          {gameOver ? 'PLAY AGAIN' : 'NEW GAME'}
-                        </GlowButton>
-                        <p className="text-[10px] text-[var(--t3)] text-center leading-relaxed">
-                          {gameOver
-                            ? 'Game over — start a fresh match.'
-                            : 'Resets the board. Progress is saved on reload.'}
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <GlowButton
-                          variant="brand"
-                          fullWidth
-                          parallelogram
-                          disabled={!canAct || gameOver}
-                          loading={txPending}
-                          onClick={handleMoveSubmit}
-                        >
-                          BROADCAST MOVE
-                        </GlowButton>
-                        <div className="grid grid-cols-2 gap-3">
-                          <GlowButton
-                            variant="ghost"
-                            size="sm"
-                            disabled={!canAct || gameOver}
-                            loading={txPending}
-                            onClick={handleReportWin}
-                          >
-                            REPORT WIN
-                          </GlowButton>
-                          <GlowButton
-                            variant="ghost"
-                            size="sm"
-                            disabled={!canAct || gameOver}
-                            loading={txPending}
-                            className="text-red-400 !border-red-500/20 hover:!bg-red-500/10"
-                            onClick={handleResign}
-                          >
-                            RESIGN
-                          </GlowButton>
-                        </div>
-                      </>
-                    )}
+                    <GlowButton variant="brand" fullWidth parallelogram onClick={resetBotGame}>
+                      {gameOver ? 'PLAY AGAIN' : 'NEW GAME'}
+                    </GlowButton>
+                    <p className="text-[10px] text-[var(--t3)] text-center leading-relaxed">
+                      {gameOver ? 'Game over — start a fresh match.' : 'Resets the board. Progress is saved on reload.'}
+                    </p>
                   </div>
                 </ClayCard>
+              ) : (
+                // PvP — turn state + end-game actions
+                <>
+                  {/* Turn indicator */}
+                  {!gameOver && (
+                    <ClayCard className="p-5">
+                      {isMyTurn ? (
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_#4ade80]" />
+                            <span className="text-[10px] font-black tracking-[0.2em] text-green-400 uppercase">Your Turn</span>
+                          </div>
+                          <p className="text-[11px] text-[var(--t3)] leading-relaxed">
+                            Drag or click a piece to move. Your opponent sees it automatically.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_#fbbf24]" />
+                            <span className="text-[10px] font-black tracking-[0.2em] text-amber-400 uppercase">Opponent&apos;s Turn</span>
+                          </div>
+                          <p className="text-[11px] text-[var(--t3)] leading-relaxed">
+                            Waiting for their move…
+                          </p>
+                          <div className="flex items-center gap-2 mt-1 pt-2 border-t border-white/5">
+                            <div className={`w-1.5 h-1.5 rounded-full ${relayError ? 'bg-red-400' : 'bg-[var(--c)] animate-pulse'}`} />
+                            <span className={`text-[9px] font-bold tracking-widest uppercase ${relayError ? 'text-red-400' : 'text-[var(--c)]'}`}>
+                              {relayError ? 'Relay offline' : 'Live sync active'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </ClayCard>
+                  )}
+
+                  {/* End-game actions */}
+                  <ClayCard className="p-5">
+                    <h3 className="text-[10px] font-black tracking-[0.2em] text-[var(--t3)] uppercase mb-3">
+                      {gameOver ? 'Game Over' : 'End Game'}
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <GlowButton
+                        variant="ghost"
+                        size="sm"
+                        disabled={!canAct || !gameOver}
+                        loading={txPending}
+                        onClick={handleReportWin}
+                      >
+                        CLAIM WIN
+                      </GlowButton>
+                      <GlowButton
+                        variant="ghost"
+                        size="sm"
+                        disabled={!canAct || gameOver}
+                        loading={txPending}
+                        className="text-red-400 !border-red-500/20 hover:!bg-red-500/10"
+                        onClick={handleResign}
+                      >
+                        RESIGN
+                      </GlowButton>
+                    </div>
+                    {!gameOver && (
+                      <p className="text-[9px] text-[var(--t3)] text-center mt-3 leading-relaxed opacity-60">
+                        Resigning or claiming win requires a Celo transaction.
+                      </p>
+                    )}
+                  </ClayCard>
+                </>
               )}
 
-              {/* Relay status banner — only visible when sync is degraded */}
-              {!isBotGame && relayError && (
-                <div className="px-4 py-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-center">
-                  <span className="text-red-300/80 text-[10px] uppercase font-bold tracking-widest">
-                    Move sync offline — board may be stale
-                  </span>
-                </div>
-              )}
 
               {/* History */}
               <ClayCard variant="inset" className="p-6">
