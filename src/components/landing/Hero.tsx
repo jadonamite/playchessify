@@ -43,81 +43,96 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="hero-navbar w-full flex items-center justify-between" style={{ padding: "18px 56px", position: "relative", zIndex: 20 }}>
-        <div>
-          <Image src="/chessify.png" alt="Chessify" width={200} height={50} className="w-[140px] md:w-[200px] h-auto object-contain" />
+      <nav
+        className="hero-navbar w-full flex items-center justify-between sticky top-0 z-50"
+        style={{
+          padding: "12px 40px",
+          background: "rgba(6,6,15,0.82)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.35)",
+        }}
+      >
+        {/* Logo */}
+        <div className="shrink-0">
+          <Image src="/chessify.png" alt="Chessify" width={160} height={40} className="w-[120px] md:w-[150px] h-auto object-contain" />
         </div>
-        <div className="nav-surface hero-nav-links" style={{ display: "flex", gap: 28, borderRadius: 999, padding: "10px 28px" }}>
-          {["How it works", "History", "Faucet"].map((l) => {
-            const isAppRoute = l === "Faucet" || l === "History"
+
+        {/* Nav links pill */}
+        <div
+          className="hero-nav-links"
+          style={{
+            display: "flex",
+            gap: 20,
+            borderRadius: 999,
+            padding: "9px 22px",
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.07)",
+          }}
+        >
+          {["How it works", "Leaderboard", "History", "Faucet"].map((l) => {
+            const isAppRoute = l === "Faucet" || l === "History" || l === "Leaderboard"
             const path = isAppRoute ? `/app/${l.toLowerCase()}` : `#${l.toLowerCase().replace(" ", "-")}`
-            
             return (
               <Link
                 key={l}
                 href={path}
-                style={{ fontFamily: "var(--fd)", fontSize: 12, fontWeight: 500, color: "var(--t2)", textDecoration: "none", letterSpacing: ".06em", transition: "color .2s" }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--c)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--t2)"; }}
+                style={{ fontFamily: "var(--fd)", fontSize: 11, fontWeight: 500, color: "var(--t2)", textDecoration: "none", letterSpacing: ".06em", transition: "color .2s" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--c)" }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--t2)" }}
               >
                 {l}
               </Link>
             )
           })}
         </div>
-        <div className="flex items-center gap-3">
+
+        {/* Right side */}
+        <div className="flex items-center gap-3 shrink-0">
           <div className="hidden sm:block">
             <ThemeToggle />
           </div>
 
           {connected && displayAddress ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div className="flex items-center gap-2">
               {/* Chain badge */}
               <div
-                className="flex items-center gap-1.5 py-1 px-2.5 rounded-full"
-                style={{ background: `${chainColor}15`, border: `1px solid ${chainColor}30` }}
+                className="hidden sm:flex items-center gap-1.5 py-1 px-2.5 rounded-full"
+                style={{ background: `${chainColor}15`, border: `1px solid ${chainColor}28` }}
               >
                 <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: chainColor }} />
-                <span className="text-[9px] font-bold tracking-[0.15em]" style={{ color: chainColor, fontFamily: 'var(--fd)' }}>
+                <span className="text-[9px] font-bold tracking-[0.15em]" style={{ color: chainColor, fontFamily: "var(--fd)" }}>
                   {chainLabel}
                 </span>
               </div>
-              {/* Address */}
-              <span
-                className="text-[10px] sm:text-[11px]"
+
+              {/* Address + disconnect unified pill */}
+              <div
+                className="flex items-center gap-2 py-1.5 px-3 rounded-full"
                 style={{
-                  fontFamily: "var(--fb)", color: "var(--t1)",
-                  background: "var(--b1)", padding: "6px 12px", borderRadius: 999,
-                  border: '1px solid var(--b2)'
+                  background: "rgba(0,0,0,0.45)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
                 }}
               >
-                {formatAddress(displayAddress)}
-              </span>
-              {/* Disconnect */}
-              <button
-                onClick={disconnectAll}
-                style={{ background: "transparent", border: "none", color: "var(--t3)", cursor: "pointer", fontSize: 18, padding: '0 4px' }}
-                title="Disconnect Wallet"
-              >
-                ×
-              </button>
+                <span className="text-[10px] sm:text-[11px] font-medium" style={{ color: "var(--t1)", fontFamily: "var(--fb)" }}>
+                  {formatAddress(displayAddress)}
+                </span>
+                <button
+                  onClick={disconnectAll}
+                  className="text-[var(--t3)] hover:text-red-400 transition-colors leading-none rounded-full hover:bg-red-500/10 w-4 h-4 flex items-center justify-center cursor-pointer"
+                  style={{ fontSize: 14, border: "none", background: "transparent" }}
+                  title="Disconnect"
+                >
+                  ×
+                </button>
+              </div>
             </div>
           ) : (
-            <button
-              onClick={connectWallet}
-              className="text-[10px] sm:text-[11px] px-3 py-2 sm:px-4"
-              style={{
-                background: "var(--c)",
-                color: "#000",
-                border: "none",
-                fontWeight: "bold",
-                borderRadius: 999,
-                cursor: "pointer",
-                fontFamily: 'var(--fd)'
-              }}
-            >
-              Connect Wallet
-            </button>
+            <GlowButton variant="brand" size="sm" onClick={connectWallet}>
+              CONNECT
+            </GlowButton>
           )}
         </div>
       </nav>
@@ -155,7 +170,7 @@ export default function Hero() {
   }, [])
 
   return (
-    <section className="hero-section" style={{ background: 'var(--bg)', position: 'relative', overflow: 'hidden' }}>
+    <section className="hero-section" style={{ background: 'var(--bg)', position: 'relative', overflow: 'clip' }}>
       <style>{KEYFRAMES}</style>
 
       {/* Ambient mesh */}

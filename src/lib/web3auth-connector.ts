@@ -16,9 +16,9 @@ export function web3AuthConnector(getWeb3Auth: () => Web3Auth) {
       if (typeof window === 'undefined') return
       instance = getWeb3Auth()
       try {
-        await instance.initModal()
+        await instance.init()
       } catch {
-        // initModal can throw on SSR or if clientId is missing — safe to swallow here
+        // init can throw on SSR or if clientId is missing — safe to swallow here
       }
     },
 
@@ -61,7 +61,7 @@ export function web3AuthConnector(getWeb3Auth: () => Web3Auth) {
     async isAuthorized() {
       try {
         if (!instance) return false
-        await instance.initModal()
+        await instance.init()
         const accounts = await this.getAccounts()
         return accounts.length > 0
       } catch {
