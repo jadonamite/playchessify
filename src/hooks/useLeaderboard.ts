@@ -82,16 +82,17 @@ export function useLeaderboard() {
       for (let i = 0; i < addresses.length; i++) {
         const result = statsResults[i]
         if (result.status !== 'success') continue
-        // viem returns named outputs as an object
-        const r = result.result as { wins: bigint; losses: bigint; draws: bigint; rating: bigint; gamesPlayed: bigint }
-        const gamesPlayed = Number(r.gamesPlayed)
+        // viem returns multiple outputs as a positional readonly tuple
+        const r = result.result as readonly [bigint, bigint, bigint, bigint, bigint]
+        // order: wins, losses, draws, rating, gamesPlayed
+        const gamesPlayed = Number(r[4])
         if (gamesPlayed === 0) continue
         leaderboard.push({
           address: addresses[i],
-          wins: Number(r.wins),
-          losses: Number(r.losses),
-          draws: Number(r.draws),
-          rating: Number(r.rating),
+          wins: Number(r[0]),
+          losses: Number(r[1]),
+          draws: Number(r[2]),
+          rating: Number(r[3]),
           gamesPlayed,
           rank: 0,
         })

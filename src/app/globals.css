@@ -177,8 +177,10 @@ body {
 }
 
 @media (max-width: 768px) {
-  .hero-navbar { padding: 14px 20px !important; }
+  .hero-navbar { padding: 0 !important; }
   .hero-nav-links { display: none !important; }
+  #hamburger-btn { display: flex !important; }
+  #mobile-menu { display: block; }
   .hero-content { padding: 40px 20px 60px !important; }
   .hero-pieces { display: block !important; pointer-events: none; }
   .hero-float-cards { display: none !important; }
