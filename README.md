@@ -1,23 +1,17 @@
 # ♟️ Chessify Protocol
 
-A **live, mainnet, free-to-play, multi-chain chess protocol** deployed on **Stacks (Bitcoin L2)** and **Celo (EVM)**.
+A **live, mainnet, free-to-play chess protocol** deployed on **Celo (EVM)**.
 
-Chessify allows players to wager free-to-mint CHESS tokens on fully on-chain chess matches, with a premium Cyber-Industrial UI.
+Players wager free-to-mint CHESS tokens on fully on-chain chess matches, with a premium Cyber-Industrial UI.
 
 ---
 
-## 📐 Architecture Overview
+## 📐 Architecture
 
-The protocol runs a streamlined **2-contract architecture** per chain, consolidated from a legacy modular system.
+Two contracts on Celo Mainnet:
 
-### Stacks (Clarity)
-- **`chess-token-v3.clar`** — SIP-010 token + Escrow Vault with gateway-release pattern
-- **`chess-game.clar`** — Game engine: lifecycle, Elo rating, escrow, timeout enforcement
-- **`automata-agent.clar`** — On-chain attestation for AI agent actions
-
-### Celo (Solidity)
 - **`ChessToken.sol`** — ERC-20 CHESS token with faucet and batch-minting
-- **`ChessGame.sol`** — Game engine mirroring Stacks logic (Elo, lifecycle, escrow)
+- **`ChessGame.sol`** — Game engine: lifecycle, Elo rating, escrow, timeout enforcement
 
 ---
 
@@ -25,33 +19,32 @@ The protocol runs a streamlined **2-contract architecture** per chain, consolida
 
 | Layer | Component | Status |
 | :--- | :--- | :--- |
-| **Blockchain** | Smart Contracts (Stacks & Celo) | ✅ Live Mainnet |
-| **Frontend** | Landing page, Lobby, Game board, History, Leaderboard, Faucet | ✅ Complete |
+| **Blockchain** | Smart Contracts (Celo) | ✅ Live Mainnet |
+| **Frontend** | Landing, Lobby, Game board, History, Leaderboard, Faucet | ✅ Complete |
 | **Wallet** | Reown AppKit + Web3Auth social login (email, Google, etc.) | ✅ Complete |
 | **Game Flow** | Create → Approve → Spend → Join → Play → Resolve | ✅ Complete |
 | **Token Checks** | Balance validation + multi-step wallet confirmation UI | ✅ Complete |
-| **Cross-Chain Elo** | Unified leaderboard from Stacks + Celo stats | 🏗️ In Progress |
 | **On-Chain Move Verification** | Hash/PGN anchoring to prevent client-side fake wins | 🔜 Planned |
 
 ---
 
 ## 🔥 Economic Model
 
-### Gas (STX / CELO)
+### Gas (CELO)
 Used strictly for transaction fees. All wagers use CHESS tokens only — zero financial risk.
 
 ### CHESS Token
 Free-to-access in-game currency for wagers, rewards, and ranking.
-- **Faucet**: 1,000 CHESS per wallet per day (144 blocks on Stacks, ~1 day on Celo)
+- **Faucet**: 1,000 CHESS per wallet per day
 - **Wagers**: Players select a CHESS amount before match creation; balance is validated before any transaction
-- **Escrow**: Wagers are locked in the contract vault and released only on game resolution
+- **Escrow**: Wagers are locked in the contract and released only on game resolution
 
 ---
 
 ## 🎮 Lifecycle Flow
 
 1. **Connect** — User connects via Reown modal (injected wallet, WalletConnect, or social login). Auto-redirects to `/app/lobby`.
-2. **Create Match** — Player A selects a wager. Balance is checked on-chain. UI prompts wallet approval (Step 1: Approve, Step 2: Initialize).
+2. **Create Match** — Player A selects a wager. Balance is checked on-chain. Wallet prompts approval then game initialization (2 transactions).
 3. **Join Match** — Player B joins from the lobby or by match ID. Same approve → lock flow.
 4. **Gameplay** — Players alternate moves. Each move is submitted on-chain (`submitMove`). Turn order and 5-min timers enforced.
 5. **Resolution** — Match ends via Checkmate (`reportWin`), Resignation, Draw, or Timeout. Contract releases the pot and updates Elo.
@@ -73,26 +66,16 @@ Free-to-access in-game currency for wagers, rewards, and ranking.
 
 ## 🛠️ Tech Stack
 
-- **Contracts**: Clarity (Stacks), Solidity (Celo)
+- **Contracts**: Solidity 0.8.20 (Celo)
 - **Frontend**: Next.js 16, TypeScript, Tailwind CSS 4.x
 - **Animation**: Framer Motion
 - **Wallet**: Reown AppKit, Web3Auth, Wagmi, Viem
 - **Chess**: chess.js (rules), react-chessboard (UI)
-- **State**: Zustand (toast store, game state)
+- **State**: Zustand
 
 ---
 
 ## 📖 Deployed Contracts
-
-**Stacks Deployer**: `SP6X0MXEEGZX14ZTK7XQXJ76W35ZJDP9NZBT6F39`
-
-| Contract | Identifier |
-| :--- | :--- |
-| chess-token-v3 | `SP6X0MXEEGZX14ZTK7XQXJ76W35ZJDP9NZBT6F39.chess-token-v3` |
-| chess-game | `SP6X0MXEEGZX14ZTK7XQXJ76W35ZJDP9NZBT6F39.chess-game` |
-| automata-agent | `SP6X0MXEEGZX14ZTK7XQXJ76W35ZJDP9NZBT6F39.automata-agent` |
-
-**Celo Mainnet**
 
 | Contract | Address |
 | :--- | :--- |
