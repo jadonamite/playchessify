@@ -12,8 +12,10 @@ import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID } from '@/config/contract
 import { useCeloChess } from '@/hooks/useCeloChess'
 import { useLobby } from '@/hooks/useLobby'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
+import { useProfile } from '@/hooks/useProfile'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
+import ClaimModal from '@/components/ui/ClaimModal'
 import LoadingState from '@/components/ui/LoadingState'
 // @ts-expect-error - intentional unused variable
 import { useReadContract, useAccount } from 'wagmi'
@@ -92,6 +94,10 @@ export default function LobbyContent() {
 
   const { games: openGames, isLoading: isLobbyLoading, refresh: refreshLobby } = useLobby()
   const { data: lobbyProfileMap = {} } = useBatchProfiles(openGames.map((g) => g.creator))
+
+  const { data: myProfile } = useProfile(celoAddress ?? null)
+  const [claimModalOpen, setClaimModalOpen] = useState(false)
+  const showClaimBanner = isConnected && !!celoAddress && myProfile === null
 
   const handleCreateGame = async () => {
     if (MAINTENANCE_MODE) return setIsComingSoonOpen(true)
@@ -179,6 +185,35 @@ export default function LobbyContent() {
       <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px)', backgroundSize: '52px 52px', pointerEvents: 'none', zIndex: 0, opacity: 0.4 }} />
 
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-full box-border px-4 md:px-8 py-12 md:py-24">
+
+        {/* ── .chess onboarding banner ── */}
+        {showClaimBanner && celoAddress && (
+          <div className="w-full max-w-7xl mx-auto mb-6">
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--c)]/20 px-5 py-4"
+              style={{ background: 'linear-gradient(90deg,rgba(0,204,255,0.06) 0%,rgba(6,6,15,0.7) 100%)' }}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-lg shrink-0">✦</span>
+                <div className="min-w-0">
+                  <p className="text-xs font-black tracking-wide text-white">Claim your <span style={{ color: 'var(--c)' }}>.chess</span> name</p>
+                  <p className="text-[10px] text-[var(--t3)] truncate">Stand out on the leaderboard with a permanent identity.</p>
+                </div>
+              </div>
+              <GlowButton
+                variant="brand"
+                size="sm"
+                parallelogram
+                className="shrink-0"
+                onClick={() => setClaimModalOpen(true)}
+              >
+                CLAIM
+              </GlowButton>
+            </motion.div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start w-full max-w-7xl mx-auto box-border">
 
@@ -666,6 +701,13 @@ export default function LobbyContent() {
       </AnimatePresence>
 
       <ComingSoonOverlay isOpen={isComingSoonOpen} onClose={() => setIsComingSoonOpen(false)} />
+      {celoAddress && (
+        <ClaimModal
+          open={claimModalOpen}
+          address={celoAddress}
+          onClose={() => setClaimModalOpen(false)}
+        />
+      )}
     </main>
   )
 }
