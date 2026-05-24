@@ -45,7 +45,6 @@ const MEDAL = {
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 
-const fmt = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`
 
 const winRate = (e: LeaderboardEntry) =>
   e.gamesPlayed === 0 ? '—' : `${Math.round((e.wins / e.gamesPlayed) * 100)}%`
@@ -394,7 +393,10 @@ export default function LeaderboardContent() {
                 style={{ background: 'var(--b1)' }}
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[var(--c)] animate-pulse" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-[var(--c)] animate-pulse shrink-0" />
+                  {myEntry && (
+                    <ChessAvatar address={myEntry.address} size={36} />
+                  )}
                   <div>
                     <div
                       className="text-[8px] font-black tracking-[0.28em] uppercase mb-0.5"
@@ -402,9 +404,20 @@ export default function LeaderboardContent() {
                     >
                       YOUR POSITION
                     </div>
+                    {myEntry && (
+                      <ChessName
+                        address={myEntry.address}
+                        profile={profileMap[myEntry.address.toLowerCase()]}
+                        short
+                        asLink
+                        badge
+                        className="font-bold text-sm tracking-wide"
+                        style={{ color: 'var(--c)' }}
+                      />
+                    )}
                     <div
-                      className="text-xl font-black"
-                      style={{ fontFamily: 'var(--fd)', color: 'var(--c)' }}
+                      className="text-lg font-black mt-0.5"
+                      style={{ fontFamily: 'var(--fd)', color: 'var(--t1)' }}
                     >
                       RANK #{myRank}
                     </div>
