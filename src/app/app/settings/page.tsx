@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useSignMessage } from 'wagmi'
@@ -59,11 +59,19 @@ export default function SettingsPage() {
   const { signMessageAsync } = useSignMessage()
 
   const [claimOpen, setClaimOpen] = useState(false)
-  const [editDisplayName, setEditDisplayName] = useState(profile?.displayName ?? '')
-  const [editBio, setEditBio] = useState(profile?.bio ?? '')
+  const [editDisplayName, setEditDisplayName] = useState('')
+  const [editBio, setEditBio] = useState('')
   const [editDirty, setEditDirty] = useState(false)
   const [editError, setEditError] = useState('')
   const [editSaved, setEditSaved] = useState(false)
+
+  // Sync fields when profile loads
+  useEffect(() => {
+    if (profile && !editDirty) {
+      setEditDisplayName(profile.displayName ?? '')
+      setEditBio(profile.bio ?? '')
+    }
+  }, [profile, editDirty])
 
   const handleSaveProfile = async () => {
     if (!address || !profile) return

@@ -61,7 +61,7 @@ function PodiumCard({
   entry: LeaderboardEntry
   isMe: boolean
   delay: number
-  profileMap: Record<string, any>
+  profileMap: Record<string, import('@/types/profile').ChessProfile | null>
 }) {
   const rank = entry.rank as 1 | 2 | 3
   const m = MEDAL[rank]
@@ -150,7 +150,7 @@ function PodiumCard({
             badge
             asLink
             className="font-bold text-xs tracking-wide"
-            style={{ color: isMe ? 'var(--c)' : 'var(--t1)' } as any}
+            style={{ color: isMe ? 'var(--c)' : 'var(--t1)' }}
           />
         </div>
 
@@ -226,7 +226,7 @@ function RankRow({
   entry: LeaderboardEntry
   isMe: boolean
   idx: number
-  profileMap: Record<string, any>
+  profileMap: Record<string, import('@/types/profile').ChessProfile | null>
 }) {
   return (
     <motion.div
@@ -263,7 +263,7 @@ function RankRow({
             badge
             asLink
             className="font-bold text-sm tracking-wide truncate"
-            style={{ color: isMe ? 'var(--c)' : 'var(--t1)' } as any}
+            style={{ color: isMe ? 'var(--c)' : 'var(--t1)' }}
           />
         </div>
       </div>

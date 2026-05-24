@@ -175,13 +175,35 @@ export function Navbar() {
                 </Link>
               ))}
               {/* Wallet row in mobile menu */}
-              {!connected && (
-                <div className="mt-3 pt-3 border-t border-white/5">
+              <div className="mt-3 pt-3 border-t border-white/5">
+                {connected && displayAddress ? (
+                  <div className="flex items-center justify-between gap-3">
+                    <Link
+                      href={`/app/profile/${displayAddress}`}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 flex-1 min-w-0"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <ChessAvatar address={displayAddress} size={28} />
+                      <ChessName
+                        address={displayAddress}
+                        short
+                        className="text-xs font-bold text-[var(--t1)] truncate"
+                      />
+                    </Link>
+                    <button
+                      onClick={disconnectAll}
+                      className="text-[9px] font-black tracking-widest uppercase text-red-400/70 hover:text-red-400 transition-colors"
+                    >
+                      DISCONNECT
+                    </button>
+                  </div>
+                ) : (
                   <GlowButton variant="brand" fullWidth onClick={() => { connectWallet(); setMobileOpen(false) }}>
                     CONNECT WALLET
                   </GlowButton>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         )}
