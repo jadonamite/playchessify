@@ -66,16 +66,15 @@ export function usePlayerHistory(playerAddress: string | null | undefined) {
         const statusIdx = Number(g.status)
         const status = STATUS_LABELS[statusIdx] ?? 'Unknown'
 
+        // GameResult enum: None=0, WhiteWins=1, BlackWins=2, DrawResult=3
+        const resultIdx = Number(g.result)
         let result: PlayerHistoryItem['result'] = 'active'
         if (statusIdx === 0) result = 'waiting'
-        else if (statusIdx === 1) result = 'active'
-        else if (statusIdx === 4) result = 'draw'
+        else if (statusIdx === 4 || resultIdx === 3) result = 'draw'
         else if (statusIdx === 2) {
-          // Finished — winner is whoever called reportWin; approximate via ELO not available here
-          // Can't determine win/loss without winner field in contract; show as 'win'/'loss' based on loser
-          const loser = (g.loser as string | undefined)?.toLowerCase()
-          if (loser) result = loser === me ? 'loss' : 'win'
-          else result = 'active' // unknown
+          if (resultIdx === 1) result = role === 'white' ? 'win' : 'loss'
+          else if (resultIdx === 2) result = role === 'black' ? 'win' : 'loss'
+          else result = 'active'
         }
 
         items.push({
