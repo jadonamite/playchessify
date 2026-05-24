@@ -9,6 +9,8 @@ import GlowButton from '@/components/ui/GlowButton'
 import LoadingState from '@/components/ui/LoadingState'
 import { useHistory } from '@/hooks/useHistory'
 import { Queen, PieceView } from '@/components/ui/ChessModels'
+import { useBatchProfiles } from '@/hooks/useBatchProfiles'
+import ChessName from '@/components/ui/ChessName'
 
 function Scene() {
   return (
@@ -54,6 +56,10 @@ function Scene() {
 export function HistoryContent() {
   const router = useRouter()
   const { history, isLoading } = useHistory()
+  const opponentAddrs = history
+    .map((i) => i.opponent)
+    .filter((a) => a.startsWith('0x'))
+  const { data: profileMap = {} } = useBatchProfiles(opponentAddrs)
 
   return (
     <main className="relative min-h-screen w-full bg-[#06060f] text-[#eeeeff] overflow-x-hidden flex flex-col font-body">
@@ -125,7 +131,14 @@ export function HistoryContent() {
                                   {item.role}
                                 </span>
                                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest truncate max-w-[150px]">
-                                  vs {item.opponent.slice(0, 8)}...
+                                  vs{' '}
+                                  {item.opponent.startsWith('0x') ? (
+                                    <ChessName
+                                      address={item.opponent}
+                                      profile={profileMap[item.opponent.toLowerCase()]}
+                                      short
+                                    />
+                                  ) : item.opponent}
                                 </span>
                               </div>
                               <span className="font-black text-xl text-white tracking-tight">

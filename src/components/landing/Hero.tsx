@@ -8,6 +8,7 @@ import { Canvas } from '@react-three/fiber'
 import { Environment } from '@react-three/drei'
 import { useWallet } from '@/components/wallet-provider'
 import ChainSelectModal from '@/components/ui/ChainSelectModal'
+import ChessName from '@/components/ui/ChessName'
 import { King, Queen, Bishop, Knight, Pawn } from '@/components/ui/ChessModels'
 import TypingHeroText from '@/components/ui/TypingHeroText'
 import { useRouter } from 'next/navigation'
@@ -113,9 +114,12 @@ export function Navbar() {
                   className="flex items-center gap-2 py-1.5 px-3 rounded-full"
                   style={{ background: "rgba(0,0,0,0.45)", border: "1px solid rgba(255,255,255,0.1)" }}
                 >
-                  <span className="text-[10px] sm:text-[11px] font-medium" style={{ color: "var(--t1)", fontFamily: "var(--fb)" }}>
-                    {formatAddress(displayAddress)}
-                  </span>
+                  <ChessName
+                    address={displayAddress}
+                    short
+                    className="text-[10px] sm:text-[11px] font-medium"
+                    style={{ color: "var(--t1)", fontFamily: "var(--fb)" }}
+                  />
                   <button
                     onClick={disconnectAll}
                     className="text-[var(--t3)] hover:text-red-400 transition-colors rounded-full hover:bg-red-500/10 w-4 h-4 flex items-center justify-center cursor-pointer"

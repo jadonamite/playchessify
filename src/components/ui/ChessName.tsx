@@ -1,14 +1,16 @@
 'use client'
 
+import type React from 'react'
 import { useProfile } from '@/hooks/useProfile'
 import type { ChessProfile } from '@/types/profile'
 
 interface ChessNameProps {
   address: string
-  profile?: ChessProfile | null   // pre-loaded (skips fetch)
-  badge?: boolean                  // show ✦ OG badge
-  short?: boolean                  // show "jadon" instead of "jadon.chess"
+  profile?: ChessProfile | null
+  badge?: boolean
+  short?: boolean
   className?: string
+  style?: React.CSSProperties
 }
 
 function fmtAddr(addr: string) {
@@ -21,6 +23,7 @@ export default function ChessName({
   badge = false,
   short = false,
   className = '',
+  style,
 }: ChessNameProps) {
   const skip = preloaded !== undefined
   const { data: fetched, isLoading } = useProfile(skip ? null : address)
@@ -29,20 +32,20 @@ export default function ChessName({
 
   if (isLoading) {
     return (
-      <span className={className} style={{ opacity: 0.5 }}>
+      <span className={className} style={{ ...style, opacity: 0.5 }}>
         {fmtAddr(address)}
       </span>
     )
   }
 
   if (!profile) {
-    return <span className={className}>{fmtAddr(address)}</span>
+    return <span className={className} style={style}>{fmtAddr(address)}</span>
   }
 
   const display = short ? profile.username : `${profile.username}.chess`
 
   return (
-    <span className={className}>
+    <span className={className} style={style}>
       {display}
       {badge && profile.og && (
         <span

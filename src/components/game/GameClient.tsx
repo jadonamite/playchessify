@@ -21,6 +21,9 @@ import { getBestMove, getHintMove } from '@/lib/chess-engine'
 import { playMoveChime, startAmbient, stopAmbient } from '@/lib/audio'
 import { useGameMoves } from '@/hooks/useGameMoves'
 import { useToastStore } from '@/hooks/useToastStore'
+import ChessName from '@/components/ui/ChessName'
+import ChessAvatar from '@/components/ui/ChessAvatar'
+import { useBatchProfiles } from '@/hooks/useBatchProfiles'
 
 const BOT_SAVE_KEY = 'chess-bot-save'
 
@@ -148,6 +151,11 @@ export default function GameClient() {
     : isCreator  ? 'white'
     : isOpponent ? 'black'
     : null
+
+  const playerAddrs = gameData
+    ? [gameData.white, gameData.black].filter((a) => a && a !== ZERO && a.startsWith('0x'))
+    : []
+  const { data: gameProfileMap = {} } = useBatchProfiles(playerAddrs)
 
   const gameIsWaiting   = gameData?.status === '0'
   const contractActive  = gameData?.status === '1'
@@ -516,11 +524,38 @@ export default function GameClient() {
                   <StatBadge label="OPPONENT" value="SYSTEM BOT" />
                 </div>
               ) : gameData && (
-                <div className="flex flex-wrap gap-4 mt-4">
-                  <StatBadge label="WAGER" value={`${wagerFormatted} CHESS`} accent />
-                  <StatBadge label="STATUS" value={statusLabel} />
-                  {myColor && <StatBadge label="YOU PLAY" value={myColor.toUpperCase()} />}
-                </div>
+                <>
+                  <div className="flex flex-wrap gap-4 mt-4">
+                    <StatBadge label="WAGER" value={`${wagerFormatted} CHESS`} accent />
+                    <StatBadge label="STATUS" value={statusLabel} />
+                    {myColor && <StatBadge label="YOU PLAY" value={myColor.toUpperCase()} />}
+                  </div>
+                  <div className="flex items-center gap-3 mt-4">
+                    <div className="flex items-center gap-2">
+                      <ChessAvatar address={gameData.white} size={24} />
+                      <ChessName
+                        address={gameData.white}
+                        profile={gameProfileMap[gameData.white.toLowerCase()]}
+                        short
+                        className="text-xs font-bold text-white/80"
+                      />
+                    </div>
+                    <span className="text-[var(--t3)] text-xs font-black">vs</span>
+                    {gameData.black && gameData.black !== ZERO ? (
+                      <div className="flex items-center gap-2">
+                        <ChessAvatar address={gameData.black} size={24} />
+                        <ChessName
+                          address={gameData.black}
+                          profile={gameProfileMap[gameData.black.toLowerCase()]}
+                          short
+                          className="text-xs font-bold text-white/80"
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-xs text-[var(--t3)] italic">waiting…</span>
+                    )}
+                  </div>
+                </>
               )}
             </div>
             <Link href="/app/lobby">

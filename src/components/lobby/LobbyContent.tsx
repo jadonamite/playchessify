@@ -11,6 +11,9 @@ import { Navbar } from '@/components/landing/Hero'
 import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID } from '@/config/contracts'
 import { useCeloChess } from '@/hooks/useCeloChess'
 import { useLobby } from '@/hooks/useLobby'
+import { useBatchProfiles } from '@/hooks/useBatchProfiles'
+import ChessName from '@/components/ui/ChessName'
+import ChessAvatar from '@/components/ui/ChessAvatar'
 import LoadingState from '@/components/ui/LoadingState'
 // @ts-expect-error - intentional unused variable
 import { useReadContract, useAccount } from 'wagmi'
@@ -88,6 +91,7 @@ export default function LobbyContent() {
   }, [celoAddress, celoBalance, celoStats])
 
   const { games: openGames, isLoading: isLobbyLoading, refresh: refreshLobby } = useLobby()
+  const { data: lobbyProfileMap = {} } = useBatchProfiles(openGames.map((g) => g.creator))
 
   const handleCreateGame = async () => {
     if (MAINTENANCE_MODE) return setIsComingSoonOpen(true)
@@ -345,16 +349,21 @@ export default function LobbyContent() {
                               <span className="text-[9px] uppercase tracking-widest opacity-60">ELO</span>
                               <span className="text-base leading-none mt-1">{game.elo}</span>
                             </div>
-                            <div className="flex flex-col justify-center min-w-0">
-                              <span
-                                className="text-[10px] tracking-[0.2em] text-gray-500 uppercase font-bold mb-1"
-                                style={{ fontFamily: 'var(--fd)' }}
-                              >
-                                CHALLENGER
-                              </span>
-                              <span className="font-bold tracking-wide text-base text-gray-200 truncate max-w-full">
-                                {game.creator}
-                              </span>
+                            <div className="flex items-center gap-3 min-w-0">
+                              <ChessAvatar address={game.creator} size={32} />
+                              <div className="flex flex-col justify-center min-w-0">
+                                <span
+                                  className="text-[10px] tracking-[0.2em] text-gray-500 uppercase font-bold mb-1"
+                                  style={{ fontFamily: 'var(--fd)' }}
+                                >
+                                  CHALLENGER
+                                </span>
+                                <ChessName
+                                  address={game.creator}
+                                  profile={lobbyProfileMap[game.creator.toLowerCase()]}
+                                  className="font-bold tracking-wide text-base text-gray-200 truncate max-w-full"
+                                />
+                              </div>
                             </div>
                           </div>
 

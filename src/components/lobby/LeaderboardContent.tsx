@@ -7,6 +7,9 @@ import GlowButton from '@/components/ui/GlowButton'
 import LoadingState from '@/components/ui/LoadingState'
 import { Navbar } from '@/components/landing/Hero'
 import { useLeaderboard, type LeaderboardEntry } from '@/hooks/useLeaderboard'
+import { useBatchProfiles } from '@/hooks/useBatchProfiles'
+import ChessName from '@/components/ui/ChessName'
+import ChessAvatar from '@/components/ui/ChessAvatar'
 
 // ── constants ───────────────────────────────────────────────────────────────
 
@@ -53,10 +56,12 @@ function PodiumCard({
   entry,
   isMe,
   delay,
+  profileMap,
 }: {
   entry: LeaderboardEntry
   isMe: boolean
   delay: number
+  profileMap: Record<string, any>
 }) {
   const rank = entry.rank as 1 | 2 | 3
   const m = MEDAL[rank]
@@ -128,22 +133,24 @@ function PodiumCard({
           {m.title}
         </div>
 
-        {/* Address */}
-        <div className="text-center">
+        {/* Identity */}
+        <div className="text-center flex flex-col items-center gap-1.5">
+          <ChessAvatar address={entry.address} size={36} />
           {isMe && (
             <div
-              className="text-[8px] font-black tracking-widest uppercase mb-1"
+              className="text-[8px] font-black tracking-widest uppercase"
               style={{ color: 'var(--c)', fontFamily: 'var(--fd)' }}
             >
               ⚡ YOU
             </div>
           )}
-          <div
-            className="font-bold text-xs tracking-wide truncate max-w-full"
-            style={{ color: isMe ? 'var(--c)' : 'var(--t1)', fontFamily: 'var(--fb)' }}
-          >
-            {fmt(entry.address)}
-          </div>
+          <ChessName
+            address={entry.address}
+            profile={profileMap[entry.address.toLowerCase()]}
+            badge
+            className="font-bold text-xs tracking-wide"
+            style={{ color: isMe ? 'var(--c)' : 'var(--t1)' } as any}
+          />
         </div>
 
         {/* ELO */}
@@ -213,10 +220,12 @@ function RankRow({
   entry,
   isMe,
   idx,
+  profileMap,
 }: {
   entry: LeaderboardEntry
   isMe: boolean
   idx: number
+  profileMap: Record<string, any>
 }) {
   return (
     <motion.div
@@ -229,14 +238,15 @@ function RankRow({
         borderLeft: isMe ? '2px solid var(--c)' : '2px solid transparent',
       }}
     >
-      {/* Rank + address */}
-      <div className="flex items-center gap-5 min-w-0">
+      {/* Rank + identity */}
+      <div className="flex items-center gap-4 min-w-0">
         <span
           className="text-[11px] font-black tracking-widest w-8 shrink-0 text-right"
           style={{ fontFamily: 'var(--fd)', color: 'var(--t3)' }}
         >
           #{entry.rank}
         </span>
+        <ChessAvatar address={entry.address} size={30} />
         <div className="flex flex-col min-w-0">
           {isMe && (
             <span
@@ -246,12 +256,13 @@ function RankRow({
               YOU
             </span>
           )}
-          <span
+          <ChessName
+            address={entry.address}
+            profile={profileMap[entry.address.toLowerCase()]}
+            badge
             className="font-bold text-sm tracking-wide truncate"
-            style={{ color: isMe ? 'var(--c)' : 'var(--t1)', fontFamily: 'var(--fb)' }}
-          >
-            {fmt(entry.address)}
-          </span>
+            style={{ color: isMe ? 'var(--c)' : 'var(--t1)' } as any}
+          />
         </div>
       </div>
 
@@ -296,6 +307,7 @@ export default function LeaderboardContent() {
   const router = useRouter()
   const { address } = useAccount()
   const { entries, isLoading, myRank, refresh } = useLeaderboard()
+  const { data: profileMap = {} } = useBatchProfiles(entries.map((e) => e.address))
 
   const myAddress = address?.toLowerCase()
   const top3 = entries.slice(0, 3)
@@ -469,6 +481,7 @@ export default function LeaderboardContent() {
                       entry={entry}
                       isMe={!!myAddress && entry.address === myAddress}
                       delay={0.1 + i * 0.09}
+                      profileMap={profileMap}
                     />
                   ))}
                 </div>
@@ -506,6 +519,7 @@ export default function LeaderboardContent() {
                           entry={entry}
                           isMe={!!myAddress && entry.address === myAddress}
                           idx={idx}
+                          profileMap={profileMap}
                         />
                       ))}
                     </AnimatePresence>
