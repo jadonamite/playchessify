@@ -13,6 +13,7 @@ export type HistoryItem = {
   opponent: string
   wager: string
   status: string
+  result: 'win' | 'loss' | 'draw' | 'active' | 'waiting'
   timestamp: number
 }
 
@@ -61,13 +62,23 @@ export function useHistory() {
 
         const role: 'white' | 'black' = white === me ? 'white' : 'black'
         const opponent: string = role === 'white' ? g.black : g.white
+        const statusIdx = Number(g.status)
+        const resultIdx = Number(g.result)
+        let result: HistoryItem['result'] = 'active'
+        if (statusIdx === 0) result = 'waiting'
+        else if (statusIdx === 4 || resultIdx === 3) result = 'draw'
+        else if (statusIdx === 2) {
+          if (resultIdx === 1) result = role === 'white' ? 'win' : 'loss'
+          else if (resultIdx === 2) result = role === 'black' ? 'win' : 'loss'
+        }
         items.push({
           id: String(i + 1),
           chain: 'celo',
           role,
           opponent: opponent.toLowerCase() === ZERO ? 'Waiting...' : opponent,
           wager: formatUnits(g.wager as bigint, TOKEN_DECIMALS),
-          status: STATUS_LABELS[Number(g.status)] ?? 'Unknown',
+          status: STATUS_LABELS[statusIdx] ?? 'Unknown',
+          result,
           timestamp: Number(g.createdAt),
         })
       }

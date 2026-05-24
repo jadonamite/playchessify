@@ -142,9 +142,12 @@ export function HistoryContent() {
                                   ) : item.opponent}
                                 </span>
                               </div>
-                              <span className="font-black text-xl text-white tracking-tight">
+                              <button
+                                onClick={() => router.push(`/app/game/${item.id}`)}
+                                className="font-black text-xl text-white tracking-tight hover:text-[var(--c)] transition-colors text-left"
+                              >
                                 MATCH #{item.id}
-                              </span>
+                              </button>
                             </div>
                           </div>
 
@@ -157,13 +160,25 @@ export function HistoryContent() {
                             </div>
 
                             <div className="flex flex-col text-right">
-                              <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Status</span>
-                              <div className="flex items-center gap-2 justify-end">
-                                <div className={`w-1.5 h-1.5 rounded-full ${item.status === 'Active' ? 'bg-green-400 animate-pulse' : 'bg-gray-400'}`} />
-                                <span className={`text-sm font-black uppercase italic ${item.status === 'Active' ? 'text-green-400' : 'text-gray-300'}`}>
-                                  {item.status}
-                                </span>
-                              </div>
+                              <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Result</span>
+                              <span
+                                className="text-sm font-black uppercase px-3 py-1 rounded-lg"
+                                style={{
+                                  background: item.result === 'win' ? 'rgba(74,222,128,0.12)' :
+                                    item.result === 'loss' ? 'rgba(239,68,68,0.12)' :
+                                    item.result === 'draw' ? 'rgba(148,163,184,0.12)' :
+                                    'rgba(255,255,255,0.06)',
+                                  color: item.result === 'win' ? '#4ade80' :
+                                    item.result === 'loss' ? '#f87171' :
+                                    item.result === 'draw' ? '#94a3b8' :
+                                    item.status === 'Active' ? '#22d3ee' : '#6b7280',
+                                }}
+                              >
+                                {item.result === 'win' ? 'WIN' :
+                                 item.result === 'loss' ? 'LOSS' :
+                                 item.result === 'draw' ? 'DRAW' :
+                                 item.status}
+                              </span>
                             </div>
                           </div>
                         </motion.div>
