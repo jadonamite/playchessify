@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Chess } from 'chess.js'
 import dynamic from 'next/dynamic'
@@ -18,7 +18,7 @@ import LoadingState from '@/components/ui/LoadingState'
 import PromotionModal, { PromotionPiece } from '@/components/ui/PromotionModal'
 import { Navbar } from '@/components/landing/Hero'
 import { getBestMove, getHintMove } from '@/lib/chess-engine'
-import { playMoveChime, startAmbient, stopAmbient } from '@/lib/audio'
+import { playMoveChime, startAmbient, startGameTrack, stopAmbient } from '@/lib/audio'
 import { useGameMoves } from '@/hooks/useGameMoves'
 import { useToastStore } from '@/hooks/useToastStore'
 import { useSettingsStore, BOARD_THEMES } from '@/hooks/useSettingsStore'
@@ -295,7 +295,12 @@ export default function GameClient() {
     const shouldPlay = (isBotGame || contractActive) && !gameOver
     if (!shouldPlay) return
     const ctx = getCtx()
-    if (ctx) startAmbient(ctx)
+    if (!ctx) return
+    if (isBotGame || contractActive) {
+      startGameTrack(ctx)
+    } else {
+      startAmbient(ctx)
+    }
   }, [soundOn, isBotGame, contractActive, gameOver, getCtx])
 
   const handleHint = useCallback(() => {
@@ -588,13 +593,24 @@ export default function GameClient() {
                       onSquareClick: handleSquareClick,
                       darkSquareStyle: { backgroundColor: BOARD_THEMES[boardTheme].dark },
                       lightSquareStyle: { backgroundColor: BOARD_THEMES[boardTheme].light },
-                      squareStyles: {
-                        ...(moveFrom ? { [moveFrom]: { backgroundColor: 'rgba(0,204,255,0.4)' } } : {}),
-                        ...(hintMove ? {
-                          [hintMove.from]: { backgroundColor: 'rgba(74,222,128,0.4)' },
-                          [hintMove.to]: { background: 'radial-gradient(circle, rgba(74,222,128,0.55) 28%, transparent 72%)' },
-                        } : {}),
-                      },
+                      squareStyles: (() => {
+                        const styles: Record<string, React.CSSProperties> = {}
+                        if (moveFrom) {
+                          styles[moveFrom] = { backgroundColor: 'rgba(0,204,255,0.35)' }
+                          const legalMoves = game.moves({ square: moveFrom as any, verbose: true }) as Array<{ to: string; flags: string }>
+                          legalMoves.forEach(({ to, flags }) => {
+                            const isCapture = flags.includes('c') || flags.includes('e')
+                            styles[to] = isCapture
+                              ? { boxShadow: 'inset 0 0 0 3px rgba(74,222,128,0.7)', borderRadius: '4px' }
+                              : { background: 'radial-gradient(circle, rgba(74,222,128,0.7) 30%, transparent 32%)' }
+                          })
+                        }
+                        if (hintMove) {
+                          styles[hintMove.from] = { backgroundColor: 'rgba(251,191,36,0.35)' }
+                          styles[hintMove.to] = { background: 'radial-gradient(circle, rgba(251,191,36,0.65) 30%, transparent 32%)' }
+                        }
+                        return styles
+                      })(),
                       boardStyle: { borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' },
                     }}
                   />
