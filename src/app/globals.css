@@ -178,7 +178,7 @@ body {
 
 /* Navbar responsive helpers */
 .nav-desktop { display: flex; }
-.nav-mobile  { display: none; }
+.nav-mobile  { display: none !important; } /* must beat inline display:flex on the button */
 
 @media (max-width: 768px) {
   .nav-desktop { display: none !important; }
