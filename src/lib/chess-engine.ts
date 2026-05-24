@@ -157,6 +157,26 @@ export function getBestMove(game: Chess, depth: number = 3): Move | null {
   return bestMove
 }
 
+export function getHintMove(game: Chess, depth = 3): Move | null {
+  const moves = orderMoves(game.moves({ verbose: true }))
+  if (game.isGameOver() || moves.length === 0) return null
+
+  const isWhite = game.turn() === 'w'
+  let best: Move | null = null
+  let bestVal = isWhite ? -Infinity : Infinity
+
+  for (const move of moves) {
+    game.move(move)
+    const val = minimax(game, depth - 1, -Infinity, Infinity, !isWhite)
+    game.undo()
+    if (isWhite ? val > bestVal : val < bestVal) {
+      bestVal = val
+      best = move
+    }
+  }
+  return best
+}
+
 function minimax(
   game: Chess,
   depth: number,

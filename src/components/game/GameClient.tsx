@@ -17,7 +17,8 @@ import StatBadge from '@/components/ui/StatBadge'
 import LoadingState from '@/components/ui/LoadingState'
 import PromotionModal, { PromotionPiece } from '@/components/ui/PromotionModal'
 import { Navbar } from '@/components/landing/Hero'
-import { getBestMove } from '@/lib/chess-engine'
+import { getBestMove, getHintMove } from '@/lib/chess-engine'
+import { playMoveChime, startAmbient, stopAmbient } from '@/lib/audio'
 import { useGameMoves } from '@/hooks/useGameMoves'
 import { useToastStore } from '@/hooks/useToastStore'
 
@@ -91,6 +92,24 @@ export default function GameClient() {
   // ── opponent turn timer (5 min) ─────────────────────────────────────────────
   const TURN_TIMEOUT_SECS = 300
   const [turnSecondsLeft, setTurnSecondsLeft] = useState(TURN_TIMEOUT_SECS)
+  const [soundOn, setSoundOn] = useState(true)
+  const [hintMove, setHintMove] = useState<{ from: string; to: string } | null>(null)
+  const [isHintLoading, setIsHintLoading] = useState(false)
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const soundOnRef = useRef(true)
+  useEffect(() => { soundOnRef.current = soundOn }, [soundOn])
+
+  const getCtx = useCallback((): AudioContext | null => {
+    if (typeof window === 'undefined') return null
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+      if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume()
+      return audioCtxRef.current
+    } catch { return null }
+  }, [])
 
   const { data: celoGameData } = useReadContract({
     address: CELO_CONTRACTS.game as `0x${string}`,
@@ -217,11 +236,15 @@ export default function GameClient() {
 
     setGame(new Chess(replayed.fen()))
     setMoveHistory(sanHistory)
+    if (soundOnRef.current && sanHistory.length === prev.length + 1) {
+      const ctx = getCtx()
+      if (ctx) playMoveChime(ctx, true)
+    }
 
     if (replayed.isCheckmate()) showToast('The King has fallen. End of line.', 'checkmate')
     else if (replayed.inCheck()) showToast('King under direct assault — parry or evade!', 'check')
     else if (replayed.isDraw() || replayed.isStalemate()) showToast('Tactical deadlock — neither commander can proceed.', 'draw')
-  }, [relayMoves, isBotGame, showToast]) // moveHistory intentionally omitted — read via ref
+  }, [relayMoves, isBotGame, showToast, getCtx]) // moveHistory intentionally omitted — read via ref
 
   // ── opponent turn timer ─────────────────────────────────────────────────────
 
@@ -251,7 +274,35 @@ export default function GameClient() {
   const botReplyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => () => {
     if (botReplyTimerRef.current) clearTimeout(botReplyTimerRef.current)
+    if (hintTimerRef.current) clearTimeout(hintTimerRef.current)
+    if (audioCtxRef.current) stopAmbient(audioCtxRef.current)
   }, [])
+
+  useEffect(() => {
+    if (!soundOn) {
+      if (audioCtxRef.current) stopAmbient(audioCtxRef.current)
+      return
+    }
+    const shouldPlay = (isBotGame || contractActive) && !gameOver
+    if (!shouldPlay) return
+    const ctx = getCtx()
+    if (ctx) startAmbient(ctx)
+  }, [soundOn, isBotGame, contractActive, gameOver, getCtx])
+
+  const handleHint = useCallback(() => {
+    if (isHintLoading || gameOver) return
+    setIsHintLoading(true)
+    if (hintTimerRef.current) { clearTimeout(hintTimerRef.current); hintTimerRef.current = null }
+    setTimeout(() => {
+      const clone = new Chess(game.fen())
+      const hint = getHintMove(clone, 3)
+      setIsHintLoading(false)
+      if (hint) {
+        setHintMove({ from: hint.from, to: hint.to })
+        hintTimerRef.current = setTimeout(() => setHintMove(null), 6000)
+      }
+    }, 0)
+  }, [game, isHintLoading, gameOver])
 
   const resetBotGame = useCallback(() => {
     if (botReplyTimerRef.current) { clearTimeout(botReplyTimerRef.current); botReplyTimerRef.current = null }
@@ -287,6 +338,8 @@ export default function GameClient() {
       setGame(next)
       const newHistory = [...moveHistoryRef.current, move.san]
       setMoveHistory(newHistory)
+      setHintMove(null)
+      if (soundOnRef.current) { const ctx = getCtx(); if (ctx) playMoveChime(ctx, false) }
 
       // Persist bot state
       if (isBotGame) {
@@ -339,7 +392,7 @@ export default function GameClient() {
       showToast(game.inCheck() ? 'Your King is in check — resolve it first.' : "You can't move there.", 'invalid')
       return false
     }
-  }, [game, isBotGame, celoAddress, relaySubmitMove, showToast])
+  }, [game, isBotGame, celoAddress, relaySubmitMove, showToast, getCtx])
 
   // ── board event handlers ─────────────────────────────────────────────────────
 
@@ -499,7 +552,13 @@ export default function GameClient() {
                       onSquareClick: handleSquareClick,
                       darkSquareStyle: { backgroundColor: '#0f172a' },
                       lightSquareStyle: { backgroundColor: '#1e293b' },
-                      squareStyles: moveFrom ? { [moveFrom]: { backgroundColor: 'rgba(0,204,255,0.4)' } } : {},
+                      squareStyles: {
+                        ...(moveFrom ? { [moveFrom]: { backgroundColor: 'rgba(0,204,255,0.4)' } } : {}),
+                        ...(hintMove ? {
+                          [hintMove.from]: { backgroundColor: 'rgba(74,222,128,0.4)' },
+                          [hintMove.to]: { background: 'radial-gradient(circle, rgba(74,222,128,0.55) 28%, transparent 72%)' },
+                        } : {}),
+                      },
                       boardStyle: { borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' },
                     }}
                   />
@@ -531,6 +590,30 @@ export default function GameClient() {
                       }`} />
                     </div>
                   )}
+                </div>
+
+                {/* Sound toggle */}
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={() => setSoundOn(s => !s)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] border transition-colors"
+                    style={{
+                      borderColor: soundOn ? 'rgba(0,204,255,0.3)' : 'rgba(255,255,255,0.08)',
+                      color: soundOn ? 'var(--c)' : 'var(--t3)',
+                      background: soundOn ? 'rgba(0,204,255,0.06)' : 'transparent',
+                    }}
+                  >
+                    {soundOn ? (
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                      </svg>
+                    ) : (
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                      </svg>
+                    )}
+                    {soundOn ? 'SOUND' : 'MUTED'}
+                  </button>
                 </div>
               </ClayCard>
             </div>
@@ -579,6 +662,11 @@ export default function GameClient() {
                     <GlowButton variant="brand" fullWidth parallelogram onClick={resetBotGame}>
                       {gameOver ? 'PLAY AGAIN' : 'NEW GAME'}
                     </GlowButton>
+                    {!gameOver && turn === 'w' && (
+                      <GlowButton variant="ghost" fullWidth parallelogram onClick={handleHint} disabled={isHintLoading}>
+                        {isHintLoading ? 'ANALYSING…' : hintMove ? `HINT: ${hintMove.from.toUpperCase()} → ${hintMove.to.toUpperCase()}` : 'GET HINT'}
+                      </GlowButton>
+                    )}
                     <p className="text-[10px] text-[var(--t3)] text-center leading-relaxed">
                       {gameOver ? 'Game over — start a fresh match.' : 'Progress saved on reload.'}
                     </p>
@@ -624,6 +712,21 @@ export default function GameClient() {
                             </span>
                           </div>
                         </div>
+                      )}
+                    </ClayCard>
+                  )}
+
+                  {/* Hint */}
+                  {contractActive && !gameOver && isMyTurn && (
+                    <ClayCard className="p-5">
+                      <p className="text-[10px] font-black tracking-[0.2em] text-[var(--t3)] uppercase mb-3">Analysis</p>
+                      <GlowButton variant="ghost" fullWidth onClick={handleHint} disabled={isHintLoading}>
+                        {isHintLoading ? 'ANALYSING…' : hintMove ? `HINT: ${hintMove.from.toUpperCase()} → ${hintMove.to.toUpperCase()}` : 'GET HINT'}
+                      </GlowButton>
+                      {hintMove && (
+                        <p className="text-[9px] text-green-400 font-bold tracking-widest uppercase text-center mt-2 opacity-70">
+                          Green squares show best move
+                        </p>
                       )}
                     </ClayCard>
                   )}
