@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useWallet } from '@/components/wallet-provider'
 import GlowButton from '@/components/ui/GlowButton'
@@ -16,6 +16,8 @@ import { useProfile } from '@/hooks/useProfile'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import ClaimModal from '@/components/ui/ClaimModal'
+import { useSettingsStore } from '@/hooks/useSettingsStore'
+import { startAmbient, stopAmbient } from '@/lib/audio'
 import LoadingState from '@/components/ui/LoadingState'
 // @ts-expect-error - intentional unused variable
 import { useReadContract, useAccount } from 'wagmi'
@@ -98,6 +100,20 @@ export default function LobbyContent() {
   const { data: myProfile } = useProfile(celoAddress ?? null)
   const [claimModalOpen, setClaimModalOpen] = useState(false)
   const showClaimBanner = isConnected && !!celoAddress && myProfile === null
+
+  // Lobby ambient audio
+  const { soundEnabled } = useSettingsStore()
+  const audioRef = useRef<AudioContext | null>(null)
+  useEffect(() => {
+    if (!soundEnabled) { if (audioRef.current) stopAmbient(audioRef.current); return }
+    if (!audioRef.current) {
+      audioRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+    }
+    const ctx = audioRef.current
+    if (ctx.state === 'suspended') ctx.resume()
+    startAmbient(ctx)
+    return () => { stopAmbient(ctx) }
+  }, [soundEnabled])
 
   const handleCreateGame = async () => {
     if (MAINTENANCE_MODE) return setIsComingSoonOpen(true)
@@ -396,6 +412,7 @@ export default function LobbyContent() {
                                 <ChessName
                                   address={game.creator}
                                   profile={lobbyProfileMap[game.creator.toLowerCase()]}
+                                  asLink
                                   className="font-bold tracking-wide text-base text-gray-200 truncate max-w-full"
                                 />
                               </div>

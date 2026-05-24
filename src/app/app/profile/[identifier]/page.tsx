@@ -282,8 +282,51 @@ export default function ProfilePage() {
             {profileAddress && (
               <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-black/20 border border-white/5">
                 <span className="text-[9px] font-black tracking-[0.2em] uppercase text-[var(--t3)]">ADDRESS</span>
-                <span className="text-xs font-mono text-[var(--t2)] break-all">{profileAddress}</span>
+                <span className="text-xs font-mono text-[var(--t2)] break-all flex-1">{profileAddress}</span>
+                <button
+                  onClick={() => navigator.clipboard.writeText(profileAddress)}
+                  className="text-[9px] font-black tracking-widest uppercase text-[var(--t3)] hover:text-[var(--c)] transition-colors shrink-0"
+                >
+                  COPY
+                </button>
               </div>
+            )}
+
+            {/* Actions */}
+            {!isOwn && profileAddress && (
+              <div className="flex gap-3">
+                <GlowButton
+                  variant="brand"
+                  fullWidth
+                  parallelogram
+                  onClick={() => router.push('/app/lobby')}
+                >
+                  CHALLENGE
+                </GlowButton>
+                <GlowButton
+                  variant="ghost"
+                  fullWidth
+                  onClick={() => {
+                    const url = `${window.location.origin}/app/profile/${profile?.username ?? profileAddress}`
+                    navigator.clipboard.writeText(url)
+                  }}
+                >
+                  SHARE PROFILE
+                </GlowButton>
+              </div>
+            )}
+
+            {isOwn && (
+              <GlowButton
+                variant="ghost"
+                fullWidth
+                onClick={() => {
+                  const url = `${window.location.origin}/app/profile/${profile?.username ?? profileAddress}`
+                  navigator.clipboard.writeText(url)
+                }}
+              >
+                SHARE PROFILE
+              </GlowButton>
             )}
           </motion.div>
         )}

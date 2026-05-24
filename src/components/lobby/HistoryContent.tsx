@@ -137,6 +137,7 @@ export function HistoryContent() {
                                       address={item.opponent}
                                       profile={profileMap[item.opponent.toLowerCase()]}
                                       short
+                                      asLink
                                     />
                                   ) : item.opponent}
                                 </span>

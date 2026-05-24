@@ -9,6 +9,7 @@ import { Environment } from '@react-three/drei'
 import { useWallet } from '@/components/wallet-provider'
 import ChainSelectModal from '@/components/ui/ChainSelectModal'
 import ChessName from '@/components/ui/ChessName'
+import ChessAvatar from '@/components/ui/ChessAvatar'
 import { King, Queen, Bishop, Knight, Pawn } from '@/components/ui/ChessModels'
 import TypingHeroText from '@/components/ui/TypingHeroText'
 import { useRouter } from 'next/navigation'
@@ -111,23 +112,25 @@ export function Navbar() {
                   <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: chainColor }} />
                   <span className="text-[9px] font-bold tracking-[0.15em]" style={{ color: chainColor, fontFamily: "var(--fd)" }}>CELO</span>
                 </div>
-                <div
-                  className="flex items-center gap-2 py-1.5 px-3 rounded-full"
-                  style={{ background: "rgba(0,0,0,0.45)", border: "1px solid rgba(255,255,255,0.1)" }}
+                <Link
+                  href={`/app/profile/${displayAddress}`}
+                  className="flex items-center gap-2 py-1.5 px-3 rounded-full hover:border-[var(--c)]/40 transition-colors"
+                  style={{ background: "rgba(0,0,0,0.45)", border: "1px solid rgba(255,255,255,0.1)", textDecoration: 'none' }}
                 >
+                  <ChessAvatar address={displayAddress} size={20} />
                   <ChessName
                     address={displayAddress}
                     short
                     className="text-[10px] sm:text-[11px] font-medium"
                     style={{ color: "var(--t1)", fontFamily: "var(--fb)" }}
                   />
-                  <button
-                    onClick={disconnectAll}
-                    className="text-[var(--t3)] hover:text-red-400 transition-colors rounded-full hover:bg-red-500/10 w-4 h-4 flex items-center justify-center cursor-pointer"
-                    style={{ fontSize: 14, border: "none", background: "transparent" }}
-                    title="Disconnect"
-                  >×</button>
-                </div>
+                </Link>
+                <button
+                  onClick={disconnectAll}
+                  className="text-[var(--t3)] hover:text-red-400 transition-colors rounded-full hover:bg-red-500/10 w-7 h-7 flex items-center justify-center cursor-pointer border border-white/10"
+                  style={{ fontSize: 14, background: "rgba(0,0,0,0.4)" }}
+                  title="Disconnect"
+                >×</button>
               </div>
             ) : (
               <GlowButton variant="brand" size="sm" onClick={connectWallet}>CONNECT</GlowButton>

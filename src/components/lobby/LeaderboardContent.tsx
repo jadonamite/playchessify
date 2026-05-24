@@ -148,6 +148,7 @@ function PodiumCard({
             address={entry.address}
             profile={profileMap[entry.address.toLowerCase()]}
             badge
+            asLink
             className="font-bold text-xs tracking-wide"
             style={{ color: isMe ? 'var(--c)' : 'var(--t1)' } as any}
           />
@@ -260,6 +261,7 @@ function RankRow({
             address={entry.address}
             profile={profileMap[entry.address.toLowerCase()]}
             badge
+            asLink
             className="font-bold text-sm tracking-wide truncate"
             style={{ color: isMe ? 'var(--c)' : 'var(--t1)' } as any}
           />
