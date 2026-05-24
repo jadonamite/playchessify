@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Verify signature
-  const message = `Chessify Profile Claim\n\nUsername: ${username.toLowerCase()}.chess\nAddress: ${address.toLowerCase()}\nTimestamp: ${timestamp}`
+  const message = `Chessify Profile Claim\n\nUsername: ${username.toLowerCase()}.chess\nAddress: ${address}\nTimestamp: ${timestamp}`
 
   try {
     const valid = await verifyMessage({

@@ -43,7 +43,7 @@ function BgIcon({ children }: { children: React.ReactNode }) {
 }
 
 export default function LobbyContent() {
-  const { isConnected, address: celoAddress, connectWallet } = useWallet()
+  const { isConnected, address: celoAddress } = useWallet()
   // @ts-expect-error - intentional unused isCeloPending
   const { createGame: createCeloGame, joinGame: joinCeloGame, isPending: isCeloPending } = useCeloChess()
   const router = useRouter()
@@ -167,27 +167,13 @@ export default function LobbyContent() {
 
   useEffect(() => {
     if (!isConnected) {
-      const timer = setTimeout(() => {
-        router.replace('/')
-      }, 3000)
-      return () => clearTimeout(timer)
+      router.replace('/')
     }
   }, [isConnected, router])
 
   if (!isConnected) {
     return (
-      <main className="min-h-screen w-full max-w-[100vw] bg-[var(--bg)] flex items-center justify-center p-6 relative overflow-hidden box-border">
-        <Navbar />
-        <div className="absolute inset-0 pointer-events-none z-0 opacity-40 bg-[var(--bg)]" />
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px)', backgroundSize: '52px 52px', pointerEvents: 'none', zIndex: 0, opacity: 0.5 }} />
-
-        <ClayCard className="max-w-md w-full p-8 md:p-10 text-center mt-20 relative z-10 shadow-2xl">
-          <h2 className="text-2xl font-bold text-[var(--t1)] mb-4">Connection Required</h2>
-          <p className="text-[var(--t2)] mb-4">Please connect your wallet to enter the Chessify Lobby.</p>
-          <p className="text-[var(--t3)] text-[10px] uppercase tracking-widest mb-8">Redirecting to landing page in 3s...</p>
-          <GlowButton onClick={connectWallet} variant="brand">Connect Wallet</GlowButton>
-        </ClayCard>
-      </main>
+      <main className="min-h-screen w-full bg-[var(--bg)]" />
     )
   }
 

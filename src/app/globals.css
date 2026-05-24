@@ -176,7 +176,13 @@ body {
   .hero-pieces { pointer-events: none; }
 }
 
+/* Navbar responsive helpers */
+.nav-desktop { display: flex; }
+.nav-mobile  { display: none; }
+
 @media (max-width: 768px) {
+  .nav-desktop { display: none !important; }
+  .nav-mobile  { display: flex !important; }
   .hero-navbar { padding: 0 !important; }
   .hero-nav-links { display: none !important; }
   #hamburger-btn { display: flex !important; }

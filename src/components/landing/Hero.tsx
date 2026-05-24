@@ -1,18 +1,17 @@
 'use client'
-import Image from 'next/image'
 import GlowButton from '@/components/ui/GlowButton'
-import ThemeToggle from '@/components/ui/ThemeToggle'
 import Link from 'next/link'
 import { Suspense, useEffect, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Environment } from '@react-three/drei'
 import { useWallet } from '@/components/wallet-provider'
-import ChainSelectModal from '@/components/ui/ChainSelectModal'
-import ChessName from '@/components/ui/ChessName'
-import ChessAvatar from '@/components/ui/ChessAvatar'
 import { King, Queen, Bishop, Knight, Pawn } from '@/components/ui/ChessModels'
 import TypingHeroText from '@/components/ui/TypingHeroText'
 import { useRouter } from 'next/navigation'
+import NavbarComponent from '@/components/ui/Navbar'
+
+// Re-export so all existing `import { Navbar } from '@/components/landing/Hero'` keep working
+export { default as Navbar } from '@/components/ui/Navbar'
 
 const KEYFRAMES = `
 @keyframes rspin       { to{transform:translate(-50%,-50%) rotate(360deg)} }
@@ -27,200 +26,6 @@ const KEYFRAMES = `
   .hero-pieces { pointer-events: none; }
 }
 `
-
-const NAV_LINKS = [
-  { label: "How it works", path: "#how-it-works" },
-  { label: "Leaderboard",  path: "/app/leaderboard" },
-  { label: "History",      path: "/app/history" },
-  { label: "Faucet",       path: "/app/faucet" },
-  { label: "Settings",     path: "/app/settings" },
-]
-
-export function Navbar() {
-  const {
-    isConnected, address,
-    connectWallet, disconnectAll,
-    showChainSelect, setShowChainSelect,
-    connect, connectSocial
-  } = useWallet()
-
-  const [mobileOpen, setMobileOpen] = useState(false)
-
-  const connected = isConnected
-  const displayAddress = address
-  const chainColor = '#35ee66'
-
-
-  return (
-    <>
-      <nav
-        className="hero-navbar w-full sticky top-0 z-50"
-        style={{
-          background: "rgba(6,6,15,0.92)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.35)",
-        }}
-      >
-        {/* ── main row ── */}
-        <div className="flex items-center justify-between" style={{ padding: "12px 24px" }}>
-
-          {/* Logo */}
-          <div className="shrink-0">
-            <Image src="/chessify.png" alt="Chessify" width={160} height={40} className="w-[110px] md:w-[140px] h-auto object-contain" />
-          </div>
-
-          {/* Desktop nav links pill */}
-          <div
-            className="hero-nav-links"
-            style={{
-              display: "flex",
-              gap: 20,
-              borderRadius: 999,
-              padding: "9px 22px",
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.07)",
-            }}
-          >
-            {NAV_LINKS.map(({ label, path }) => (
-              <Link
-                key={label}
-                href={path}
-                style={{ fontFamily: "var(--fd)", fontSize: 11, fontWeight: 500, color: "var(--t2)", textDecoration: "none", letterSpacing: ".06em", transition: "color .2s" }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--c)" }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--t2)" }}
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
-
-          {/* Right side */}
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="hidden sm:block">
-              <ThemeToggle />
-            </div>
-
-            {connected && displayAddress ? (
-              <div className="flex items-center gap-2">
-                <div
-                  className="hidden sm:flex items-center gap-1.5 py-1 px-2.5 rounded-full"
-                  style={{ background: `${chainColor}15`, border: `1px solid ${chainColor}28` }}
-                >
-                  <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: chainColor }} />
-                  <span className="text-[9px] font-bold tracking-[0.15em]" style={{ color: chainColor, fontFamily: "var(--fd)" }}>CELO</span>
-                </div>
-                <Link
-                  href={`/app/profile/${displayAddress}`}
-                  className="flex items-center gap-2 py-1.5 px-3 rounded-full hover:border-[var(--c)]/40 transition-colors"
-                  style={{ background: "rgba(0,0,0,0.45)", border: "1px solid rgba(255,255,255,0.1)", textDecoration: 'none' }}
-                >
-                  <ChessAvatar address={displayAddress} size={20} />
-                  <ChessName
-                    address={displayAddress}
-                    short
-                    className="text-[10px] sm:text-[11px] font-medium"
-                    style={{ color: "var(--t1)", fontFamily: "var(--fb)" }}
-                  />
-                </Link>
-                <button
-                  onClick={disconnectAll}
-                  className="text-[var(--t3)] hover:text-red-400 transition-colors rounded-full hover:bg-red-500/10 w-7 h-7 flex items-center justify-center cursor-pointer border border-white/10"
-                  style={{ fontSize: 14, background: "rgba(0,0,0,0.4)" }}
-                  title="Disconnect"
-                >×</button>
-              </div>
-            ) : (
-              <GlowButton variant="brand" size="sm" onClick={connectWallet}>CONNECT</GlowButton>
-            )}
-
-            {/* Hamburger — mobile only */}
-            <button
-              className="flex flex-col justify-center items-center gap-[5px] w-9 h-9 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-colors"
-              style={{ display: "none" }}
-              id="hamburger-btn"
-              onClick={() => setMobileOpen((o) => !o)}
-              aria-label="Open menu"
-            >
-              <span className={`block w-4.5 h-px bg-[var(--t1)] transition-all duration-200 ${mobileOpen ? 'rotate-45 translate-y-[6px]' : ''}`} style={{ width: 18, height: 1.5, borderRadius: 1, background: 'var(--t1)', display: 'block', transition: 'transform .2s, opacity .2s' }} />
-              <span className={`block h-px bg-[var(--t1)] transition-all duration-200 ${mobileOpen ? 'opacity-0' : ''}`} style={{ width: 18, height: 1.5, borderRadius: 1, background: 'var(--t1)', display: 'block', transition: 'opacity .2s' }} />
-              <span className={`block h-px bg-[var(--t1)] transition-all duration-200 ${mobileOpen ? '-rotate-45 -translate-y-[6px]' : ''}`} style={{ width: 18, height: 1.5, borderRadius: 1, background: 'var(--t1)', display: 'block', transition: 'transform .2s' }} />
-            </button>
-          </div>
-        </div>
-
-        {/* ── Mobile drawer ── */}
-        {mobileOpen && (
-          <div
-            id="mobile-menu"
-            style={{
-              borderTop: "1px solid rgba(255,255,255,0.07)",
-              background: "rgba(6,6,15,0.97)",
-              padding: "16px 24px 20px",
-            }}
-          >
-            <div className="flex flex-col gap-1">
-              {NAV_LINKS.map(({ label, path }) => (
-                <Link
-                  key={label}
-                  href={path}
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/[0.05] transition-colors"
-                  style={{ fontFamily: "var(--fd)", fontSize: 12, fontWeight: 600, color: "var(--t2)", textDecoration: "none", letterSpacing: ".06em" }}
-                >
-                  <span style={{ color: "var(--c)" }}>›</span>
-                  {label}
-                </Link>
-              ))}
-              {/* Wallet row in mobile menu */}
-              <div className="mt-3 pt-3 border-t border-white/5">
-                {connected && displayAddress ? (
-                  <div className="flex items-center justify-between gap-3">
-                    <Link
-                      href={`/app/profile/${displayAddress}`}
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 flex-1 min-w-0"
-                      style={{ textDecoration: 'none' }}
-                    >
-                      <ChessAvatar address={displayAddress} size={28} />
-                      <ChessName
-                        address={displayAddress}
-                        short
-                        className="text-xs font-bold text-[var(--t1)] truncate"
-                      />
-                    </Link>
-                    <button
-                      onClick={disconnectAll}
-                      className="text-[9px] font-black tracking-widest uppercase text-red-400/70 hover:text-red-400 transition-colors"
-                    >
-                      DISCONNECT
-                    </button>
-                  </div>
-                ) : (
-                  <GlowButton variant="brand" fullWidth onClick={() => { connectWallet(); setMobileOpen(false) }}>
-                    CONNECT WALLET
-                  </GlowButton>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </nav>
-
-      {/* Chain Select Modal */}
-      <ChainSelectModal
-        isOpen={showChainSelect}
-        onClose={() => setShowChainSelect(false)}
-        onSelectCelo={connect}
-        onSelectSocial={connectSocial}
-      />
-    </>
-  )
-}
-
-
-
 
 export default function Hero() {
   const { isConnected, connectWallet } = useWallet()
@@ -249,7 +54,7 @@ export default function Hero() {
       {/* Grid */}
       <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px)', backgroundSize: '52px 52px', pointerEvents: 'none', WebkitMaskImage: 'radial-gradient(ellipse 90% 90% at 50% 50%,black 30%,transparent 80%)', maskImage: 'radial-gradient(ellipse 90% 90% at 50% 50%,black 30%,transparent 80%)' }} />
 
-      <Navbar />
+      <NavbarComponent />
 
       <div className="hero-content" style={{ position: 'relative', minHeight: 'calc(100vh - 76px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: isMobile ? '20px 16px 60px' : '60px 48px 80px' }}>
 
