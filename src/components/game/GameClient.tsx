@@ -21,6 +21,7 @@ import { getBestMove, getHintMove } from '@/lib/chess-engine'
 import { playMoveChime, startAmbient, stopAmbient } from '@/lib/audio'
 import { useGameMoves } from '@/hooks/useGameMoves'
 import { useToastStore } from '@/hooks/useToastStore'
+import { useSettingsStore, BOARD_THEMES } from '@/hooks/useSettingsStore'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
@@ -95,12 +96,12 @@ export default function GameClient() {
   // ── opponent turn timer (5 min) ─────────────────────────────────────────────
   const TURN_TIMEOUT_SECS = 300
   const [turnSecondsLeft, setTurnSecondsLeft] = useState(TURN_TIMEOUT_SECS)
-  const [soundOn, setSoundOn] = useState(true)
+  const { soundEnabled: soundOn, setSoundEnabled: setSoundOn, boardTheme } = useSettingsStore()
   const [hintMove, setHintMove] = useState<{ from: string; to: string } | null>(null)
   const [isHintLoading, setIsHintLoading] = useState(false)
   const audioCtxRef = useRef<AudioContext | null>(null)
   const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const soundOnRef = useRef(true)
+  const soundOnRef = useRef(soundOn)
   useEffect(() => { soundOnRef.current = soundOn }, [soundOn])
 
   const getCtx = useCallback((): AudioContext | null => {
@@ -585,8 +586,8 @@ export default function GameClient() {
                       canDragPiece: handleCanDragPiece,
                       onPieceDrop: handlePieceDrop,
                       onSquareClick: handleSquareClick,
-                      darkSquareStyle: { backgroundColor: '#0f172a' },
-                      lightSquareStyle: { backgroundColor: '#1e293b' },
+                      darkSquareStyle: { backgroundColor: BOARD_THEMES[boardTheme].dark },
+                      lightSquareStyle: { backgroundColor: BOARD_THEMES[boardTheme].light },
                       squareStyles: {
                         ...(moveFrom ? { [moveFrom]: { backgroundColor: 'rgba(0,204,255,0.4)' } } : {}),
                         ...(hintMove ? {

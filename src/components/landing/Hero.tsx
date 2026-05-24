@@ -32,6 +32,7 @@ const NAV_LINKS = [
   { label: "Leaderboard",  path: "/app/leaderboard" },
   { label: "History",      path: "/app/history" },
   { label: "Faucet",       path: "/app/faucet" },
+  { label: "Settings",     path: "/app/settings" },
 ]
 
 export function Navbar() {
