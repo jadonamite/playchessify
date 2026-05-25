@@ -17,6 +17,17 @@ const NAV_LINKS = [
   { label: 'Settings',    path: '/app/settings' },
 ]
 
+function LogoutIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+      <polyline points="16 17 21 12 16 7"/>
+      <line x1="21" y1="12" x2="9" y2="12"/>
+    </svg>
+  )
+}
+
 export default function Navbar() {
   const {
     isConnected, address,
@@ -44,131 +55,122 @@ export default function Navbar() {
         position: 'sticky',
         top: 0,
         zIndex: 50,
-        background: 'rgba(6,6,15,0.72)',
+        background: 'rgba(6,6,15,0.95)',
         backdropFilter: 'blur(24px)',
         WebkitBackdropFilter: 'blur(24px)',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        borderBottom: '1px solid rgba(255,255,255,0.055)',
       }}>
+        {/* ── Main bar ── */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '12px 28px',
+          height: 58,
+          padding: '0 28px',
+          position: 'relative',
         }}>
 
-          {/* Logo — standalone, far left */}
-          <Link href="/" style={{ flexShrink: 0, lineHeight: 0, display: 'block' }}>
+          {/* Logo — bare, far left */}
+          <Link href="/" style={{ flexShrink: 0, lineHeight: 0, display: 'block', position: 'relative', zIndex: 2 }}>
             <Image
               src="/chessify.png"
               alt="Chessify"
               width={140}
               height={36}
               priority
-              style={{ width: 'clamp(96px, 10vw, 132px)', height: 'auto', objectFit: 'contain' }}
+              style={{ width: 'clamp(96px, 10vw, 128px)', height: 'auto', objectFit: 'contain' }}
             />
           </Link>
 
-          {/* Right pill — nav links + wallet in one capsule — desktop only */}
-          <div className="nav-desktop" style={{
-            alignItems: 'center',
-            borderRadius: 999,
-            background: 'rgba(13,13,26,0.92)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            boxShadow: '0 1px 0 rgba(255,255,255,0.05) inset, 0 12px 40px rgba(0,0,0,0.5)',
-          }}>
-            {/* Nav links */}
-            <div style={{ display: 'flex', alignItems: 'center', padding: '0 4px' }}>
-              {NAV_LINKS.map(({ label, path }) => (
+          {/* Trapezoid — centered, hugs the top edge, desktop only */}
+          <div
+            className="nav-desktop"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              height: '100%',
+              alignItems: 'center',
+              padding: '0 44px',
+              gap: 0,
+              /* wider at top (flush with nav top), tapers at bottom */
+              clipPath: 'polygon(0% 0%, 100% 0%, calc(100% - 22px) 100%, 22px 100%)',
+              background: 'rgba(255,255,255,0.042)',
+              filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.09))',
+              zIndex: 1,
+            }}
+          >
+            {NAV_LINKS.map(({ label, path }, i) => (
+              <span key={label} style={{ display: 'flex', alignItems: 'center' }}>
                 <Link
-                  key={label}
                   href={path}
                   style={{
                     fontFamily: 'var(--fd)',
                     fontSize: 10,
                     fontWeight: 600,
-                    color: 'var(--t3)',
+                    color: 'var(--t2)',
                     textDecoration: 'none',
                     letterSpacing: '.09em',
-                    padding: '11px 14px',
-                    borderRadius: 999,
+                    padding: '0 18px',
                     whiteSpace: 'nowrap',
-                    transition: 'color .15s, background .15s',
+                    transition: 'color .15s',
                   }}
-                  onMouseEnter={e => {
-                    const el = e.currentTarget as HTMLElement
-                    el.style.color = 'var(--t1)'
-                    el.style.background = 'rgba(255,255,255,0.04)'
-                  }}
-                  onMouseLeave={e => {
-                    const el = e.currentTarget as HTMLElement
-                    el.style.color = 'var(--t3)'
-                    el.style.background = 'transparent'
-                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--c)' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--t2)' }}
                 >
                   {label}
                 </Link>
-              ))}
-            </div>
+                {i < NAV_LINKS.length - 1 && (
+                  <span style={{
+                    color: 'rgba(255,255,255,0.14)',
+                    fontSize: 11,
+                    lineHeight: 1,
+                    userSelect: 'none',
+                    pointerEvents: 'none',
+                  }}>|</span>
+                )}
+              </span>
+            ))}
+          </div>
 
-            {/* Divider */}
-            <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.07)', flexShrink: 0 }} />
+          {/* Right — parallelogram wallet/connect + mobile hamburger */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative', zIndex: 2 }}>
 
-            {/* Wallet section */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px 5px 10px' }}>
+            {/* Desktop: wallet parallelogram or connect button */}
+            <div className="nav-desktop" style={{ display: 'flex', alignItems: 'center' }}>
               {showWallet ? (
-                <>
-                  {/* Celo badge */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    padding: '3px 8px',
-                    borderRadius: 999,
-                    background: 'rgba(53,238,102,0.07)',
-                    border: '1px solid rgba(53,238,102,0.14)',
-                  }}>
-                    <div style={{
-                      width: 5,
-                      height: 5,
-                      borderRadius: '50%',
-                      background: '#35ee66',
-                      boxShadow: '0 0 6px #35ee66',
-                      animation: 'pulseDot 2s ease-in-out infinite',
-                    }} />
-                    <span style={{
-                      fontSize: 8,
-                      fontWeight: 800,
-                      letterSpacing: '.18em',
-                      color: '#35ee66',
-                      fontFamily: 'var(--fd)',
-                    }}>CELO</span>
-                  </div>
-
-                  {/* Wallet pill */}
+                /* Connected — parallelogram pill */
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  clipPath: 'polygon(14px 0%, 100% 0%, calc(100% - 14px) 100%, 0% 100%)',
+                  background: 'rgba(0,204,255,0.07)',
+                  border: 'none',
+                }}>
+                  {/* Profile link area */}
                   <Link
                     href={`/app/profile/${address}`}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: 7,
-                      padding: '4px 10px 4px 5px',
-                      borderRadius: 999,
-                      background: 'rgba(0,204,255,0.06)',
-                      border: '1px solid rgba(0,204,255,0.13)',
+                      padding: '10px 14px 10px 22px',
                       textDecoration: 'none',
-                      transition: 'border-color .15s, background .15s',
+                      transition: 'background .15s',
                     }}
-                    onMouseEnter={e => {
-                      const el = e.currentTarget as HTMLElement
-                      el.style.borderColor = 'rgba(0,204,255,0.3)'
-                      el.style.background = 'rgba(0,204,255,0.1)'
-                    }}
-                    onMouseLeave={e => {
-                      const el = e.currentTarget as HTMLElement
-                      el.style.borderColor = 'rgba(0,204,255,0.13)'
-                      el.style.background = 'rgba(0,204,255,0.06)'
-                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,204,255,0.07)' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                   >
+                    <div style={{
+                      width: 5,
+                      height: 5,
+                      borderRadius: '50%',
+                      background: '#35ee66',
+                      boxShadow: '0 0 5px #35ee66',
+                      flexShrink: 0,
+                      animation: 'pulseDot 2s ease-in-out infinite',
+                    }} />
                     <ChessAvatar address={address} size={18} />
                     <ChessName
                       address={address}
@@ -183,25 +185,24 @@ export default function Navbar() {
                     />
                   </Link>
 
-                  {/* Disconnect */}
+                  {/* Thin divider */}
+                  <div style={{ width: 1, height: 18, background: 'rgba(0,204,255,0.18)', flexShrink: 0 }} />
+
+                  {/* Logout icon button */}
                   <button
                     onClick={disconnectAll}
                     title="Disconnect"
                     style={{
-                      width: 26,
-                      height: 26,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      borderRadius: '50%',
-                      border: 'none',
+                      padding: '10px 20px 10px 13px',
                       background: 'transparent',
+                      border: 'none',
                       color: 'var(--t3)',
-                      fontSize: 16,
                       cursor: 'pointer',
                       transition: 'color .15s, background .15s',
                       flexShrink: 0,
-                      lineHeight: 1,
                     }}
                     onMouseEnter={e => {
                       const el = e.currentTarget as HTMLElement
@@ -213,58 +214,67 @@ export default function Navbar() {
                       el.style.color = 'var(--t3)'
                       el.style.background = 'transparent'
                     }}
-                  >×</button>
-                </>
+                  >
+                    <LogoutIcon />
+                  </button>
+                </div>
               ) : mounted ? (
-                <GlowButton variant="brand" size="sm" onClick={connectWallet}>CONNECT</GlowButton>
+                <GlowButton
+                  variant="brand"
+                  parallelogram
+                  onClick={connectWallet}
+                  style={{ padding: '10px 28px', fontSize: '11px' }}
+                >
+                  CONNECT
+                </GlowButton>
               ) : (
-                <div style={{ width: 88, height: 34 }} />
+                <div style={{ width: 110, height: 38 }} />
               )}
             </div>
-          </div>
 
-          {/* Hamburger — mobile only. No inline display so .nav-mobile CSS controls visibility */}
-          <button
-            className="nav-mobile"
-            onClick={() => setMobileOpen(o => !o)}
-            aria-label="Toggle menu"
-            aria-expanded={mobileOpen}
-            style={{
-              width: 36,
-              height: 36,
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 5,
-              borderRadius: 10,
-              border: `1px solid ${mobileOpen ? 'rgba(0,204,255,0.28)' : 'rgba(255,255,255,0.09)'}`,
-              background: mobileOpen ? 'rgba(0,204,255,0.07)' : 'rgba(255,255,255,0.03)',
-              cursor: 'pointer',
-              transition: 'background .15s, border-color .15s',
-              flexShrink: 0,
-            }}
-          >
-            {[0, 1, 2].map(i => (
-              <span key={i} style={{
-                display: 'block',
-                width: 18,
-                height: 1.5,
-                borderRadius: 1,
-                background: mobileOpen ? 'var(--c)' : 'var(--t2)',
-                transition: 'transform .2s ease, opacity .15s, background .15s',
-                transformOrigin: 'center',
-                transform: mobileOpen
-                  ? i === 0 ? 'translateY(6.5px) rotate(45deg)'
-                  : i === 2 ? 'translateY(-6.5px) rotate(-45deg)'
-                  : 'scaleX(0)'
-                  : 'none',
-                opacity: mobileOpen && i === 1 ? 0 : 1,
-              }} />
-            ))}
-          </button>
+            {/* Mobile hamburger — no inline display so .nav-mobile CSS controls it */}
+            <button
+              className="nav-mobile"
+              onClick={() => setMobileOpen(o => !o)}
+              aria-label="Toggle menu"
+              aria-expanded={mobileOpen}
+              style={{
+                width: 36,
+                height: 36,
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 5,
+                borderRadius: 10,
+                border: `1px solid ${mobileOpen ? 'rgba(0,204,255,0.28)' : 'rgba(255,255,255,0.09)'}`,
+                background: mobileOpen ? 'rgba(0,204,255,0.07)' : 'rgba(255,255,255,0.03)',
+                cursor: 'pointer',
+                transition: 'background .15s, border-color .15s',
+                flexShrink: 0,
+              }}
+            >
+              {[0, 1, 2].map(i => (
+                <span key={i} style={{
+                  display: 'block',
+                  width: 18,
+                  height: 1.5,
+                  borderRadius: 1,
+                  background: mobileOpen ? 'var(--c)' : 'var(--t2)',
+                  transition: 'transform .2s ease, opacity .15s, background .15s',
+                  transformOrigin: 'center',
+                  transform: mobileOpen
+                    ? i === 0 ? 'translateY(6.5px) rotate(45deg)'
+                    : i === 2 ? 'translateY(-6.5px) rotate(-45deg)'
+                    : 'scaleX(0)'
+                    : 'none',
+                  opacity: mobileOpen && i === 1 ? 0 : 1,
+                }} />
+              ))}
+            </button>
+          </div>
         </div>
 
-        {/* Mobile drawer */}
+        {/* ── Mobile drawer ── */}
         <AnimatePresence>
           {mobileOpen && (
             <motion.div
@@ -311,12 +321,11 @@ export default function Navbar() {
                       el.style.color = 'var(--t2)'
                     }}
                   >
-                    <span style={{ color: 'var(--c)', fontSize: 8, opacity: 0.7 }}>◈</span>
+                    <span style={{ color: 'var(--c)', fontSize: 8, opacity: 0.6 }}>◈</span>
                     {label}
                   </Link>
                 ))}
 
-                {/* Mobile wallet */}
                 <div style={{ marginTop: 10, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                   {showWallet ? (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
@@ -327,11 +336,7 @@ export default function Navbar() {
                       >
                         <ChessAvatar address={address!} size={30} />
                         <div style={{ minWidth: 0 }}>
-                          <ChessName
-                            address={address!}
-                            short
-                            style={{ fontSize: 12, fontWeight: 700, color: 'var(--t1)', display: 'block' }}
-                          />
+                          <ChessName address={address!} short style={{ fontSize: 12, fontWeight: 700, color: 'var(--t1)', display: 'block' }} />
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
                             <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#35ee66' }} />
                             <span style={{ fontSize: 8, fontWeight: 700, color: '#35ee66', letterSpacing: '.12em', fontFamily: 'var(--fd)' }}>CELO</span>
@@ -341,9 +346,12 @@ export default function Navbar() {
                       <button
                         onClick={() => { disconnectAll(); setMobileOpen(false) }}
                         style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
                           fontSize: 9,
                           fontWeight: 800,
-                          letterSpacing: '.12em',
+                          letterSpacing: '.1em',
                           textTransform: 'uppercase',
                           color: 'rgba(248,113,113,0.55)',
                           background: 'none',
@@ -357,6 +365,7 @@ export default function Navbar() {
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#f87171' }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(248,113,113,0.55)' }}
                       >
+                        <LogoutIcon />
                         Disconnect
                       </button>
                     </div>
