@@ -9,6 +9,8 @@ import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import GlowButton from '@/components/ui/GlowButton'
 import ChainSelectModal from '@/components/ui/ChainSelectModal'
+import { useSettingsStore } from '@/hooks/useSettingsStore'
+import { stopAmbient } from '@/lib/audio'
 
 const NAV_LINKS = [
   { label: 'Leaderboard', path: '/app/leaderboard' },
@@ -36,6 +38,7 @@ export default function Navbar() {
     connect, connectSocial,
   } = useWallet()
 
+  const { soundEnabled, setSoundEnabled } = useSettingsStore()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -136,6 +139,36 @@ export default function Navbar() {
 
           {/* Right — parallelogram wallet/connect + mobile hamburger */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative', zIndex: 2 }}>
+
+            {/* Music toggle — desktop */}
+            {mounted && (
+              <button
+                className="nav-desktop"
+                onClick={() => {
+                  const next = !soundEnabled
+                  setSoundEnabled(next)
+                  if (!next) stopAmbient()
+                }}
+                title={soundEnabled ? 'Mute music' : 'Play music'}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 34,
+                  height: 34,
+                  borderRadius: 10,
+                  border: `1px solid ${soundEnabled ? 'rgba(0,204,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
+                  background: soundEnabled ? 'rgba(0,204,255,0.06)' : 'rgba(255,255,255,0.03)',
+                  color: soundEnabled ? 'var(--c)' : 'var(--t3)',
+                  cursor: 'pointer',
+                  transition: 'all .15s',
+                  flexShrink: 0,
+                  fontSize: 14,
+                }}
+              >
+                {soundEnabled ? '♪' : '♩'}
+              </button>
+            )}
 
             {/* Desktop: wallet parallelogram or connect button */}
             <div className="nav-desktop" style={{ display: 'flex', alignItems: 'center' }}>
@@ -291,6 +324,36 @@ export default function Navbar() {
                 flexDirection: 'column',
                 gap: 2,
               }}>
+                {/* Music toggle — mobile */}
+                <button
+                  onClick={() => {
+                    const next = !soundEnabled
+                    setSoundEnabled(next)
+                    if (!next) stopAmbient()
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '11px 14px',
+                    borderRadius: 12,
+                    fontFamily: 'var(--fd)',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: soundEnabled ? 'var(--c)' : 'var(--t2)',
+                    background: soundEnabled ? 'rgba(0,204,255,0.05)' : 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    letterSpacing: '.07em',
+                    transition: 'background .12s, color .12s',
+                    width: '100%',
+                    textAlign: 'left',
+                  }}
+                >
+                  <span style={{ fontSize: 14 }}>{soundEnabled ? '♪' : '♩'}</span>
+                  {soundEnabled ? 'MUSIC ON' : 'MUSIC OFF'}
+                </button>
+
                 {NAV_LINKS.map(({ label, path }) => (
                   <Link
                     key={label}

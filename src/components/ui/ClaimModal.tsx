@@ -3,9 +3,23 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSignMessage } from 'wagmi'
+import { useQuery } from '@tanstack/react-query'
 import { useCheckUsername, useClaimProfile } from '@/hooks/useProfile'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import GlowButton from '@/components/ui/GlowButton'
+
+function useProfileTotal() {
+  return useQuery<number | null>({
+    queryKey: ['profile-total'],
+    queryFn: async () => {
+      const res = await fetch('/api/profile/total')
+      if (!res.ok) return null
+      const data = await res.json() as { total: number }
+      return data.total
+    },
+    staleTime: 60_000,
+  })
+}
 
 interface ClaimModalProps {
   open: boolean
@@ -52,6 +66,7 @@ export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimM
   const [displayName, setDisplayName] = useState('')
   const [bio, setBio] = useState('')
   const [error, setError] = useState('')
+  const { data: total } = useProfileTotal()
 
   const debouncedUsername = username.trim().toLowerCase()
   const { data: checkResult, isLoading: isChecking } = useCheckUsername(debouncedUsername)
@@ -149,6 +164,21 @@ export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimM
                     className="text-[var(--t3)] hover:text-white transition-colors text-xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/5"
                   >×</button>
                 </div>
+
+                {/* OG hint — shown while slots remain */}
+                {(total === null || total === undefined || total < 100) && (
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-amber-400/20 bg-amber-400/5">
+                    <span className="text-amber-400 text-base leading-none">✦</span>
+                    <div>
+                      <p className="text-[10px] font-black tracking-[0.18em] uppercase text-amber-400">OG Status Available</p>
+                      <p className="text-[9px] text-white/40 mt-0.5">
+                        {total !== null && total !== undefined
+                          ? `${100 - total} of 100 OG spots remaining — first 100 profiles get the ✦ badge forever.`
+                          : 'First 100 profiles get the ✦ OG badge permanently.'}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Avatar preview */}
                 <div className="flex items-center gap-4 p-4 rounded-2xl bg-black/30 border border-white/5">
