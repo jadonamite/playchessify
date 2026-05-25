@@ -15,6 +15,11 @@ const WalletProvider = dynamic(
   { ssr: false }
 )
 
+const AudioManager = dynamic(
+  () => import('@/components/AudioManager'),
+  { ssr: false }
+)
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
@@ -44,6 +49,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <WagmiProvider config={wagmiConfig} reconnectOnMount>
           <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
             <WalletProvider>
+              <AudioManager />
               {children}
               <CenterToast />
             </WalletProvider>

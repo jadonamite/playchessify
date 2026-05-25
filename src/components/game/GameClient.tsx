@@ -18,7 +18,7 @@ import LoadingState from '@/components/ui/LoadingState'
 import PromotionModal, { PromotionPiece } from '@/components/ui/PromotionModal'
 import { Navbar } from '@/components/landing/Hero'
 import { getBestMove, getHintMove } from '@/lib/chess-engine'
-import { playMoveChime, startAmbient, startGameTrack, stopAmbient } from '@/lib/audio'
+import { playMoveChime } from '@/lib/audio'
 import { useGameMoves } from '@/hooks/useGameMoves'
 import { useToastStore } from '@/hooks/useToastStore'
 import { useSettingsStore, BOARD_THEMES } from '@/hooks/useSettingsStore'
@@ -114,6 +114,7 @@ export default function GameClient() {
       return audioCtxRef.current
     } catch { return null }
   }, [])
+
 
   const { data: celoGameData } = useReadContract({
     address: CELO_CONTRACTS.game as `0x${string}`,
@@ -284,24 +285,7 @@ export default function GameClient() {
   useEffect(() => () => {
     if (botReplyTimerRef.current) clearTimeout(botReplyTimerRef.current)
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current)
-    if (audioCtxRef.current) stopAmbient(audioCtxRef.current)
   }, [])
-
-  useEffect(() => {
-    if (!soundOn) {
-      if (audioCtxRef.current) stopAmbient(audioCtxRef.current)
-      return
-    }
-    const shouldPlay = (isBotGame || contractActive) && !gameOver
-    if (!shouldPlay) return
-    const ctx = getCtx()
-    if (!ctx) return
-    if (isBotGame || contractActive) {
-      startGameTrack(ctx)
-    } else {
-      startAmbient(ctx)
-    }
-  }, [soundOn, isBotGame, contractActive, gameOver, getCtx])
 
   const handleHint = useCallback(() => {
     if (isHintLoading || gameOver) return

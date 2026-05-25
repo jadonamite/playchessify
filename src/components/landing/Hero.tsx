@@ -34,7 +34,7 @@ export default function Hero() {
 
   useEffect(() => {
     if (isConnected) {
-      router.push('/app/lobby')
+      router.replace('/app/lobby')
     }
   }, [isConnected, router])
 

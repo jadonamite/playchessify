@@ -1,61 +1,93 @@
-// Audio engine — MP3 ambient track + Web Audio API move sounds
-// Ambient: /music/mondamusic-lofi-lofi-girl-lofi-chill-512853.mp3 (looped)
-// Move sounds: synthesised bandpass thud + sine sub
+// Audio engine — two persistent MP3 tracks + Web Audio API move sounds
+// Landing/lobby: mondamusic-lofi-lofi-girl-lofi-music-529555.mp3
+// Game:          mondamusic-lofi-lofi-girl-lofi-chill-512853.mp3
 
-const TRACK_SRC = '/music/mondamusic-lofi-lofi-girl-lofi-chill-512853.mp3'
+const LANDING_TRACK = '/music/mondamusic-lofi-lofi-girl-lofi-music-529555.mp3'
+const GAME_TRACK    = '/music/mondamusic-lofi-lofi-girl-lofi-chill-512853.mp3'
 
-let _audio: HTMLAudioElement | null = null
-let _fadeTimer: ReturnType<typeof setTimeout> | null = null
+type TrackId = 'landing' | 'game'
 
-function getAudio(): HTMLAudioElement {
-  if (!_audio) {
-    _audio = new Audio(TRACK_SRC)
-    _audio.loop = true
-    _audio.volume = 0
-  }
-  return _audio
+interface Track {
+  audio: HTMLAudioElement
+  fadeTimer: ReturnType<typeof setInterval> | null
 }
 
-function fadeTo(target: number, durationMs: number) {
-  if (_fadeTimer) clearInterval(_fadeTimer)
-  const audio = getAudio()
-  const start = audio.volume
+const tracks: Record<TrackId, Track | null> = { landing: null, game: null }
+let activeTrack: TrackId | null = null
+
+function getTrack(id: TrackId): Track {
+  if (tracks[id]) return tracks[id]!
+  const audio = new Audio(id === 'game' ? GAME_TRACK : LANDING_TRACK)
+  audio.loop = true
+  audio.volume = 0
+  const t: Track = { audio, fadeTimer: null }
+  tracks[id] = t
+  return t
+}
+
+function fadeTo(track: Track, target: number, durationMs: number, onDone?: () => void) {
+  if (track.fadeTimer) clearInterval(track.fadeTimer)
+  const start = track.audio.volume
   const delta = target - start
   const steps = Math.max(1, Math.round(durationMs / 30))
   let step = 0
-  _fadeTimer = setInterval(() => {
+  track.fadeTimer = setInterval(() => {
     step++
-    audio.volume = Math.min(1, Math.max(0, start + delta * (step / steps)))
+    track.audio.volume = Math.min(1, Math.max(0, start + delta * (step / steps)))
     if (step >= steps) {
-      clearInterval(_fadeTimer!)
-      _fadeTimer = null
-      if (target === 0) {
-        audio.pause()
-        audio.currentTime = 0
-      }
+      clearInterval(track.fadeTimer!)
+      track.fadeTimer = null
+      onDone?.()
     }
   }, 30)
+}
+
+function startTrack(id: TrackId, volume = 0.55) {
+  const track = getTrack(id)
+  if (track.audio.paused) {
+    track.audio.play().catch(() => {})
+  }
+  fadeTo(track, volume, 2500)
+  activeTrack = id
+}
+
+function stopTrack(id: TrackId, durationMs = 1200) {
+  const track = tracks[id]
+  if (!track || track.audio.paused) return
+  fadeTo(track, 0, durationMs, () => {
+    track.audio.pause()
+    track.audio.currentTime = 0
+  })
 }
 
 // ─── public API ─────────────────────────────────────────────────────────────
 
 export function startAmbient(_ctx?: AudioContext) {
-  const audio = getAudio()
-  if (!audio.paused) return
-  audio.play().catch(() => {})
-  fadeTo(0.55, 3000)
+  if (activeTrack === 'landing') return
+  stopTrack('game', 800)
+  startTrack('landing', 0.55)
 }
 
 export function startGameTrack(_ctx?: AudioContext) {
-  const audio = getAudio()
-  if (!audio.paused) return
-  audio.play().catch(() => {})
-  fadeTo(0.5, 2000)
+  if (activeTrack === 'game') return
+  stopTrack('landing', 800)
+  startTrack('game', 0.5)
 }
 
 export function stopAmbient(_ctx?: AudioContext) {
-  if (!_audio || _audio.paused) return
-  fadeTo(0, 1200)
+  stopTrack('landing')
+  stopTrack('game')
+  activeTrack = null
+}
+
+export function setMuted(muted: boolean) {
+  if (muted) {
+    Object.values(tracks).forEach(t => { if (t) t.audio.volume = 0 })
+  } else if (activeTrack) {
+    const vol = activeTrack === 'game' ? 0.5 : 0.55
+    const track = tracks[activeTrack]
+    if (track) fadeTo(track, vol, 800)
+  }
 }
 
 // ─── move sound (Web Audio API) ─────────────────────────────────────────────

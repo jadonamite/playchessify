@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { usePrivy } from '@privy-io/react-auth'
+import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { useAccount, useDisconnect } from 'wagmi'
 
 interface WalletContextType {
@@ -35,6 +35,7 @@ export const useWallet = () => useContext(WalletContext)
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const { login, logout, authenticated, ready } = usePrivy()
   const { address: evmAddress } = useAccount()
+  const { wallets } = useWallets()
   const { disconnect: wagmiDisconnect } = useDisconnect()
 
   const [isMiniPay, setIsMiniPay] = useState(false)
@@ -72,8 +73,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     disconnect()
   }, [disconnect])
 
-  // Resolve address: prefer wagmi account (external wallet), fall back to Privy embedded wallet
-  const address = evmAddress ?? null
+  // Prefer wagmi (external wallet), fall back to Privy embedded wallet address
+  const privyAddress = wallets[0]?.address as `0x${string}` | undefined
+  const address = evmAddress ?? privyAddress ?? null
 
   return (
     <WalletContext.Provider
