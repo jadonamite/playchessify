@@ -1,8 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { useAccount, useDisconnect, useConnect } from 'wagmi'
-import { WEB3AUTH_CONNECTOR_ID } from '@/lib/web3auth-connector'
+import { useAccount, useDisconnect } from 'wagmi'
 
 interface WalletContextType {
   address: string | null
@@ -35,7 +34,6 @@ export const useWallet = () => useContext(WalletContext)
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const { address: evmAddress, isConnected: evmConnected } = useAccount()
   const { disconnect: wagmiDisconnect } = useDisconnect()
-  const { connect: wagmiConnect, connectors } = useConnect()
 
   const [isMiniPay, setIsMiniPay] = useState(false)
   const [showChainSelect, setShowChainSelect] = useState(false)
@@ -59,18 +57,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const connectSocial = useCallback(async () => {
-    const socialConnector = connectors.find(c => c.id === WEB3AUTH_CONNECTOR_ID)
-    if (!socialConnector) {
-      console.error('Web3Auth connector not found')
-      return
-    }
     try {
-      wagmiConnect({ connector: socialConnector })
+      const { modal } = await import('@reown/appkit/react')
+      await modal?.open({ view: 'Connect' })
       setShowChainSelect(false)
     } catch (e) {
       console.error('Social login failed:', e)
     }
-  }, [connectors, wagmiConnect])
+  }, [])
 
   const disconnect = useCallback(() => {
     wagmiDisconnect()

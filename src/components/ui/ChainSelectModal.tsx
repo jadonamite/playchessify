@@ -276,10 +276,7 @@ export default function ChainSelectModal({
                 ))}
               </div>
               <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/40 group-hover:text-white/70 transition-colors">
-                Social Login
-              </span>
-              <span className="text-[9px] font-semibold tracking-[0.15em] uppercase text-white/20 group-hover:text-white/40 transition-colors ml-1">
-                · Web3Auth
+                Continue with Social
               </span>
             </motion.button>
 

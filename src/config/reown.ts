@@ -1,8 +1,6 @@
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { celo, mainnet } from '@reown/appkit/networks'
 import { http } from 'wagmi'
-import { getWeb3Auth } from '@/config/web3auth'
-import { web3AuthConnector } from '@/lib/web3auth-connector'
 
 export const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || ''
 
@@ -18,7 +16,6 @@ export const wagmiAdapter = new WagmiAdapter({
     [celo.id]: http('https://forno.celo.org'),
     [mainnet.id]: http(),
   },
-  connectors: [web3AuthConnector(getWeb3Auth)],
 })
 
 // Lazy initializer — called once inside a React useEffect, NOT at module scope.
