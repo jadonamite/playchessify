@@ -158,9 +158,17 @@ export default function LobbyContent() {
     }
   }, [isConnected, router])
 
+  // Not authenticated at all — redirect
   if (!isConnected) {
+    return <main className="min-h-screen w-full bg-[var(--bg)]" />
+  }
+
+  // Authenticated but wallet address still being provisioned (Privy embedded wallet)
+  if (!celoAddress) {
     return (
-      <main className="min-h-screen w-full bg-[var(--bg)]" />
+      <main className="min-h-screen w-full bg-[var(--bg)] flex items-center justify-center">
+        <LoadingState message="SETTING UP WALLET" />
+      </main>
     )
   }
 

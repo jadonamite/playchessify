@@ -41,7 +41,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [isMiniPay, setIsMiniPay] = useState(false)
   const [showChainSelect, setShowChainSelect] = useState(false)
 
-  const isConnected = (ready && authenticated) || !!evmAddress
+  // Prefer wagmi (external wallet), fall back to Privy embedded wallet address
+  const privyAddress = wallets[0]?.address as `0x${string}` | undefined
+  const address = evmAddress ?? privyAddress ?? null
+
+  // Only connected when we have an actual address — authenticated with no address = wallet still provisioning
+  const isConnected = !!address
 
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).ethereum?.isMiniPay) {
@@ -72,10 +77,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const disconnectAll = useCallback(() => {
     disconnect()
   }, [disconnect])
-
-  // Prefer wagmi (external wallet), fall back to Privy embedded wallet address
-  const privyAddress = wallets[0]?.address as `0x${string}` | undefined
-  const address = evmAddress ?? privyAddress ?? null
 
   return (
     <WalletContext.Provider
