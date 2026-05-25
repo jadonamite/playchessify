@@ -8,7 +8,6 @@ import { useWallet } from '@/components/wallet-provider'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import GlowButton from '@/components/ui/GlowButton'
-import ChainSelectModal from '@/components/ui/ChainSelectModal'
 import { useSettingsStore } from '@/hooks/useSettingsStore'
 import { stopAmbient } from '@/lib/audio'
 
@@ -33,9 +32,8 @@ function LogoutIcon() {
 export default function Navbar() {
   const {
     isConnected, address,
-    connectWallet, disconnectAll,
-    showChainSelect, setShowChainSelect,
-    connect, connectSocial,
+    disconnectAll,
+    connect,
   } = useWallet()
 
   const { soundEnabled, setSoundEnabled } = useSettingsStore()
@@ -255,7 +253,7 @@ export default function Navbar() {
                 <GlowButton
                   variant="brand"
                   parallelogram
-                  onClick={connectWallet}
+                  onClick={connect}
                   style={{ padding: '10px 28px', fontSize: '11px' }}
                 >
                   CONNECT
@@ -433,7 +431,7 @@ export default function Navbar() {
                       </button>
                     </div>
                   ) : (
-                    <GlowButton variant="brand" fullWidth onClick={() => { connectWallet(); setMobileOpen(false) }}>
+                    <GlowButton variant="brand" fullWidth onClick={() => { connect(); setMobileOpen(false) }}>
                       CONNECT WALLET
                     </GlowButton>
                   )}
@@ -444,12 +442,6 @@ export default function Navbar() {
         </AnimatePresence>
       </nav>
 
-      <ChainSelectModal
-        isOpen={showChainSelect}
-        onClose={() => setShowChainSelect(false)}
-        onSelectCelo={connect}
-        onSelectSocial={connectSocial}
-      />
     </>
   )
 }

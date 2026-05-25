@@ -65,8 +65,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, [logout, wagmiDisconnect])
 
   const connectWallet = useCallback(() => {
-    setShowChainSelect(true)
-  }, [])
+    login()
+  }, [login])
 
   const disconnectAll = useCallback(() => {
     disconnect()
