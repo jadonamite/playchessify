@@ -23,33 +23,33 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }))
 
   return (
-    <PrivyProvider
-      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
-      config={{
-        defaultChain: celo,
-        supportedChains: [celo],
-        appearance: {
-          theme: 'dark',
-          accentColor: '#00ccff',
-          logo: '/chessify.png',
-          walletChainType: 'ethereum-only',
-        },
-        loginMethods: ['google', 'twitter', 'discord', 'github', 'email', 'wallet'],
-        embeddedWallets: {
-          createOnLogin: 'users-without-wallets',
-        },
-      }}
-    >
-      <WagmiProvider config={wagmiConfig}>
-        <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <PrivyProvider
+        appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
+        config={{
+          defaultChain: celo,
+          supportedChains: [celo],
+          appearance: {
+            theme: 'dark',
+            accentColor: '#00ccff',
+            logo: '/chessify.png',
+            walletChainType: 'ethereum-only',
+          },
+          loginMethods: ['google', 'twitter', 'discord', 'github', 'email', 'wallet'],
+          embeddedWallets: {
+            createOnLogin: 'users-without-wallets',
+          },
+        }}
+      >
+        <WagmiProvider config={wagmiConfig} reconnectOnMount>
           <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
             <WalletProvider>
               {children}
               <CenterToast />
             </WalletProvider>
           </ThemeProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
-    </PrivyProvider>
+        </WagmiProvider>
+      </PrivyProvider>
+    </QueryClientProvider>
   )
 }
