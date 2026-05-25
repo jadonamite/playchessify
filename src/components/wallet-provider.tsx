@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { usePrivy } from '@privy-io/react-auth'
 import { useAccount, useDisconnect } from 'wagmi'
 
 interface WalletContextType {
@@ -32,13 +33,14 @@ const WalletContext = createContext<WalletContextType>({
 export const useWallet = () => useContext(WalletContext)
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
-  const { address: evmAddress, isConnected: evmConnected } = useAccount()
+  const { login, logout, authenticated, ready } = usePrivy()
+  const { address: evmAddress } = useAccount()
   const { disconnect: wagmiDisconnect } = useDisconnect()
 
   const [isMiniPay, setIsMiniPay] = useState(false)
   const [showChainSelect, setShowChainSelect] = useState(false)
 
-  const isConnected = evmConnected || !!evmAddress
+  const isConnected = (ready && authenticated) || !!evmAddress
 
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).ethereum?.isMiniPay) {
@@ -47,28 +49,20 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const connect = useCallback(async () => {
-    try {
-      const { modal } = await import('@reown/appkit/react')
-      await modal?.open()
-    } catch (e) {
-      console.error('Failed to open AppKit modal:', e)
-    }
+    login()
     setShowChainSelect(false)
-  }, [])
+  }, [login])
 
+  // Social login and wallet login both go through Privy's unified modal
   const connectSocial = useCallback(async () => {
-    try {
-      const { modal } = await import('@reown/appkit/react')
-      await modal?.open({ view: 'Connect' })
-      setShowChainSelect(false)
-    } catch (e) {
-      console.error('Social login failed:', e)
-    }
-  }, [])
+    login()
+    setShowChainSelect(false)
+  }, [login])
 
   const disconnect = useCallback(() => {
+    logout()
     wagmiDisconnect()
-  }, [wagmiDisconnect])
+  }, [logout, wagmiDisconnect])
 
   const connectWallet = useCallback(() => {
     setShowChainSelect(true)
@@ -78,10 +72,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     disconnect()
   }, [disconnect])
 
+  // Resolve address: prefer wagmi account (external wallet), fall back to Privy embedded wallet
+  const address = evmAddress ?? null
+
   return (
     <WalletContext.Provider
       value={{
-        address: evmAddress || null,
+        address,
         isConnected,
         isMiniPay,
         connectWallet,

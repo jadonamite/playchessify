@@ -20,6 +20,8 @@
   ],
   "dependencies": {
     "@jadonamite/plugins": "^1.0.0",
+    "@privy-io/react-auth": "^3.27.1",
+    "@privy-io/wagmi": "^4.0.8",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-toast": "^1.2.15",
