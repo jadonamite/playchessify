@@ -1,12 +1,13 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { usePrivy, useWallets } from '@privy-io/react-auth'
+import { usePrivy, useWallets, useCreateWallet } from '@privy-io/react-auth'
 import { useAccount, useDisconnect } from 'wagmi'
 
 interface WalletContextType {
   address: string | null
   isConnected: boolean
+  isReady: boolean
   isMiniPay: boolean
   connectWallet: () => void
   disconnectAll: () => void
@@ -20,6 +21,7 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType>({
   address: null,
   isConnected: false,
+  isReady: false,
   isMiniPay: false,
   connectWallet: () => {},
   disconnectAll: () => {},
@@ -36,17 +38,20 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const { login, logout, authenticated, ready } = usePrivy()
   const { address: evmAddress } = useAccount()
   const { wallets } = useWallets()
+  const { createWallet } = useCreateWallet()
   const { disconnect: wagmiDisconnect } = useDisconnect()
 
   const [isMiniPay, setIsMiniPay] = useState(false)
   const [showChainSelect, setShowChainSelect] = useState(false)
 
-  // Prefer wagmi (external wallet), fall back to Privy embedded wallet address
+  // Prefer wagmi (external wallet), fall back to Privy embedded wallet
   const privyAddress = wallets[0]?.address as `0x${string}` | undefined
   const address = evmAddress ?? privyAddress ?? null
 
-  // Only connected when we have an actual address — authenticated with no address = wallet still provisioning
-  const isConnected = !!address
+  // Authenticated = connected (even while wallet is provisioning)
+  const isConnected = ready && authenticated
+  // Fully ready = connected + has wallet address
+  const isReady = isConnected && !!address
 
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).ethereum?.isMiniPay) {
@@ -54,16 +59,25 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const connect = useCallback(async () => {
-    login()
-    setShowChainSelect(false)
-  }, [login])
+  // If authenticated but no wallet exists yet, create one explicitly
+  useEffect(() => {
+    if (!ready || !authenticated) return
+    if (wallets.length === 0 && !evmAddress) {
+      createWallet().catch(() => {})
+    }
+  }, [ready, authenticated, wallets.length, evmAddress, createWallet])
 
-  // Social login and wallet login both go through Privy's unified modal
-  const connectSocial = useCallback(async () => {
+  const connect = useCallback(async () => {
+    if (authenticated) return // already logged in, don't re-trigger
     login()
     setShowChainSelect(false)
-  }, [login])
+  }, [login, authenticated])
+
+  const connectSocial = useCallback(async () => {
+    if (authenticated) return
+    login()
+    setShowChainSelect(false)
+  }, [login, authenticated])
 
   const disconnect = useCallback(() => {
     logout()
@@ -71,8 +85,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, [logout, wagmiDisconnect])
 
   const connectWallet = useCallback(() => {
+    if (authenticated) return
     login()
-  }, [login])
+  }, [login, authenticated])
 
   const disconnectAll = useCallback(() => {
     disconnect()
@@ -83,6 +98,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       value={{
         address,
         isConnected,
+        isReady,
         isMiniPay,
         connectWallet,
         disconnectAll,

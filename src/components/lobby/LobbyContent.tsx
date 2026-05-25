@@ -42,7 +42,7 @@ function BgIcon({ children }: { children: React.ReactNode }) {
 }
 
 export default function LobbyContent() {
-  const { isConnected, address: celoAddress } = useWallet()
+  const { isConnected, isReady, address: celoAddress } = useWallet()
   // @ts-expect-error - intentional unused isCeloPending
   const { createGame: createCeloGame, joinGame: joinCeloGame, isPending: isCeloPending } = useCeloChess()
   const router = useRouter()
@@ -158,13 +158,13 @@ export default function LobbyContent() {
     }
   }, [isConnected, router])
 
-  // Not authenticated at all — redirect
+  // Not authenticated — redirect to landing
   if (!isConnected) {
     return <main className="min-h-screen w-full bg-[var(--bg)]" />
   }
 
-  // Authenticated but wallet address still being provisioned (Privy embedded wallet)
-  if (!celoAddress) {
+  // Authenticated but wallet still being provisioned
+  if (!isReady || !celoAddress) {
     return (
       <main className="min-h-screen w-full bg-[var(--bg)] flex items-center justify-center">
         <LoadingState message="SETTING UP WALLET" />

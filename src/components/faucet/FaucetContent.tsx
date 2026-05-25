@@ -11,7 +11,7 @@ import GlowButton from '@/components/ui/GlowButton'
 import LoadingState from '@/components/ui/LoadingState'
 import FaucetResultModal, { type FaucetResultType } from '@/components/ui/FaucetResultModal'
 import { Navbar } from '@/components/landing/Hero'
-import { King, Pawn, Bishop, Knight } from '@/components/ui/ChessModels'
+import { King, Pawn, Bishop, Knight, PieceView } from '@/components/ui/ChessModels'
 import { CHESS_TOKEN_ABI } from '@/config/abis'
 import { CELO_CONTRACTS, TOKEN_DECIMALS, FAUCET_AMOUNT, CELO_CHAIN_ID } from '@/config/contracts'
 import { formatUnits } from 'viem'
@@ -328,9 +328,9 @@ export default function FaucetContent() {
           {/* ── INFO CARDS ── */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { icon: '⚡', title: 'INSTANT', desc: 'Tokens arrive in your wallet within seconds of confirmation.' },
-              { icon: '🔄', title: 'DAILY RESET', desc: 'The cooldown resets every ~24 hours. Come back daily.' },
-              { icon: '🎯', title: 'PLAY READY', desc: 'Use claimed tokens to create matches and wager in games.' },
+              { piece: 'knight' as const, color: '#00ccff', title: 'INSTANT', desc: 'Tokens arrive in your wallet within seconds of confirmation.' },
+              { piece: 'pawn' as const, color: '#a064ff', title: 'DAILY RESET', desc: 'The cooldown resets every ~24 hours. Come back daily.' },
+              { piece: 'king' as const, color: '#ffb400', title: 'PLAY READY', desc: 'Use claimed tokens to create matches and wager in games.' },
             ].map((card, i) => (
               <motion.div
                 key={card.title}
@@ -339,7 +339,9 @@ export default function FaucetContent() {
                 transition={{ delay: 0.3 + i * 0.1 }}
                 className="rounded-2xl border border-white/5 bg-slate-900/40 backdrop-blur-sm p-5 flex flex-col gap-3"
               >
-                <span className="text-2xl">{card.icon}</span>
+                <div className="h-12 flex items-center -ml-2">
+                  <PieceView type={card.piece} color={card.color} className="w-12 h-12" />
+                </div>
                 <span className="text-[10px] font-black tracking-[0.25em] text-[var(--c)] uppercase" style={{ fontFamily: 'var(--fd)' }}>
                   {card.title}
                 </span>

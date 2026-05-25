@@ -31,7 +31,7 @@ function LogoutIcon() {
 
 export default function Navbar() {
   const {
-    isConnected, address,
+    isConnected, isReady, address,
     disconnectAll,
     connect,
   } = useWallet()
@@ -47,7 +47,7 @@ export default function Navbar() {
     return () => window.removeEventListener('resize', close)
   }, [])
 
-  const showWallet = mounted && isConnected && !!address
+  const showWallet = mounted && isReady && !!address
 
   return (
     <>
