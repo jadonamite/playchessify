@@ -1,0 +1,6 @@
+Chessnut chess piece set
+Author: Alexis Luengas (https://github.com/LexLuengas/chessnut-pieces)
+License: Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+
+These SVG assets are distributed under the Apache 2.0 license and may be used
+commercially provided this notice is retained.

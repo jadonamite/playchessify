@@ -25,6 +25,7 @@ import { useSettingsStore, BOARD_THEMES } from '@/hooks/useSettingsStore'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
+import { customPieces } from '@/lib/chessPieces'
 
 const BOT_SAVE_KEY = 'chess-bot-save'
 
@@ -570,6 +571,7 @@ export default function GameClient() {
                     options={{
                       id: 'board',
                       position: game.fen(),
+                      pieces: customPieces,
                       boardOrientation: myColor === 'black' ? 'black' : 'white',
                       allowDragging: canAct && !gameOver && (isBotGame ? turn === 'w' : isMyTurn),
                       canDragPiece: handleCanDragPiece,
