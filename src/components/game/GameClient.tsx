@@ -17,15 +17,15 @@ import StatBadge from '@/components/ui/StatBadge'
 import LoadingState from '@/components/ui/LoadingState'
 import PromotionModal, { PromotionPiece } from '@/components/ui/PromotionModal'
 import { Navbar } from '@/components/landing/Hero'
-import { getBestMove, getHintMove } from '@/lib/chess-engine'
+import { getBestMove, getHintMove, getCaptureSummary } from '@/lib/chess-engine'
 import { playMoveChime } from '@/lib/audio'
 import { useGameMoves } from '@/hooks/useGameMoves'
 import { useToastStore } from '@/hooks/useToastStore'
-import { useSettingsStore, BOARD_THEMES } from '@/hooks/useSettingsStore'
+import { useSettingsStore, BOARD_THEMES, AI_DEPTH } from '@/hooks/useSettingsStore'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
-import { customPieces } from '@/lib/chessPieces'
+import { customPieces, PIECE_SET } from '@/lib/chessPieces'
 
 const BOT_SAVE_KEY = 'chess-bot-save'
 
@@ -38,6 +38,29 @@ interface GameData {
   black: string
   wager: string
   status: string // '0'=WAITING '1'=ACTIVE '2'=FINISHED '3'=CANCELLED '4'=DRAW
+}
+
+// ─── captured-pieces tray ───────────────────────────────────────────────────
+
+function CapturedTray({ pieces, color, advantage }: { pieces: string[]; color: 'w' | 'b'; advantage: number }) {
+  return (
+    <div className="flex items-center gap-2 min-h-[22px]">
+      <div className="flex items-center">
+        {pieces.map((p, i) => (
+          <img
+            key={i}
+            src={`/pieces/${PIECE_SET}/${color}${p.toUpperCase()}.svg`}
+            alt={p}
+            draggable={false}
+            className="w-[18px] h-[18px] -mr-1.5 last:mr-0 drop-shadow"
+          />
+        ))}
+      </div>
+      {advantage > 0 && (
+        <span className="text-[11px] font-black tabular-nums text-[var(--c)]">+{advantage}</span>
+      )}
+    </div>
+  )
 }
 
 // ─── component ────────────────────────────────────────────────────────────────
@@ -97,7 +120,10 @@ export default function GameClient() {
   // ── opponent turn timer (5 min) ─────────────────────────────────────────────
   const TURN_TIMEOUT_SECS = 300
   const [turnSecondsLeft, setTurnSecondsLeft] = useState(TURN_TIMEOUT_SECS)
-  const { soundEnabled: soundOn, setSoundEnabled: setSoundOn, boardTheme } = useSettingsStore()
+  const { soundEnabled: soundOn, setSoundEnabled: setSoundOn, boardTheme, aiDifficulty, showMoveHints } = useSettingsStore()
+  const aiDepth = AI_DEPTH[aiDifficulty]
+  const aiDepthRef = useRef(aiDepth)
+  useEffect(() => { aiDepthRef.current = aiDepth }, [aiDepth])
   const [hintMove, setHintMove] = useState<{ from: string; to: string } | null>(null)
   const [isHintLoading, setIsHintLoading] = useState(false)
   const audioCtxRef = useRef<AudioContext | null>(null)
@@ -184,6 +210,13 @@ export default function GameClient() {
 
   // canAct: bot always ok; PvP needs connection + participant status
   const canAct = isBotGame ? !txPending : isConnected && !txPending && isParticipant
+
+  // ── captured pieces / material balance ────────────────────────────────────────
+  const captureSummary = getCaptureSummary(game.board())
+  const iAmWhite = (myColor ?? 'white') === 'white'
+  const myCaptured  = iAmWhite ? captureSummary.whiteCaptured : captureSummary.blackCaptured
+  const oppCaptured = iAmWhite ? captureSummary.blackCaptured : captureSummary.whiteCaptured
+  const myAdvantage = iAmWhite ? captureSummary.advantage : -captureSummary.advantage
 
   // ── game result derivation ──────────────────────────────────────────────────
 
@@ -370,7 +403,7 @@ export default function GameClient() {
         botReplyTimerRef.current = setTimeout(() => {
           botReplyTimerRef.current = null
           const after = new Chess(next.fen())
-          const botMove = getBestMove(after, 3)
+          const botMove = getBestMove(after, aiDepthRef.current)
           if (!botMove) return
           after.move(botMove)
           const fen = after.fen()
@@ -566,7 +599,12 @@ export default function GameClient() {
                   </svg>
                 </div>
 
-                <div className="max-w-[600px] mx-auto aspect-square">
+                <div className="max-w-[600px] mx-auto">
+                  {/* Opponent's captures (pieces they've taken from you) */}
+                  <div className="mb-2 px-1">
+                    <CapturedTray pieces={oppCaptured} color={iAmWhite ? 'w' : 'b'} advantage={-myAdvantage} />
+                  </div>
+                  <div className="aspect-square">
                   <Chessboard
                     options={{
                       id: 'board',
@@ -583,13 +621,15 @@ export default function GameClient() {
                         const styles: Record<string, React.CSSProperties> = {}
                         if (moveFrom) {
                           styles[moveFrom] = { backgroundColor: 'rgba(0,204,255,0.35)' }
-                          const legalMoves = game.moves({ square: moveFrom as any, verbose: true }) as Array<{ to: string; flags: string }>
-                          legalMoves.forEach(({ to, flags }) => {
-                            const isCapture = flags.includes('c') || flags.includes('e')
-                            styles[to] = isCapture
-                              ? { boxShadow: 'inset 0 0 0 3px rgba(74,222,128,0.7)', borderRadius: '4px' }
-                              : { background: 'radial-gradient(circle, rgba(74,222,128,0.7) 30%, transparent 32%)' }
-                          })
+                          if (showMoveHints) {
+                            const legalMoves = game.moves({ square: moveFrom as any, verbose: true }) as Array<{ to: string; flags: string }>
+                            legalMoves.forEach(({ to, flags }) => {
+                              const isCapture = flags.includes('c') || flags.includes('e')
+                              styles[to] = isCapture
+                                ? { boxShadow: 'inset 0 0 0 3px rgba(74,222,128,0.7)', borderRadius: '4px' }
+                                : { background: 'radial-gradient(circle, rgba(74,222,128,0.7) 30%, transparent 32%)' }
+                            })
+                          }
                         }
                         if (hintMove) {
                           styles[hintMove.from] = { backgroundColor: 'rgba(251,191,36,0.35)' }
@@ -600,6 +640,11 @@ export default function GameClient() {
                       boardStyle: { borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' },
                     }}
                   />
+                  </div>
+                  {/* Your captures (pieces you've taken) */}
+                  <div className="mt-2 px-1">
+                    <CapturedTray pieces={myCaptured} color={iAmWhite ? 'b' : 'w'} advantage={myAdvantage} />
+                  </div>
                 </div>
 
                 {/* Turn bar */}

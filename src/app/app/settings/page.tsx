@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { useSignMessage } from 'wagmi'
 import { useWallet } from '@/components/wallet-provider'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
-import { useSettingsStore, BOARD_THEMES, type BoardTheme } from '@/hooks/useSettingsStore'
+import { useSettingsStore, BOARD_THEMES, AI_DIFFICULTY_LABELS, type BoardTheme, type AiDifficulty } from '@/hooks/useSettingsStore'
 import { Navbar } from '@/components/landing/Hero'
 import GlowButton from '@/components/ui/GlowButton'
 import ClayCard from '@/components/ui/ClayCard'
@@ -37,13 +37,16 @@ function Toggle({ label, sub, checked, onChange }: { label: string; sub?: string
         {sub && <p className="text-[10px] text-[var(--t3)] mt-0.5">{sub}</p>}
       </div>
       <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className="relative w-11 h-6 rounded-full transition-colors shrink-0"
+        className="relative inline-flex items-center w-11 h-6 rounded-full p-0.5 border-0 box-border transition-colors shrink-0 cursor-pointer"
         style={{ background: checked ? 'var(--c)' : 'rgba(255,255,255,0.1)' }}
       >
         <span
-          className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
-          style={{ transform: checked ? 'translateX(22px)' : 'translateX(2px)' }}
+          className="block w-5 h-5 rounded-full bg-white shadow transition-transform"
+          style={{ transform: checked ? 'translateX(20px)' : 'translateX(0)' }}
         />
       </button>
     </div>
@@ -53,7 +56,7 @@ function Toggle({ label, sub, checked, onChange }: { label: string; sub?: string
 export default function SettingsPage() {
   const router = useRouter()
   const { address, isConnected } = useWallet()
-  const { soundEnabled, setSoundEnabled, boardTheme, setBoardTheme } = useSettingsStore()
+  const { soundEnabled, setSoundEnabled, boardTheme, setBoardTheme, aiDifficulty, setAiDifficulty, showMoveHints, setShowMoveHints } = useSettingsStore()
   const { data: profile } = useProfile(address ?? null)
   const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
   const { signMessageAsync } = useSignMessage()
@@ -90,6 +93,7 @@ export default function SettingsPage() {
   }
 
   const BOARD_THEME_KEYS = Object.keys(BOARD_THEMES) as BoardTheme[]
+  const AI_DIFFICULTIES: AiDifficulty[] = ['easy', 'medium', 'hard']
 
   return (
     <main className="min-h-screen w-full bg-[var(--bg)] text-[var(--t1)] relative overflow-x-hidden">
@@ -130,6 +134,47 @@ export default function SettingsPage() {
                 sub="Move sounds and ambient music during game"
                 checked={soundEnabled}
                 onChange={setSoundEnabled}
+              />
+            </ClayCard>
+          </Section>
+
+          {/* ── GAMEPLAY ── */}
+          <Section title="Gameplay">
+            <ClayCard className="p-5 flex flex-col gap-5">
+              {/* AI difficulty */}
+              <div className="flex flex-col gap-3">
+                <div>
+                  <p className="text-sm font-bold text-[var(--t1)]">AI Difficulty</p>
+                  <p className="text-[10px] text-[var(--t3)] mt-0.5">Strength of the bot in single-player training</p>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {AI_DIFFICULTIES.map((key) => {
+                    const isActive = aiDifficulty === key
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setAiDifficulty(key)}
+                        className="py-2.5 rounded-xl border text-[11px] font-black uppercase tracking-wider transition-colors"
+                        style={{
+                          borderColor: isActive ? 'var(--c)' : 'rgba(255,255,255,0.07)',
+                          background: isActive ? 'rgba(0,204,255,0.06)' : 'rgba(0,0,0,0.2)',
+                          color: isActive ? 'var(--c)' : 'var(--t2)',
+                        }}
+                      >
+                        {AI_DIFFICULTY_LABELS[key]}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </ClayCard>
+            <ClayCard className="p-0 overflow-hidden">
+              <Toggle
+                label="Move Hints"
+                sub="Highlight legal destinations when you pick up a piece"
+                checked={showMoveHints}
+                onChange={setShowMoveHints}
               />
             </ClayCard>
           </Section>
