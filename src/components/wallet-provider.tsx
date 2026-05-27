@@ -1,8 +1,8 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { usePrivy, useWallets, useCreateWallet } from '@privy-io/react-auth'
-import { useAccount, useDisconnect } from 'wagmi'
+import { useAccount, useDisconnect, useConnect, useConnectors } from 'wagmi'
 
 interface WalletContextType {
   address: string | null
@@ -40,24 +40,35 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const { wallets } = useWallets()
   const { createWallet } = useCreateWallet()
   const { disconnect: wagmiDisconnect } = useDisconnect()
+  const { connect } = useConnect()
+  const connectors = useConnectors()
 
   const [isMiniPay, setIsMiniPay] = useState(false)
   const [showChainSelect, setShowChainSelect] = useState(false)
+  const miniPayConnectTried = useRef(false)
 
   // Prefer wagmi (external wallet), fall back to Privy embedded wallet
   const privyAddress = wallets[0]?.address as `0x${string}` | undefined
   const address = evmAddress ?? privyAddress ?? null
 
-  // Authenticated = connected (even while wallet is provisioning)
-  const isConnected = ready && authenticated
+  // Authenticated via Privy, OR auto-connected MiniPay (injected wallet, no Privy session)
+  const isConnected = (ready && authenticated) || (isMiniPay && !!evmAddress)
   // Fully ready = connected + has wallet address
   const isReady = isConnected && !!address
 
+  // MiniPay runs the dApp in an in-app browser with an injected wallet.
+  // Detect it and auto-connect the injected connector — MiniPay grants without
+  // a prompt, so the user lands logged-in without tapping "connect".
   useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).ethereum?.isMiniPay) {
-      setIsMiniPay(true)
-    }
-  }, [])
+    if (typeof window === 'undefined') return
+    if (!(window as any).ethereum?.isMiniPay) return
+    setIsMiniPay(true)
+    if (miniPayConnectTried.current || evmAddress) return
+    const injectedConnector = connectors.find((c) => c.type === 'injected')
+    if (!injectedConnector) return
+    miniPayConnectTried.current = true
+    connect({ connector: injectedConnector })
+  }, [connectors, connect, evmAddress])
 
   // If authenticated but no wallet exists yet, create one explicitly
   useEffect(() => {
