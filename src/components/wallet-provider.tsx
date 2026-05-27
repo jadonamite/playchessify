@@ -40,7 +40,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const { wallets } = useWallets()
   const { createWallet } = useCreateWallet()
   const { disconnect: wagmiDisconnect } = useDisconnect()
-  const { connect } = useConnect()
+  const { connect: wagmiConnect } = useConnect()
   const connectors = useConnectors()
 
   const [isMiniPay, setIsMiniPay] = useState(false)
@@ -67,8 +67,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const injectedConnector = connectors.find((c) => c.type === 'injected')
     if (!injectedConnector) return
     miniPayConnectTried.current = true
-    connect({ connector: injectedConnector })
-  }, [connectors, connect, evmAddress])
+    wagmiConnect({ connector: injectedConnector })
+  }, [connectors, wagmiConnect, evmAddress])
 
   // If authenticated but no wallet exists yet, create one explicitly
   useEffect(() => {
