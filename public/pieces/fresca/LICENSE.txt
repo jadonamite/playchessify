@@ -1,0 +1,7 @@
+Fresca chess piece set
+Author: sadsnake1
+License: CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+Used under the NonCommercial clause — playchessify is a non-commercial project
+(its on-chain token is a dummy in-game asset, not a real-money wager).
+Attribution to the original author is retained per the license.

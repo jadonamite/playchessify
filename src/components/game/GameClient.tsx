@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback, useEffect, useRef } from 'react'
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Chess } from 'chess.js'
 import dynamic from 'next/dynamic'
@@ -21,11 +21,11 @@ import { getBestMove, getHintMove, getCaptureSummary } from '@/lib/chess-engine'
 import { playMoveChime } from '@/lib/audio'
 import { useGameMoves } from '@/hooks/useGameMoves'
 import { useToastStore } from '@/hooks/useToastStore'
-import { useSettingsStore, BOARD_THEMES, AI_DEPTH } from '@/hooks/useSettingsStore'
+import { useSettingsStore, BOARD_THEMES, AI_DEPTH, type PieceSet } from '@/hooks/useSettingsStore'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
-import { customPieces, PIECE_SET } from '@/lib/chessPieces'
+import { buildPieces, piecePath } from '@/lib/chessPieces'
 
 const BOT_SAVE_KEY = 'chess-bot-save'
 
@@ -42,14 +42,14 @@ interface GameData {
 
 // ─── captured-pieces tray ───────────────────────────────────────────────────
 
-function CapturedTray({ pieces, color, advantage }: { pieces: string[]; color: 'w' | 'b'; advantage: number }) {
+function CapturedTray({ pieces, color, advantage, set }: { pieces: string[]; color: 'w' | 'b'; advantage: number; set: PieceSet }) {
   return (
     <div className="flex items-center gap-2 min-h-[22px]">
       <div className="flex items-center">
         {pieces.map((p, i) => (
           <img
             key={i}
-            src={`/pieces/${PIECE_SET}/${color}${p.toUpperCase()}.svg`}
+            src={piecePath(set, `${color}${p.toUpperCase()}`)}
             alt={p}
             draggable={false}
             className="w-[18px] h-[18px] -mr-1.5 last:mr-0 drop-shadow"
@@ -120,7 +120,8 @@ export default function GameClient() {
   // ── opponent turn timer (5 min) ─────────────────────────────────────────────
   const TURN_TIMEOUT_SECS = 300
   const [turnSecondsLeft, setTurnSecondsLeft] = useState(TURN_TIMEOUT_SECS)
-  const { soundEnabled: soundOn, setSoundEnabled: setSoundOn, boardTheme, aiDifficulty, showMoveHints } = useSettingsStore()
+  const { soundEnabled: soundOn, setSoundEnabled: setSoundOn, boardTheme, pieceSet, aiDifficulty, showMoveHints } = useSettingsStore()
+  const customPieces = useMemo(() => buildPieces(pieceSet), [pieceSet])
   const aiDepth = AI_DEPTH[aiDifficulty]
   const aiDepthRef = useRef(aiDepth)
   useEffect(() => { aiDepthRef.current = aiDepth }, [aiDepth])
@@ -602,7 +603,7 @@ export default function GameClient() {
                 <div className="max-w-[600px] mx-auto">
                   {/* Opponent's captures (pieces they've taken from you) */}
                   <div className="mb-2 px-1">
-                    <CapturedTray pieces={oppCaptured} color={iAmWhite ? 'w' : 'b'} advantage={-myAdvantage} />
+                    <CapturedTray pieces={oppCaptured} color={iAmWhite ? 'w' : 'b'} advantage={-myAdvantage} set={pieceSet} />
                   </div>
                   <div className="aspect-square">
                   <Chessboard
@@ -643,7 +644,7 @@ export default function GameClient() {
                   </div>
                   {/* Your captures (pieces you've taken) */}
                   <div className="mt-2 px-1">
-                    <CapturedTray pieces={myCaptured} color={iAmWhite ? 'b' : 'w'} advantage={myAdvantage} />
+                    <CapturedTray pieces={myCaptured} color={iAmWhite ? 'b' : 'w'} advantage={myAdvantage} set={pieceSet} />
                   </div>
                 </div>
 

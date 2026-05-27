@@ -12,6 +12,17 @@ export const BOARD_THEMES: Record<BoardTheme, { dark: string; light: string; nam
   midnight: { dark: '#1a0a2e', light: '#2d1b54', name: 'Midnight' },
 }
 
+export type PieceSet = 'chessnut' | 'caliente' | 'maestro' | 'fresca' | 'cooke'
+
+// Available in-game piece sets. SVG assets live in `public/pieces/<id>/`.
+export const PIECE_SETS: { id: PieceSet; name: string }[] = [
+  { id: 'chessnut', name: 'Chessnut' },
+  { id: 'caliente', name: 'Caliente' },
+  { id: 'maestro', name: 'Maestro' },
+  { id: 'fresca', name: 'Fresca' },
+  { id: 'cooke', name: 'Cooke' },
+]
+
 export type AiDifficulty = 'easy' | 'medium' | 'hard'
 
 // Difficulty maps to minimax search depth. Capped at 3 — deeper search
@@ -31,10 +42,12 @@ export const AI_DIFFICULTY_LABELS: Record<AiDifficulty, string> = {
 interface SettingsState {
   soundEnabled: boolean
   boardTheme: BoardTheme
+  pieceSet: PieceSet
   aiDifficulty: AiDifficulty
   showMoveHints: boolean
   setSoundEnabled: (v: boolean) => void
   setBoardTheme: (t: BoardTheme) => void
+  setPieceSet: (p: PieceSet) => void
   setAiDifficulty: (d: AiDifficulty) => void
   setShowMoveHints: (v: boolean) => void
 }
@@ -44,10 +57,12 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       soundEnabled: true,
       boardTheme: 'dark',
+      pieceSet: 'chessnut',
       aiDifficulty: 'medium',
       showMoveHints: true,
       setSoundEnabled: (v) => set({ soundEnabled: v }),
       setBoardTheme: (t) => set({ boardTheme: t }),
+      setPieceSet: (p) => set({ pieceSet: p }),
       setAiDifficulty: (d) => set({ aiDifficulty: d }),
       setShowMoveHints: (v) => set({ showMoveHints: v }),
     }),

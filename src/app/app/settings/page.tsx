@@ -6,7 +6,8 @@ import { motion } from 'framer-motion'
 import { useSignMessage } from 'wagmi'
 import { useWallet } from '@/components/wallet-provider'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
-import { useSettingsStore, BOARD_THEMES, AI_DIFFICULTY_LABELS, type BoardTheme, type AiDifficulty } from '@/hooks/useSettingsStore'
+import { useSettingsStore, BOARD_THEMES, AI_DIFFICULTY_LABELS, PIECE_SETS, type BoardTheme, type AiDifficulty } from '@/hooks/useSettingsStore'
+import { piecePath } from '@/lib/chessPieces'
 import { Navbar } from '@/components/landing/Hero'
 import GlowButton from '@/components/ui/GlowButton'
 import ClayCard from '@/components/ui/ClayCard'
@@ -56,7 +57,7 @@ function Toggle({ label, sub, checked, onChange }: { label: string; sub?: string
 export default function SettingsPage() {
   const router = useRouter()
   const { address, isConnected } = useWallet()
-  const { soundEnabled, setSoundEnabled, boardTheme, setBoardTheme, aiDifficulty, setAiDifficulty, showMoveHints, setShowMoveHints } = useSettingsStore()
+  const { soundEnabled, setSoundEnabled, boardTheme, setBoardTheme, pieceSet, setPieceSet, aiDifficulty, setAiDifficulty, showMoveHints, setShowMoveHints } = useSettingsStore()
   const { data: profile } = useProfile(address ?? null)
   const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
   const { signMessageAsync } = useSignMessage()
@@ -211,6 +212,48 @@ export default function SettingsPage() {
                         className="text-[10px] font-black tracking-wide"
                         style={{ color: isActive ? 'var(--c)' : 'var(--t2)' }}
                       >{theme.name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </ClayCard>
+          </Section>
+
+          {/* ── PIECE SET ── */}
+          <Section title="Piece Set">
+            <ClayCard className="p-5">
+              <div className="grid grid-cols-2 gap-3">
+                {PIECE_SETS.map((set) => {
+                  const isActive = pieceSet === set.id
+                  return (
+                    <button
+                      key={set.id}
+                      type="button"
+                      onClick={() => setPieceSet(set.id)}
+                      className="flex flex-col gap-2 p-3 rounded-2xl border transition-colors text-left"
+                      style={{
+                        borderColor: isActive ? 'var(--c)' : 'rgba(255,255,255,0.07)',
+                        background: isActive ? 'rgba(0,204,255,0.06)' : 'rgba(0,0,0,0.2)',
+                      }}
+                    >
+                      <div
+                        className="flex items-center justify-center gap-1 rounded-lg p-2"
+                        style={{ background: 'rgba(255,255,255,0.06)' }}
+                      >
+                        {['wN', 'bQ', 'wK'].map((code) => (
+                          <img
+                            key={code}
+                            src={piecePath(set.id, code)}
+                            alt={code}
+                            draggable={false}
+                            className="w-8 h-8"
+                          />
+                        ))}
+                      </div>
+                      <span
+                        className="text-[10px] font-black tracking-wide"
+                        style={{ color: isActive ? 'var(--c)' : 'var(--t2)' }}
+                      >{set.name}</span>
                     </button>
                   )
                 })}
