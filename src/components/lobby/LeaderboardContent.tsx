@@ -1,6 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAccount } from 'wagmi'
 import GlowButton from '@/components/ui/GlowButton'
@@ -12,6 +13,8 @@ import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 
 // ── constants ───────────────────────────────────────────────────────────────
+
+const RANKS_PER_PAGE = 10
 
 const MEDAL = {
   1: {
@@ -315,6 +318,12 @@ export default function LeaderboardContent() {
   const rest = entries.slice(3)
   const myEntry = myAddress ? entries.find((e) => e.address === myAddress) : null
   const myEntryNotInPodium = myEntry && (myEntry.rank ?? 0) > 3
+
+  // Pagination — 10 commanders per page (ranks 4+)
+  const [page, setPage] = useState(1)
+  const totalPages = Math.max(1, Math.ceil(rest.length / RANKS_PER_PAGE))
+  const currentPage = Math.min(page, totalPages) // clamp if the list shrank after a refresh
+  const pageItems = rest.slice((currentPage - 1) * RANKS_PER_PAGE, currentPage * RANKS_PER_PAGE)
 
   return (
     <main className="min-h-screen w-full bg-[var(--bg)] text-[var(--t1)] relative overflow-x-hidden flex flex-col">
