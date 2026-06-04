@@ -35,7 +35,7 @@ export function useLobby() {
           abi: CHESS_GAME_ABI,
           functionName: 'getGame',
           args: [BigInt(i)]
-        }) as any
+        }) as { white: string; wager: bigint; status: number | bigint }
 
         if (g && Number(g.status) === 0 && g.white !== '0x0000000000000000000000000000000000000000') {
           result.push({

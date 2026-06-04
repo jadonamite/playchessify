@@ -61,7 +61,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   // a prompt, so the user lands logged-in without tapping "connect".
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (!(window as any).ethereum?.isMiniPay) return
+    if (!(window as unknown as { ethereum?: { isMiniPay?: boolean } }).ethereum?.isMiniPay) return
     setIsMiniPay(true)
     if (miniPayConnectTried.current || evmAddress) return
     const injectedConnector = connectors.find((c) => c.type === 'injected')

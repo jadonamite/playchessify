@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
   // Validate username
   const nameCheck = validateUsername(username ?? '')
-  if (!nameCheck.ok) return NextResponse.json({ error: nameCheck.reason }, { status: 400 })
+  if (!nameCheck.ok || !username) return NextResponse.json({ error: nameCheck.reason }, { status: 400 })
 
   if (displayName.length > 30) {
     return NextResponse.json({ error: 'displayName max 30 characters' }, { status: 400 })

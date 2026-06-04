@@ -55,11 +55,12 @@ function BasePiece({ modelPath, color = '#00ccff', emissive, emissiveIntensity, 
 
   const clonedScene = useMemo(() => {
     const clone = scene.clone()
-    clone.traverse((child: any) => {
-      if (child.isMesh) {
-        child.material = material
-        child.castShadow = true
-        child.receiveShadow = true
+    clone.traverse((child) => {
+      const mesh = child as THREE.Mesh
+      if (mesh.isMesh) {
+        mesh.material = material
+        mesh.castShadow = true
+        mesh.receiveShadow = true
       }
     })
     return clone

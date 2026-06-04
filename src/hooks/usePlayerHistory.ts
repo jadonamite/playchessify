@@ -56,7 +56,7 @@ export function usePlayerHistory(playerAddress: string | null | undefined) {
       for (let i = 0; i < results.length; i++) {
         const r = results[i]
         if (r.status !== 'success') continue
-        const g = r.result as any
+        const g = r.result as { white: string; black: string; wager: bigint; status: number | bigint; result: number | bigint }
         const white = (g.white as string).toLowerCase()
         const black = (g.black as string).toLowerCase()
         if (white !== me && black !== me) continue

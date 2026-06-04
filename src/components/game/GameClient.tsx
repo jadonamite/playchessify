@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Chess } from 'chess.js'
+import { Chess, type Square, type Move } from 'chess.js'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -136,7 +136,7 @@ export default function GameClient() {
     if (typeof window === 'undefined') return null
     try {
       if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+        audioCtxRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
       }
       if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume()
       return audioCtxRef.current
@@ -158,7 +158,7 @@ export default function GameClient() {
 
   useEffect(() => {
     if (!celoGameData) return
-    const gd = celoGameData as any
+    const gd = celoGameData as { white: string; black: string; wager: bigint; status: bigint }
     setGameData({
       white:  gd.white,
       black:  gd.black,
@@ -430,7 +430,7 @@ export default function GameClient() {
   // ── board event handlers ─────────────────────────────────────────────────────
 
   const handlePieceDrop = useCallback(
-    ({ sourceSquare, targetSquare }: { piece: any; sourceSquare: string; targetSquare: string | null }) => {
+    ({ sourceSquare, targetSquare }: { piece: unknown; sourceSquare: string; targetSquare: string | null }) => {
       if (!targetSquare) return false
       return executeMove(sourceSquare, targetSquare)
     },
@@ -438,18 +438,18 @@ export default function GameClient() {
   )
 
   const handleSquareClick = useCallback(
-    ({ square }: { piece: any; square: string }) => {
+    ({ square }: { piece: unknown; square: string }) => {
       if (!canAct || gameOver) return
       if (isBotGame && game.turn() === 'b') return
       if (!isBotGame && !isMyTurn) return
 
       if (!moveFrom) {
-        const piece = game.get(square as any)
+        const piece = game.get(square as Square)
         if (piece && piece.color === game.turn()) setMoveFrom(square)
         return
       }
 
-      const piece = game.get(square as any)
+      const piece = game.get(square as Square)
       if (piece && piece.color === game.turn()) { setMoveFrom(square); return }
 
       executeMove(moveFrom, square)
@@ -459,11 +459,11 @@ export default function GameClient() {
   )
 
   const handleCanDragPiece = useCallback(
-    ({ square }: { isSparePiece: boolean; piece: any; square: string | null }) => {
+    ({ square }: { isSparePiece: boolean; piece: unknown; square: string | null }) => {
       if (!canAct || gameOver || !square) return false
       if (isBotGame && game.turn() === 'b') return false
       if (!isBotGame && !isMyTurn) return false
-      const piece = game.get(square as any)
+      const piece = game.get(square as Square)
       return !!piece && piece.color === game.turn()
     },
     [canAct, gameOver, isBotGame, isMyTurn, game]

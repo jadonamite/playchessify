@@ -55,7 +55,7 @@ export function useLeaderboard() {
       const addressSet = new Set<string>()
       for (const r of gameResults) {
         if (r.status !== 'success') continue
-        const g = r.result as any
+        const g = r.result as { white: string; black: string }
         const w = (g.white as string).toLowerCase()
         const b = (g.black as string).toLowerCase()
         if (w !== ZERO) addressSet.add(w)

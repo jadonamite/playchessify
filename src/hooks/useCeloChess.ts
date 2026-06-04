@@ -120,7 +120,7 @@ export function useCeloChess() {
       const userCancelled = msg.includes('rejected') || msg.includes('user denied') || msg.includes('cancelled')
       if (userCancelled) {
         showToast('Transaction cancelled by user.', 'error')
-      } else if (!err?.message?.includes('Insufficient balance')) {
+      } else if (!msg.includes('insufficient balance')) {
         showToast('Blockchain interaction failed. Please check your transaction and try again.', 'error')
       }
       throw err
@@ -215,7 +215,7 @@ export function useCeloChess() {
       const userCancelled = msg.includes('rejected') || msg.includes('user denied') || msg.includes('cancelled')
       if (userCancelled) {
         showToast('Transaction cancelled by user.', 'error')
-      } else if (!err?.message?.includes('Insufficient balance')) {
+      } else if (!msg.includes('insufficient balance')) {
         showToast('Blockchain interaction failed. Please check your transaction and try again.', 'error')
       }
       throw err
