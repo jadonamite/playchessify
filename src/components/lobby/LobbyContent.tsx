@@ -17,7 +17,6 @@ import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import ClaimModal from '@/components/ui/ClaimModal'
 import LoadingState from '@/components/ui/LoadingState'
-// @ts-expect-error - intentional unused variable
 import { useReadContract } from 'wagmi'
 import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
 import { formatUnits } from 'viem'
