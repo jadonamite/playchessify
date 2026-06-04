@@ -24,7 +24,7 @@ const MEDAL = {
     bg: 'rgba(255,215,0,0.06)',
     icon: '♛',
     title: 'GRANDMASTER',
-    minH: 'min-h-[360px]',
+    minH: 'sm:min-h-[360px]',
   },
   2: {
     color: '#C0C0C0',
@@ -33,7 +33,7 @@ const MEDAL = {
     bg: 'rgba(255,255,255,0.025)',
     icon: '♜',
     title: 'MASTER',
-    minH: 'min-h-[300px]',
+    minH: 'sm:min-h-[300px]',
   },
   3: {
     color: '#CD7F32',
@@ -42,7 +42,7 @@ const MEDAL = {
     bg: 'rgba(205,127,50,0.03)',
     icon: '♝',
     title: 'EXPERT',
-    minH: 'min-h-[270px]',
+    minH: 'sm:min-h-[270px]',
   },
 } as const
 
@@ -67,14 +67,15 @@ function PodiumCard({
 }) {
   const rank = entry.rank as 1 | 2 | 3
   const m = MEDAL[rank]
-  const orderClass = rank === 2 ? 'order-1' : rank === 1 ? 'order-2' : 'order-3'
+  // Podium ordering (2nd · 1st · 3rd) only in the row layout; on mobile we stack in natural rank order
+  const orderClass = rank === 2 ? 'sm:order-1' : rank === 1 ? 'sm:order-2' : 'sm:order-3'
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 48, scale: 0.86 }}
       animate={{ opacity: 1, y: 0, scale: rank === 1 ? 1.04 : 1 }}
       transition={{ delay, type: 'spring', damping: 18, stiffness: 180 }}
-      className={`${orderClass} flex-1 min-w-0`}
+      className={`${orderClass} w-full sm:flex-1 min-w-0`}
     >
       <div
         className={`rounded-[28px] border p-6 flex flex-col items-center gap-3 relative overflow-hidden ${m.minH}`}
@@ -498,7 +499,7 @@ export default function LeaderboardContent() {
             <>
               {/* ── Podium (top 3) ── */}
               {top3.length > 0 && (
-                <div className="flex gap-3 md:gap-5 items-end">
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-5 items-stretch sm:items-end">
                   {top3.map((entry, i) => (
                     <PodiumCard
                       key={entry.address}
