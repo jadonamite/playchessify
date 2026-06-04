@@ -13,7 +13,7 @@ Celo-only Next.js frontend for the on-chain ChessGame + ChessToken contracts. Al
 |---|---|
 | Framework | Next.js 16.2.1, App Router, TypeScript |
 | Chain | Celo Mainnet (`chainId: 42220`) |
-| Wallet/Auth | Reown AppKit + Web3Auth social login |
+| Wallet/Auth | Privy — embedded wallets + social login (`@privy-io/react-auth` + `@privy-io/wagmi`) |
 | Chain state | Wagmi + Viem (`publicClient.multicall` for batch reads) |
 | Server state | `@tanstack/react-query` (5-min staleTime throughout) |
 | Client state | Zustand (`useSettingsStore`, `useToastStore`) |
@@ -85,7 +85,8 @@ wins, losses, draws, rating, gamesPlayed   all uint256
 ## Feature Inventory
 
 ### 1. Wallet & Auth
-- Reown AppKit + Web3Auth social login
+- Privy embedded wallets + social login (`loginMethods`: google, twitter, discord, github, email, wallet)
+- Embedded wallet auto-created for users without one (`createOnLogin: 'users-without-wallets'`)
 - `useWallet()` wraps `useAccount` + `useConnect` + `useDisconnect`
 - Auto-redirect `/app/lobby` on connect; guard back to `/` if disconnected
 - Navbar wallet pill: ChessAvatar + ChessName → `/app/profile/{address}` + separate disconnect button
@@ -303,7 +304,7 @@ playMoveChime                  // alias for playMoveSound (backwards compat)
 ```
 src/
 ├── app/
-│   ├── providers.tsx                      ← QueryClient + Wagmi + AppKit + Toast mount
+│   ├── providers.tsx                      ← QueryClient + Privy + Wagmi + Toast mount
 │   ├── app/
 │   │   ├── lobby/page.tsx
 │   │   ├── game/[id]/page.tsx
@@ -365,8 +366,7 @@ src/
 ## Environment Variables
 
 ```bash
-NEXT_PUBLIC_REOWN_PROJECT_ID         # Reown AppKit project
-NEXT_PUBLIC_WEB3AUTH_CLIENT_ID       # optional — social login (has fallback)
+NEXT_PUBLIC_PRIVY_APP_ID             # Privy app ID (client) — required for wallet/auth
 NEXT_PUBLIC_CELO_TOKEN               # optional — overrides hardcoded token address
 NEXT_PUBLIC_CELO_GAME                # optional — overrides hardcoded game address
 UPSTASH_REDIS_REST_URL               # profile store + move relay

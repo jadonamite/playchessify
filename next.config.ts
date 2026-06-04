@@ -17,10 +17,6 @@ const nextConfig: NextConfig = {
   },
   transpilePackages: [
     'react-chessboard',
-    '@reown/appkit',
-    '@reown/appkit-adapter-wagmi',
-    '@reown/appkit-ui',
-    '@reown/appkit-common',
     'wagmi',
     '@wagmi/core',
     '@wagmi/connectors'

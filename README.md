@@ -21,7 +21,7 @@ Two contracts on Celo Mainnet:
 | :--- | :--- | :--- |
 | **Blockchain** | Smart Contracts (Celo) | ✅ Live Mainnet |
 | **Frontend** | Landing, Lobby, Game board, History, Leaderboard, Faucet | ✅ Complete |
-| **Wallet** | Reown AppKit + Web3Auth social login (email, Google, etc.) | ✅ Complete |
+| **Wallet** | Privy — embedded wallets + social login (Google, X, Discord, GitHub, email) | ✅ Complete |
 | **Game Flow** | Create → Approve → Spend → Join → Play → Resolve | ✅ Complete |
 | **Token Checks** | Balance validation + multi-step wallet confirmation UI | ✅ Complete |
 | **On-Chain Move Verification** | Hash/PGN anchoring to prevent client-side fake wins | 🔜 Planned |
@@ -43,7 +43,7 @@ Free-to-access in-game currency for wagers, rewards, and ranking.
 
 ## 🎮 Lifecycle Flow
 
-1. **Connect** — User connects via Reown modal (injected wallet, WalletConnect, or social login). Auto-redirects to `/app/lobby`.
+1. **Connect** — User connects via Privy (injected/external wallet, embedded wallet, or social login). Auto-redirects to `/app/lobby`.
 2. **Create Match** — Player A selects a wager. Balance is checked on-chain. Wallet prompts approval then game initialization (2 transactions).
 3. **Join Match** — Player B joins from the lobby or by match ID. Same approve → lock flow.
 4. **Gameplay** — Players alternate moves. Each move is submitted on-chain (`submitMove`). Turn order and 5-min timers enforced.
@@ -69,7 +69,7 @@ Free-to-access in-game currency for wagers, rewards, and ranking.
 - **Contracts**: Solidity 0.8.20 (Celo)
 - **Frontend**: Next.js 16, TypeScript, Tailwind CSS 4.x
 - **Animation**: Framer Motion
-- **Wallet**: Reown AppKit, Web3Auth, Wagmi, Viem
+- **Wallet**: Privy (`@privy-io/react-auth` + `@privy-io/wagmi`), Wagmi, Viem
 - **Chess**: chess.js (rules), react-chessboard (UI)
 - **State**: Zustand
 
