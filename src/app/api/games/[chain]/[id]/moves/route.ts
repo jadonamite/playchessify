@@ -28,8 +28,8 @@ export async function GET(
   try {
     const moves = await getMoves(chain, gameId)
     return NextResponse.json({ moves })
-  } catch (err: any) {
-    console.error(`${LOG_PREFIX} GET failed`, { chain, gameId, err: err?.message })
+  } catch (err) {
+    console.error(`${LOG_PREFIX} GET failed`, { chain, gameId, err: (err as Error)?.message })
     return NextResponse.json({ error: 'relay unavailable' }, { status: 503 })
   }
 }
@@ -46,7 +46,7 @@ export async function POST(
   if (!chain) return NextResponse.json({ error: 'invalid chain' }, { status: 400 })
   if (gameId === null) return NextResponse.json({ error: 'invalid gameId' }, { status: 400 })
 
-  let body: any
+  let body: Record<string, unknown>
   try {
     body = await req.json()
   } catch {
@@ -82,8 +82,8 @@ export async function POST(
 
     const newLen = await appendMove(chain, gameId, record)
     return NextResponse.json({ ok: true, moveCount: newLen, move: record })
-  } catch (err: any) {
-    console.error(`${LOG_PREFIX} POST failed`, { chain, gameId, err: err?.message })
+  } catch (err) {
+    console.error(`${LOG_PREFIX} POST failed`, { chain, gameId, err: (err as Error)?.message })
     return NextResponse.json({ error: 'relay unavailable' }, { status: 503 })
   }
 }

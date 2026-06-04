@@ -114,9 +114,10 @@ export function useCeloChess() {
       }
 
       throw new Error(`${LOG_PREFIX} createGame: GameCreated event not found in receipt (${createTxHash})`)
-    } catch (err: any) {
+    } catch (err) {
       console.error(`${LOG_PREFIX} createGame failed:`, err)
-      const userCancelled = err?.message?.toLowerCase().includes('rejected') || err?.message?.toLowerCase().includes('user denied') || err?.message?.toLowerCase().includes('cancelled')
+      const msg = (err instanceof Error ? err.message : '').toLowerCase()
+      const userCancelled = msg.includes('rejected') || msg.includes('user denied') || msg.includes('cancelled')
       if (userCancelled) {
         showToast('Transaction cancelled by user.', 'error')
       } else if (!err?.message?.includes('Insufficient balance')) {
@@ -208,9 +209,10 @@ export function useCeloChess() {
       }
       console.info(`${LOG_PREFIX} joinGame: success`, { gameId, hash: joinTxHash })
       showToast('Successfully joined the match!', 'success')
-    } catch (err: any) {
+    } catch (err) {
       console.error(`${LOG_PREFIX} joinGame failed:`, err)
-      const userCancelled = err?.message?.toLowerCase().includes('rejected') || err?.message?.toLowerCase().includes('user denied') || err?.message?.toLowerCase().includes('cancelled')
+      const msg = (err instanceof Error ? err.message : '').toLowerCase()
+      const userCancelled = msg.includes('rejected') || msg.includes('user denied') || msg.includes('cancelled')
       if (userCancelled) {
         showToast('Transaction cancelled by user.', 'error')
       } else if (!err?.message?.includes('Insufficient balance')) {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getBatchProfiles } from '@/lib/profile-store'
 
 export async function POST(req: NextRequest) {
-  let body: any
+  let body: { addresses?: unknown }
   try { body = await req.json() } catch {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 })
   }

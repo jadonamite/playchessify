@@ -88,8 +88,8 @@ export default function SettingsPage() {
       setEditDirty(false)
       setEditSaved(true)
       setTimeout(() => setEditSaved(false), 3000)
-    } catch (e: any) {
-      setEditError(e?.message ?? 'Update failed')
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : 'Update failed')
     }
   }
 

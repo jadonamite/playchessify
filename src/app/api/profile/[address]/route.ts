@@ -25,7 +25,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ error: 'invalid address' }, { status: 400 })
   }
 
-  let body: any
+  let body: { signature?: string; timestamp?: string; username?: string; displayName?: string; bio?: string }
   try { body = await req.json() } catch {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 })
   }

@@ -9,7 +9,7 @@ import {
 import type { ChessProfile } from '@/types/profile'
 
 export async function POST(req: NextRequest) {
-  let body: any
+  let body: { address?: string; username?: string; displayName?: string; bio?: string; signature?: string; timestamp?: string }
   try { body = await req.json() } catch {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 })
   }

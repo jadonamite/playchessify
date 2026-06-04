@@ -82,7 +82,7 @@ export default function LobbyContent() {
     if (celoAddress) {
       if (celoBalance !== undefined) setBalance(formatUnits(celoBalance as bigint, TOKEN_DECIMALS))
       if (celoStats) {
-        const s = celoStats as any
+        const s = celoStats as readonly bigint[]
         setRating(Number(s[3]))
         setWins(Number(s[0]))
         setLosses(Number(s[1]))
@@ -109,8 +109,8 @@ export default function LobbyContent() {
       } else {
         refreshLobby()
       }
-    } catch (err: any) {
-      const msg = err?.message?.includes('cancelled')
+    } catch (err) {
+      const msg = (err instanceof Error ? err.message : '').includes('cancelled')
         ? 'Transaction cancelled.'
         : 'Failed to create game. Check your balance and try again.'
       setCreateError(msg)
@@ -125,8 +125,8 @@ export default function LobbyContent() {
     try {
       await joinCeloGame(gameId, matchWager)
       router.push(`/app/game/${gameId}`)
-    } catch (err: any) {
-      if (!err?.message?.includes('cancelled')) {
+    } catch (err) {
+      if (!(err instanceof Error ? err.message : '').includes('cancelled')) {
         console.error('[LobbyContent] handleJoinGame failed:', err)
       }
     } finally {

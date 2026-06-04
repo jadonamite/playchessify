@@ -113,8 +113,8 @@ export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimM
       })
       setStep('success')
       onSuccess?.()
-    } catch (e: any) {
-      setError(e?.message ?? 'Something went wrong. Try again.')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong. Try again.')
     }
   }
 

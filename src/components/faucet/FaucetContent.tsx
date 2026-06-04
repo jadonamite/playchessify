@@ -162,8 +162,8 @@ export default function FaucetContent() {
       setTxHash(hash || '')
       setResultType('success')
       refetchBalance()
-    } catch (err: any) {
-      const msg = err?.message || 'Unknown error'
+    } catch (err) {
+      const msg = (err instanceof Error ? err.message : '') || 'Unknown error'
 
       if (msg === 'TIMEOUT') {
         setResultType('timeout')

@@ -58,9 +58,9 @@ export function useGameMoves({ chain, gameId, enabled }: UseGameMovesOptions): U
       // shorter list and revert the player's just-committed move.
       setMoves((prev) => (incoming.length > prev.length ? incoming : prev))
       setError(null)
-    } catch (err: any) {
+    } catch (err) {
       console.error(`${LOG_PREFIX} refresh failed`, err)
-      setError(err?.message ?? 'relay error')
+      setError(err instanceof Error ? err.message : 'relay error')
     }
   }, [chain, gameId])
 
@@ -102,9 +102,9 @@ export function useGameMoves({ chain, gameId, enabled }: UseGameMovesOptions): U
       setMoves((prev) => [...prev, newMove])
       console.info(`${LOG_PREFIX} submitMove ok`, { gameId, moveNumber, san })
       return true
-    } catch (err: any) {
+    } catch (err) {
       console.error(`${LOG_PREFIX} submitMove failed`, err)
-      setError(err?.message ?? 'submit failed')
+      setError(err instanceof Error ? err.message : 'submit failed')
       return false
     }
   }, [chain, gameId])
