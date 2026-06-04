@@ -166,6 +166,7 @@ export default function FaucetResultModal({
 }: FaucetResultModalProps) {
   const [mounted, setMounted] = useState(false)
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration mount flag
   useEffect(() => { setMounted(true) }, [])
   if (!mounted) return null
 

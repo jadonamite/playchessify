@@ -27,6 +27,7 @@ const OPTIONS: Array<{
 
 export default function PromotionModal({ open, color, onSelect, onCancel }: PromotionModalProps) {
   const [mounted, setMounted] = useState(false)
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration mount flag
   useEffect(() => { setMounted(true) }, [])
 
   // Keyboard shortcuts: Q/R/B/N pick; Escape cancels

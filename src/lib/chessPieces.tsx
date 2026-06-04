@@ -19,6 +19,7 @@ export function buildPieces(set: PieceSet): PieceRenderObject {
     CODES.map((code) => [
       code,
       () => (
+        // eslint-disable-next-line @next/next/no-img-element -- dynamic SVG piece sprite, next/image unsuitable
         <img
           src={piecePath(set, code)}
           alt={code}

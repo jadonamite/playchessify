@@ -109,6 +109,7 @@ const STATUS_CONFIG = {
 export default function GameStatusModal({ type, message, onClose }: GameStatusModalProps) {
   const [mounted, setMounted] = useState(false)
   
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration mount flag
   useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {

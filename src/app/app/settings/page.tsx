@@ -72,6 +72,7 @@ export default function SettingsPage() {
   // Sync fields when profile loads
   useEffect(() => {
     if (profile && !editDirty) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync form fields from loaded profile
       setEditDisplayName(profile.displayName ?? '')
       setEditBio(profile.bio ?? '')
     }
@@ -241,6 +242,7 @@ export default function SettingsPage() {
                         style={{ background: 'rgba(255,255,255,0.06)' }}
                       >
                         {['wN', 'bQ', 'wK'].map((code) => (
+                          // eslint-disable-next-line @next/next/no-img-element -- dynamic SVG piece sprite, next/image unsuitable
                           <img
                             key={code}
                             src={piecePath(set.id, code)}

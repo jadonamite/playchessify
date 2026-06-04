@@ -62,6 +62,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (!(window as unknown as { ethereum?: { isMiniPay?: boolean } }).ethereum?.isMiniPay) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time MiniPay environment detection
     setIsMiniPay(true)
     if (miniPayConnectTried.current || evmAddress) return
     const injectedConnector = connectors.find((c) => c.type === 'injected')

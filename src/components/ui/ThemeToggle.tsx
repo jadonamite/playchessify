@@ -7,6 +7,7 @@ export default function ThemeToggle() {
   const [mounted, setMounted] = useState(false)
 
   // Avoid hydration mismatch by waiting until mounted
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration mount flag
   useEffect(() => setMounted(true), [])
 
   if (!mounted) return <div style={{ width: 40, height: 40 }} />

@@ -103,6 +103,7 @@ function ChainCard({
         {/* Ecosystem Badge */}
         <div className="flex items-center gap-2 mb-3">
           <div className="w-6 h-6 flex items-center justify-center relative bg-white/5 rounded-lg border border-white/10 p-1">
+            {/* eslint-disable-next-line @next/next/no-img-element -- dynamic remote chain icon URL */}
             <img src={iconUrl} alt="chain" className="w-full h-full object-contain" />
           </div>
           <span
@@ -267,6 +268,7 @@ export default function ChainSelectModal({
                     className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center overflow-hidden"
                     title={provider.name}
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- dynamic wallet provider icon */}
                     <img
                       src={provider.icon}
                       alt={provider.name}
