@@ -31,7 +31,7 @@ function LogoutIcon() {
 
 export default function Navbar() {
   const {
-    isConnected, isReady, address,
+    isReady, address,
     disconnectAll,
     connect,
   } = useWallet()

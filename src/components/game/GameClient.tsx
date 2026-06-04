@@ -679,7 +679,7 @@ export default function GameClient() {
                 {/* Sound toggle */}
                 <div className="mt-4 flex justify-end">
                   <button
-                    onClick={() => setSoundOn(s => !s)}
+                    onClick={() => setSoundOn(!soundOn)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] border transition-colors"
                     style={{
                       borderColor: soundOn ? 'rgba(0,204,255,0.3)' : 'rgba(255,255,255,0.08)',

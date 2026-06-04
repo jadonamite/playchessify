@@ -16,7 +16,6 @@ import { useProfile } from '@/hooks/useProfile'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import ClaimModal from '@/components/ui/ClaimModal'
-import { useSettingsStore } from '@/hooks/useSettingsStore'
 import LoadingState from '@/components/ui/LoadingState'
 // @ts-expect-error - intentional unused variable
 import { useReadContract, useAccount } from 'wagmi'
@@ -99,8 +98,6 @@ export default function LobbyContent() {
   const { data: myProfile } = useProfile(celoAddress ?? null)
   const [claimModalOpen, setClaimModalOpen] = useState(false)
   const showClaimBanner = isConnected && !!celoAddress && myProfile === null
-
-  const { soundEnabled } = useSettingsStore()
 
   const handleCreateGame = async () => {
     if (MAINTENANCE_MODE) return setIsComingSoonOpen(true)

@@ -144,11 +144,12 @@ export default function ProfilePage() {
     query: { enabled: !!profileAddress },
   })
 
-  const wins = stats ? Number((stats as any)[0]) : 0
-  const losses = stats ? Number((stats as any)[1]) : 0
-  const draws = stats ? Number((stats as any)[2]) : 0
-  const rating = stats ? Number((stats as any)[3]) : 0
-  const gamesPlayed = stats ? Number((stats as any)[4]) : 0
+  const s = stats as readonly bigint[] | undefined
+  const wins = s ? Number(s[0]) : 0
+  const losses = s ? Number(s[1]) : 0
+  const draws = s ? Number(s[2]) : 0
+  const rating = s ? Number(s[3]) : 0
+  const gamesPlayed = s ? Number(s[4]) : 0
   const winRate = gamesPlayed > 0 ? `${Math.round((wins / gamesPlayed) * 100)}%` : '—'
 
   const { data: recentGames = [], isLoading: historyLoading } = usePlayerHistory(profileAddress)
@@ -180,8 +181,8 @@ export default function ProfilePage() {
         timestamp,
       })
       setEditing(false)
-    } catch (e: any) {
-      setEditError(e?.message ?? 'Update failed')
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : 'Update failed')
     }
   }
 
