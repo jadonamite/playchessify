@@ -351,7 +351,7 @@ export default function GameClient() {
     try {
       // Promotion detection — defer to modal
       if (!promotion) {
-        const legals = game.moves({ square: src as any, verbose: true }) as any[]
+        const legals = game.moves({ square: src as Square, verbose: true }) as Move[]
         if (legals.find((m) => m.to === tgt && m.promotion)) {
           setPendingPromotion({ from: src, to: tgt, color: game.turn() === 'w' ? 'white' : 'black' })
           return true
@@ -623,7 +623,7 @@ export default function GameClient() {
                         if (moveFrom) {
                           styles[moveFrom] = { backgroundColor: 'rgba(0,204,255,0.35)' }
                           if (showMoveHints) {
-                            const legalMoves = game.moves({ square: moveFrom as any, verbose: true }) as Array<{ to: string; flags: string }>
+                            const legalMoves = game.moves({ square: moveFrom as Square, verbose: true }) as Array<{ to: string; flags: string }>
                             legalMoves.forEach(({ to, flags }) => {
                               const isCapture = flags.includes('c') || flags.includes('e')
                               styles[to] = isCapture
