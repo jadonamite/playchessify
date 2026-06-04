@@ -299,7 +299,7 @@ export default function GameClient() {
     if (isBotGame) return
     setTurnSecondsLeft(TURN_TIMEOUT_SECS)
     setOpponentTimedOut(false)
-  }, [relayMoves.length, isBotGame]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [relayMoves.length, isBotGame])
 
   // Countdown — only ticks when it's opponent's turn and game is live
   useEffect(() => {

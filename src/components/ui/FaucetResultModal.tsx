@@ -21,14 +21,15 @@ const KEYFRAMES = `
 
 /* ── Confetti Particles ── */
 function Confetti() {
-  const particles = Array.from({ length: 24 }, (_, i) => ({
+  // Generate once via lazy initial state — particles stay stable across re-renders
+  const [particles] = useState(() => Array.from({ length: 24 }, (_, i) => ({
     id: i,
     left: `${Math.random() * 100}%`,
     delay: `${Math.random() * 2}s`,
     duration: `${2 + Math.random() * 3}s`,
     size: 4 + Math.random() * 6,
     color: ['#00ccff', '#6a0dad', '#35ee66', '#ffb400', '#ff4466'][Math.floor(Math.random() * 5)],
-  }))
+  })))
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
