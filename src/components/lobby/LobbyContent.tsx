@@ -18,7 +18,7 @@ import ChessAvatar from '@/components/ui/ChessAvatar'
 import ClaimModal from '@/components/ui/ClaimModal'
 import LoadingState from '@/components/ui/LoadingState'
 // @ts-expect-error - intentional unused variable
-import { useReadContract, useAccount } from 'wagmi'
+import { useReadContract } from 'wagmi'
 import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
 import { formatUnits } from 'viem'
 function BgIcon({ children }: { children: React.ReactNode }) {
@@ -42,8 +42,7 @@ function BgIcon({ children }: { children: React.ReactNode }) {
 
 export default function LobbyContent() {
   const { isConnected, isReady, address: celoAddress } = useWallet()
-  // @ts-expect-error - intentional unused isCeloPending
-  const { createGame: createCeloGame, joinGame: joinCeloGame, isPending: isCeloPending } = useCeloChess()
+  const { createGame: createCeloGame, joinGame: joinCeloGame } = useCeloChess()
   const router = useRouter()
 
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)

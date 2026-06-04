@@ -62,19 +62,19 @@ function stopTrack(id: TrackId, durationMs = 1200) {
 
 // ─── public API ─────────────────────────────────────────────────────────────
 
-export function startAmbient(_ctx?: AudioContext) {
+export function startAmbient() {
   if (activeTrack === 'landing') return
   stopTrack('game', 800)
   startTrack('landing', 0.55)
 }
 
-export function startGameTrack(_ctx?: AudioContext) {
+export function startGameTrack() {
   if (activeTrack === 'game') return
   stopTrack('landing', 800)
   startTrack('game', 0.5)
 }
 
-export function stopAmbient(_ctx?: AudioContext) {
+export function stopAmbient() {
   stopTrack('landing')
   stopTrack('game')
   activeTrack = null

@@ -82,7 +82,7 @@ export default function NotFound() {
                Checkmated by <span className="text-[var(--c)]">the Void</span>
              </h2>
              <p className="text-[var(--t2)] mt-6 max-w-md mx-auto text-lg font-medium">
-               The move you're looking for doesn't exist in our protocol. Retrace your steps back to the lobby.
+               The move you&apos;re looking for doesn&apos;t exist in our protocol. Retrace your steps back to the lobby.
              </p>
            </div>
         </motion.div>
