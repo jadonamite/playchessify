@@ -18,7 +18,7 @@ import ChessName from '@/components/ui/ChessName'
 import { CHESS_GAME_ABI } from '@/config/abis'
 import { CELO_CONTRACTS } from '@/config/contracts'
 import type { ChessProfile } from '@/types/profile'
-import { usePlayerHistory } from '@/hooks/usePlayerHistory'
+import { usePlayerHistory, type PlayerHistoryItem } from '@/hooks/usePlayerHistory'
 
 function StatBox({ label, value, accent }: { label: string; value: string | number; accent?: boolean }) {
   return (
@@ -28,6 +28,52 @@ function StatBox({ label, value, accent }: { label: string; value: string | numb
         className="text-xl font-black leading-none"
         style={{ fontFamily: 'var(--fd)', color: accent ? 'var(--c)' : 'var(--t1)' }}
       >{value}</span>
+    </div>
+  )
+}
+
+const RESULT_BADGE: Record<PlayerHistoryItem['result'], { label: string; bg: string; color: string }> = {
+  win: { label: 'WIN', bg: 'rgba(74,222,128,0.12)', color: '#4ade80' },
+  loss: { label: 'LOSS', bg: 'rgba(239,68,68,0.12)', color: '#f87171' },
+  draw: { label: 'DRAW', bg: 'rgba(255,255,255,0.05)', color: 'var(--t3)' },
+  active: { label: 'LIVE', bg: 'rgba(255,255,255,0.04)', color: 'var(--c)' },
+  waiting: { label: 'WAITING', bg: 'rgba(251,191,36,0.12)', color: '#fbbf24' },
+}
+
+function GameRow({ g, cta, onClick }: { g: PlayerHistoryItem; cta: string; onClick: () => void }) {
+  const badge = RESULT_BADGE[g.result]
+  const live = g.result === 'active'
+  return (
+    <div className="flex items-center justify-between py-3 gap-4">
+      <div className="flex items-center gap-3 min-w-0">
+        <span
+          className="flex items-center gap-1.5 text-[8px] font-black tracking-[0.2em] uppercase px-2 py-0.5 rounded"
+          style={{ background: badge.bg, color: badge.color }}
+        >
+          {live && <span className="w-1.5 h-1.5 rounded-full bg-[var(--c)] animate-pulse" />}
+          {badge.label}
+        </span>
+        {g.opponent ? (
+          <div className="flex items-center gap-2 min-w-0">
+            <ChessAvatar address={g.opponent} size={20} />
+            <ChessName address={g.opponent} short asLink className="text-xs text-[var(--t2)] truncate" />
+          </div>
+        ) : (
+          <span className="text-xs text-[var(--t3)]">Open challenge</span>
+        )}
+      </div>
+      <div className="flex items-center gap-4 shrink-0">
+        <span className="text-[9px] text-[var(--t3)] font-bold uppercase tracking-widest">{g.role}</span>
+        <span className="text-xs font-black text-[var(--c)]" style={{ fontFamily: 'var(--fd)' }}>
+          {g.wager} <span className="text-[9px] opacity-60">CHESS</span>
+        </span>
+        <button
+          onClick={onClick}
+          className="text-[8px] font-black tracking-widest uppercase text-[var(--t3)] hover:text-[var(--c)] transition-colors"
+        >
+          {cta}
+        </button>
+      </div>
     </div>
   )
 }
@@ -106,6 +152,11 @@ export default function ProfilePage() {
   const winRate = gamesPlayed > 0 ? `${Math.round((wins / gamesPlayed) * 100)}%` : '—'
 
   const { data: recentGames = [], isLoading: historyLoading } = usePlayerHistory(profileAddress)
+
+  const activeGames = recentGames.filter((g) => g.result === 'active' || g.result === 'waiting')
+  const finishedGames = recentGames.filter(
+    (g) => g.result === 'win' || g.result === 'loss' || g.result === 'draw',
+  )
 
   const startEdit = () => {
     setEditDisplayName(profile?.displayName ?? '')
@@ -267,6 +318,39 @@ export default function ProfilePage() {
               )}
             </ClayCard>
 
+            {/* Dashboard quick actions — own profile only */}
+            {isOwn && (
+              <div className="flex gap-3">
+                <GlowButton variant="brand" fullWidth parallelogram onClick={() => router.push('/app/lobby')}>
+                  ▶ NEW GAME
+                </GlowButton>
+                <GlowButton variant="ghost" fullWidth onClick={() => router.push('/app/leaderboard')}>
+                  RANKINGS
+                </GlowButton>
+              </div>
+            )}
+
+            {/* In Play — active & waiting games */}
+            {activeGames.length > 0 && (
+              <ClayCard className="p-6">
+                <p className="flex items-center gap-2 text-[10px] font-black tracking-[0.25em] uppercase text-[var(--t3)] mb-4">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--c)] animate-pulse" />
+                  In Play
+                  <span className="text-[var(--c)]">{activeGames.length}</span>
+                </p>
+                <div className="flex flex-col divide-y divide-white/5">
+                  {activeGames.map((g) => (
+                    <GameRow
+                      key={g.id}
+                      g={g}
+                      cta={isOwn ? (g.result === 'waiting' ? 'OPEN' : 'RESUME') : 'WATCH'}
+                      onClick={() => router.push(`/app/game/${g.id}`)}
+                    />
+                  ))}
+                </div>
+              </ClayCard>
+            )}
+
             {/* On-chain stats */}
             <ClayCard className="p-6">
               <p className="text-[10px] font-black tracking-[0.25em] uppercase text-[var(--t3)] mb-4">
@@ -283,7 +367,7 @@ export default function ProfilePage() {
             </ClayCard>
 
             {/* Recent Games */}
-            {(recentGames.length > 0 || historyLoading) && (
+            {(finishedGames.length > 0 || historyLoading) && (
               <ClayCard className="p-6">
                 <p className="text-[10px] font-black tracking-[0.25em] uppercase text-[var(--t3)] mb-4">
                   Recent Games
@@ -294,46 +378,13 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <div className="flex flex-col divide-y divide-white/5">
-                    {recentGames.slice(0, 10).map((g) => (
-                      <div key={g.id} className="flex items-center justify-between py-3 gap-4">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <span
-                            className="text-[8px] font-black tracking-[0.2em] uppercase px-2 py-0.5 rounded"
-                            style={{
-                              background: g.result === 'win' ? 'rgba(74,222,128,0.12)' :
-                                g.result === 'loss' ? 'rgba(239,68,68,0.12)' :
-                                'rgba(255,255,255,0.05)',
-                              color: g.result === 'win' ? '#4ade80' :
-                                g.result === 'loss' ? '#f87171' :
-                                'var(--t3)',
-                            }}
-                          >
-                            {g.result === 'win' ? 'WIN' : g.result === 'loss' ? 'LOSS' : g.result.toUpperCase()}
-                          </span>
-                          {g.opponent ? (
-                            <div className="flex items-center gap-2 min-w-0">
-                              <ChessAvatar address={g.opponent} size={20} />
-                              <ChessName address={g.opponent} short asLink className="text-xs text-[var(--t2)] truncate" />
-                            </div>
-                          ) : (
-                            <span className="text-xs text-[var(--t3)]">Open challenge</span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4 shrink-0">
-                          <span className="text-[9px] text-[var(--t3)] font-bold uppercase tracking-widest">
-                            {g.role}
-                          </span>
-                          <span className="text-xs font-black text-[var(--c)]" style={{ fontFamily: 'var(--fd)' }}>
-                            {g.wager} <span className="text-[9px] opacity-60">CHESS</span>
-                          </span>
-                          <button
-                            onClick={() => router.push(`/app/game/${g.id}`)}
-                            className="text-[8px] font-black tracking-widest uppercase text-[var(--t3)] hover:text-[var(--c)] transition-colors"
-                          >
-                            VIEW
-                          </button>
-                        </div>
-                      </div>
+                    {finishedGames.slice(0, 10).map((g) => (
+                      <GameRow
+                        key={g.id}
+                        g={g}
+                        cta="VIEW"
+                        onClick={() => router.push(`/app/game/${g.id}`)}
+                      />
                     ))}
                   </div>
                 )}
