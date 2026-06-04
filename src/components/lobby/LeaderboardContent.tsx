@@ -537,7 +537,7 @@ export default function LeaderboardContent() {
 
                   <div className="divide-y divide-white/5">
                     <AnimatePresence mode="popLayout">
-                      {rest.map((entry, idx) => (
+                      {pageItems.map((entry, idx) => (
                         <RankRow
                           key={entry.address}
                           entry={entry}
@@ -548,6 +548,34 @@ export default function LeaderboardContent() {
                       ))}
                     </AnimatePresence>
                   </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="px-6 md:px-8 py-4 border-t border-white/5 flex items-center justify-between gap-4">
+                      <GlowButton
+                        variant="ghost"
+                        size="sm"
+                        disabled={currentPage === 1}
+                        onClick={() => setPage(currentPage - 1)}
+                      >
+                        ← PREV
+                      </GlowButton>
+                      <span
+                        className="text-[10px] font-black tracking-[0.25em] uppercase text-[var(--t3)] whitespace-nowrap"
+                        style={{ fontFamily: 'var(--fd)' }}
+                      >
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <GlowButton
+                        variant="ghost"
+                        size="sm"
+                        disabled={currentPage === totalPages}
+                        onClick={() => setPage(currentPage + 1)}
+                      >
+                        NEXT →
+                      </GlowButton>
+                    </div>
+                  )}
                 </motion.div>
               )}
 
