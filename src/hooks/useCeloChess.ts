@@ -11,6 +11,12 @@ import { useToastStore } from '@/hooks/useToastStore'
 const LOG_PREFIX = '[useCeloChess]'
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
+// Option A — approve a large-but-finite allowance so repeat games skip the approve tx
+// (the allowance check below only re-approves once this is exhausted). A finite cap keeps
+// wallets from showing the scary "unlimited approval" warning. Option B (EIP-2612 permit)
+// would remove the approve tx entirely — tracked separately.
+const APPROVAL_ALLOWANCE = parseUnits('1000000', TOKEN_DECIMALS) // 1,000,000 CHESS
+
 export function useCeloChess() {
   const { address } = useAccount()
   const { writeContractAsync } = useWriteContract()
@@ -64,7 +70,7 @@ export function useCeloChess() {
           address: CELO_CONTRACTS.token as `0x${string}`,
           abi: CHESS_TOKEN_ABI,
           functionName: 'approve',
-          args: [CELO_CONTRACTS.game as `0x${string}`, amount],
+          args: [CELO_CONTRACTS.game as `0x${string}`, amount > APPROVAL_ALLOWANCE ? amount : APPROVAL_ALLOWANCE],
         })
 
         const approveReceipt = await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
@@ -175,7 +181,7 @@ export function useCeloChess() {
           address: CELO_CONTRACTS.token as `0x${string}`,
           abi: CHESS_TOKEN_ABI,
           functionName: 'approve',
-          args: [CELO_CONTRACTS.game as `0x${string}`, amount],
+          args: [CELO_CONTRACTS.game as `0x${string}`, amount > APPROVAL_ALLOWANCE ? amount : APPROVAL_ALLOWANCE],
         })
 
         const approveReceipt = await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
