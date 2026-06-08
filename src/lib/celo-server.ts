@@ -107,6 +107,33 @@ export async function getOnchainGame(gameId: number): Promise<OnchainGame> {
   }
 }
 
+// Short-lived in-memory cache to coalesce the per-move on-chain reads the relay
+// does (moves arrive seconds apart; status/players barely change in that window).
+const _gameCache = new Map<number, { at: number; game: OnchainGame }>()
+const GAME_CACHE_TTL_MS = 5_000
+
+export async function getOnchainGameCached(gameId: number): Promise<OnchainGame> {
+  const hit = _gameCache.get(gameId)
+  if (hit && Date.now() - hit.at < GAME_CACHE_TTL_MS) return hit.game
+  const game = await getOnchainGame(gameId)
+  _gameCache.set(gameId, { at: Date.now(), game })
+  return game
+}
+
+/** Verify a wallet signature over an arbitrary message. Handles EOAs and, via
+ *  EIP-1271, ERC-4337 smart accounts (Tier A). */
+export async function verifyWalletSignature(
+  signer: Address,
+  message: string,
+  signature: `0x${string}`,
+): Promise<boolean> {
+  try {
+    return await getPublicClient().verifyMessage({ address: signer, message, signature })
+  } catch {
+    return false
+  }
+}
+
 // ── On-chain writes ──────────────────────────────────────────────────────────
 
 /** Oracle settles a game to its terminal result. Waits for the receipt. */
