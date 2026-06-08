@@ -48,10 +48,12 @@ const GAME_ADDRESS = CELO_CONTRACTS.game as Address
 const TOKEN_ADDRESS = CELO_CONTRACTS.token as Address
 
 // ── Public client (reads) ────────────────────────────────────────────────────
-let _publicClient: ReturnType<typeof createPublicClient> | null = null
-export function getPublicClient() {
-  if (_publicClient) return _publicClient
-  _publicClient = createPublicClient({ chain: CHAIN, transport: http(RPC_URL) })
+function makePublicClient() {
+  return createPublicClient({ chain: CHAIN, transport: http(RPC_URL) })
+}
+let _publicClient: ReturnType<typeof makePublicClient> | null = null
+export function getPublicClient(): ReturnType<typeof makePublicClient> {
+  if (!_publicClient) _publicClient = makePublicClient()
   return _publicClient
 }
 
