@@ -158,7 +158,7 @@ export default function GameClient() {
 
   useEffect(() => {
     if (!celoGameData) return
-    const gd = celoGameData as { white: string; black: string; wager: bigint; status: bigint }
+    const gd = celoGameData as { white: string; black: string; wager: bigint; status: number }
     setGameData({
       white:  gd.white,
       black:  gd.black,
