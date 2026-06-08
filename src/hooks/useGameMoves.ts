@@ -12,6 +12,23 @@ export interface MoveRecord {
   player: string
   moveNumber: number
   ts: number
+  sig?: string
+  signer?: string
+}
+
+export type SignMove = (message: string) => Promise<`0x${string}` | null>
+
+// Builds the message to sign for a move. Must stay identical to the server's
+// canonicalMoveMessage in '@/lib/settlement'.
+function moveMessage(p: { chain: string; gameId: number; moveNumber: number; san: string; fen: string }): string {
+  return [
+    'playchessify:move',
+    `chain:${p.chain}`,
+    `game:${p.gameId}`,
+    `n:${p.moveNumber}`,
+    `san:${p.san}`,
+    `fen:${p.fen}`,
+  ].join('\n')
 }
 
 interface UseGameMovesOptions {
@@ -24,7 +41,8 @@ interface UseGameMovesResult {
   moves: MoveRecord[]
   isLoading: boolean
   error: string | null
-  submitMove: (san: string, player: string) => Promise<boolean>
+  // fen = resulting position after the move; sign = optional per-tier signer.
+  submitMove: (san: string, player: string, fen: string, sign?: SignMove) => Promise<boolean>
   refresh: () => Promise<void>
 }
 
@@ -75,15 +93,23 @@ export function useGameMoves({ chain, gameId, enabled }: UseGameMovesOptions): U
     return () => clearInterval(interval)
   }, [enabled, chain, gameId, refresh])
 
-  const submitMove = useCallback(async (san: string, player: string): Promise<boolean> => {
+  const submitMove = useCallback(async (san: string, player: string, fen: string, sign?: SignMove): Promise<boolean> => {
     if (!chain || gameId === undefined || gameId === null) return false
 
     const moveNumber = movesRef.current.length + 1
+
+    // Sign the move where the wallet supports it (Tier A/C). MiniPay returns null
+    // and the move is submitted unsigned — the relay still binds it to the turn.
+    let sig: `0x${string}` | null = null
+    if (sign) {
+      sig = await sign(moveMessage({ chain, gameId, moveNumber, san, fen }))
+    }
+
     try {
       const res = await fetch(`/api/games/${chain}/${gameId}/moves`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ san, player, moveNumber }),
+        body: JSON.stringify({ san, player, moveNumber, ...(sig ? { sig } : {}) }),
       })
       const body = await res.json().catch(() => ({}))
 

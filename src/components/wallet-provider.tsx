@@ -13,6 +13,9 @@ export type WalletTier = 'minipay' | 'smart' | 'eoa'
 
 interface WalletContextType {
   address: string | null
+  // The on-chain identity used as the game "player": the smart-account address for
+  // Tier A, otherwise the connected EOA. Always matches white/black on-chain.
+  playerAddress: string | null
   isConnected: boolean
   isReady: boolean
   isMiniPay: boolean
@@ -28,6 +31,7 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType>({
   address: null,
+  playerAddress: null,
   isConnected: false,
   isReady: false,
   isMiniPay: false,
@@ -73,6 +77,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     : smartWalletClient?.account
       ? 'smart'
       : 'eoa'
+
+  // On-chain identity = smart-account address for Tier A, else the connected EOA.
+  const playerAddress =
+    walletTier === 'smart' && smartWalletClient?.account
+      ? smartWalletClient.account.address
+      : address
 
   // MiniPay runs the dApp in an in-app browser with an injected wallet.
   // Detect it and auto-connect the injected connector — MiniPay grants without
@@ -127,6 +137,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     <WalletContext.Provider
       value={{
         address,
+        playerAddress,
         isConnected,
         isReady,
         isMiniPay,
