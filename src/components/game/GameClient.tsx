@@ -74,7 +74,7 @@ export default function GameClient() {
   const gameId    = isBotGame ? 0 : Number(params?.id ?? 0)
 
   const { address: celoAddress, isConnected, connectWallet } = useWallet()
-  const { joinGame: joinCelo, resign: resignCelo, reportWin: reportCeloWin } = useCeloChess()
+  const { joinGame: joinCelo, resign: resignCelo, requestSettle } = useCeloChess()
   const showToast = useToastStore((s) => s.showToast)
 
   // ── chess state ─────────────────────────────────────────────────────────────
@@ -115,7 +115,6 @@ export default function GameClient() {
 
   // Track end-game actions the local user initiated so we can derive result immediately.
   const [didResign, setDidResign]         = useState(false)
-  const [wagerClaimed, setWagerClaimed]   = useState(false)
   const [opponentTimedOut, setOpponentTimedOut] = useState(false)
 
   // ── opponent turn timer (5 min) ─────────────────────────────────────────────
@@ -192,6 +191,8 @@ export default function GameClient() {
   const contractActive  = gameData?.status === '1'
   const contractDone    = gameData?.status === '2'
   const contractDraw    = gameData?.status === '4'
+  // Settled on-chain = the oracle (or resign/draw) moved escrow to a terminal state.
+  const payoutSettled   = contractDone || contractDraw
   const canJoinFromPage = gameIsWaiting && !isParticipant && !isBotGame && isConnected
 
   const STATUS_LABELS: Record<string, string> = {
@@ -490,10 +491,20 @@ export default function GameClient() {
     setDidResign(true)
   })
 
-  const handleReportWin = () => withTx(async () => {
-    await reportCeloWin(gameId)
-    setWagerClaimed(true)
-  })
+  // Auto-settle: once the board is terminal (or the opponent timed out) for a live
+  // on-chain game, ask the server to settle via the oracle. Idempotent and safe for
+  // both clients; a useRef guard stops this client from spamming the endpoint, and a
+  // failed request clears the guard so it can retry.
+  const settleRequestedRef = useRef(false)
+  useEffect(() => {
+    if (isBotGame || !isParticipant || !contractActive) return
+    const terminal = gameOver || opponentTimedOut
+    if (!terminal || settleRequestedRef.current) return
+    settleRequestedRef.current = true
+    requestSettle(gameId).then((ok) => {
+      if (!ok) settleRequestedRef.current = false
+    })
+  }, [isBotGame, isParticipant, contractActive, gameOver, opponentTimedOut, gameId, requestSettle])
 
   const handleJoinMatch = () => {
     if (!gameData) return
@@ -945,24 +956,25 @@ export default function GameClient() {
                   </div>
                 )}
 
-                {/* Actions */}
+                {/* Actions — payout is settled automatically by the oracle; the
+                    panel below is a passive status driven by the getGame poll. */}
                 <div className="flex flex-col gap-3 w-full">
-                  {gameResult === 'won' && !wagerClaimed && (
-                    <GlowButton
-                      variant="brand"
-                      fullWidth
-                      parallelogram
-                      loading={txPending}
-                      onClick={handleReportWin}
-                    >
-                      CLAIM {wagerFormatted} CHESS
-                    </GlowButton>
-                  )}
-                  {wagerClaimed && (
-                    <div className="flex items-center justify-center gap-2 py-2">
-                      <div className="w-2 h-2 rounded-full bg-green-400" />
-                      <span className="text-green-400 text-xs font-black tracking-widest uppercase">Winnings Claimed</span>
-                    </div>
+                  {gameData && Number(gameData.wager) > 0 && gameResult !== 'lost' && (
+                    payoutSettled ? (
+                      <div className="flex items-center justify-center gap-2 py-2">
+                        <div className="w-2 h-2 rounded-full bg-green-400" />
+                        <span className="text-green-400 text-xs font-black tracking-widest uppercase">
+                          {gameResult === 'draw' ? 'Wager Refunded' : 'Payout Received'}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2 py-2">
+                        <div className="w-2 h-2 rounded-full bg-[var(--c)] animate-pulse" />
+                        <span className="text-[var(--c)] text-xs font-black tracking-widest uppercase">
+                          Settling payout…
+                        </span>
+                      </div>
+                    )
                   )}
                   <GlowButton variant="ghost" fullWidth onClick={() => router.push('/app/lobby')}>
                     BACK TO LOBBY

@@ -8,19 +8,27 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title ChessGame — On-chain chess protocol for Chessify on Celo
 /// @notice Handles game lifecycle, wagers (CHESS token), escrow, and player stats.
-///         Chess rules are validated client-side by chess.js — only results are submitted on-chain.
-///         Designed for Remix → deploy to Celo Sepolia / Mainnet.
+///         Chess rules are validated server-side: the oracle replays the authoritative
+///         move list (Redis relay) with chess.js and settles only terminal positions.
 ///
 /// DEPLOYMENT ORDER:
 ///   1. Deploy ChessToken
 ///   2. Deploy ChessGame(chessTokenAddress)
-///   3. Players call ChessToken.approve(chessGameAddress, amount) before wagering
+///   3. Owner calls setOracle(oracleAddress)
+///   4. Players call ChessToken.approve(chessGameAddress, amount) before wagering
 ///
-/// TRUST MODEL (free-to-play):
-///   - resign()         → caller loses (can only hurt yourself)
-///   - claimTimeout()   → verified on-chain via block height
-///   - proposeDraw()    → requires opponent's acceptDraw()
-///   - reportWin()      → caller claims checkmate (acceptable for free tokens)
+/// TRUST MODEL:
+///   - createGame/joinGame/resign/proposeDraw/acceptDraw/cancelGame are msg.sender-based
+///     and self-custodial — they work identically for EOAs and ERC-4337 smart accounts,
+///     and a caller can only ever hurt themselves.
+///   - settleGame() is the ONLY way to declare a winner, and only the oracle may call it.
+///     The oracle holds the same trust the move-relay already holds: it independently
+///     replays the Redis move list (never trusting the client), settles only terminal
+///     positions, and cross-checks the on-chain players. It is a dedicated low-value hot
+///     key, rotatable by the owner via setOracle. Funds can only ever go to white / black
+///     / split — never to the oracle.
+///   - reclaimExpired() is an oracle-independent backstop: if the oracle is down, either
+///     participant can recover the escrow after EXPIRY_BLOCKS (split refund).
 
 contract ChessGame is ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
@@ -33,7 +41,7 @@ contract ChessGame is ReentrancyGuard, Ownable {
         Waiting,    // 0 — created, waiting for opponent
         Active,     // 1 — both players joined, game in progress
         Finished,   // 2 — game ended (win/loss)
-        Cancelled,  // 3 — creator cancelled before opponent joined
+        Cancelled,  // 3 — creator cancelled before join, or expired escrow reclaimed
         Draw        // 4 — game ended in draw
     }
 
@@ -51,10 +59,7 @@ contract ChessGame is ReentrancyGuard, Ownable {
         uint256 wager;           // 0 = free game
         GameStatus status;
         GameResult result;
-        address turn;            // whose turn it is (for timeout)
-        uint256 moveCount;
         uint256 createdAt;       // block number
-        uint256 lastMoveBlock;   // block number of last move (for timeout)
         address drawProposer;    // who proposed draw (address(0) if none)
     }
 
@@ -72,8 +77,11 @@ contract ChessGame is ReentrancyGuard, Ownable {
 
     IERC20 public immutable chessToken;
 
+    /// @notice Settlement oracle — the only address allowed to declare a winner/draw.
+    address public oracle;
+
     uint256 public gameNonce;                           // auto-incrementing game ID
-    uint256 public timeoutBlocks = 360;                 // ~30 min on Celo (5s blocks)
+    uint256 public constant EXPIRY_BLOCKS = 17_280;     // ~1 day on Celo (5s blocks) — reclaim backstop
     uint256 public constant STARTING_ELO = 1200;
     uint256 public constant K_FACTOR = 32;
     uint256 public constant MIN_RATING = 100;
@@ -87,16 +95,15 @@ contract ChessGame is ReentrancyGuard, Ownable {
 
     error GameNotFound();
     error NotYourGame();
-    error NotYourTurn();
     error GameNotWaiting();
     error GameNotActive();
     error CannotJoinOwnGame();
-    error InsufficientAllowance();
-    error TimeoutNotReached();
     error NoDrawProposed();
     error AlreadyProposedDraw();
     error CannotAcceptOwnDraw();
-    error InvalidWager();
+    error NotOracle();
+    error InvalidResult();
+    error NotExpired();
 
     // ══════════════════════════════════════════════
     //  Events
@@ -104,13 +111,22 @@ contract ChessGame is ReentrancyGuard, Ownable {
 
     event GameCreated(uint256 indexed gameId, address indexed white, uint256 wager);
     event GameJoined(uint256 indexed gameId, address indexed black);
-    event MoveMade(uint256 indexed gameId, address indexed player, uint256 moveCount);
     event GameResigned(uint256 indexed gameId, address indexed loser, address indexed winner);
-    event TimeoutClaimed(uint256 indexed gameId, address indexed winner, address indexed loser);
     event DrawProposed(uint256 indexed gameId, address indexed proposer);
     event DrawAccepted(uint256 indexed gameId);
-    event CheckmateReported(uint256 indexed gameId, address indexed winner, address indexed loser);
+    event GameSettled(uint256 indexed gameId, GameResult result, address winner);
     event GameCancelled(uint256 indexed gameId, address indexed creator);
+    event WagerReclaimed(uint256 indexed gameId, address indexed by);
+    event OracleUpdated(address indexed oracle);
+
+    // ══════════════════════════════════════════════
+    //  Modifiers
+    // ══════════════════════════════════════════════
+
+    modifier onlyOracle() {
+        if (msg.sender != oracle) revert NotOracle();
+        _;
+    }
 
     // ══════════════════════════════════════════════
     //  Constructor
@@ -144,10 +160,7 @@ contract ChessGame is ReentrancyGuard, Ownable {
             wager: wager,
             status: GameStatus.Waiting,
             result: GameResult.None,
-            turn: msg.sender,         // white moves first
-            moveCount: 0,
             createdAt: block.number,
-            lastMoveBlock: block.number,
             drawProposer: address(0)
         });
 
@@ -171,27 +184,8 @@ contract ChessGame is ReentrancyGuard, Ownable {
 
         game.black = msg.sender;
         game.status = GameStatus.Active;
-        game.lastMoveBlock = block.number;
 
         emit GameJoined(gameId, msg.sender);
-    }
-
-    /// @notice Record that a move was made (turn flip + timeout reset).
-    ///         No move data stored on-chain — chess.js validates client-side.
-    function submitMove(uint256 gameId) external {
-        Game storage game = games[gameId];
-        if (game.status != GameStatus.Active) revert GameNotActive();
-        if (msg.sender != game.turn) revert NotYourTurn();
-
-        // Flip turn
-        game.turn = (msg.sender == game.white) ? game.black : game.white;
-        game.moveCount++;
-        game.lastMoveBlock = block.number;
-
-        // Clear any pending draw proposal when a move is made
-        game.drawProposer = address(0);
-
-        emit MoveMade(gameId, msg.sender, game.moveCount);
     }
 
     /// @notice Resign — caller loses, opponent wins automatically.
@@ -204,32 +198,9 @@ contract ChessGame is ReentrancyGuard, Ownable {
         address winner = (msg.sender == game.white) ? game.black : game.white;
         GameResult result = (winner == game.white) ? GameResult.WhiteWins : GameResult.BlackWins;
 
-        _endGame(gameId, game, GameStatus.Finished, result, winner, msg.sender);
+        _endGame(game, GameStatus.Finished, result, winner, msg.sender);
 
         emit GameResigned(gameId, msg.sender, winner);
-    }
-
-    /// @notice Claim timeout win — opponent hasn't moved in `timeoutBlocks`.
-    ///         Verified on-chain via block height. Cannot be faked.
-    function claimTimeout(uint256 gameId) external nonReentrant {
-        Game storage game = games[gameId];
-        if (game.status != GameStatus.Active) revert GameNotActive();
-        if (msg.sender != game.white && msg.sender != game.black) revert NotYourGame();
-
-        // Timeout: the player whose turn it is has been AFK
-        // The CLAIMER must NOT be the one whose turn it is
-        if (msg.sender == game.turn) revert NotYourTurn();
-
-        // Verify timeout period has passed
-        if (block.number - game.lastMoveBlock < timeoutBlocks) revert TimeoutNotReached();
-
-        address winner = msg.sender;
-        address loser  = game.turn;  // the one who timed out
-        GameResult result = (winner == game.white) ? GameResult.WhiteWins : GameResult.BlackWins;
-
-        _endGame(gameId, game, GameStatus.Finished, result, winner, loser);
-
-        emit TimeoutClaimed(gameId, winner, loser);
     }
 
     /// @notice Propose a draw (stalemate, agreement, repetition, 50-move rule, etc.)
@@ -252,40 +223,31 @@ contract ChessGame is ReentrancyGuard, Ownable {
         if (game.drawProposer == address(0)) revert NoDrawProposed();
         if (game.drawProposer == msg.sender) revert CannotAcceptOwnDraw();
 
-        // End as draw — each player gets their wager back
-        game.status = GameStatus.Draw;
-        game.result = GameResult.DrawResult;
-
-        // Refund both players
-        if (game.wager > 0) {
-            chessToken.safeTransfer(game.white, game.wager);
-            chessToken.safeTransfer(game.black, game.wager);
-        }
-
-        // Update stats
-        playerStats[game.white].draws++;
-        playerStats[game.white].gamesPlayed++;
-        playerStats[game.black].draws++;
-        playerStats[game.black].gamesPlayed++;
+        _endDraw(game);
 
         emit DrawAccepted(gameId);
     }
 
-    /// @notice Report checkmate — caller claims they won.
-    ///         Trust model: since CHESS tokens are free, the risk of false reports is minimal.
-    ///         Chess.js validates the actual game state on the frontend.
-    function reportWin(uint256 gameId) external nonReentrant {
+    /// @notice Settle a game to its terminal result. ORACLE ONLY.
+    ///         The oracle replays the authoritative move list off-chain and submits the
+    ///         result here. Idempotent: a non-Active game reverts, so either client may
+    ///         safely trigger settlement.
+    /// @param result Must be WhiteWins, BlackWins, or DrawResult.
+    function settleGame(uint256 gameId, GameResult result) external onlyOracle nonReentrant {
         Game storage game = games[gameId];
         if (game.status != GameStatus.Active) revert GameNotActive();
-        if (msg.sender != game.white && msg.sender != game.black) revert NotYourGame();
 
-        address winner = msg.sender;
-        address loser  = (msg.sender == game.white) ? game.black : game.white;
-        GameResult result = (winner == game.white) ? GameResult.WhiteWins : GameResult.BlackWins;
-
-        _endGame(gameId, game, GameStatus.Finished, result, winner, loser);
-
-        emit CheckmateReported(gameId, winner, loser);
+        if (result == GameResult.WhiteWins || result == GameResult.BlackWins) {
+            address winner = (result == GameResult.WhiteWins) ? game.white : game.black;
+            address loser  = (result == GameResult.WhiteWins) ? game.black : game.white;
+            _endGame(game, GameStatus.Finished, result, winner, loser);
+            emit GameSettled(gameId, result, winner);
+        } else if (result == GameResult.DrawResult) {
+            _endDraw(game);
+            emit GameSettled(gameId, result, address(0));
+        } else {
+            revert InvalidResult();
+        }
     }
 
     /// @notice Cancel a game that hasn't started yet. Only the creator can cancel.
@@ -303,6 +265,26 @@ contract ChessGame is ReentrancyGuard, Ownable {
         }
 
         emit GameCancelled(gameId, msg.sender);
+    }
+
+    /// @notice Oracle-independent backstop: after EXPIRY_BLOCKS with the game still Active,
+    ///         either participant reclaims the escrow (split refund). Prevents permanently
+    ///         locked funds if the oracle is unavailable. The first call settles both sides.
+    function reclaimExpired(uint256 gameId) external nonReentrant {
+        Game storage game = games[gameId];
+        if (game.status != GameStatus.Active) revert GameNotActive();
+        if (msg.sender != game.white && msg.sender != game.black) revert NotYourGame();
+        if (block.number - game.createdAt < EXPIRY_BLOCKS) revert NotExpired();
+
+        game.status = GameStatus.Cancelled;
+        game.result = GameResult.Cancelled;
+
+        if (game.wager > 0) {
+            chessToken.safeTransfer(game.white, game.wager);
+            chessToken.safeTransfer(game.black, game.wager);
+        }
+
+        emit WagerReclaimed(gameId, msg.sender);
     }
 
     // ══════════════════════════════════════════════
@@ -324,30 +306,21 @@ contract ChessGame is ReentrancyGuard, Ownable {
         return gameNonce;
     }
 
-    /// @notice Check if a game can be timed out right now
-    function canClaimTimeout(uint256 gameId) external view returns (bool) {
+    /// @notice Whether a game's escrow is reclaimable right now (expiry backstop reached).
+    function canReclaim(uint256 gameId) external view returns (bool) {
         Game storage game = games[gameId];
         if (game.status != GameStatus.Active) return false;
-        return block.number - game.lastMoveBlock >= timeoutBlocks;
-    }
-
-    /// @notice Get blocks remaining until timeout is claimable
-    function blocksUntilTimeout(uint256 gameId) external view returns (uint256) {
-        Game storage game = games[gameId];
-        if (game.status != GameStatus.Active) return 0;
-
-        uint256 elapsed = block.number - game.lastMoveBlock;
-        if (elapsed >= timeoutBlocks) return 0;
-        return timeoutBlocks - elapsed;
+        return block.number - game.createdAt >= EXPIRY_BLOCKS;
     }
 
     // ══════════════════════════════════════════════
     //  Owner Admin
     // ══════════════════════════════════════════════
 
-    /// @notice Update the timeout duration (in blocks)
-    function setTimeoutBlocks(uint256 _blocks) external onlyOwner {
-        timeoutBlocks = _blocks;
+    /// @notice Set the settlement oracle (rotatable for key compromise / rotation).
+    function setOracle(address newOracle) external onlyOwner {
+        oracle = newOracle;
+        emit OracleUpdated(newOracle);
     }
 
     // ══════════════════════════════════════════════
@@ -356,7 +329,6 @@ contract ChessGame is ReentrancyGuard, Ownable {
 
     /// @dev End a game with a winner and loser. Transfers pot + updates Elo.
     function _endGame(
-        uint256 /* gameId */,
         Game storage game,
         GameStatus status,
         GameResult result,
@@ -380,6 +352,25 @@ contract ChessGame is ReentrancyGuard, Ownable {
 
         // Update Elo ratings
         _updateElo(winner, loser);
+    }
+
+    /// @dev End a game as a draw — refund both wagers and update draw stats.
+    ///      Shared by acceptDraw (player agreement) and settleGame (oracle-detected draw).
+    function _endDraw(Game storage game) internal {
+        game.status = GameStatus.Draw;
+        game.result = GameResult.DrawResult;
+
+        // Refund both players
+        if (game.wager > 0) {
+            chessToken.safeTransfer(game.white, game.wager);
+            chessToken.safeTransfer(game.black, game.wager);
+        }
+
+        // Update stats
+        playerStats[game.white].draws++;
+        playerStats[game.white].gamesPlayed++;
+        playerStats[game.black].draws++;
+        playerStats[game.black].gamesPlayed++;
     }
 
     /// @dev Simplified Elo calculation using integer math.

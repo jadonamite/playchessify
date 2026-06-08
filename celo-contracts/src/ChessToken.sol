@@ -24,6 +24,11 @@ contract ChessToken is ERC20, Ownable {
 
     bool public mintEnabled = true;
 
+    /// @notice Server wallet permitted to provision CHESS to gasless (MiniPay) wallets,
+    ///         so a 0-balance EOA never has to spend gas on faucetClaim. Mints a valueless
+    ///         faucet token only — it can never touch game escrow.
+    address public minter;
+
     /// @notice Block number of each address's last faucet claim
     mapping(address => uint256) public lastFaucetClaim;
 
@@ -34,6 +39,7 @@ contract ChessToken is ERC20, Ownable {
     error MintDisabled();
     error FaucetCooldown(uint256 blocksRemaining);
     error InvalidAmount();
+    error NotMinter();
 
     // ──────────────────────────────────────────────
     //  Events
@@ -41,6 +47,16 @@ contract ChessToken is ERC20, Ownable {
 
     event FaucetClaimed(address indexed player, uint256 amount);
     event MintToggled(bool enabled);
+    event MinterUpdated(address indexed minter);
+
+    // ──────────────────────────────────────────────
+    //  Modifiers
+    // ──────────────────────────────────────────────
+
+    modifier onlyMinter() {
+        if (msg.sender != minter) revert NotMinter();
+        _;
+    }
 
     // ──────────────────────────────────────────────
     //  Constructor
@@ -107,6 +123,24 @@ contract ChessToken is ERC20, Ownable {
         for (uint256 i = 0; i < recipients.length; i++) {
             _mint(recipients[i], amounts[i]);
         }
+    }
+
+    // ──────────────────────────────────────────────
+    //  Minter — Server provisions CHESS to gasless wallets
+    // ──────────────────────────────────────────────
+
+    /// @notice Set the minter (server wallet that provisions CHESS to MiniPay users).
+    function setMinter(address newMinter) external onlyOwner {
+        minter = newMinter;
+        emit MinterUpdated(newMinter);
+    }
+
+    /// @notice Minter provisions CHESS to a recipient (e.g. a fresh MiniPay wallet)
+    ///         without that wallet spending gas on faucetClaim.
+    function mintTo(address to, uint256 amount) external onlyMinter {
+        if (!mintEnabled) revert MintDisabled();
+        if (amount == 0) revert InvalidAmount();
+        _mint(to, amount);
     }
 
     // ──────────────────────────────────────────────

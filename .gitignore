@@ -90,3 +90,10 @@ fix_env.js
 stellar-contracts/target/
 .soroban/
 
+
+# Foundry
+celo-contracts/lib/
+celo-contracts/out/
+celo-contracts/cache/
+celo-contracts/broadcast/
+foundry.lock
