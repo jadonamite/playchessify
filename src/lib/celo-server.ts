@@ -181,6 +181,29 @@ export async function sponsorGas(to: Address, amountCusd: bigint): Promise<Hash>
   return hash
 }
 
+/** Whether the gas-sponsor wallet can still cover a drip of `amountCusd`
+ *  (and has CELO for its own gas). Lets the API degrade gracefully to self-pay
+ *  instead of failing when the faucet runs dry. */
+export async function gasSponsorCanCover(amountCusd: bigint): Promise<boolean> {
+  try {
+    const { account } = walletFor('GAS_SPONSOR_PRIVATE_KEY')
+    const pub = getPublicClient()
+    const [cusd, celo] = await Promise.all([
+      pub.readContract({
+        address: CUSD_ADDRESS,
+        abi: ERC20_MIN_ABI,
+        functionName: 'balanceOf',
+        args: [account.address],
+      }) as Promise<bigint>,
+      pub.getBalance({ address: account.address }),
+    ])
+    // Keep a small CELO floor so the sponsor can still pay for the transfer's gas.
+    return cusd >= amountCusd && celo > 1_000_000_000_000_000n // > 0.001 CELO
+  } catch {
+    return false
+  }
+}
+
 /** Current CHESS balance of an address. */
 export async function chessBalanceOf(addr: Address): Promise<bigint> {
   return (await getPublicClient().readContract({

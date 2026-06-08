@@ -18,6 +18,32 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 // wallets from showing the scary "unlimited approval" warning.
 const APPROVAL_ALLOWANCE = parseUnits('1000000', TOKEN_DECIMALS) // 1,000,000 CHESS
 
+// Minimum cUSD (18 decimals) a MiniPay wallet needs on hand to pay gas for a write.
+const MIN_GAS_CUSD = 5_000_000_000_000_000n // 0.005 cUSD
+const GAS_POLL_ATTEMPTS = 12
+const GAS_POLL_INTERVAL_MS = 1_000
+
+// Result of provisioning gas for a MiniPay wallet.
+//   'sponsored' → drip landed, wallet now funded
+//   'has-gas'   → wallet already had enough
+//   'self-pay'  → no sponsorship (other tiers, or faucet degraded) — user pays
+type GasStatus = 'sponsored' | 'has-gas' | 'self-pay'
+
+// Minimal ERC20 fragment for reading a wallet's cUSD balance.
+const ERC20_BALANCE_ABI = [
+  { type: 'function', name: 'balanceOf', stateMutability: 'view', inputs: [{ name: 'a', type: 'address' }], outputs: [{ type: 'uint256' }] },
+] as const
+
+// Heuristic: did a write fail because sponsorship (paymaster/bundler/userOp) was
+// unavailable, rather than a genuine revert? Used to retry once and to message clearly.
+function isSponsorshipError(err: unknown): boolean {
+  const m = (err instanceof Error ? err.message : String(err)).toLowerCase()
+  return (
+    m.includes('paymaster') || m.includes('sponsor') || m.includes('bundler') ||
+    m.includes('user operation') || m.includes('useroperation') || m.includes('aa2') || m.includes('aa3')
+  )
+}
+
 interface WriteRequest {
   address: Address
   abi: Abi
@@ -55,7 +81,18 @@ export function useCeloChess() {
           functionName: req.functionName,
           args: req.args,
         })
-        return smartClient.sendTransaction({ to: req.address, data })
+        // Graceful degradation for Tier A: a Privy hosted paymaster can't be
+        // disabled per-call (so we can't "self-pay" a smart account), but most
+        // sponsorship failures are transient bundler/paymaster hiccups — retry once
+        // before surfacing a clear, actionable error.
+        try {
+          return await smartClient.sendTransaction({ to: req.address, data })
+        } catch (err) {
+          if (!isSponsorshipError(err)) throw err
+          console.warn(`${LOG_PREFIX} sponsored tx failed, retrying once`, err)
+          await sleep(1500)
+          return await smartClient.sendTransaction({ to: req.address, data })
+        }
       }
 
       if (walletTier === 'minipay') {
@@ -79,23 +116,81 @@ export function useCeloChess() {
     [walletTier, smartClient, writeContractAsync],
   )
 
-  // ── MiniPay gas provisioning ─────────────────────────────────────────────────
-  // Before a MiniPay wallet writes, ensure it has cUSD gas (+ CHESS). Idempotent on
-  // the server; a no-op for other tiers.
-  const ensureGasSponsored = useCallback(async () => {
-    if (walletTier !== 'minipay' || !playerAddress) return
+  // Read a wallet's current cUSD (gas) balance.
+  const readCusdBalance = useCallback(
+    async (addr: Address): Promise<bigint> => {
+      if (!publicClient) return 0n
+      try {
+        return (await publicClient.readContract({
+          address: CUSD_ADDRESS as Address,
+          abi: ERC20_BALANCE_ABI,
+          functionName: 'balanceOf',
+          args: [addr],
+        })) as bigint
+      } catch {
+        return 0n
+      }
+    },
+    [publicClient],
+  )
+
+  // Poll until the dripped cUSD actually lands (replaces a blind sleep): confirms
+  // the wallet's own RPC view sees the gas before it estimates the next tx.
+  const pollUntilGas = useCallback(
+    async (addr: Address): Promise<boolean> => {
+      for (let i = 0; i < GAS_POLL_ATTEMPTS; i++) {
+        if ((await readCusdBalance(addr)) >= MIN_GAS_CUSD) return true
+        await sleep(GAS_POLL_INTERVAL_MS)
+      }
+      return false
+    },
+    [readCusdBalance],
+  )
+
+  // ── MiniPay gas provisioning (Tier B) ────────────────────────────────────────
+  // Ensure a MiniPay wallet has cUSD gas before it writes. No-op (→ 'self-pay') for
+  // other tiers. Degrades gracefully: if the wallet already has gas, if the faucet
+  // is exhausted, or if the request fails, we fall through to self-pay instead of
+  // blocking — the caller then decides whether the user can actually cover it.
+  const ensureGasSponsored = useCallback(async (): Promise<GasStatus> => {
+    if (walletTier !== 'minipay' || !playerAddress) return 'self-pay'
+
+    const addr = playerAddress as Address
+    if ((await readCusdBalance(addr)) >= MIN_GAS_CUSD) return 'has-gas'
+
     try {
-      await fetch('/api/gas/sponsor', {
+      const res = await fetch('/api/gas/sponsor', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ address: playerAddress, chain: 'celo' }),
+        body: JSON.stringify({ address: addr, chain: 'celo' }),
       })
-      // Give the drip a moment to land before the wallet estimates gas.
-      await sleep(1500)
+      const body = (await res.json().catch(() => ({}))) as { degraded?: boolean }
+      if (body?.degraded) {
+        showToast('Gasless service is busy — using your cUSD for gas.', 'info')
+        return 'self-pay'
+      }
     } catch (err) {
-      console.warn(`${LOG_PREFIX} gas sponsor request failed (continuing)`, err)
+      console.warn(`${LOG_PREFIX} gas sponsor request failed (degrading to self-pay)`, err)
+      return 'self-pay'
     }
-  }, [walletTier, playerAddress])
+
+    // Confirm the drip landed before continuing.
+    return (await pollUntilGas(addr)) ? 'sponsored' : 'self-pay'
+  }, [walletTier, playerAddress, readCusdBalance, pollUntilGas, showToast])
+
+  // When sponsorship didn't cover the wallet, make sure the user can actually
+  // self-pay (has some cUSD); otherwise stop with a clear, actionable message
+  // instead of a cryptic wallet gas-estimation error.
+  const assertCanSelfPay = useCallback(
+    async (status: GasStatus): Promise<void> => {
+      if (walletTier !== 'minipay' || status !== 'self-pay' || !playerAddress) return
+      if ((await readCusdBalance(playerAddress as Address)) < MIN_GAS_CUSD) {
+        showToast('Free gas is temporarily unavailable and your wallet has no cUSD for gas. Add a little cUSD and try again.', 'error')
+        throw new Error(`${LOG_PREFIX} self-pay not possible: no cUSD for gas`)
+      }
+    },
+    [walletTier, playerAddress, readCusdBalance, showToast],
+  )
 
   // ── shared steps ─────────────────────────────────────────────────────────────
   const ensureBalance = useCallback(
@@ -156,7 +251,9 @@ export function useCeloChess() {
       const userCancelled =
         msg.includes('rejected') || msg.includes('user denied') || msg.includes('cancelled')
       if (userCancelled) showToast('Transaction cancelled by user.', 'error')
-      else if (!msg.includes('insufficient balance'))
+      else if (isSponsorshipError(err))
+        showToast('Sponsored (gasless) transaction is unavailable right now — please retry in a moment.', 'error')
+      else if (!msg.includes('insufficient balance') && !msg.includes('no cusd for gas'))
         showToast('Blockchain interaction failed. Please check your transaction and try again.', 'error')
     },
     [showToast],
@@ -177,7 +274,8 @@ export function useCeloChess() {
       setIsPending(true)
       try {
         const amount = parseUnits(wagerAmount.toString(), TOKEN_DECIMALS)
-        await ensureGasSponsored()
+        const gas = await ensureGasSponsored()
+        await assertCanSelfPay(gas)
         if (amount > 0n) {
           await ensureBalance(amount, wagerAmount)
           await ensureApproval(amount)
@@ -217,7 +315,7 @@ export function useCeloChess() {
         setIsPending(false)
       }
     },
-    [playerAddress, publicClient, ensureGasSponsored, ensureBalance, ensureApproval, sendWrite, showToast, handleTxError],
+    [playerAddress, publicClient, ensureGasSponsored, assertCanSelfPay, ensureBalance, ensureApproval, sendWrite, showToast, handleTxError],
   )
 
   // ── joinGame ────────────────────────────────────────────────────────────────
@@ -235,7 +333,8 @@ export function useCeloChess() {
       setIsPending(true)
       try {
         const amount = parseUnits(wagerAmount.toString(), TOKEN_DECIMALS)
-        await ensureGasSponsored()
+        const gas = await ensureGasSponsored()
+        await assertCanSelfPay(gas)
         if (amount > 0n) {
           await ensureBalance(amount, wagerAmount)
           await ensureApproval(amount)
@@ -261,7 +360,7 @@ export function useCeloChess() {
         setIsPending(false)
       }
     },
-    [playerAddress, publicClient, ensureGasSponsored, ensureBalance, ensureApproval, sendWrite, showToast, handleTxError],
+    [playerAddress, publicClient, ensureGasSponsored, assertCanSelfPay, ensureBalance, ensureApproval, sendWrite, showToast, handleTxError],
   )
 
   // ── resign ──────────────────────────────────────────────────────────────────

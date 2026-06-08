@@ -6,6 +6,7 @@ import {
   chessBalanceOf,
   sponsorGas,
   mintChessTo,
+  gasSponsorCanCover,
 } from '@/lib/celo-server'
 
 export const runtime = 'nodejs'
@@ -75,6 +76,13 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true, skippedGas: true, mintTx })
       }
       return NextResponse.json({ ok: true, skipped: true })
+    }
+
+    // Graceful degradation: if the faucet can't cover a drip, tell the client to
+    // self-pay rather than block. `degraded` is a signal, not an error.
+    if (!(await gasSponsorCanCover(GAS_DRIP_CUSD))) {
+      console.warn(`${LOG_PREFIX} sponsor wallet exhausted — degrading to self-pay`)
+      return NextResponse.json({ ok: false, degraded: true, reason: 'sponsor-exhausted' }, { status: 200 })
     }
 
     // ── Sybil guards ──
