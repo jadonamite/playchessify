@@ -231,3 +231,4 @@ export const ERC20_MIN_ABI = [
 ] as const
 
 export { GAME_ADDRESS, TOKEN_ADDRESS, getAddress }
+export type { Address }

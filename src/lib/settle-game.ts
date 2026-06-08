@@ -1,4 +1,3 @@
-import 'server-only'
 import { Chess } from 'chess.js'
 import { Redis } from '@upstash/redis'
 import { getMoves, unregisterActiveGame, type Chain, type MoveRecord } from '@/lib/moves-store'

@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useWallet } from '@/components/wallet-provider'
 import { useCeloChess } from '@/hooks/useCeloChess'
+import { useMoveSigner } from '@/hooks/useMoveSigner'
 import { useReadContract } from 'wagmi'
 import { CHESS_GAME_ABI } from '@/config/abis'
 import { CELO_CONTRACTS, CELO_CHAIN_ID, TOKEN_DECIMALS } from '@/config/contracts'
@@ -73,8 +74,9 @@ export default function GameClient() {
   const isBotGame = params?.id === 'bot'
   const gameId    = isBotGame ? 0 : Number(params?.id ?? 0)
 
-  const { address: celoAddress, isConnected, connectWallet } = useWallet()
+  const { address: celoAddress, playerAddress, isConnected, connectWallet } = useWallet()
   const { joinGame: joinCelo, resign: resignCelo, requestSettle } = useCeloChess()
+  const { signMove } = useMoveSigner()
   const showToast = useToastStore((s) => s.showToast)
 
   // ── chess state ─────────────────────────────────────────────────────────────
@@ -392,10 +394,12 @@ export default function GameClient() {
         if (isBotGame) localStorage.removeItem(BOT_SAVE_KEY)
       }
 
-      // PvP: relay only — no on-chain tx per move
+      // PvP: relay only — no on-chain tx per move. Use the on-chain identity
+      // (playerAddress) so it matches white/black, and sign the move where the
+      // wallet can (Tier A/C); MiniPay submits unsigned.
       if (!isBotGame) {
-        const player = celoAddress ?? ''
-        void relaySubmitMove(move.san, player).then((ok) => {
+        const player = playerAddress ?? celoAddress ?? ''
+        void relaySubmitMove(move.san, player, next.fen(), signMove).then((ok) => {
           if (!ok) showToast('Move conflict with opponent — resyncing board.', 'invalid')
         })
       }
@@ -427,7 +431,7 @@ export default function GameClient() {
       showToast(game.inCheck() ? 'Your King is in check — resolve it first.' : "You can't move there.", 'invalid')
       return false
     }
-  }, [game, isBotGame, celoAddress, relaySubmitMove, showToast, getCtx])
+  }, [game, isBotGame, celoAddress, playerAddress, signMove, relaySubmitMove, showToast, getCtx])
 
   // ── board event handlers ─────────────────────────────────────────────────────
 
