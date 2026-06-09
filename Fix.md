@@ -57,8 +57,6 @@ Out-of-scope on the first pass; cleared now so the project type-checks cleanly e
 - `lobby/LobbyContent.tsx` — dropped unused `Suspense` and `useMemo` imports.
 - `ui/ChessModels.tsx` — `BasePiece` now actually consumes its `emissive` and `emissiveIntensity` props (they were being silently ignored, so modal accents like the red CheckScene glow weren't reaching the material).
 - `ui/GameStatusModal.tsx` — removed dead `GlowButton` import and the never-injected `KEYFRAMES` string.
-- `tests/global.d.ts` (new) — re-declares the Clarinet vitest globals (`simnet`, `testEnvironment`, etc.) locally because the upstream `.d.ts` under `node_modules/@stacks/clarinet-sdk/vitest-helpers` is filtered out by this tsconfig's blanket `exclude: ["node_modules"]`. Vitest still installs the runtime globals; this just teaches the type-checker about them.
-- `tests/*.test.ts` — commented out the unused `accounts` / `address1` stub bindings; they're brought back when a real test references them.
 
 ## Progress
 

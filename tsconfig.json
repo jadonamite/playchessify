@@ -34,8 +34,6 @@
   },
   "include": [
     "src",
-    "node_modules/@stacks/clarinet-sdk/vitest-helpers/src",
-    "tests",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],

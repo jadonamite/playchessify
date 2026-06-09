@@ -70,7 +70,7 @@ blocks (~1 day at Celo's 5 s blocks) · `EXPIRY_BLOCKS = 17,280` · `STARTING_EL
 · `K_FACTOR = 32` · `MIN_RATING = 100`.
 
 > Note: `config/contracts.ts` still carries `FAUCET_COOLDOWN = 144` / `BLOCK_TIME_SECS = 600`
-> from the old 10-min-block (Stacks) era. These are display-only and wrong for Celo;
+> from an old 10-min-block assumption. These are display-only and wrong for Celo (5 s blocks);
 > the authoritative cooldown is the contract's 17,280 blocks.
 
 ---
