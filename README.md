@@ -1,83 +1,93 @@
-# ♟️ Chessify Protocol
+# ♟️ Playchessify
 
-A **live, mainnet, free-to-play chess protocol** deployed on **Celo (EVM)**.
+A **free-to-play, on-chain chess protocol on Celo**. Players wager free-to-mint CHESS
+tokens on real chess matches, with a premium cyber-industrial UI.
 
-Players wager free-to-mint CHESS tokens on fully on-chain chess matches, with a premium Cyber-Industrial UI.
+Chess rules are validated **off-chain** (chess.js over a Redis move relay) and the result
+is **settled on-chain by a trusted oracle** — the contract escrows wagers and pays out, but
+never validates chess itself.
 
 ---
 
 ## 📐 Architecture
 
-Two contracts on Celo Mainnet:
+Two Foundry contracts on Celo (`celo-contracts/`):
 
-- **`ChessToken.sol`** — ERC-20 CHESS token with faucet and batch-minting
-- **`ChessGame.sol`** — Game engine: lifecycle, Elo rating, escrow, timeout enforcement
+- **`ChessToken.sol`** — ERC-20 CHESS with a faucet (1,000/day), owner mint, and a `minter`
+  role so the server can provision tokens to gasless wallets.
+- **`ChessGame.sol`** — lifecycle, wager escrow, Elo, and **oracle settlement**
+  (`settleGame`, `onlyOracle`) plus a `reclaimExpired` backstop.
 
----
+Off-chain services:
 
-## 🚀 Protocol Status
+- **Move relay** — Upstash Redis. Moves are turn-bound and (for capable wallets) signed.
+- **Settlement** — a server oracle replays the move list and calls `settleGame`; a
+  **Vercel Cron** (`/api/cron/settle`, every minute) guarantees finished games settle.
+- **Gas sponsorship** — MiniPay wallets get a cUSD gas drip + CHESS provision; social/email
+  wallets use an ERC-4337 Pimlico paymaster; everything degrades gracefully to self-pay.
 
-| Layer | Component | Status |
-| :--- | :--- | :--- |
-| **Blockchain** | Smart Contracts (Celo) | ✅ Live Mainnet |
-| **Frontend** | Landing, Lobby, Game board, History, Leaderboard, Faucet | ✅ Complete |
-| **Wallet** | Privy — embedded wallets + social login (Google, X, Discord, GitHub, email) | ✅ Complete |
-| **Game Flow** | Create → Approve → Spend → Join → Play → Resolve | ✅ Complete |
-| **Token Checks** | Balance validation + multi-step wallet confirmation UI | ✅ Complete |
-| **On-Chain Move Verification** | Hash/PGN anchoring to prevent client-side fake wins | 🔜 Planned |
-
----
-
-## 🔥 Economic Model
-
-### Gas (CELO)
-Used strictly for transaction fees. All wagers use CHESS tokens only — zero financial risk.
-
-### CHESS Token
-Free-to-access in-game currency for wagers, rewards, and ranking.
-- **Faucet**: 1,000 CHESS per wallet per day
-- **Wagers**: Players select a CHESS amount before match creation; balance is validated before any transaction
-- **Escrow**: Wagers are locked in the contract and released only on game resolution
+See **handover.md** for the full system reference and **DEPLOY.md** for the release runbook.
 
 ---
 
-## 🎮 Lifecycle Flow
+## 🔥 Economic model
 
-1. **Connect** — User connects via Privy (injected/external wallet, embedded wallet, or social login). Auto-redirects to `/app/lobby`.
-2. **Create Match** — Player A selects a wager. Balance is checked on-chain. Wallet prompts approval then game initialization (2 transactions).
-3. **Join Match** — Player B joins from the lobby or by match ID. Same approve → lock flow.
-4. **Gameplay** — Players alternate moves. Each move is submitted on-chain (`submitMove`). Turn order and 5-min timers enforced.
-5. **Resolution** — Match ends via Checkmate (`reportWin`), Resignation, Draw, or Timeout. Contract releases the pot and updates Elo.
+CELO/cUSD pay gas only. Wagers use **CHESS**, which is free:
+
+- **Faucet** — 1,000 CHESS per wallet per ~24 h (17,280 Celo blocks).
+- **Wagers** — selected before match creation; balance checked on-chain; escrowed in the contract.
+- **Payout** — released only on settlement (oracle win/draw, resign, accepted draw, or expiry reclaim).
+
+Zero financial risk — CHESS has no monetary value.
 
 ---
 
-## 🗂️ Frontend Pages
+## 🎮 Lifecycle
+
+1. **Connect** — Privy (injected/MiniPay, embedded, or social). Auto-redirect to `/app/lobby`.
+2. **Create** — pick a wager → approve (large-but-finite allowance) → `createGame`. Repeat games
+   skip the approve until the allowance is exhausted.
+3. **Join** — from the lobby or by match ID; matching wager is locked.
+4. **Play** — moves go to the **relay** (not on-chain). Capable wallets sign each move; MiniPay
+   moves are turn-bound. The opponent's board syncs by polling.
+5. **Resolve** — checkmate/draw/timeout is replayed and **settled on-chain by the oracle**;
+   resign and accepted draws settle directly. The winner receives the pot; draws refund both.
+
+---
+
+## 🗂️ Pages
 
 | Route | Page |
-| :--- | :--- |
-| `/` | Landing page (Hero, Features, CTA) |
-| `/app/lobby` | Game lobby — open challenges, create match, profile stats |
-| `/app/game/[id]` | Live game board (react-chessboard + chess.js + on-chain moves) |
-| `/app/faucet` | CHESS token faucet |
-| `/app/history` | Past games for connected wallet |
+|---|---|
+| `/` | Landing |
+| `/app/lobby` | Open challenges, create/join, profile stats |
+| `/app/game/[id]` | Live board (`id` or `bot` for offline AI) |
+| `/app/faucet` | CHESS faucet |
+| `/app/history` | Your on-chain games |
 | `/app/leaderboard` | On-chain Elo rankings |
+| `/app/profile/[identifier]` | `.chess` profile (address or username) |
+| `/app/settings` | Sound, board theme, piece set, AI difficulty, hints, profile |
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Tech
 
-- **Contracts**: Solidity 0.8.20 (Celo)
-- **Frontend**: Next.js 16, TypeScript, Tailwind CSS 4.x
-- **Animation**: Framer Motion
-- **Wallet**: Privy (`@privy-io/react-auth` + `@privy-io/wagmi`), Wagmi, Viem
-- **Chess**: chess.js (rules), react-chessboard (UI)
-- **State**: Zustand
+- **Contracts:** Solidity 0.8.20, OpenZeppelin, Foundry
+- **Frontend:** Next.js 16, TypeScript, Tailwind CSS 4, Framer Motion
+- **Wallet:** Privy (embedded + social + ERC-4337 smart wallets), Wagmi, Viem
+- **Off-chain:** Upstash Redis (relay + profiles), Vercel Cron (settlement)
+- **Chess:** chess.js (rules), react-chessboard (UI)
+- **State:** Zustand, TanStack Query
 
 ---
 
-## 📖 Deployed Contracts
+## 📖 Deployed contracts
 
-| Contract | Address |
+> The new oracle contracts are **not deployed yet**; `config/contracts.ts` still defaults to the
+> old pre-oracle addresses below. Run **DEPLOY.md**, then point `NEXT_PUBLIC_CELO_TOKEN` /
+> `NEXT_PUBLIC_CELO_GAME` at the new addresses.
+
+| Contract | Address (old / pre-oracle) |
 | :--- | :--- |
 | ChessToken | `0xE370aad742dF8DC8Ae9c0F0b9f265334D39e2197` |
 | ChessGame | `0xf85f00D39A84b5180390548Ea9f76B0458607E78` |

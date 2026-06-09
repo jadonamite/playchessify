@@ -1,3 +1,9 @@
+;; ⚠️ SUPERSEDED — LEGACY STACKS/CLARITY CONSOLE (2026-06-09)
+;; These commands target the OLD Stacks multi-contract system (.router, .chess-token,
+;; submit-move) from the original Chessify repo. Playchessify is Celo-only with off-chain
+;; move relay + oracle settlement — there is no on-chain submit-move here. Kept for history
+;; only. For current contract calls see celo-contracts/ and handover.md.
+
 ;; 1. Claim free CHESS tokens for two players
 ::set_tx_sender ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
 (contract-call? .chess-token faucet-claim)

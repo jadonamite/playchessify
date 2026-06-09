@@ -1,5 +1,14 @@
 # ♟️ Chessify Protocol — Comprehensive Project Progress & Context
 
+> [!WARNING]
+> **SUPERSEDED — historical only (as of 2026-06-09).** This document describes the *old*
+> multi-chain **Chessify** repo (Stacks + Celo, 2-contract Clarity/Solidity system, the
+> `chessify-protocol` NPM package, simulation scripts) and an on-chain per-move (`submit-move`)
+> / `report-win` model. **Playchessify is now Celo-only** with off-chain move relay + oracle
+> settlement (`settleGame`), and the contract has no `submitMove`/`reportWin`/`turn`/`moveCount`.
+> For current architecture read **handover.md**; for release steps read **DEPLOY.md**. This file
+> is kept for history of the earlier protocol work only — do not treat it as current state.
+
 > **PURPOSE OF THIS DOCUMENT**: This file serves as the canonical onboarding context for any LLM or developer picking up this project. It describes the full architecture, deployed state, file-by-file inventory, known issues, and roadmap. Read this before touching any code.
 
 **Current Phase**: Phase 3 — Multi-Chain Integration (Hybrid Proto-Launch)  

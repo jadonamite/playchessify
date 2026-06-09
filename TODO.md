@@ -24,6 +24,12 @@
   (split refund) after `EXPIRY_BLOCKS` (~1 day) if the oracle is down — an oracle-independent backstop.
 
 ## Deploy / ops (new — oracle settlement release)
+
+> Full runbook now lives in **DEPLOY.md**. Already shipped: the settlement worker
+> (`/api/cron/settle`, wired in `vercel.json`, every minute) and the gas-sponsor hardening
+> (balance-poll instead of blind sleep, typed `GasStatus`, Tier A/B graceful degradation to
+> self-pay). The items below are the remaining release steps.
+
 - [ ] Deploy fresh contracts (Foundry): `forge script script/Deploy.s.sol:Deploy --rpc-url alfajores
   --broadcast --verify`, then point `NEXT_PUBLIC_CELO_TOKEN` / `NEXT_PUBLIC_CELO_GAME` at them.
   Migration note: old free-faucet balances are abandoned (app is pre-launch; everyone starts fresh).
