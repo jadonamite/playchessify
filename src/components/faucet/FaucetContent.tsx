@@ -30,16 +30,14 @@ const KEYFRAMES = `
 }
 `
 
-/* ═══════════════════════════════════════════
-   MAIN FAUCET CONTENT
-   ═══════════════════════════════════════════ */
-export default function FaucetContent() {
-  const router = useRouter()
-  const { isConnected, playerAddress, walletTier, connectWallet } = useWallet()
-  const { writeContractAsync } = useWriteContract()
-  const { client: smartClient } = useSmartWallets()
-  const publicClient = usePublicClient({ chainId: CELO_CHAIN_ID })
-  const queryClient = useQueryClient()
+/* ── 3D Background Scene ── */
+function FaucetScene() {
+  return (
+    <>
+      <ambientLight intensity={1.5} />
+      <directionalLight position={[10, 10, 5]} intensity={2} color="#00ccff" />
+      <directionalLight position={[-10, -10, -5]} intensity={1} color="#6a0dad" />
+      <Environment files="/textures/environment/city.hdr" />
 
       {/* Large background king */}
       <King position={[0, -0.5, -2]} color="#0f172a" emissive="#00ccff" emissiveIntensity={0.15} floatSpeed={0.5} floatIntensity={0.3} rotationIntensity={0.1} scale={2.5} />
@@ -76,15 +74,6 @@ export default function FaucetContent() {
   )
 }
 
-/* ── 3D Background Scene ── */
-function FaucetScene() {
-  return (
-    <>
-      <ambientLight intensity={1.5} />
-      <directionalLight position={[10, 10, 5]} intensity={2} color="#00ccff" />
-      <directionalLight position={[-10, -10, -5]} intensity={1} color="#6a0dad" />
-      <Environment files="/textures/environment/city.hdr" />
-
 /* ── TOKEN DISPLAY ── */
 function TokenDisplay({ balance }: { balance: string }) {
   return (
@@ -116,6 +105,17 @@ function TokenDisplay({ balance }: { balance: string }) {
     </motion.div>
   )
 }
+
+/* ═══════════════════════════════════════════
+   MAIN FAUCET CONTENT
+   ═══════════════════════════════════════════ */
+export default function FaucetContent() {
+  const router = useRouter()
+  const { isConnected, playerAddress, walletTier, connectWallet } = useWallet()
+  const { writeContractAsync } = useWriteContract()
+  const { client: smartClient } = useSmartWallets()
+  const publicClient = usePublicClient({ chainId: CELO_CHAIN_ID })
+  const queryClient = useQueryClient()
 
   const [isClaiming, setIsClaiming] = useState(false)
   const [resultType, setResultType] = useState<FaucetResultType>(null)
