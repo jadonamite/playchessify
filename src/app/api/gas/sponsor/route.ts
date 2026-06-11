@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Redis } from '@upstash/redis'
 import { isAddress, getAddress, type Address } from 'viem'
 import {
-  cusdBalanceOf,
+  usdmBalanceOf,
   chessBalanceOf,
   sponsorGas,
   mintChessTo,
@@ -14,10 +14,10 @@ export const dynamic = 'force-dynamic'
 
 const LOG_PREFIX = '[api/gas/sponsor]'
 
-// ── Drip economics (cUSD has 18 decimals; CHESS has 6) ───────────────────────
-// A MiniPay wallet only needs enough cUSD to pay gas for approve + create/join.
-const MIN_GAS_CUSD = 10_000_000_000_000_000n   // 0.01 cUSD — above this, no drip needed
-const GAS_DRIP_CUSD = 30_000_000_000_000_000n  // 0.03 cUSD — covers approve + create/join
+// ── Drip economics (USDm has 18 decimals; CHESS has 6) ───────────────────────
+// A MiniPay wallet only needs enough USDm to pay gas for approve + create/join.
+const MIN_GAS_USDM = 10_000_000_000_000_000n   // 0.01 USDm — above this, no drip needed
+const GAS_DRIP_USDM = 30_000_000_000_000_000n  // 0.03 USDm — covers approve + create/join
 const MIN_CHESS = 100_000_000n                 // 100 CHESS — below this we provision
 const CHESS_PROVISION = 1_000_000_000n         // 1,000 CHESS minted to fresh wallets
 
@@ -43,7 +43,7 @@ const K = {
 }
 
 // POST /api/gas/sponsor — Tier B (MiniPay) only.
-// Makes a 0-balance MiniPay EOA able to transact: provisions CHESS + drips cUSD gas.
+// Makes a 0-balance MiniPay EOA able to transact: provisions CHESS + drips USDm gas.
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown>
   try {
@@ -67,8 +67,8 @@ export async function POST(req: NextRequest) {
 
   try {
     // Fast path: already has enough gas → nothing to do.
-    const cusd = await cusdBalanceOf(address)
-    if (cusd >= MIN_GAS_CUSD) {
+    const usdm = await usdmBalanceOf(address)
+    if (usdm >= MIN_GAS_USDM) {
       // Still top up CHESS if the wallet is empty, so they never call the gas-charging faucet.
       const chess = await chessBalanceOf(address)
       if (chess < MIN_CHESS) {
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
 
     // Graceful degradation: if the faucet can't cover a drip, tell the client to
     // self-pay rather than block. `degraded` is a signal, not an error.
-    if (!(await gasSponsorCanCover(GAS_DRIP_CUSD))) {
+    if (!(await gasSponsorCanCover(GAS_DRIP_USDM))) {
       console.warn(`${LOG_PREFIX} sponsor wallet exhausted — degrading to self-pay`)
       return NextResponse.json({ ok: false, degraded: true, reason: 'sponsor-exhausted' }, { status: 200 })
     }
@@ -112,8 +112,8 @@ export async function POST(req: NextRequest) {
         mintTx = await mintChessTo(address, CHESS_PROVISION)
       }
 
-      // Drip cUSD gas.
-      const gasTx = await sponsorGas(address, GAS_DRIP_CUSD)
+      // Drip USDm gas.
+      const gasTx = await sponsorGas(address, GAS_DRIP_USDM)
 
       // Mark cooldown only on success.
       await redis.set(K.cooldown(address), '1', { ex: COOLDOWN_SECONDS })

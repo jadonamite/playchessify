@@ -17,7 +17,7 @@ import { CELO_CONTRACTS } from '@/config/contracts'
 // Wallet roles (kept as separate env vars for split/rotation; may share one key initially):
 //   ORACLE_PRIVATE_KEY      — calls settleGame (declares winner/draw)
 //   MINTER_PRIVATE_KEY      — calls token.mintTo (provisions CHESS to MiniPay wallets)
-//   GAS_SPONSOR_PRIVATE_KEY — drips cUSD gas to 0-balance MiniPay EOAs
+//   GAS_SPONSOR_PRIVATE_KEY — drips USDm gas to 0-balance MiniPay EOAs
 // All three hold CELO, so their own txs pay gas natively (no feeCurrency).
 
 // ── Contract result enum (mirrors ChessGame.GameResult) ──────────────────────
@@ -166,31 +166,31 @@ export async function mintChessTo(to: Address, amount: bigint): Promise<Hash> {
   return hash
 }
 
-/** Drip cUSD gas money to a 0-balance MiniPay EOA so it can transact. */
-export async function sponsorGas(to: Address, amountCusd: bigint): Promise<Hash> {
+/** Drip USDm gas money to a 0-balance MiniPay EOA so it can transact. */
+export async function sponsorGas(to: Address, amountUsdm: bigint): Promise<Hash> {
   const { account, client } = walletFor('GAS_SPONSOR_PRIVATE_KEY')
   const hash = await client.writeContract({
     account,
     chain: CHAIN,
-    address: CUSD_ADDRESS,
+    address: USDM_ADDRESS,
     abi: ERC20_MIN_ABI,
     functionName: 'transfer',
-    args: [to, amountCusd],
+    args: [to, amountUsdm],
   })
   await getPublicClient().waitForTransactionReceipt({ hash })
   return hash
 }
 
-/** Whether the gas-sponsor wallet can still cover a drip of `amountCusd`
+/** Whether the gas-sponsor wallet can still cover a drip of `amountUsdm`
  *  (and has CELO for its own gas). Lets the API degrade gracefully to self-pay
  *  instead of failing when the faucet runs dry. */
-export async function gasSponsorCanCover(amountCusd: bigint): Promise<boolean> {
+export async function gasSponsorCanCover(amountUsdm: bigint): Promise<boolean> {
   try {
     const { account } = walletFor('GAS_SPONSOR_PRIVATE_KEY')
     const pub = getPublicClient()
-    const [cusd, celo] = await Promise.all([
+    const [usdm, celo] = await Promise.all([
       pub.readContract({
-        address: CUSD_ADDRESS,
+        address: USDM_ADDRESS,
         abi: ERC20_MIN_ABI,
         functionName: 'balanceOf',
         args: [account.address],
@@ -198,7 +198,7 @@ export async function gasSponsorCanCover(amountCusd: bigint): Promise<boolean> {
       pub.getBalance({ address: account.address }),
     ])
     // Keep a small CELO floor so the sponsor can still pay for the transfer's gas.
-    return cusd >= amountCusd && celo > 1_000_000_000_000_000n // > 0.001 CELO
+    return usdm >= amountUsdm && celo > 1_000_000_000_000_000n // > 0.001 CELO
   } catch {
     return false
   }
@@ -214,10 +214,10 @@ export async function chessBalanceOf(addr: Address): Promise<bigint> {
   })) as bigint
 }
 
-/** Current cUSD balance of an address (fee-currency gas balance for MiniPay). */
-export async function cusdBalanceOf(addr: Address): Promise<bigint> {
+/** Current USDm balance of an address (fee-currency gas balance for MiniPay). */
+export async function usdmBalanceOf(addr: Address): Promise<bigint> {
   return (await getPublicClient().readContract({
-    address: CUSD_ADDRESS,
+    address: USDM_ADDRESS,
     abi: ERC20_MIN_ABI,
     functionName: 'balanceOf',
     args: [addr],
@@ -225,12 +225,13 @@ export async function cusdBalanceOf(addr: Address): Promise<bigint> {
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
-// cUSD (gas fee currency on Celo). Mainnet default; override per network.
-export const CUSD_ADDRESS = getAddress(
+// USDm (Mento Dollar — the cUSD rebrand: same contract, same 18 decimals).
+// Gas fee currency on Celo. Mainnet default; override per network.
+export const USDM_ADDRESS = getAddress(
   process.env.NEXT_PUBLIC_FEE_CURRENCY ??
     (IS_TESTNET
-      ? '0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1' // Alfajores cUSD
-      : '0x765DE816845861e75A25fCA122bb6898B8B1282a'), // Mainnet cUSD
+      ? '0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1' // Alfajores USDm
+      : '0x765DE816845861e75A25fCA122bb6898B8B1282a'), // Mainnet USDm
 )
 
 export const ERC20_MIN_ABI = [

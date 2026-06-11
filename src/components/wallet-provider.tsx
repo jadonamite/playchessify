@@ -6,7 +6,7 @@ import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
 import { useAccount, useDisconnect, useConnect, useConnectors } from 'wagmi'
 
 // Capability tier drives how on-chain writes are sponsored:
-//   'minipay' → legacy tx + cUSD gas-drip (MiniPay can't sign typed data)
+//   'minipay' → legacy tx + USDm gas-drip (MiniPay can't sign typed data)
 //   'smart'   → ERC-4337 userOp sponsored by the Pimlico paymaster
 //   'eoa'     → external injected wallet pays its own gas
 export type WalletTier = 'minipay' | 'smart' | 'eoa'
