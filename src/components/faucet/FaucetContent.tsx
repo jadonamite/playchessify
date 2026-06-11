@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, Suspense } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { Canvas } from '@react-three/fiber'
 import { Float, Environment, Text } from '@react-three/drei'
@@ -114,6 +115,7 @@ export default function FaucetContent() {
   const { writeContractAsync } = useWriteContract()
   const { client: smartClient } = useSmartWallets()
   const publicClient = usePublicClient({ chainId: CELO_CHAIN_ID })
+  const queryClient = useQueryClient()
 
   const [isClaiming, setIsClaiming] = useState(false)
   const [resultType, setResultType] = useState<FaucetResultType>(null)
@@ -121,7 +123,7 @@ export default function FaucetContent() {
   const [errorMessage, setErrorMessage] = useState<string>('')
 
   // Balance of the on-chain player identity (smart account for Tier A, else the EOA).
-  const { data: rawBalance, refetch: refetchBalance } = useReadContract({
+  const { data: rawBalance } = useReadContract({
     address: CELO_CONTRACTS.token as `0x${string}`,
     abi: CHESS_TOKEN_ABI,
     functionName: 'balanceOf',
@@ -189,7 +191,10 @@ export default function FaucetContent() {
       const hash = await claimCelo()
       setTxHash(hash || '')
       setResultType('success')
-      refetchBalance()
+      // Invalidate every cached query (this page's balance + the lobby's balance/
+      // stats) so navigating back to the lobby fetches the fresh on-chain balance
+      // instead of serving the stale cache.
+      queryClient.invalidateQueries()
     } catch (err) {
       const msg = (err instanceof Error ? err.message : '') || 'Unknown error'
 

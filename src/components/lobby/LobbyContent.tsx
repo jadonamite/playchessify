@@ -40,7 +40,7 @@ function BgIcon({ children }: { children: React.ReactNode }) {
 }
 
 export default function LobbyContent() {
-  const { isConnected, isReady, address: celoAddress } = useWallet()
+  const { isConnected, isReady, address: celoAddress, playerAddress } = useWallet()
   const { createGame: createCeloGame, joinGame: joinCeloGame } = useCeloChess()
   const router = useRouter()
 
@@ -60,26 +60,34 @@ export default function LobbyContent() {
   const [wins, setWins] = useState(0)
   const [losses, setLosses] = useState(0)
 
-  const { data: celoBalance, isPending: isBalanceLoading } = useReadContract({
+  // Balance/stats are keyed to the on-chain player identity (the smart account for
+  // Tier A, otherwise the connected EOA) — the same identity the game contract sees.
+  const {
+    data: celoBalance,
+    isPending: isBalanceLoading,
+    isRefetching,
+    refetch: refetchBalance,
+  } = useReadContract({
     address: CELO_CONTRACTS.token as `0x${string}`,
     abi: CHESS_TOKEN_ABI,
     functionName: 'balanceOf',
-    args: [celoAddress as `0x${string}`],
+    args: [playerAddress as `0x${string}`],
     chainId: CELO_CHAIN_ID,
-    query: { enabled: !!celoAddress }
+    query: { enabled: !!playerAddress, refetchInterval: 5000, staleTime: 0 }
   })
+  const isBalanceUpdating = isBalanceLoading || isRefetching
 
   const { data: celoStats } = useReadContract({
     address: CELO_CONTRACTS.game as `0x${string}`,
     abi: CHESS_GAME_ABI,
     functionName: 'playerStats',
-    args: [celoAddress as `0x${string}`],
+    args: [playerAddress as `0x${string}`],
     chainId: CELO_CHAIN_ID,
-    query: { enabled: !!celoAddress }
+    query: { enabled: !!playerAddress }
   })
 
   useEffect(() => {
-    if (celoAddress) {
+    if (playerAddress) {
       if (celoBalance !== undefined) setBalance(formatUnits(celoBalance as bigint, TOKEN_DECIMALS))
       if (celoStats) {
         const s = celoStats as readonly bigint[]
@@ -88,7 +96,7 @@ export default function LobbyContent() {
         setLosses(Number(s[1]))
       }
     }
-  }, [celoAddress, celoBalance, celoStats])
+  }, [playerAddress, celoBalance, celoStats])
 
   const { games: openGames, isLoading: isLobbyLoading, refresh: refreshLobby } = useLobby()
   const { data: lobbyProfileMap = {} } = useBatchProfiles(openGames.map((g) => g.creator))
@@ -488,6 +496,28 @@ export default function LobbyContent() {
                     {balance}
                   </span>
                   <span className="text-sm text-cyan-500 font-bold tracking-widest">CHESS</span>
+                  <button
+                    onClick={() => refetchBalance()}
+                    aria-label="Refresh balance"
+                    title="Refresh balance"
+                    className="self-center ml-1 p-1.5 rounded-full border border-white/10 bg-black/30 text-cyan-400 hover:bg-black/50 hover:border-white/20 transition-colors"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="14"
+                      height="14"
+                      fill="none"
+                      className={isBalanceUpdating ? 'animate-spin' : ''}
+                    >
+                      <path
+                        d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
                 </div>
 
                 <div className="flex justify-between items-center bg-black/40 p-5 rounded-2xl border border-white/5 mb-8">
@@ -615,7 +645,7 @@ export default function LobbyContent() {
                         <div className="text-right">
                           <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">YOUR BALANCE</span>
                           <span className="text-sm font-black text-cyan-400">
-                            {isBalanceLoading ? (
+                            {isBalanceUpdating ? (
                               <span className="inline-block w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin align-middle" />
                             ) : (
                               `${balance} CHESS`
@@ -631,7 +661,7 @@ export default function LobbyContent() {
                           </label>
                           <div className="grid grid-cols-3 gap-2">
                             {[50, 100, 250, 500, 1000, 2500].map(amt => {
-                              const isInsufficient = !isBalanceLoading && (parseFloat(balance) || 0) < amt
+                              const isInsufficient = !isBalanceUpdating && (parseFloat(balance) || 0) < amt
                               return (
                                 <button
                                   key={amt}
@@ -659,7 +689,7 @@ export default function LobbyContent() {
                         </p>
                       )}
 
-                      {!isBalanceLoading && (parseFloat(balance) || 0) < wager && (
+                      {!isBalanceUpdating && (parseFloat(balance) || 0) < wager && (
                         <div className="flex flex-col items-center gap-3 mb-6 py-4 px-4 rounded-2xl border border-red-500/15 bg-red-500/5">
                           <p className="text-[10px] text-red-400 font-bold tracking-[0.2em] uppercase text-center">
                             Not enough CHESS for this wager
@@ -679,7 +709,7 @@ export default function LobbyContent() {
                           fullWidth
                           variant="brand"
                           onClick={handleCreateGame}
-                          disabled={isBalanceLoading || (parseFloat(balance) || 0) < wager}
+                          disabled={isBalanceUpdating || (parseFloat(balance) || 0) < wager}
                         >
                           INITIALIZE GAME
                         </GlowButton>
