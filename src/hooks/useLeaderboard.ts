@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { usePublicClient, useAccount } from 'wagmi'
 import type { Abi } from 'viem'
 import { CELO_CONTRACTS, CELO_CHAIN_ID } from '@/config/contracts'
 import { CHESS_GAME_ABI } from '@/config/abis'
+import { usePublicClient, useAccount } from 'wagmi'
+import { useState, useEffect, useCallback } from 'react'
 
 export interface LeaderboardEntry {
   address: string
