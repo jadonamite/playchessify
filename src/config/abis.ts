@@ -3,6 +3,8 @@ export const CHESS_TOKEN_ABI = [
   { "type": "function", "name": "balanceOf", "stateMutability": "view", "inputs": [{ "name": "account", "type": "address" }], "outputs": [{ "type": "uint256" }] },
   { "type": "function", "name": "allowance", "stateMutability": "view", "inputs": [{ "name": "owner", "type": "address" }, { "name": "spender", "type": "address" }], "outputs": [{ "type": "uint256" }] },
   { "type": "function", "name": "faucetClaim", "stateMutability": "nonpayable", "inputs": [], "outputs": [] },
+  { "type": "function", "name": "lastFaucetClaim", "stateMutability": "view", "inputs": [{ "name": "account", "type": "address" }], "outputs": [{ "type": "uint256" }] },
+  { "type": "error", "name": "FaucetCooldown", "inputs": [{ "name": "blocksRemaining", "type": "uint256" }] },
   { "type": "function", "name": "mintTo", "stateMutability": "nonpayable", "inputs": [{ "name": "to", "type": "address" }, { "name": "amount", "type": "uint256" }], "outputs": [] },
   { "type": "function", "name": "minter", "stateMutability": "view", "inputs": [], "outputs": [{ "type": "address" }] },
   { "type": "function", "name": "decimals", "stateMutability": "view", "inputs": [], "outputs": [{ "type": "uint8" }] }

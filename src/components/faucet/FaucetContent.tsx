@@ -15,7 +15,7 @@ import FaucetResultModal, { type FaucetResultType } from '@/components/ui/Faucet
 import { Navbar } from '@/components/landing/Hero'
 import { King, Pawn, Bishop, Knight, PieceView } from '@/components/ui/ChessModels'
 import { CHESS_TOKEN_ABI } from '@/config/abis'
-import { CELO_CONTRACTS, TOKEN_DECIMALS, FAUCET_AMOUNT, CELO_CHAIN_ID, CUSD_ADDRESS } from '@/config/contracts'
+import { CELO_CONTRACTS, TOKEN_DECIMALS, FAUCET_AMOUNT, CELO_CHAIN_ID, USDM_ADDRESS, FAUCET_COOLDOWN, BLOCK_TIME_SECS } from '@/config/contracts'
 import { formatUnits, encodeFunctionData } from 'viem'
 
 /* ── KEYFRAMES ── */
@@ -121,6 +121,7 @@ export default function FaucetContent() {
   const [resultType, setResultType] = useState<FaucetResultType>(null)
   const [txHash, setTxHash] = useState<string>('')
   const [errorMessage, setErrorMessage] = useState<string>('')
+  const [cooldownRemaining, setCooldownRemaining] = useState<string>('')
 
   // Balance of the on-chain player identity (smart account for Tier A, else the EOA).
   const { data: rawBalance } = useReadContract({
@@ -160,7 +161,7 @@ export default function FaucetContent() {
         abi: CHESS_TOKEN_ABI,
         functionName: 'faucetClaim',
         args: [],
-        feeCurrency: CUSD_ADDRESS,
+        feeCurrency: USDM_ADDRESS,
       } as Parameters<typeof writeContractAsync>[0])
     } else {
       hash = await writeContractAsync({
@@ -181,6 +182,40 @@ export default function FaucetContent() {
     return hash
   }
 
+  // Human-readable time left on the faucet cooldown, e.g. "23h 12m".
+  const formatCooldown = (blocksLeft: bigint): string => {
+    const secs = Number(blocksLeft) * BLOCK_TIME_SECS
+    const h = Math.floor(secs / 3600)
+    const m = Math.ceil((secs % 3600) / 60)
+    return h > 0 ? `${h}h ${m}m` : `${m}m`
+  }
+
+  // Pre-check the on-chain cooldown so a still-locked claim shows the friendly
+  // cooldown modal (with time remaining) instead of a raw revert from the wallet.
+  // Returns true when the claim is still on cooldown.
+  const checkCooldown = async (): Promise<boolean> => {
+    if (!publicClient || !playerAddress) return false
+    try {
+      const [lastClaim, currentBlock] = await Promise.all([
+        publicClient.readContract({
+          address: CELO_CONTRACTS.token as `0x${string}`,
+          abi: CHESS_TOKEN_ABI,
+          functionName: 'lastFaucetClaim',
+          args: [playerAddress as `0x${string}`],
+        }) as Promise<bigint>,
+        publicClient.getBlockNumber(),
+      ])
+      if (lastClaim === 0n) return false
+      const elapsed = currentBlock - lastClaim
+      if (elapsed >= BigInt(FAUCET_COOLDOWN)) return false
+      setCooldownRemaining(formatCooldown(BigInt(FAUCET_COOLDOWN) - elapsed))
+      setResultType('cooldown')
+      return true
+    } catch {
+      return false // pre-check is best-effort; fall through to the real claim
+    }
+  }
+
   /* ── Main Claim Action ── */
   const handleClaim = async () => {
     if (!isConnected) return
@@ -188,6 +223,7 @@ export default function FaucetContent() {
     setErrorMessage('')
 
     try {
+      if (await checkCooldown()) return
       const hash = await claimCelo()
       setTxHash(hash || '')
       setResultType('success')
@@ -201,6 +237,8 @@ export default function FaucetContent() {
       if (msg === 'TIMEOUT') {
         setResultType('timeout')
       } else if (msg.toLowerCase().includes('cooldown') || msg.toLowerCase().includes('too soon') || msg.toLowerCase().includes('already claimed')) {
+        // FaucetCooldown(blocksRemaining) custom error (decoded via the ABI) or
+        // an equivalent provider message — show the friendly modal, not the revert.
         setResultType('cooldown')
       } else {
         setErrorMessage(msg.length > 120 ? msg.slice(0, 120) + '...' : msg)
@@ -393,10 +431,12 @@ export default function FaucetContent() {
           setResultType(null)
           setTxHash('')
           setErrorMessage('')
+          setCooldownRemaining('')
         }}
         txHash={txHash}
         amount={faucetAmountFormatted}
         errorMessage={errorMessage}
+        cooldownRemaining={cooldownRemaining}
         chain="celo"
       />
     </main>

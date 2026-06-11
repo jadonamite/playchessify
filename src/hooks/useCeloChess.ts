@@ -4,7 +4,7 @@ import { useWriteContract, useAccount, usePublicClient } from 'wagmi'
 import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
 import { decodeEventLog, encodeFunctionData, type Abi, type Address } from 'viem'
 import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
-import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID, CUSD_ADDRESS } from '@/config/contracts'
+import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID, USDM_ADDRESS } from '@/config/contracts'
 import { parseUnits } from 'viem'
 import { useCallback, useState } from 'react'
 import { useToastStore } from '@/hooks/useToastStore'
@@ -18,8 +18,8 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 // wallets from showing the scary "unlimited approval" warning.
 const APPROVAL_ALLOWANCE = parseUnits('1000000', TOKEN_DECIMALS) // 1,000,000 CHESS
 
-// Minimum cUSD (18 decimals) a MiniPay wallet needs on hand to pay gas for a write.
-const MIN_GAS_CUSD = 5_000_000_000_000_000n // 0.005 cUSD
+// Minimum USDm (18 decimals) a MiniPay wallet needs on hand to pay gas for a write.
+const MIN_GAS_USDM = 5_000_000_000_000_000n // 0.005 USDm
 const GAS_POLL_ATTEMPTS = 12
 const GAS_POLL_INTERVAL_MS = 1_000
 
@@ -29,7 +29,7 @@ const GAS_POLL_INTERVAL_MS = 1_000
 //   'self-pay'  → no sponsorship (other tiers, or faucet degraded) — user pays
 type GasStatus = 'sponsored' | 'has-gas' | 'self-pay'
 
-// Minimal ERC20 fragment for reading a wallet's cUSD balance.
+// Minimal ERC20 fragment for reading a wallet's USDm balance.
 const ERC20_BALANCE_ABI = [
   { type: 'function', name: 'balanceOf', stateMutability: 'view', inputs: [{ name: 'a', type: 'address' }], outputs: [{ type: 'uint256' }] },
 ] as const
@@ -71,7 +71,7 @@ export function useCeloChess() {
   // One helper isolates the per-tier sponsorship mechanism so createGame/joinGame/
   // approve stay readable:
   //   smart   → Privy smart-wallet client → Pimlico paymaster sponsors the userOp
-  //   minipay → legacy tx with feeCurrency = cUSD (gas paid from the server drip)
+  //   minipay → legacy tx with feeCurrency = USDm (gas paid from the server drip)
   //   eoa     → plain write, user pays
   const sendWrite = useCallback(
     async (req: WriteRequest): Promise<`0x${string}`> => {
@@ -102,7 +102,7 @@ export function useCeloChess() {
           abi: req.abi,
           functionName: req.functionName,
           args: req.args,
-          feeCurrency: CUSD_ADDRESS,
+          feeCurrency: USDM_ADDRESS,
         } as Parameters<typeof writeContractAsync>[0])
       }
 
@@ -116,13 +116,13 @@ export function useCeloChess() {
     [walletTier, smartClient, writeContractAsync],
   )
 
-  // Read a wallet's current cUSD (gas) balance.
-  const readCusdBalance = useCallback(
+  // Read a wallet's current USDm (gas) balance.
+  const readUsdmBalance = useCallback(
     async (addr: Address): Promise<bigint> => {
       if (!publicClient) return 0n
       try {
         return (await publicClient.readContract({
-          address: CUSD_ADDRESS as Address,
+          address: USDM_ADDRESS as Address,
           abi: ERC20_BALANCE_ABI,
           functionName: 'balanceOf',
           args: [addr],
@@ -134,21 +134,21 @@ export function useCeloChess() {
     [publicClient],
   )
 
-  // Poll until the dripped cUSD actually lands (replaces a blind sleep): confirms
+  // Poll until the dripped USDm actually lands (replaces a blind sleep): confirms
   // the wallet's own RPC view sees the gas before it estimates the next tx.
   const pollUntilGas = useCallback(
     async (addr: Address): Promise<boolean> => {
       for (let i = 0; i < GAS_POLL_ATTEMPTS; i++) {
-        if ((await readCusdBalance(addr)) >= MIN_GAS_CUSD) return true
+        if ((await readUsdmBalance(addr)) >= MIN_GAS_USDM) return true
         await sleep(GAS_POLL_INTERVAL_MS)
       }
       return false
     },
-    [readCusdBalance],
+    [readUsdmBalance],
   )
 
   // ── MiniPay gas provisioning (Tier B) ────────────────────────────────────────
-  // Ensure a MiniPay wallet has cUSD gas before it writes. No-op (→ 'self-pay') for
+  // Ensure a MiniPay wallet has USDm gas before it writes. No-op (→ 'self-pay') for
   // other tiers. Degrades gracefully: if the wallet already has gas, if the faucet
   // is exhausted, or if the request fails, we fall through to self-pay instead of
   // blocking — the caller then decides whether the user can actually cover it.
@@ -156,7 +156,7 @@ export function useCeloChess() {
     if (walletTier !== 'minipay' || !playerAddress) return 'self-pay'
 
     const addr = playerAddress as Address
-    if ((await readCusdBalance(addr)) >= MIN_GAS_CUSD) return 'has-gas'
+    if ((await readUsdmBalance(addr)) >= MIN_GAS_USDM) return 'has-gas'
 
     try {
       const res = await fetch('/api/gas/sponsor', {
@@ -166,7 +166,7 @@ export function useCeloChess() {
       })
       const body = (await res.json().catch(() => ({}))) as { degraded?: boolean }
       if (body?.degraded) {
-        showToast('Gasless service is busy — using your cUSD for gas.', 'info')
+        showToast('Gasless service is busy — using your USDm for gas.', 'info')
         return 'self-pay'
       }
     } catch (err) {
@@ -176,20 +176,20 @@ export function useCeloChess() {
 
     // Confirm the drip landed before continuing.
     return (await pollUntilGas(addr)) ? 'sponsored' : 'self-pay'
-  }, [walletTier, playerAddress, readCusdBalance, pollUntilGas, showToast])
+  }, [walletTier, playerAddress, readUsdmBalance, pollUntilGas, showToast])
 
   // When sponsorship didn't cover the wallet, make sure the user can actually
-  // self-pay (has some cUSD); otherwise stop with a clear, actionable message
+  // self-pay (has some USDm); otherwise stop with a clear, actionable message
   // instead of a cryptic wallet gas-estimation error.
   const assertCanSelfPay = useCallback(
     async (status: GasStatus): Promise<void> => {
       if (walletTier !== 'minipay' || status !== 'self-pay' || !playerAddress) return
-      if ((await readCusdBalance(playerAddress as Address)) < MIN_GAS_CUSD) {
-        showToast('Free gas is temporarily unavailable and your wallet has no cUSD for gas. Add a little cUSD and try again.', 'error')
-        throw new Error(`${LOG_PREFIX} self-pay not possible: no cUSD for gas`)
+      if ((await readUsdmBalance(playerAddress as Address)) < MIN_GAS_USDM) {
+        showToast('Free gas is temporarily unavailable and your wallet has no USDm for gas. Add a little USDm and try again.', 'error')
+        throw new Error(`${LOG_PREFIX} self-pay not possible: no USDm for gas`)
       }
     },
-    [walletTier, playerAddress, readCusdBalance, showToast],
+    [walletTier, playerAddress, readUsdmBalance, showToast],
   )
 
   // ── shared steps ─────────────────────────────────────────────────────────────
@@ -253,7 +253,7 @@ export function useCeloChess() {
       if (userCancelled) showToast('Transaction cancelled by user.', 'error')
       else if (isSponsorshipError(err))
         showToast('Sponsored (gasless) transaction is unavailable right now — please retry in a moment.', 'error')
-      else if (!msg.includes('insufficient balance') && !msg.includes('no cusd for gas'))
+      else if (!msg.includes('insufficient balance') && !msg.includes('no usdm for gas'))
         showToast('Blockchain interaction failed. Please check your transaction and try again.', 'error')
     },
     [showToast],
