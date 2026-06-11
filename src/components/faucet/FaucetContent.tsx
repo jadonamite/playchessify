@@ -7,14 +7,15 @@ import { Float, Environment, Text } from '@react-three/drei'
 import { useRouter } from 'next/navigation'
 import { useWallet } from '@/components/wallet-provider'
 import { useWriteContract, useReadContract, usePublicClient } from 'wagmi'
+import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
 import GlowButton from '@/components/ui/GlowButton'
 import LoadingState from '@/components/ui/LoadingState'
 import FaucetResultModal, { type FaucetResultType } from '@/components/ui/FaucetResultModal'
 import { Navbar } from '@/components/landing/Hero'
 import { King, Pawn, Bishop, Knight, PieceView } from '@/components/ui/ChessModels'
 import { CHESS_TOKEN_ABI } from '@/config/abis'
-import { CELO_CONTRACTS, TOKEN_DECIMALS, FAUCET_AMOUNT, CELO_CHAIN_ID } from '@/config/contracts'
-import { formatUnits } from 'viem'
+import { CELO_CONTRACTS, TOKEN_DECIMALS, FAUCET_AMOUNT, CELO_CHAIN_ID, CUSD_ADDRESS } from '@/config/contracts'
+import { formatUnits, encodeFunctionData } from 'viem'
 
 /* ── KEYFRAMES ── */
 const KEYFRAMES = `
@@ -109,8 +110,9 @@ function TokenDisplay({ balance }: { balance: string }) {
    ═══════════════════════════════════════════ */
 export default function FaucetContent() {
   const router = useRouter()
-  const { isConnected, address, connectWallet } = useWallet()
+  const { isConnected, playerAddress, walletTier, connectWallet } = useWallet()
   const { writeContractAsync } = useWriteContract()
+  const { client: smartClient } = useSmartWallets()
   const publicClient = usePublicClient({ chainId: CELO_CHAIN_ID })
 
   const [isClaiming, setIsClaiming] = useState(false)
@@ -118,28 +120,54 @@ export default function FaucetContent() {
   const [txHash, setTxHash] = useState<string>('')
   const [errorMessage, setErrorMessage] = useState<string>('')
 
+  // Balance of the on-chain player identity (smart account for Tier A, else the EOA).
   const { data: rawBalance, refetch: refetchBalance } = useReadContract({
     address: CELO_CONTRACTS.token as `0x${string}`,
     abi: CHESS_TOKEN_ABI,
     functionName: 'balanceOf',
-    args: [address as `0x${string}`],
+    args: [playerAddress as `0x${string}`],
     chainId: CELO_CHAIN_ID,
-    query: { enabled: !!address },
+    query: { enabled: !!playerAddress },
   })
   const balance = rawBalance !== undefined
     ? formatUnits(rawBalance as bigint, TOKEN_DECIMALS)
     : '—'
 
   /* ── Claim Handler: Celo ── */
+  // Tier-aware dispatch (mirrors useCeloChess.sendWrite):
+  //   smart   → Privy smart-wallet client → Pimlico sponsors the userOp, and
+  //             msg.sender is the smart account so CHESS lands on the player identity
+  //   minipay → legacy tx with feeCurrency = cUSD
+  //   eoa     → plain write, user pays
   const claimCelo = async () => {
     const TIMEOUT_MS = 90_000
 
-    const hash = await writeContractAsync({
-      address: CELO_CONTRACTS.token as `0x${string}`,
-      abi: CHESS_TOKEN_ABI,
-      functionName: 'faucetClaim',
-      args: [],
-    })
+    let hash: `0x${string}`
+    if (walletTier === 'smart' && smartClient) {
+      hash = await smartClient.sendTransaction({
+        to: CELO_CONTRACTS.token as `0x${string}`,
+        data: encodeFunctionData({
+          abi: CHESS_TOKEN_ABI,
+          functionName: 'faucetClaim',
+          args: [],
+        }),
+      })
+    } else if (walletTier === 'minipay') {
+      hash = await writeContractAsync({
+        address: CELO_CONTRACTS.token as `0x${string}`,
+        abi: CHESS_TOKEN_ABI,
+        functionName: 'faucetClaim',
+        args: [],
+        feeCurrency: CUSD_ADDRESS,
+      } as Parameters<typeof writeContractAsync>[0])
+    } else {
+      hash = await writeContractAsync({
+        address: CELO_CONTRACTS.token as `0x${string}`,
+        abi: CHESS_TOKEN_ABI,
+        functionName: 'faucetClaim',
+        args: [],
+      })
+    }
 
     const receiptPromise = publicClient!.waitForTransactionReceipt({ hash })
     const timeoutPromise = new Promise<never>((_, reject) =>
@@ -303,7 +331,7 @@ export default function FaucetContent() {
                   <div className="flex items-center gap-2 bg-black/30 py-2 px-5 rounded-full border border-white/10">
                     <div className="w-2 h-2 rounded-full bg-[#35ee66] animate-pulse" />
                     <span className="text-[10px] font-bold tracking-[0.15em] text-white/60 font-mono">
-                      {address?.slice(0, 8)}...{address?.slice(-6)}
+                      {playerAddress?.slice(0, 8)}...{playerAddress?.slice(-6)}
                     </span>
                   </div>
 
