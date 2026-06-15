@@ -99,9 +99,13 @@ a fresh session.
   (offer/accept card, sidebar, active games only).
 
 ### Backlog
-- [ ] Leaderboard/history scaling — currently full `gameNonce` multicall scans; add a cursor or
-  Redis index as games grow.
-- [ ] Refactor `GameClient.tsx` (~1,000-line monolith) — see `game_refactor_plan.md`.
+- [x] Leaderboard/history scaling — Redis-indexed (`src/lib/game-index.ts`): cursor + player set +
+  per-player game index. New `/api/leaderboard` & `/api/history` routes scan only games created
+  since the last sync; hooks (`useLeaderboard`/`useHistory`/`usePlayerHistory`) now fetch them.
+  **Needs a deploy to go live in prod.**
+- [x] Refactor `GameClient.tsx` (~1,000-line monolith) — done: 1062→554 lines, view + data-sync
+  extracted into `src/components/game/*` + `useGameData`. See `game_refactor_plan.md` (deeper
+  engine/bot hook extraction left as optional follow-up).
 - [ ] Game replay viewer · global player search · recent-profiles feed · opponent-join notifications.
 - [ ] (Optional) Fund the xAI team to switch the commit bot from NVIDIA to Grok (env-only change).
 
