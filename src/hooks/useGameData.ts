@@ -8,7 +8,7 @@ import { type GameData, ZERO, STATUS_LABELS, norm } from '@/components/game/type
 interface UseGameDataArgs {
   gameId: number
   isBotGame: boolean
-  celoAddress: string | undefined
+  celoAddress: string | null | undefined
   isConnected: boolean
 }
 
