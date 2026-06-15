@@ -1,8 +1,28 @@
 # Playchessify — TODO & Handover
 
-**Updated:** 2026-06-10 · Canonical references: **`handover.md`** (system reference) and
-**`DEPLOY.md`** (release runbook). This file is the running checklist + the prompt to spin up
-a fresh session.
+**Updated:** 2026-06-15 · Canonical references: **`handover.md`** (system reference + session
+log) and **`DEPLOY.md`** (release runbook). This file is the running checklist + the prompt to
+spin up a fresh session.
+
+---
+
+## ▶ Next up (after 2026-06-15)
+
+Priority order for the next session:
+
+1. **Push to origin** — `main` is ~20 commits ahead of `origin/main` (includes the refactor,
+   scaling, Tier C drip, draw UI; history has intentional `chore(wip)` auto-checkpoints). Not
+   yet pushed. Push when ready (no rebase/squash — keeping wip commits as-is per decision).
+2. **Verify the new indexed routes in prod** — `/api/leaderboard` + `/api/history` are deployed
+   and live; do a real-data sanity check (leaderboard renders, a known player's history loads).
+   First call warms the Redis index (one-time full scan); subsequent calls are delta-only.
+3. **GameClient refactor — finish the hooks** (optional): extract `useChessEngine` /
+   bot-move logic / board-interaction handlers per `game_refactor_plan.md` (deferred this round
+   as behaviour-sensitive on a live component).
+4. **Tier C meta-tx forwarder** (the big July item, below) — only when ready for a contract
+   redeploy + escrow migration; the interim CELO-drip works in the meantime.
+5. **New features** — replay viewer, global player search, recent-profiles feed,
+   opponent-join notifications (see Backlog).
 
 ---
 
@@ -74,6 +94,12 @@ a fresh session.
 ### Live on mainnet (chain 42220)
 - [x] Oracle contracts deployed: ChessToken `0x3F7e…55A3`, ChessGame `0xb378…aE85`. Oracle
   (`0x4d68…C6c9`) and minter (`0x4548…5AB9`) wired and funded; gas-sponsor (`0xc26f…D0f2`) funded.
+- [x] **(2026-06-14) Operator re-wire** — recovered the original operator keys, re-pointed
+  `setOracle`/`setMinter` from `0x425B` back to the dedicated wallets `0x4d68`/`0x4548`/`0xc26f`,
+  funded them (~5 CELO each), synced Vercel + local + `.env.tacked`. Owner key = `EVM_MASTER`
+  in `Scripts/.env`. Full account in `handover.md` session log.
+- [x] **(2026-06-15) Removed the temporary `/api/admin/recover` route** (key recovery is done;
+  verified `404` in prod).
 - [x] Pimlico paymaster configured in Privy dashboard for Celo (Tier A) — funded with $1, no
   sponsorship policy yet (low priority while balance is tiny; add a policy before topping up
   meaningfully — see `Pimlicosetup.md`).

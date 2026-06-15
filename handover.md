@@ -1,6 +1,6 @@
 # Playchessify — Handover Document
 
-**Last updated:** 2026-06-09 | **Live on:** Celo (Mainnet target; Alfajores rehearsal)
+**Last updated:** 2026-06-15 | **Live on:** Celo Mainnet (`42220`)
 **Repo:** `github.com/jadonamite/playchessify`
 
 Celo-only Next.js frontend + Foundry contracts for an on-chain, free-to-play chess
@@ -9,12 +9,61 @@ off-chain** (chess.js over a Redis move relay) and **settled on-chain by a trust
 oracle** — the contract itself never validates chess.
 
 > [!IMPORTANT]
-> **Deployment state.** The contracts in `celo-contracts/` (oracle settlement, minter,
-> gas-sponsor backstop) are **not deployed yet**. `src/config/contracts.ts` still
-> defaults to the *old* pre-oracle addresses (`0xE370…` / `0xf85f…`). Nothing works
-> end-to-end against those — the frontend ABI already targets the new functions
-> (`settleGame`, `reclaimExpired`, `mintTo`) and has dropped `submitMove`/`reportWin`.
-> The whole oracle/gas system goes live only after the deploy in **DEPLOY.md**.
+> **Deployment state — LIVE on Celo mainnet.** ChessGame `0xb378…aE85`, ChessToken
+> `0x3f7e…55a3`. Oracle/minter/gas-sponsor are the three dedicated wallets
+> `0x4d68…C6c9` / `0x4548…5AB9` / `0xc26f…D0f2` (re-wired 2026-06-14 — see session log).
+> The contract OWNER/deployer is `0xF679…7638` (= `EVM_MASTER_PRIVATE_KEY` in
+> `Scripts/.env`). Operator keys live in the Vercel `playchessify` project (Production
+> env), local `.env.local`/`.env.production`, and the gitignored `.env.tacked` backup.
+
+---
+
+## Session log — 2026-06-15
+
+Elaborate record of the work done in this session (recovery + refactor + scaling + deploy).
+
+### 1. Operator-wallet recovery & re-wire (2026-06-13 → 06-14)
+
+- **Problem:** the live contracts' oracle/minter had been pointed at `0x425B…6E03`
+  (a shared wallet from the `Scripts/.env` `EVM_WALLET_*` pool) because the originally
+  intended operator keys were thought lost. The three dedicated wallets the contracts
+  were *deployed* with — oracle `0x4d68…C6c9`, minter `0x4548…5AB9`, gas-sponsor
+  `0xc26f…D0f2`, funded 15 CELO each — were stranded.
+- **Recovery:** the three keys were located in a prior session log and verified by
+  address derivation, then saved to the gitignored `.env.tacked`. The owner/deployer
+  key `0xF679…7638` was confirmed backed up as `EVM_MASTER_PRIVATE_KEY` in `Scripts/.env`.
+- **Re-wire (06-14):** `ChessGame.setOracle(0x4d68…)` + `ChessToken.setMinter(0x4548…)`
+  signed by the owner; operators funded from the master; Vercel + local env swapped to
+  the recovered keys; redeployed. Verified on-chain `oracle()`/`minter()` + via the app.
+- **Incident noted:** a parallel **Gemini Antigravity** agent ran a `sweep_funds.js` that
+  swept the operators into the master mid-session. Funds were safe (own master); root
+  cause documented. Final balances rebalanced to ~5 CELO per operator, +15 to master.
+
+### 2. GameClient refactor
+
+`src/components/game/GameClient.tsx` reduced **1062 → 554 lines**. Extracted the view
+layer into focused components — `BoardPanel`, `GameSidebar`, `GameHeader`,
+`GameResultOverlay`, `MoveLog`, `CapturedTray`, `AmbientBackground` — plus shared
+`types.ts`, and pulled the on-chain game record + derived identity/status flags into the
+`useGameData` hook. Behaviour-preserving (tsc + clean production build pass). The deeper
+engine/bot/board-interaction hook extractions are deferred (see `game_refactor_plan.md`).
+
+### 3. Leaderboard / history scaling
+
+Replaced the per-load full-table scans (`getGame` multicall over `1..gameNonce`) with a
+Redis index (`src/lib/game-index.ts`): a **cursor** (highest gameId folded in), a global
+**player set**, and a **per-player game index**. Each sync only scans games created since
+the cursor. New server routes `/api/leaderboard` (20s cache) and `/api/history?address=`;
+hooks `useLeaderboard` / `useHistory` / `usePlayerHistory` now fetch them. Bonus:
+`usePlayerHistory` no longer caps at the last 40 games.
+
+### 4. Tier C gas + draw UI (committed) and admin route (removed)
+
+- Committed the previously-deployed-but-uncommitted **Tier C native-CELO gas drip** and
+  **draw-offer UI** (`feat(gas)` commit), plus `.vercelignore` so local `.env*` no longer
+  shadows the Vercel runtime env at build.
+- The temporary `/api/admin/recover` route (used for the key recovery) was **deleted** and
+  removed from production (verified `404`).
 
 ---
 
