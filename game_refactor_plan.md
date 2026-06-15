@@ -1,18 +1,30 @@
 # GamePlay Refactor Plan
 
-> **Status (2026-06-09): not started.** `src/components/game/GameClient.tsx` is still a single
-> ~1,000-line component. The issue links below point at the old `jadonamite/Chessify` repo, not
-> `playchessify` — treat them as an aspirational backlog, not active tracking.
+> **Status (2026-06-15): largely done.** `src/components/game/GameClient.tsx` went from a
+> single ~1,060-line component to a ~550-line orchestrator. The view layer and on-chain data
+> sync are now extracted into focused files. Remaining items are the deeper logic-hook
+> extractions (engine/bot/board-interaction), deferred as lower-value / higher-risk on a live
+> component.
 
-This document tracks the 10 issues created for refactoring GameClient.tsx.
+## Done (2026-06-15)
 
-- [ ] [Refactor: Extract Wallet and Network Context Hook](https://github.com/jadonamite/Chessify/issues/4)
-- [ ] [Refactor: Extract Chess Engine Logic Hook](https://github.com/jadonamite/Chessify/issues/5)
-- [ ] [Refactor: Isolate AI/Bot Move Logic](https://github.com/jadonamite/Chessify/issues/6)
-- [ ] [Refactor: Extract Game Data Synchronization](https://github.com/jadonamite/Chessify/issues/7)
-- [ ] [Refactor: Extract Board Interaction Handlers](https://github.com/jadonamite/Chessify/issues/8)
-- [ ] [Refactor: Isolate Move History Component](https://github.com/jadonamite/Chessify/issues/9)
-- [ ] [Refactor: Isolate Player Stats Component](https://github.com/jadonamite/Chessify/issues/10)
-- [ ] [Refactor: Isolate Game Operations Component](https://github.com/jadonamite/Chessify/issues/11)
-- [ ] [Refactor: Isolate Ambient and Layout UI](https://github.com/jadonamite/Chessify/issues/12)
-- [ ] [Refactor: Final GameClient Assembly](https://github.com/jadonamite/Chessify/issues/13)
+- [x] **Extract Game Data Synchronization** → `src/hooks/useGameData.ts` (getGame poll + gameData
+  state + derived identity/status/draw flags + profile map).
+- [x] **Isolate Move History Component** → `src/components/game/MoveLog.tsx`.
+- [x] **Isolate Player Stats / header** → `src/components/game/GameHeader.tsx`.
+- [x] **Isolate Game Operations** → `src/components/game/GameSidebar.tsx` (join / waiting / bot /
+  turn-state / hint / draw / resign cards + connect nudge).
+- [x] **Isolate board view** → `src/components/game/BoardPanel.tsx` (board + captured trays +
+  turn bar + sound toggle).
+- [x] **Isolate result + ambient/layout UI** → `GameResultOverlay.tsx`, `AmbientBackground.tsx`,
+  `CapturedTray.tsx`; shared `types.ts`.
+
+## Remaining (optional follow-ups)
+
+- [ ] Extract Chess Engine Logic Hook (`game`/`moveHistory`/`executeMove`).
+- [ ] Isolate AI/Bot Move Logic (`getBestMove` reply timer, bot persistence).
+- [ ] Extract Board Interaction Handlers (drag/click/promotion) — currently still in GameClient
+  because they close tightly over `executeMove` + relay + bot state.
+
+These three stay in the GameClient orchestrator for now; extracting them is a behavior-sensitive
+change best done with the move/relay/bot flow under test first.
