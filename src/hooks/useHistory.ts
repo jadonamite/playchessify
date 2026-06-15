@@ -1,10 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useAccount, usePublicClient } from 'wagmi'
-import { CELO_CONTRACTS, CELO_CHAIN_ID, TOKEN_DECIMALS } from '@/config/contracts'
-import { CHESS_GAME_ABI } from '@/config/abis'
-import { formatUnits, type Abi } from 'viem'
+import { useAccount } from 'wagmi'
 
 export type HistoryItem = {
   id: string
@@ -17,78 +14,23 @@ export type HistoryItem = {
   timestamp: number
 }
 
-const STATUS_LABELS = ['Waiting', 'Active', 'Finished', 'Cancelled', 'Draw']
-const ZERO = '0x0000000000000000000000000000000000000000'
-
 export function useHistory() {
   const { address: celoAddress } = useAccount()
-  const publicClient = usePublicClient({ chainId: CELO_CHAIN_ID })
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  const fetchHistory = useCallback(async () => {
-    if (!celoAddress || !publicClient) return []
+  // Server-side, Redis-indexed: only this player's gameIds are read on-chain.
+  const fetchHistory = useCallback(async (): Promise<HistoryItem[]> => {
+    if (!celoAddress) return []
     try {
-      const gameNonce = await publicClient.readContract({
-        address: CELO_CONTRACTS.game as `0x${string}`,
-        abi: CHESS_GAME_ABI as Abi,
-        functionName: 'gameNonce',
-      }) as bigint
-
-      const total = Number(gameNonce)
-      if (total === 0) return []
-
-      const ids = Array.from({ length: total }, (_, i) => BigInt(i + 1))
-      const results = await publicClient.multicall({
-        contracts: ids.map((id) => ({
-          address: CELO_CONTRACTS.game as `0x${string}`,
-          abi: CHESS_GAME_ABI as Abi,
-          functionName: 'getGame',
-          args: [id],
-        })),
-        allowFailure: true,
-      })
-
-      const me = celoAddress.toLowerCase()
-      const items: HistoryItem[] = []
-
-      for (let i = 0; i < results.length; i++) {
-        const r = results[i]
-        if (r.status !== 'success') continue
-        const g = r.result as { white: string; black: string; wager: bigint; status: number | bigint; result: number | bigint; createdAt: number | bigint }
-        const white = (g.white as string).toLowerCase()
-        const black = (g.black as string).toLowerCase()
-        if (white !== me && black !== me) continue
-
-        const role: 'white' | 'black' = white === me ? 'white' : 'black'
-        const opponent: string = role === 'white' ? g.black : g.white
-        const statusIdx = Number(g.status)
-        const resultIdx = Number(g.result)
-        let result: HistoryItem['result'] = 'active'
-        if (statusIdx === 0) result = 'waiting'
-        else if (statusIdx === 4 || resultIdx === 3) result = 'draw'
-        else if (statusIdx === 2) {
-          if (resultIdx === 1) result = role === 'white' ? 'win' : 'loss'
-          else if (resultIdx === 2) result = role === 'black' ? 'win' : 'loss'
-        }
-        items.push({
-          id: String(i + 1),
-          chain: 'celo',
-          role,
-          opponent: opponent.toLowerCase() === ZERO ? 'Waiting...' : opponent,
-          wager: formatUnits(g.wager as bigint, TOKEN_DECIMALS),
-          status: STATUS_LABELS[statusIdx] ?? 'Unknown',
-          result,
-          timestamp: Number(g.createdAt),
-        })
-      }
-
-      return items.sort((a, b) => b.timestamp - a.timestamp)
+      const res = await fetch(`/api/history?address=${celoAddress}`)
+      const body = (await res.json().catch(() => ({}))) as { history?: HistoryItem[] }
+      return Array.isArray(body.history) ? body.history : []
     } catch (err) {
       console.error('[useHistory] fetch failed:', err)
       return []
     }
-  }, [celoAddress, publicClient])
+  }, [celoAddress])
 
   const refreshHistory = useCallback(async () => {
     setIsLoading(true)
