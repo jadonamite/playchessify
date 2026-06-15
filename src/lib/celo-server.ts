@@ -204,6 +204,37 @@ export async function gasSponsorCanCover(amountUsdm: bigint): Promise<boolean> {
   }
 }
 
+/** Drip native CELO gas to a 0-balance external (Tier C) EOA so it can transact. */
+export async function sponsorCelo(to: Address, amountCelo: bigint): Promise<Hash> {
+  const { account, client } = walletFor('GAS_SPONSOR_PRIVATE_KEY')
+  const hash = await client.sendTransaction({
+    account,
+    chain: CHAIN,
+    to,
+    value: amountCelo,
+  })
+  await getPublicClient().waitForTransactionReceipt({ hash })
+  return hash
+}
+
+/** Whether the gas-sponsor wallet can still cover a CELO drip of `amountCelo`
+ *  plus its own gas floor. */
+export async function gasSponsorCanCoverCelo(amountCelo: bigint): Promise<boolean> {
+  try {
+    const { account } = walletFor('GAS_SPONSOR_PRIVATE_KEY')
+    const celoBalance = await getPublicClient().getBalance({ address: account.address })
+    // Keep a floor so the sponsor can still pay for its own transfer gas.
+    return celoBalance > amountCelo + 1_000_000_000_000_000n // drip + > 0.001 CELO
+  } catch {
+    return false
+  }
+}
+
+/** Current CELO balance of an address. */
+export async function celoBalanceOf(addr: Address): Promise<bigint> {
+  return getPublicClient().getBalance({ address: addr })
+}
+
 /** Current CHESS balance of an address. */
 export async function chessBalanceOf(addr: Address): Promise<bigint> {
   return (await getPublicClient().readContract({

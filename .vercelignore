@@ -1,0 +1,4 @@
+# Never upload local env files — runtime must use Vercel's encrypted project env,
+# not these (which can shadow the real values). .env*.local is already excluded by default.
+.env
+.env.production

@@ -20,10 +20,12 @@ const APPROVAL_ALLOWANCE = parseUnits('1000000', TOKEN_DECIMALS) // 1,000,000 CH
 
 // Minimum USDm (18 decimals) a MiniPay wallet needs on hand to pay gas for a write.
 const MIN_GAS_USDM = 5_000_000_000_000_000n // 0.005 USDm
+// Minimum native CELO an external (Tier C) wallet needs on hand to pay gas for a write.
+const MIN_GAS_CELO = 5_000_000_000_000_000n // 0.005 CELO
 const GAS_POLL_ATTEMPTS = 12
 const GAS_POLL_INTERVAL_MS = 1_000
 
-// Result of provisioning gas for a MiniPay wallet.
+// Result of provisioning gas for a wallet.
 //   'sponsored' → drip landed, wallet now funded
 //   'has-gas'   → wallet already had enough
 //   'self-pay'  → no sponsorship (other tiers, or faucet degraded) — user pays
@@ -147,49 +149,113 @@ export function useCeloChess() {
     [readUsdmBalance],
   )
 
+  // Read a wallet's current native CELO balance.
+  const readCeloBalance = useCallback(
+    async (addr: Address): Promise<bigint> => {
+      if (!publicClient) return 0n
+      try {
+        return await publicClient.getBalance({ address: addr })
+      } catch {
+        return 0n
+      }
+    },
+    [publicClient],
+  )
+
+  // Poll until the dripped CELO actually lands.
+  const pollUntilCeloGas = useCallback(
+    async (addr: Address): Promise<boolean> => {
+      for (let i = 0; i < GAS_POLL_ATTEMPTS; i++) {
+        if ((await readCeloBalance(addr)) >= MIN_GAS_CELO) return true
+        await sleep(GAS_POLL_INTERVAL_MS)
+      }
+      return false
+    },
+    [readCeloBalance],
+  )
+
   // ── MiniPay gas provisioning (Tier B) ────────────────────────────────────────
   // Ensure a MiniPay wallet has USDm gas before it writes. No-op (→ 'self-pay') for
   // other tiers. Degrades gracefully: if the wallet already has gas, if the faucet
   // is exhausted, or if the request fails, we fall through to self-pay instead of
   // blocking — the caller then decides whether the user can actually cover it.
+  //
+  // Tier C (external EOA) gets the same "free first transaction" treatment, but
+  // dripped in native CELO (the currency they actually pay gas in) instead of USDm.
   const ensureGasSponsored = useCallback(async (): Promise<GasStatus> => {
-    if (walletTier !== 'minipay' || !playerAddress) return 'self-pay'
-
+    if (!playerAddress) return 'self-pay'
     const addr = playerAddress as Address
-    if ((await readUsdmBalance(addr)) >= MIN_GAS_USDM) return 'has-gas'
 
-    try {
-      const res = await fetch('/api/gas/sponsor', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ address: addr, chain: 'celo' }),
-      })
-      const body = (await res.json().catch(() => ({}))) as { degraded?: boolean }
-      if (body?.degraded) {
-        showToast('Gasless service is busy — using your USDm for gas.', 'info')
+    if (walletTier === 'minipay') {
+      if ((await readUsdmBalance(addr)) >= MIN_GAS_USDM) return 'has-gas'
+
+      try {
+        const res = await fetch('/api/gas/sponsor', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ address: addr, chain: 'celo', tier: 'minipay' }),
+        })
+        const body = (await res.json().catch(() => ({}))) as { degraded?: boolean }
+        if (body?.degraded) {
+          showToast('Gasless service is busy — using your USDm for gas.', 'info')
+          return 'self-pay'
+        }
+      } catch (err) {
+        console.warn(`${LOG_PREFIX} gas sponsor request failed (degrading to self-pay)`, err)
         return 'self-pay'
       }
-    } catch (err) {
-      console.warn(`${LOG_PREFIX} gas sponsor request failed (degrading to self-pay)`, err)
-      return 'self-pay'
+
+      // Confirm the drip landed before continuing.
+      return (await pollUntilGas(addr)) ? 'sponsored' : 'self-pay'
     }
 
-    // Confirm the drip landed before continuing.
-    return (await pollUntilGas(addr)) ? 'sponsored' : 'self-pay'
-  }, [walletTier, playerAddress, readUsdmBalance, pollUntilGas, showToast])
+    if (walletTier === 'eoa') {
+      if ((await readCeloBalance(addr)) >= MIN_GAS_CELO) return 'has-gas'
+
+      try {
+        const res = await fetch('/api/gas/sponsor', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ address: addr, chain: 'celo', tier: 'eoa' }),
+        })
+        const body = (await res.json().catch(() => ({}))) as { ok?: boolean; degraded?: boolean; skipped?: boolean }
+        if (!body?.ok || body?.degraded || body?.skipped) return 'self-pay'
+      } catch (err) {
+        console.warn(`${LOG_PREFIX} gas sponsor request failed (degrading to self-pay)`, err)
+        return 'self-pay'
+      }
+
+      if (!(await pollUntilCeloGas(addr))) return 'self-pay'
+      showToast('Playchessify sent you some gas for this transaction — get some CELO of your own for next time.', 'info')
+      return 'sponsored'
+    }
+
+    return 'self-pay'
+  }, [walletTier, playerAddress, readUsdmBalance, pollUntilGas, readCeloBalance, pollUntilCeloGas, showToast])
 
   // When sponsorship didn't cover the wallet, make sure the user can actually
-  // self-pay (has some USDm); otherwise stop with a clear, actionable message
-  // instead of a cryptic wallet gas-estimation error.
+  // self-pay; otherwise stop with a clear, actionable message instead of a
+  // cryptic wallet gas-estimation error.
   const assertCanSelfPay = useCallback(
     async (status: GasStatus): Promise<void> => {
-      if (walletTier !== 'minipay' || status !== 'self-pay' || !playerAddress) return
-      if ((await readUsdmBalance(playerAddress as Address)) < MIN_GAS_USDM) {
-        showToast('Free gas is temporarily unavailable and your wallet has no USDm for gas. Add a little USDm and try again.', 'error')
-        throw new Error(`${LOG_PREFIX} self-pay not possible: no USDm for gas`)
+      if (status !== 'self-pay' || !playerAddress) return
+
+      if (walletTier === 'minipay') {
+        if ((await readUsdmBalance(playerAddress as Address)) < MIN_GAS_USDM) {
+          showToast('Free gas is temporarily unavailable and your wallet has no USDm for gas. Add a little USDm and try again.', 'error')
+          throw new Error(`${LOG_PREFIX} self-pay not possible: no USDm for gas`)
+        }
+        return
+      }
+
+      if (walletTier === 'eoa') {
+        if ((await readCeloBalance(playerAddress as Address)) < MIN_GAS_CELO) {
+          showToast('Free gas is temporarily unavailable and your wallet has no CELO for gas. Add a little CELO and try again.', 'error')
+          throw new Error(`${LOG_PREFIX} self-pay not possible: no CELO for gas`)
+        }
       }
     },
-    [walletTier, playerAddress, readUsdmBalance, showToast],
+    [walletTier, playerAddress, readUsdmBalance, readCeloBalance, showToast],
   )
 
   // ── shared steps ─────────────────────────────────────────────────────────────
@@ -253,7 +319,7 @@ export function useCeloChess() {
       if (userCancelled) showToast('Transaction cancelled by user.', 'error')
       else if (isSponsorshipError(err))
         showToast('Sponsored (gasless) transaction is unavailable right now — please retry in a moment.', 'error')
-      else if (!msg.includes('insufficient balance') && !msg.includes('no usdm for gas'))
+      else if (!msg.includes('insufficient balance') && !msg.includes('no usdm for gas') && !msg.includes('no celo for gas'))
         showToast('Blockchain interaction failed. Please check your transaction and try again.', 'error')
     },
     [showToast],
@@ -383,6 +449,45 @@ export function useCeloChess() {
     [sendWrite, ensureGasSponsored],
   )
 
+  // ── proposeDraw / acceptDraw ─────────────────────────────────────────────────
+  const proposeDraw = useCallback(
+    async (gameId: number) => {
+      console.info(`${LOG_PREFIX} proposeDraw`, { gameId })
+      await ensureGasSponsored()
+      try {
+        return await sendWrite({
+          address: CELO_CONTRACTS.game as Address,
+          abi: CHESS_GAME_ABI,
+          functionName: 'proposeDraw',
+          args: [BigInt(gameId)],
+        })
+      } catch (err) {
+        console.error(`${LOG_PREFIX} proposeDraw failed:`, err)
+        throw err
+      }
+    },
+    [sendWrite, ensureGasSponsored],
+  )
+
+  const acceptDraw = useCallback(
+    async (gameId: number) => {
+      console.info(`${LOG_PREFIX} acceptDraw`, { gameId })
+      await ensureGasSponsored()
+      try {
+        return await sendWrite({
+          address: CELO_CONTRACTS.game as Address,
+          abi: CHESS_GAME_ABI,
+          functionName: 'acceptDraw',
+          args: [BigInt(gameId)],
+        })
+      } catch (err) {
+        console.error(`${LOG_PREFIX} acceptDraw failed:`, err)
+        throw err
+      }
+    },
+    [sendWrite, ensureGasSponsored],
+  )
+
   // ── requestSettle ────────────────────────────────────────────────────────────
   // Ask the server to replay the game and settle it on-chain via the oracle.
   // Idempotent: safe for either client to call once the board is terminal.
@@ -397,5 +502,5 @@ export function useCeloChess() {
     }
   }, [])
 
-  return { createGame, joinGame, resign, requestSettle, isPending }
+  return { createGame, joinGame, resign, proposeDraw, acceptDraw, requestSettle, isPending }
 }

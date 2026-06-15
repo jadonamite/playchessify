@@ -71,24 +71,32 @@ a fresh session.
 
 ## 🔜 Next / In progress
 
-### Release — BLOCKING (full steps in `DEPLOY.md`)
-> The oracle contracts are **not deployed**; `config/contracts.ts` still defaults to the old
-> pre-oracle addresses (`0xE370…` / `0xf85f…`). Nothing works end-to-end until this is done.
-- [ ] Deploy fresh contracts to **Alfajores**: `forge script script/Deploy.s.sol:Deploy --rpc-url alfajores --broadcast --verify`.
-- [ ] Set env: `DEPLOYER/ORACLE/MINTER/GAS_SPONSOR` keys, `CRON_SECRET`, and point
-  `NEXT_PUBLIC_CELO_TOKEN`/`NEXT_PUBLIC_CELO_GAME` at the new addresses. Fund oracle/minter (CELO),
-  gas-sponsor (cUSD + CELO).
-- [ ] Configure Pimlico paymaster policy for Celo in the Privy dashboard (Tier A).
-- [ ] Run the **Alfajores rehearsal matrix** (Tier A/B/C, checkmate/draw/timeout/resign,
-  `reclaimExpired`, cron settle, sybil + forged-signature checks).
-- [ ] **Mainnet flip** — redeploy, update env to mainnet addresses, smoke-test one wagered game.
+### Live on mainnet (chain 42220)
+- [x] Oracle contracts deployed: ChessToken `0x3F7e…55A3`, ChessGame `0xb378…aE85`. Oracle
+  (`0x4d68…C6c9`) and minter (`0x4548…5AB9`) wired and funded; gas-sponsor (`0xc26f…D0f2`) funded.
+- [x] Pimlico paymaster configured in Privy dashboard for Celo (Tier A) — funded with $1, no
+  sponsorship policy yet (low priority while balance is tiny; add a policy before topping up
+  meaningfully — see `Pimlicosetup.md`).
+- [x] Faucet routes through the smart wallet for Tier A (Pimlico-sponsored, correct identity);
+  USDm-aware cooldown UX with friendly countdown modal.
+
+### Tier C (external EOA wallets) — gasless UX
+- [x] **Interim — CELO auto-drip**: when a Tier C wallet has <0.01 CELO, drips 0.005 CELO from
+  the gas-sponsor wallet (`GAS_SPONSOR_PRIVATE_KEY`, ~15 CELO on hand) before a write
+  (`/api/gas/sponsor` with `tier: 'eoa'`), same sybil guards as the Tier B USDm drip
+  (per-address cooldown, daily cap, separate `chess:gas-celo:*` Redis keys). Toast: "Playchessify
+  sent you some gas for this transaction — get some CELO of your own for next time." Draws
+  straight from the gas-sponsor wallet's existing balance — no reallocation needed; top up later
+  by sending CELO to its address (a deposit needs no private key) once it runs low.
+- [ ] **July — proper fix**: ERC-2771 meta-tx forwarder + `*WithSig`/permit functions on
+  ChessGame/ChessToken so Tier C gets true paymaster-style sponsorship (no gas line in their
+  wallet at all, same as Tier A). Requires new contract addresses + escrow migration — plan as a
+  full redeploy, not a patch.
 
 ### Code cleanups (non-blocking)
-- [ ] `config/contracts.ts`: stale `FAUCET_COOLDOWN = 144` / `BLOCK_TIME_SECS = 600` (10-min-block
-  assumption; Celo is 5 s / 17,280-block cooldown). Display-only but wrong.
 - [ ] `lib/index.ts`: remove dead commented-out "temporal anomaly" ThemeToggle block.
-- [ ] Wire the **draw-offer UI** — `proposeDraw`/`acceptDraw` exist on-chain but GameClient only
-  exposes resign.
+- [x] Wire the **draw-offer UI** — `proposeDraw`/`acceptDraw` now exposed in GameClient
+  (offer/accept card, sidebar, active games only).
 
 ### Backlog
 - [ ] Leaderboard/history scaling — currently full `gameNonce` multicall scans; add a cursor or
@@ -108,22 +116,21 @@ a fresh session.
 > (this checklist), and `AGENTS.md` (Next.js in this repo has breaking changes — read
 > `node_modules/next/dist/docs/` before writing Next code).
 >
-> **Current state:** Frontend + contracts are feature-complete and verified (`tsc` clean,
-> `npm run build` clean, `forge test` 32/32). The architecture is: **moves are off-chain** (Redis
-> relay, turn-bound + per-move wallet signatures; MiniPay unsigned) and **settled on-chain by a
-> trusted oracle** (`ChessGame.settleGame`, `onlyOracle`) — there is **no** on-chain
-> `submitMove`/`reportWin`. `.chess` names are off-chain Upstash (no contract — do not build one
-> without an explicit design session). Gas is tiered (Pimlico paymaster / cUSD drip / self-pay).
+> **Current state:** **Live on Celo mainnet.** ChessToken `0x3F7e…55A3`, ChessGame `0xb378…aE85`,
+> oracle/minter/gas-sponsor wired and funded, Pimlico paymaster configured for Tier A. The
+> architecture is: **moves are off-chain** (Redis relay, turn-bound + per-move wallet signatures;
+> MiniPay unsigned) and **settled on-chain by a trusted oracle** (`ChessGame.settleGame`,
+> `onlyOracle`) — there is **no** on-chain `submitMove`/`reportWin`. `.chess` names are off-chain
+> Upstash (no contract — do not build one without an explicit design session). Gas is tiered
+> (Pimlico paymaster / USDm drip / self-pay).
 >
-> **⚠️ The blocking task:** the oracle contracts in `celo-contracts/` are **NOT deployed** —
-> `config/contracts.ts` still defaults to the old pre-oracle addresses (`0xE370…` / `0xf85f…`),
-> so nothing works end-to-end until deploy. Next step is the Alfajores deploy + rehearsal matrix
-> in `DEPLOY.md`, then the mainnet flip. This needs my private keys + funded oracle/minter/
-> gas-sponsor wallets, so it's interactive — help me prep and walk it.
+> **⚠️ Open item:** Tier C (external EOA wallets like MetaMask) get **no gas sponsorship** — if
+> they connect with 0 CELO they're stuck. Interim fix (CELO auto-drip, same pattern as the Tier B
+> USDm drip) and the proper July fix (ERC-2771 meta-tx forwarder + contract redeploy) are both
+> scoped under "Tier C gasless UX" above.
 >
 > **Also know:** this repo is auto-committed every 1–7 min by `~/Projects/Scripts/Elite.cjs` (now
 > NVIDIA-powered), so expect frequent commits; today's work is already committed under bot messages.
 > Preferences: prioritise brevity, no Co-Authored-By trailer in commits, do exactly what's asked.
 >
-> Start by reading `handover.md` and `DEPLOY.md`, confirm the deploy preconditions, then propose
-> the Alfajores deploy plan.
+> Start by reading `handover.md` and the "Tier C gasless UX" section of this file.

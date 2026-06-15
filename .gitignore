@@ -97,3 +97,9 @@ celo-contracts/out/
 celo-contracts/cache/
 celo-contracts/broadcast/
 foundry.lock
+.env*.local
+
+# local key/debug helper scripts and scratch dumps (never commit)
+/check-profiles.*
+/claim-profiles.*
+/celo-contracts/Live on Celo mainnet.txt

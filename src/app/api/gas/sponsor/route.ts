@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Redis } from '@upstash/redis'
-import { isAddress, getAddress, type Address } from 'viem'
+import { isAddress, getAddress, parseEther, type Address } from 'viem'
 import {
   usdmBalanceOf,
   chessBalanceOf,
+  celoBalanceOf,
   sponsorGas,
+  sponsorCelo,
   mintChessTo,
   gasSponsorCanCover,
+  gasSponsorCanCoverCelo,
 } from '@/lib/celo-server'
 
 export const runtime = 'nodejs'
@@ -20,6 +23,10 @@ const MIN_GAS_USDM = 10_000_000_000_000_000n   // 0.01 USDm — above this, no d
 const GAS_DRIP_USDM = 30_000_000_000_000_000n  // 0.03 USDm — covers approve + create/join
 const MIN_CHESS = 100_000_000n                 // 100 CHESS — below this we provision
 const CHESS_PROVISION = 1_000_000_000n         // 1,000 CHESS minted to fresh wallets
+
+// ── Drip economics — Tier C (external EOA) native CELO gas ───────────────────
+const MIN_GAS_CELO = parseEther('0.01')   // above this, the wallet can already pay its own gas
+const CELO_DRIP_AMOUNT = parseEther('0.005') // covers a handful of txs at Celo's tiny gas costs
 
 // ── Sybil guards ─────────────────────────────────────────────────────────────
 const COOLDOWN_SECONDS = 60 * 60        // one funded drip per address per hour
@@ -40,10 +47,14 @@ const K = {
   cooldown: (a: string) => `chess:gas:cooldown:${a.toLowerCase()}`,
   lock: (a: string) => `chess:gas:lock:${a.toLowerCase()}`,
   daily: () => `chess:gas:daily:${new Date().toISOString().slice(0, 10)}`,
+  celoCooldown: (a: string) => `chess:gas-celo:cooldown:${a.toLowerCase()}`,
+  celoLock: (a: string) => `chess:gas-celo:lock:${a.toLowerCase()}`,
+  celoDaily: () => `chess:gas-celo:daily:${new Date().toISOString().slice(0, 10)}`,
 }
 
-// POST /api/gas/sponsor — Tier B (MiniPay) only.
-// Makes a 0-balance MiniPay EOA able to transact: provisions CHESS + drips USDm gas.
+// POST /api/gas/sponsor — Tier B (MiniPay) and Tier C (external EOA).
+// Tier B: makes a 0-balance MiniPay EOA able to transact (provisions CHESS + drips USDm gas).
+// Tier C: drips a small amount of native CELO so an empty external wallet can pay its own gas.
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown>
   try {
@@ -54,6 +65,7 @@ export async function POST(req: NextRequest) {
 
   const addressRaw = typeof body?.address === 'string' ? body.address.trim() : ''
   const chain = typeof body?.chain === 'string' ? body.chain : ''
+  const tier = typeof body?.tier === 'string' ? body.tier : 'minipay'
 
   if (chain !== 'celo') {
     return NextResponse.json({ error: 'invalid chain' }, { status: 400 })
@@ -64,6 +76,10 @@ export async function POST(req: NextRequest) {
   const address = getAddress(addressRaw) as Address
 
   const redis = getRedis()
+
+  if (tier === 'eoa') {
+    return handleEoaCeloDrip(address, redis)
+  }
 
   try {
     // Fast path: already has enough gas → nothing to do.
@@ -123,6 +139,54 @@ export async function POST(req: NextRequest) {
     }
   } catch (err) {
     console.error(`${LOG_PREFIX} POST failed`, {
+      address,
+      err: (err as Error)?.message,
+    })
+    return NextResponse.json({ error: 'sponsor failed' }, { status: 503 })
+  }
+}
+
+// Tier C: drip native CELO to a near-empty external EOA so it can pay its own gas.
+async function handleEoaCeloDrip(address: Address, redis: Redis) {
+  try {
+    // Fast path: already has enough gas → nothing to do.
+    const celo = await celoBalanceOf(address)
+    if (celo >= MIN_GAS_CELO) {
+      return NextResponse.json({ ok: true, skipped: true })
+    }
+
+    // Graceful degradation: if the sponsor wallet can't cover a drip, tell the
+    // client to self-pay rather than block.
+    if (!(await gasSponsorCanCoverCelo(CELO_DRIP_AMOUNT))) {
+      console.warn(`${LOG_PREFIX} sponsor wallet exhausted (CELO) — degrading to self-pay`)
+      return NextResponse.json({ ok: false, degraded: true, reason: 'sponsor-exhausted' }, { status: 200 })
+    }
+
+    // ── Sybil guards ──
+    if (await redis.get(K.celoCooldown(address))) {
+      return NextResponse.json({ ok: true, skipped: true, reason: 'cooldown' })
+    }
+    const lock = await redis.set(K.celoLock(address), '1', { nx: true, ex: LOCK_SECONDS })
+    if (lock !== 'OK') {
+      return NextResponse.json({ error: 'drip in progress' }, { status: 409 })
+    }
+    const dailyKey = K.celoDaily()
+    const count = await redis.incr(dailyKey)
+    if (count === 1) await redis.expire(dailyKey, 86_400)
+    if (count > DAILY_CAP) {
+      await redis.del(K.celoLock(address))
+      return NextResponse.json({ error: 'daily sponsor cap reached' }, { status: 429 })
+    }
+
+    try {
+      const gasTx = await sponsorCelo(address, CELO_DRIP_AMOUNT)
+      await redis.set(K.celoCooldown(address), '1', { ex: COOLDOWN_SECONDS })
+      return NextResponse.json({ ok: true, gasTx })
+    } finally {
+      await redis.del(K.celoLock(address))
+    }
+  } catch (err) {
+    console.error(`${LOG_PREFIX} CELO drip failed`, {
       address,
       err: (err as Error)?.message,
     })

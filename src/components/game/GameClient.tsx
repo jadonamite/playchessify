@@ -39,6 +39,7 @@ interface GameData {
   black: string
   wager: string
   status: string // '0'=WAITING '1'=ACTIVE '2'=FINISHED '3'=CANCELLED '4'=DRAW
+  drawProposer: string
 }
 
 // ─── captured-pieces tray ───────────────────────────────────────────────────
@@ -75,7 +76,7 @@ export default function GameClient() {
   const gameId    = isBotGame ? 0 : Number(params?.id ?? 0)
 
   const { address: celoAddress, playerAddress, isConnected, connectWallet } = useWallet()
-  const { joinGame: joinCelo, resign: resignCelo, requestSettle } = useCeloChess()
+  const { joinGame: joinCelo, resign: resignCelo, proposeDraw: proposeDrawCelo, acceptDraw: acceptDrawCelo, requestSettle } = useCeloChess()
   const { signMove } = useMoveSigner()
   const showToast = useToastStore((s) => s.showToast)
 
@@ -160,12 +161,13 @@ export default function GameClient() {
 
   useEffect(() => {
     if (!celoGameData) return
-    const gd = celoGameData as { white: string; black: string; wager: bigint; status: number }
+    const gd = celoGameData as { white: string; black: string; wager: bigint; status: number; drawProposer: string }
     setGameData({
       white:  gd.white,
       black:  gd.black,
       wager:  gd.wager.toString(),
       status: gd.status.toString(),
+      drawProposer: gd.drawProposer,
     })
   }, [celoGameData])
 
@@ -178,6 +180,12 @@ export default function GameClient() {
   const isCreator  = !!gameData && norm(gameData.white) === me && me !== ''
   const isOpponent = !!gameData && norm(gameData.black) === me && gameData.black !== '' && gameData.black !== ZERO
   const isParticipant = isCreator || isOpponent
+
+  // ── draw offer state ────────────────────────────────────────────────────────
+  const drawProposer = norm(gameData?.drawProposer ?? '')
+  const drawPending = drawProposer !== '' && drawProposer !== ZERO
+  const iProposedDraw = drawPending && drawProposer === me
+  const opponentProposedDraw = drawPending && !iProposedDraw
 
   const myColor: 'white' | 'black' | null = isBotGame ? 'white'
     : isCreator  ? 'white'
@@ -493,6 +501,14 @@ export default function GameClient() {
   const handleResign = () => withTx(async () => {
     await resignCelo(gameId)
     setDidResign(true)
+  })
+
+  const handleProposeDraw = () => withTx(async () => {
+    await proposeDrawCelo(gameId)
+  })
+
+  const handleAcceptDraw = () => withTx(async () => {
+    await acceptDrawCelo(gameId)
   })
 
   // Auto-settle: once the board is terminal (or the opponent timed out) for a live
@@ -827,6 +843,51 @@ export default function GameClient() {
                         <p className="text-[9px] text-green-400 font-bold tracking-widest uppercase text-center mt-2 opacity-70">
                           Green squares show best move
                         </p>
+                      )}
+                    </ClayCard>
+                  )}
+
+                  {/* Draw offer — only available during active play */}
+                  {contractActive && !gameOver && (
+                    <ClayCard className="p-5">
+                      <p className="text-[10px] font-black tracking-[0.2em] text-[var(--t3)] uppercase mb-3">Draw</p>
+                      {opponentProposedDraw ? (
+                        <>
+                          <p className="text-[11px] text-[var(--t3)] mb-3 leading-relaxed">
+                            Your opponent has offered a draw. Accepting refunds both wagers.
+                          </p>
+                          <GlowButton
+                            variant="brand"
+                            fullWidth
+                            disabled={!canAct}
+                            loading={txPending}
+                            onClick={handleAcceptDraw}
+                          >
+                            ACCEPT DRAW
+                          </GlowButton>
+                        </>
+                      ) : iProposedDraw ? (
+                        <div className="flex items-center justify-center gap-2 py-2">
+                          <div className="w-2 h-2 rounded-full bg-[var(--c)] animate-pulse" />
+                          <span className="text-[var(--c)] text-xs font-black tracking-widest uppercase">
+                            Draw offer sent — waiting for opponent
+                          </span>
+                        </div>
+                      ) : (
+                        <>
+                          <GlowButton
+                            variant="ghost"
+                            fullWidth
+                            disabled={!canAct}
+                            loading={txPending}
+                            onClick={handleProposeDraw}
+                          >
+                            OFFER DRAW
+                          </GlowButton>
+                          <p className="text-[9px] text-[var(--t3)] text-center mt-2 opacity-50">
+                            If accepted, both wagers are refunded.
+                          </p>
+                        </>
                       )}
                     </ClayCard>
                   )}
