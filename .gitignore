@@ -106,3 +106,6 @@ foundry.lock
 
 # temporary admin recovery route — deployable on disk, kept out of git history
 /src/app/api/admin/
+
+# auto-checkpoint committer script (DEUS mode tooling)
+/.committer.sh
