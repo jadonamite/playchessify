@@ -103,3 +103,6 @@ foundry.lock
 /check-profiles.*
 /claim-profiles.*
 /celo-contracts/Live on Celo mainnet.txt
+
+# temporary admin recovery route — deployable on disk, kept out of git history
+/src/app/api/admin/
