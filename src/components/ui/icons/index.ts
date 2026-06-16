@@ -1,7 +1,0 @@
-export { ChessKingIcon } from './ChessKingIcon'
-export { RankIcon } from './RankIcon'
-export { HistoryIcon } from './HistoryIcon'
-export { DropletIcon } from './DropletIcon'
-export { UserIcon } from './UserIcon'
-export { HintBulbIcon } from './HintBulbIcon'
-export type { DuotoneIconProps } from './types'
