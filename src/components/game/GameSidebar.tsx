@@ -152,7 +152,10 @@ export default function GameSidebar(props: GameSidebarProps) {
             <ClayCard className="p-5">
               <p className="text-[10px] font-black tracking-[0.2em] text-[var(--t3)] uppercase mb-3">Analysis</p>
               <GlowButton variant="ghost" fullWidth onClick={onHint} disabled={isHintLoading}>
-                {isHintLoading ? 'ANALYSING…' : hintMove ? `HINT: ${hintMove.from.toUpperCase()} → ${hintMove.to.toUpperCase()}` : 'GET HINT'}
+                <span className="inline-flex items-center justify-center gap-2">
+                  <HintBulbIcon size={16} glow={!isHintLoading} />
+                  {isHintLoading ? 'ANALYSING…' : hintMove ? `HINT: ${hintMove.from.toUpperCase()} → ${hintMove.to.toUpperCase()}` : 'GET HINT'}
+                </span>
               </GlowButton>
               {hintMove && (
                 <p className="text-[9px] text-green-400 font-bold tracking-widest uppercase text-center mt-2 opacity-70">
