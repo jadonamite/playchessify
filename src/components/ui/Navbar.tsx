@@ -84,7 +84,7 @@ export default function Navbar() {
               width={140}
               height={36}
               priority
-              style={{ width: 'clamp(96px, 10vw, 128px)', height: 'auto', objectFit: 'contain' }}
+              style={{ width: 'clamp(112px, 11vw, 148px)', height: 'auto', objectFit: 'contain' }}
             />
           </Link>
 
