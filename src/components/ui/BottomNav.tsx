@@ -5,12 +5,12 @@ import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useWallet } from '@/components/wallet-provider'
 import {
-  ChessKingIcon,
+  PlayIcon,
   RankIcon,
   HistoryIcon,
-  DropletIcon,
-  UserIcon,
-  type DuotoneIconProps,
+  FaucetIcon,
+  ProfileIcon,
+  type IconProps,
 } from '@/components/ui/icons'
 
 type TabDef = {
@@ -18,16 +18,16 @@ type TabDef = {
   label: string
   href: string
   match: string[]
-  Icon: (p: DuotoneIconProps) => React.ReactElement
+  Icon: (p: IconProps) => React.ReactElement
   accent: string
 }
 
 const TABS: TabDef[] = [
-  { key: 'play', label: 'Play', href: '/app/lobby', match: ['/app/lobby'], Icon: ChessKingIcon, accent: 'var(--c)' },
+  { key: 'play', label: 'Play', href: '/app/lobby', match: ['/app/lobby'], Icon: PlayIcon, accent: 'var(--c)' },
   { key: 'ranks', label: 'Ranks', href: '/app/leaderboard', match: ['/app/leaderboard'], Icon: RankIcon, accent: 'var(--candy-amber)' },
   { key: 'history', label: 'History', href: '/app/history', match: ['/app/history'], Icon: HistoryIcon, accent: 'var(--candy-grape)' },
-  { key: 'faucet', label: 'Faucet', href: '/app/faucet', match: ['/app/faucet'], Icon: DropletIcon, accent: 'var(--candy-lime)' },
-  { key: 'profile', label: 'You', href: '/app/profile', match: ['/app/profile'], Icon: UserIcon, accent: 'var(--candy-rose)' },
+  { key: 'faucet', label: 'Faucet', href: '/app/faucet', match: ['/app/faucet'], Icon: FaucetIcon, accent: 'var(--candy-lime)' },
+  { key: 'profile', label: 'You', href: '/app/profile', match: ['/app/profile'], Icon: ProfileIcon, accent: 'var(--candy-rose)' },
 ]
 
 function Tab({ tab, active, href }: { tab: TabDef; active: boolean; href: string }) {
@@ -36,49 +36,48 @@ function Tab({ tab, active, href }: { tab: TabDef; active: boolean; href: string
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
-      className="relative flex flex-1 flex-col items-center justify-center gap-1 select-none"
-      style={{ textDecoration: 'none', WebkitTapHighlightColor: 'transparent', paddingTop: 9 }}
+      className="group relative flex flex-1 flex-col items-center justify-center select-none"
+      style={{ textDecoration: 'none', WebkitTapHighlightColor: 'transparent', gap: 4, padding: '8px 4px' }}
     >
-      {/* Trapezoid active indicator — brand slanted-edge motif, slides between tabs */}
-      {active && (
-        <motion.span
-          layoutId="pc-nav-blob"
-          transition={{ type: 'spring', stiffness: 520, damping: 38 }}
-          style={{
-            position: 'absolute',
-            top: 6,
-            height: 34,
-            width: 52,
-            zIndex: 0,
-            clipPath: 'polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%)',
-            background: `color-mix(in srgb, ${tab.accent} 18%, transparent)`,
-            boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${tab.accent} 34%, transparent)`,
-          }}
-        />
-      )}
-
+      {/* Icon chip — the active tab gets a filled rounded chip in its accent;
+          the trapezoid motif lives in the chip's slanted lower edge. */}
       <motion.span
-        whileTap={{ scale: 0.86 }}
-        transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-        className="relative z-[1] flex"
+        whileTap={{ scale: 0.88 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+        className="relative flex items-center justify-center"
         style={{
+          width: 46,
+          height: 34,
           color: active ? tab.accent : 'var(--t3)',
-          transition: 'color .18s ease',
+          transition: 'color .2s ease',
         }}
       >
-        <Icon size={23} />
+        {active && (
+          <motion.span
+            layoutId="pc-nav-chip"
+            transition={{ type: 'spring', stiffness: 520, damping: 40 }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              clipPath: 'polygon(8px 0%, calc(100% - 8px) 0%, 100% 100%, 0% 100%)',
+              background: `color-mix(in srgb, ${tab.accent} 20%, transparent)`,
+              boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${tab.accent} 38%, transparent)`,
+              borderRadius: 12,
+            }}
+          />
+        )}
+        <span className="relative z-[1] flex"><Icon size={26} /></span>
       </motion.span>
 
       <span
-        className="relative z-[1]"
         style={{
           fontFamily: 'var(--fd)',
-          fontSize: 8.5,
-          fontWeight: 700,
-          letterSpacing: '.1em',
+          fontSize: 9,
+          fontWeight: 800,
+          letterSpacing: '.08em',
           textTransform: 'uppercase',
-          color: active ? 'var(--t1)' : 'var(--t3)',
-          transition: 'color .18s ease',
+          color: active ? tab.accent : 'var(--t3)',
+          transition: 'color .2s ease',
         }}
       >
         {tab.label}
@@ -104,7 +103,9 @@ export default function BottomNav() {
         bottom: 0,
         zIndex: 60,
         alignItems: 'stretch',
-        height: 'calc(var(--bottom-nav-h) + env(safe-area-inset-bottom))',
+        gap: 2,
+        padding: '6px 8px 0',
+        height: 'calc(var(--bottom-nav-h) + 8px + env(safe-area-inset-bottom))',
         paddingBottom: 'env(safe-area-inset-bottom)',
         background: 'var(--bottom-nav-bg)',
         borderTop: '1px solid var(--bottom-nav-border)',
