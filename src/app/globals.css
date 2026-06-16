@@ -70,6 +70,10 @@
   --bottom-nav-bg: linear-gradient(180deg, #14142b 0%, #0b0b1a 100%);
   --bottom-nav-border: rgba(255, 255, 255, .08);
   --bottom-nav-shadow: 0 -1px 0 rgba(255, 255, 255, .05) inset, 0 -8px 28px rgba(0, 0, 0, .55);
+
+  /* Vertical chrome budget reserved around the chess board so it can grow to fill
+     the remaining height while staying square. Mobile value is overridden below. */
+  --board-reserve: 340px;
 }
 
 /* ── LIGHT TOKENS ── */
