@@ -34,22 +34,24 @@ const btnBase: React.CSSProperties = {
   position: 'relative' as const,
 }
 
+/* Fluid sizing — buttons shrink on small viewports and settle at the original
+   desktop dimensions at wider widths: clamp(mobile-min, vw-preferred, desktop-max). */
 const pillSize: Record<string, React.CSSProperties> = {
-  sm: { fontSize: '11px', padding: '10px 22px', borderRadius: 999 },
-  md: { fontSize: '12px', padding: '11px 26px', borderRadius: 999 },
-  lg: { fontSize: '13px', padding: '15px 34px', borderRadius: 999 },
+  sm: { fontSize: 'clamp(10px,2.6vw,11px)', padding: 'clamp(9px,2.4vw,10px) clamp(16px,4.6vw,22px)', borderRadius: 999 },
+  md: { fontSize: 'clamp(11px,2.8vw,12px)', padding: 'clamp(10px,2.6vw,11px) clamp(18px,5vw,26px)', borderRadius: 999 },
+  lg: { fontSize: 'clamp(12px,3vw,13px)', padding: 'clamp(12px,3vw,15px) clamp(22px,6vw,34px)', borderRadius: 999 },
 }
 
 const ghostBase: React.CSSProperties = {
   fontFamily: 'var(--fd)',
   fontWeight: 700,
-  fontSize: '13px',
+  fontSize: 'clamp(11px,2.9vw,13px)',
   letterSpacing: '.07em',
   color: 'var(--c)',
   background: 'transparent',
   border: 'none',
   borderRadius: 999,
-  padding: '16px 40px',
+  padding: 'clamp(12px,3.2vw,16px) clamp(22px,7vw,40px)',
   cursor: 'pointer',
   display: 'inline-block',
   boxShadow: '0 0 0 1px var(--b2), 0 4px 0 rgba(0,50,70,.5), 0 8px 24px rgba(0,204,255,.1)',
@@ -85,8 +87,8 @@ const GlowButton = forwardRef<HTMLButtonElement, GlowButtonProps>(
 
     /* Brand button */
     const paraStyle: React.CSSProperties = parallelogram ? {
-      fontSize: '14px',
-      padding: '18px 56px',
+      fontSize: 'clamp(12px,3.2vw,14px)',
+      padding: 'clamp(13px,3.6vw,18px) clamp(28px,8vw,56px)',
       borderRadius: 0,
       clipPath: 'polygon(16px 0%, 100% 0%, calc(100% - 16px) 100%, 0% 100%)',
     } : pillSize[size]

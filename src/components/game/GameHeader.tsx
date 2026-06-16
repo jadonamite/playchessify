@@ -18,9 +18,9 @@ interface GameHeaderProps {
 
 export default function GameHeader({ isBotGame, gameId, gameData, wagerFormatted, statusLabel, myColor, gameProfileMap }: GameHeaderProps) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-12">
       <div>
-        <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter" style={{ fontFamily: 'var(--fd)' }}>
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tighter" style={{ fontFamily: 'var(--fd)' }}>
           {isBotGame ? <>AI <span style={{ color: 'var(--c)' }}>Training</span></> : <>Match <span style={{ color: 'var(--c)' }}>#{gameId}</span></>}
         </h1>
         {isBotGame ? (

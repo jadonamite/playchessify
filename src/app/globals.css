@@ -171,6 +171,33 @@ body {
   border-radius: 999px;
 }
 
+/* ── MOBILE-SAFE MODAL SHEETS ──
+   `.m-sheet-wrap` goes on the fixed overlay, `.m-sheet` on the card.
+   Desktop: centered card capped at 90vh with internal scroll.
+   Mobile (≤640px): card docks to the bottom as a full-width sheet capped at
+   92dvh, flat bottom corners, safe-area padding, scrolls internally so action
+   buttons are always reachable even with the keyboard open. */
+.m-sheet {
+  max-height: 90vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 640px) {
+  .m-sheet-wrap {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .m-sheet {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92dvh;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    padding-bottom: max(env(safe-area-inset-bottom), 8px);
+  }
+}
+
 /* ── MOBILE RESPONSIVE ── */
 @media (max-width: 1024px) {
   .hero-pieces { pointer-events: none; }

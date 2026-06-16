@@ -68,7 +68,7 @@ export default function Navbar() {
           alignItems: 'center',
           justifyContent: 'space-between',
           height: 58,
-          padding: '0 28px',
+          padding: '0 clamp(14px,4vw,28px)',
           position: 'relative',
         }}>
 

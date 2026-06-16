@@ -383,7 +383,7 @@ export default function FaucetContent() {
                     size="lg"
                     parallelogram
                     onClick={handleClaim}
-                    className="min-w-[280px]"
+                    className="w-full sm:w-auto sm:min-w-[280px]"
                   >
                     CLAIM {faucetAmountFormatted} CHESS
                   </GlowButton>

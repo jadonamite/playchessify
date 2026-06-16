@@ -182,7 +182,7 @@ export default function ChainSelectModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 box-border"
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 box-border overflow-y-auto"
           style={{ background: 'rgba(5, 5, 15, 0.92)', backdropFilter: 'blur(20px)' }}
         >
           {/* Grid Background */}
@@ -196,7 +196,7 @@ export default function ChainSelectModal({
           }} />
 
           {/* Content */}
-          <div className="relative z-10 w-full max-w-3xl flex flex-col items-center gap-8">
+          <div className="relative z-10 my-auto w-full max-w-3xl flex flex-col items-center gap-8 py-4">
 
             {/* Header */}
             <motion.div

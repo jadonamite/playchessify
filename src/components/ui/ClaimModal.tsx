@@ -126,7 +126,7 @@ export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimM
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="m-sheet-wrap fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
           onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
         >
@@ -135,7 +135,7 @@ export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimM
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.92, opacity: 0, y: 12 }}
             transition={{ type: 'spring', damping: 22, stiffness: 220 }}
-            className="w-full max-w-md rounded-[28px] border border-white/10 overflow-hidden"
+            className="m-sheet w-full max-w-md rounded-[28px] border border-white/10"
             style={{ background: 'linear-gradient(145deg,rgba(0,204,255,0.06) 0%,rgba(6,6,15,0.98) 60%)' }}
           >
             {step === 'success' ? (

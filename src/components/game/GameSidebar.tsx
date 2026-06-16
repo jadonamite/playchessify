@@ -50,7 +50,7 @@ export default function GameSidebar(props: GameSidebarProps) {
 
       {/* Context-aware action area */}
       {canJoinFromPage ? (
-        <ClayCard className="p-6">
+        <ClayCard className="p-4 md:p-6">
           <p className="text-[10px] font-black tracking-[0.2em] text-[var(--t3)] uppercase mb-3">Open Challenge</p>
           <p className="text-xs text-[var(--t2)] mb-1">
             Wager: <span className="text-[var(--c)] font-black">{(Number(gameData?.wager ?? 0) / Math.pow(10, TOKEN_DECIMALS)).toFixed(0)} CHESS</span>
@@ -62,7 +62,7 @@ export default function GameSidebar(props: GameSidebarProps) {
         </ClayCard>
 
       ) : gameIsWaiting && isCreator ? (
-        <ClayCard className="p-6">
+        <ClayCard className="p-4 md:p-6">
           <p className="text-[10px] font-black tracking-[0.2em] text-[var(--t3)] uppercase mb-3">Waiting for Opponent</p>
           <p className="text-xs text-[var(--t2)] mb-4 leading-relaxed">Share your match ID so they can join.</p>
           <div className="flex items-center gap-2 bg-black/40 rounded-xl p-3 border border-white/10 mb-5">
@@ -83,7 +83,7 @@ export default function GameSidebar(props: GameSidebarProps) {
         </ClayCard>
 
       ) : isBotGame ? (
-        <ClayCard className="p-6">
+        <ClayCard className="p-4 md:p-6">
           <p className="text-[10px] font-black tracking-[0.2em] text-[var(--t3)] uppercase mb-4">Training Session</p>
           <div className="space-y-3">
             <GlowButton variant="brand" fullWidth parallelogram onClick={onResetBot}>

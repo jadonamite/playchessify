@@ -459,7 +459,7 @@ export default function GameClient() {
           </Link>
         </div>
       ) : (
-        <main className="relative z-10 max-w-7xl mx-auto px-6 py-12 pt-32">
+        <main className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 py-6 md:py-12 pt-24 md:pt-32">
 
           <GameHeader
             isBotGame={isBotGame}
@@ -472,7 +472,7 @@ export default function GameClient() {
           />
 
           {/* ── board + sidebar ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8 items-start">
 
             <div className="lg:col-span-8">
               <BoardPanel

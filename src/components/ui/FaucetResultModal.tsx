@@ -180,7 +180,7 @@ export default function FaucetResultModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 box-border"
+          className="m-sheet-wrap fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 box-border"
           style={{ background: 'rgba(5, 5, 15, 0.9)', backdropFilter: 'blur(16px)' }}
         >
           <style>{KEYFRAMES}</style>
@@ -204,7 +204,7 @@ export default function FaucetResultModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 200, damping: 22 }}
-            className="relative z-10 w-full max-w-lg"
+            className="m-sheet relative z-10 w-full max-w-lg"
           >
             <div className="rounded-[32px] md:rounded-[40px] border border-white/10 bg-slate-950/70 shadow-[0_0_80px_rgba(0,204,255,0.1)] backdrop-blur-2xl overflow-hidden">
 

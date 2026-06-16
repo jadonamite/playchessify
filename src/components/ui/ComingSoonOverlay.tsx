@@ -83,7 +83,7 @@ export default function ComingSoonOverlay({ isOpen, onClose }: ComingSoonOverlay
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6  box-border"
+          className="m-sheet-wrap fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6  box-border"
           style={{ background: 'rgba(5, 5, 15, 0.85)', backdropFilter: 'blur(12px)' }}
         >
           {/* Cyber-industrial Grid Background */}
@@ -99,12 +99,12 @@ export default function ComingSoonOverlay({ isOpen, onClose }: ComingSoonOverlay
           </div>
 
           {/* Text & Interactivity Layer */}
-          <div className="relative z-10 flex flex-col items-center justify-center text-center w-full max-w-3xl box-border">
+          <div className="m-sheet relative z-10 flex flex-col items-center justify-center text-center w-full max-w-3xl box-border">
             <motion.div
               initial={{ opacity: 0, y: 30, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 20 }}
-              className="flex flex-col items-center gap-5 md:gap-6 p-8 md:p-16 rounded-[32px] md:rounded-[40px] border border-white/10 bg-slate-950/60 shadow-[0_0_80px_rgba(0,204,255,0.15)] backdrop-blur-2xl w-full mx-auto box-border"
+              className="flex flex-col items-center gap-5 md:gap-6 p-6 sm:p-8 md:p-16 rounded-[32px] md:rounded-[40px] border border-white/10 bg-slate-950/60 shadow-[0_0_80px_rgba(0,204,255,0.15)] backdrop-blur-2xl w-full mx-auto box-border"
             >
 
               <div className="flex items-center gap-2 bg-black/40 py-1.5 px-4 rounded-full border border-white/10 shadow-inner">

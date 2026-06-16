@@ -56,7 +56,7 @@ export default function PromotionModal({ open, color, onSelect, onCancel }: Prom
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-md"
+          className="m-sheet-wrap fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-md"
           onClick={onCancel}
         >
           <motion.div
@@ -64,7 +64,7 @@ export default function PromotionModal({ open, color, onSelect, onCancel }: Prom
             animate={{ opacity: 1, y: 0,  scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-            className="w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-950/95 shadow-[0_30px_120px_rgba(0,0,0,0.9)] overflow-hidden"
+            className="m-sheet w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-950/95 shadow-[0_30px_120px_rgba(0,0,0,0.9)]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}

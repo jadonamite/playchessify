@@ -584,7 +584,7 @@ export default function LobbyContent() {
       {/* ── CREATE MATCH MODAL ── */}
       <AnimatePresence>
         {isCreateModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 box-border">
+          <div className="m-sheet-wrap fixed inset-0 z-50 flex items-center justify-center p-6 box-border">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -596,14 +596,14 @@ export default function LobbyContent() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md box-border"
+              className="m-sheet relative w-full max-w-md box-border"
             >
               {/*
                 ClayCard already manages its own shell correctly.
                 The inner padding div keeps content away from the blur boundary.
               */}
               <ClayCard className="overflow-hidden border border-white/10 bg-slate-950/90 backdrop-blur-2xl shadow-[0_24px_60px_rgba(0,0,0,0.8)] rounded-[32px]">
-                <div className="p-8 md:p-10 relative">
+                <div className="p-6 sm:p-8 md:p-10 relative">
                   {/* Close button */}
                   {!isPending && (
                     <button

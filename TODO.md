@@ -13,14 +13,14 @@ Priority order for the next session:
 1. **Push to origin** — `main` is ~20 commits ahead of `origin/main` (includes the refactor,
    scaling, Tier C drip, draw UI; history has intentional `chore(wip)` auto-checkpoints). Not
    yet pushed. Push when ready (no rebase/squash — keeping wip commits as-is per decision).
-2. **Verify the new indexed routes in prod** — `/api/leaderboard` + `/api/history` are deployed
-   and live; do a real-data sanity check (leaderboard renders, a known player's history loads).
-   First call warms the Redis index (one-time full scan); subsequent calls are delta-only.
+2. ~~**Verify the new indexed routes in prod**~~ ✅ (2026-06-15) — `/api/leaderboard` (200,
+   Elo-ranked) and `/api/history?address=` (200, full per-player list) both verified live on
+   `celo.playchessify.xyz`. Redis index warmed; subsequent calls are delta-only.
 3. **GameClient refactor — finish the hooks** (optional): extract `useChessEngine` /
    bot-move logic / board-interaction handlers per `game_refactor_plan.md` (deferred this round
    as behaviour-sensitive on a live component).
-4. **Tier C meta-tx forwarder** (the big July item, below) — only when ready for a contract
-   redeploy + escrow migration; the interim CELO-drip works in the meantime.
+4. **Tier C meta-tx forwarder** — **deferred to July 2026, not this month.** Only when ready
+   for a contract redeploy + escrow migration; the interim CELO-drip covers Tier C in the meantime.
 5. **New features** — replay viewer, global player search, recent-profiles feed,
    opponent-join notifications (see Backlog).
 
@@ -114,7 +114,7 @@ Priority order for the next session:
   sent you some gas for this transaction — get some CELO of your own for next time." Draws
   straight from the gas-sponsor wallet's existing balance — no reallocation needed; top up later
   by sending CELO to its address (a deposit needs no private key) once it runs low.
-- [ ] **July — proper fix**: ERC-2771 meta-tx forwarder + `*WithSig`/permit functions on
+- [ ] **July 2026 — proper fix (not this month):** ERC-2771 meta-tx forwarder + `*WithSig`/permit functions on
   ChessGame/ChessToken so Tier C gets true paymaster-style sponsorship (no gas line in their
   wallet at all, same as Tier A). Requires new contract addresses + escrow migration — plan as a
   full redeploy, not a patch.
