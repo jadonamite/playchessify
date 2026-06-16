@@ -58,6 +58,18 @@
 
   --hero-text-shadow: 0 4px 40px rgba(0, 0, 0, .7);
   --king-text-shadow: 0 0 80px rgba(0, 204, 255, .45), 0 0 160px rgba(0, 204, 255, .15);
+
+  /* ── CANDY ACCENTS (playful makeover) — used only on icons/badges/rewards/active-nav ── */
+  --candy-grape: #a78bfa;
+  --candy-lime:  #84e36b;
+  --candy-amber: #ffb74d;
+  --candy-rose:  #ff7ab6;
+
+  /* Bottom-nav chrome */
+  --bottom-nav-h: 64px;
+  --bottom-nav-bg: linear-gradient(180deg, #14142b 0%, #0b0b1a 100%);
+  --bottom-nav-border: rgba(255, 255, 255, .08);
+  --bottom-nav-shadow: 0 -1px 0 rgba(255, 255, 255, .05) inset, 0 -8px 28px rgba(0, 0, 0, .55);
 }
 
 /* ── LIGHT TOKENS ── */
