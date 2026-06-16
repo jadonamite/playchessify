@@ -18,24 +18,24 @@ interface GameHeaderProps {
 
 export default function GameHeader({ isBotGame, gameId, gameData, wagerFormatted, statusLabel, myColor, gameProfileMap }: GameHeaderProps) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-6 md:mb-12">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-6 mb-3 md:mb-12">
       <div>
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tighter" style={{ fontFamily: 'var(--fd)' }}>
+        <h1 className="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tighter" style={{ fontFamily: 'var(--fd)' }}>
           {isBotGame ? <>AI <span style={{ color: 'var(--c)' }}>Training</span></> : <>Match <span style={{ color: 'var(--c)' }}>#{gameId}</span></>}
         </h1>
         {isBotGame ? (
-          <div className="flex gap-4 mt-4">
+          <div className="flex gap-4 mt-2 md:mt-4">
             <StatBadge label="MODE" value="SINGLE PLAYER" accent />
             <StatBadge label="OPPONENT" value="SYSTEM BOT" />
           </div>
         ) : gameData && (
           <>
-            <div className="flex flex-wrap gap-4 mt-4">
+            <div className="flex flex-wrap gap-3 md:gap-4 mt-2 md:mt-4">
               <StatBadge label="WAGER" value={`${wagerFormatted} CHESS`} accent />
               <StatBadge label="STATUS" value={statusLabel} />
               {myColor && <StatBadge label="YOU PLAY" value={myColor.toUpperCase()} />}
             </div>
-            <div className="flex items-center gap-3 mt-4">
+            <div className="flex items-center gap-3 mt-2 md:mt-4">
               <div className="flex items-center gap-2">
                 <ChessAvatar address={gameData.white} size={24} />
                 <ChessName
