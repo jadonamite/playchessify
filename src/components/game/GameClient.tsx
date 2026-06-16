@@ -22,6 +22,7 @@ import AmbientBackground from './AmbientBackground'
 import GameHeader from './GameHeader'
 import BoardPanel from './BoardPanel'
 import GameSidebar from './GameSidebar'
+import GameActionBar from './GameActionBar'
 import GameResultOverlay from './GameResultOverlay'
 import { BOT_SAVE_KEY, TURN_TIMEOUT_SECS, type GameResult } from './types'
 
@@ -459,7 +460,7 @@ export default function GameClient() {
           </Link>
         </div>
       ) : (
-        <main className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 py-6 md:py-12 pt-24 md:pt-32">
+        <main className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-6 md:py-12 pt-20 md:pt-32">
 
           <GameHeader
             isBotGame={isBotGame}
