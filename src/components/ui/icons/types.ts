@@ -1,11 +1,9 @@
-// Shared imperative handle for the animated nav icons.
-// Adapted from pqoqubbw/icons (MIT) — https://icons.pqoqubbw.dev/
-// Imports rewired from `motion/react` → `framer-motion` (the dep this repo uses).
-export interface AnimatedIconHandle {
-  startAnimation: () => void
-  stopAnimation: () => void
-}
-
-export interface AnimatedIconProps extends React.HTMLAttributes<HTMLDivElement> {
+// Duotone filled glyphs for the bottom nav + game controls.
+// Each icon renders a secondary fill (~35% opacity) + a primary fill, both in
+// currentColor, so they theme via the candy accents. Plain props — no imperative
+// animation handle (the nav adds a subtle tap scale instead).
+export interface DuotoneIconProps {
   size?: number
+  className?: string
+  style?: React.CSSProperties
 }
