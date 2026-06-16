@@ -243,10 +243,20 @@ body {
   .pc-bottom-nav { display: flex; }
   .pc-app-scroll { padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 12px); }
 }
-@keyframes navPop {
-  0%   { transform: scale(1); }
-  40%  { transform: scale(1.22); }
-  100% { transform: scale(1); }
+@media (max-width: 768px) {
+  /* Top chrome condensed + the game action bar (= --bottom-nav-h) replaces the
+     nav, so the board grows to fill nearly the whole remaining height. */
+  :root { --board-reserve: 168px; }
+}
+
+/* Glowing hint bulb — gentle accent pulse via drop-shadow. */
+.pc-bulb-glow { animation: bulbGlow 1.8s ease-in-out infinite; }
+@keyframes bulbGlow {
+  0%, 100% { filter: drop-shadow(0 0 2px currentColor); opacity: .92; }
+  50%      { filter: drop-shadow(0 0 7px currentColor); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-bulb-glow { animation: none; filter: drop-shadow(0 0 3px currentColor); }
 }
 
 @media (max-width: 768px) {
