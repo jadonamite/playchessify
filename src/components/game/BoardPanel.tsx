@@ -129,7 +129,7 @@ export default function BoardPanel(props: BoardPanelProps) {
       </div>
 
       {/* Sound toggle */}
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex justify-end px-3 md:px-0">
         <button
           onClick={() => setSoundOn(!soundOn)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] border transition-colors"
