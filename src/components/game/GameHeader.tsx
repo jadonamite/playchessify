@@ -63,7 +63,8 @@ export default function GameHeader({ isBotGame, gameId, gameData, wagerFormatted
           </>
         )}
       </div>
-      <Link href="/app/lobby">
+      {/* Desktop only — on mobile the fixed game action bar provides Quit/New Game */}
+      <Link href="/app/lobby" className="hidden md:block">
         <GlowButton variant="ghost" size="sm" parallelogram>← BACK TO LOBBY</GlowButton>
       </Link>
     </div>
