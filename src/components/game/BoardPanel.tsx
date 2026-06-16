@@ -50,9 +50,11 @@ export default function BoardPanel(props: BoardPanelProps) {
         </svg>
       </div>
 
-      <div className="max-w-[600px] mx-auto">
+      {/* Board+trays group sized to the smaller of available width and viewport
+          height so the board grows to fill yet always stays square (aspect-square). */}
+      <div className="mx-auto" style={{ width: 'min(100%, calc(100svh - var(--board-reserve)))', maxWidth: 600 }}>
         {/* Opponent's captures (pieces they've taken from you) */}
-        <div className="mb-2 px-1">
+        <div className="mb-1.5 md:mb-2 px-1">
           <CapturedTray pieces={oppCaptured} color={iAmWhite ? 'w' : 'b'} advantage={-myAdvantage} set={pieceSet} />
         </div>
         <div className="aspect-square">
