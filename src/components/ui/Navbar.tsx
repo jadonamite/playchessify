@@ -18,6 +18,10 @@ const NAV_LINKS = [
   { label: 'Settings',    path: '/app/settings' },
 ]
 
+// On mobile the bottom nav owns Play/Ranks/History/Faucet/Profile, so the
+// hamburger drawer only needs the overflow items not covered there (Settings).
+const MOBILE_DRAWER_LINKS = NAV_LINKS.filter((l) => l.path === '/app/settings')
+
 function LogoutIcon() {
   return (
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
