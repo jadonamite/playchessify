@@ -101,7 +101,7 @@ export default function BoardPanel(props: BoardPanelProps) {
       </div>
 
       {/* Turn bar */}
-      <div className="mt-3 md:mt-6 text-center">
+      <div className="mt-3 md:mt-6 text-center px-3 md:px-0">
         {gameOver ? (
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
