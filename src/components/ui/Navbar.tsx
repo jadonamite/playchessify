@@ -357,7 +357,7 @@ export default function Navbar() {
                   {soundEnabled ? 'MUSIC ON' : 'MUSIC OFF'}
                 </button>
 
-                {NAV_LINKS.map(({ label, path }) => (
+                {MOBILE_DRAWER_LINKS.map(({ label, path }) => (
                   <Link
                     key={label}
                     href={path}
