@@ -92,7 +92,10 @@ export default function GameSidebar(props: GameSidebarProps) {
             </GlowButton>
             {!gameOver && turn === 'w' && (
               <GlowButton variant="ghost" fullWidth parallelogram onClick={onHint} disabled={isHintLoading}>
-                {isHintLoading ? 'ANALYSING…' : hintMove ? `HINT: ${hintMove.from.toUpperCase()} → ${hintMove.to.toUpperCase()}` : 'GET HINT'}
+                <span className="inline-flex items-center justify-center gap-2">
+                  <HintBulbIcon size={16} glow={!isHintLoading} />
+                  {isHintLoading ? 'ANALYSING…' : hintMove ? `HINT: ${hintMove.from.toUpperCase()} → ${hintMove.to.toUpperCase()}` : 'GET HINT'}
+                </span>
               </GlowButton>
             )}
             <p className="text-[10px] text-[var(--t3)] text-center leading-relaxed">
