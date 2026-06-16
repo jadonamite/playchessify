@@ -1,58 +1,13 @@
-'use client'
+import type { DuotoneIconProps } from './types'
 
-// Adapted from pqoqubbw/icons (MIT). Import rewired to framer-motion; cn dropped.
-import { motion, useAnimation } from 'framer-motion'
-import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react'
-import type { AnimatedIconHandle, AnimatedIconProps } from './types'
-
-const DropletIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
-  ({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
-    const controls = useAnimation()
-    const isControlledRef = useRef(false)
-
-    useImperativeHandle(ref, () => {
-      isControlledRef.current = true
-      return {
-        startAnimation: () => controls.start('animate'),
-        stopAnimation: () => controls.start('normal'),
-      }
-    })
-
-    const handleMouseEnter = useCallback(
-      (e: React.MouseEvent<HTMLDivElement>) => {
-        if (isControlledRef.current) onMouseEnter?.(e)
-        else controls.start('animate')
-      },
-      [controls, onMouseEnter],
-    )
-    const handleMouseLeave = useCallback(
-      (e: React.MouseEvent<HTMLDivElement>) => {
-        if (isControlledRef.current) onMouseLeave?.(e)
-        else controls.start('normal')
-      },
-      [controls, onMouseLeave],
-    )
-
-    return (
-      <div className={className} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} {...props}>
-        <svg
-          fill="none" height={size} stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
-          strokeWidth="2" viewBox="0 0 24 24" width={size} xmlns="http://www.w3.org/2000/svg"
-        >
-          <motion.path
-            animate={controls}
-            d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"
-            transition={{ duration: 0.6, delay: 0.2 }}
-            variants={{
-              normal: { pathLength: 1, opacity: 1, pathOffset: 0 },
-              animate: { pathLength: [0, 1], opacity: [0, 1], pathOffset: [1, 0] },
-            }}
-          />
-        </svg>
-      </div>
-    )
-  },
-)
-
-DropletIcon.displayName = 'DropletIcon'
-export { DropletIcon }
+// Duotone droplet — Faucet tab.
+export function DropletIcon({ size = 24, className, style }: DuotoneIconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
+      {/* secondary: droplet body */}
+      <path fillOpacity={0.32} d="M12 2.8c3.1 4.1 6.2 6.7 6.2 10.4a6.2 6.2 0 1 1-12.4 0C5.8 9.5 8.9 6.9 12 2.8z" />
+      {/* primary: shine */}
+      <circle cx="10.2" cy="14.4" r="1.7" />
+    </svg>
+  )
+}
