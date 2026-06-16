@@ -5,90 +5,41 @@ import { motion } from 'framer-motion'
 import { HintBulbIcon } from '@/components/ui/icons'
 
 interface GameActionBarProps {
+  gameOver: boolean
+  /** Active PvP wager match — quitting forfeits the wager (resign). */
+  quitForfeits: boolean
   hintDisabled: boolean
   isHintLoading: boolean
   onHint: () => void
   onNewGame: () => void
-  /** Fired only after the user holds the Quit button to completion. */
+  /** Fired only after the user holds the CTA to completion. */
   onQuit: () => void
-  /** Label hint: PvP active matches forfeit on quit. */
-  quitForfeits: boolean
 }
 
-const HOLD_MS = 1000
-
-function NewGameGlyph({ size = 23 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      {/* duotone refresh: ring (secondary) + arrowhead (primary) */}
-      <path fillOpacity={0.32} d="M12 4a8 8 0 1 0 7.5 5.3 1 1 0 0 0-1.9.7A6 6 0 1 1 12 6V4z" />
-      <path d="M12 1.5 16 4l-4 2.5v-5z" />
-    </svg>
-  )
-}
-
-function QuitGlyph({ size = 23 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      {/* duotone power/exit: ring (secondary) + bar (primary) */}
-      <path fillOpacity={0.32} d="M5.5 8.5a8 8 0 1 0 13 0 1 1 0 0 0-1.6 1.2 6 6 0 1 1-9.8 0A1 1 0 0 0 5.5 8.5z" />
-      <rect x="11" y="2.5" width="2" height="8.5" rx="1" />
-    </svg>
-  )
-}
-
-function Cell({
-  children,
-  accent,
-  onClick,
-  disabled,
-}: {
-  children: React.ReactNode
-  accent: string
-  onClick?: () => void
-  disabled?: boolean
-}) {
-  return (
-    <motion.button
-      type="button"
-      whileTap={disabled ? undefined : { scale: 0.93 }}
-      onClick={disabled ? undefined : onClick}
-      disabled={disabled}
-      className="relative flex flex-1 flex-col items-center justify-center gap-1 select-none"
-      style={{
-        background: 'transparent',
-        border: 'none',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.4 : 1,
-        color: accent,
-        WebkitTapHighlightColor: 'transparent',
-        paddingTop: 9,
-      }}
-    >
-      {children}
-    </motion.button>
-  )
-}
+const HOLD_MS = 1100
+const TRAPEZOID = 'polygon(16px 0%, 100% 0%, calc(100% - 16px) 100%, 0% 100%)'
 
 const LABEL: React.CSSProperties = {
   fontFamily: 'var(--fd)',
-  fontSize: 8.5,
-  fontWeight: 700,
-  letterSpacing: '.1em',
+  fontWeight: 800,
+  fontSize: 13,
+  letterSpacing: '.12em',
   textTransform: 'uppercase',
 }
 
 export default function GameActionBar({
+  gameOver,
+  quitForfeits,
   hintDisabled,
   isHintLoading,
   onHint,
   onNewGame,
   onQuit,
-  quitForfeits,
 }: GameActionBarProps) {
   const [holding, setHolding] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const fired = useRef(false)
+  const danger = '#ff5a5f'
 
   const startHold = useCallback(() => {
     if (timer.current) return
@@ -110,10 +61,8 @@ export default function GameActionBar({
     if (!fired.current) setHolding(false)
   }, [])
 
-  const dangerColor = '#f87171'
-
   return (
-    <nav
+    <div
       className="pc-bottom-nav"
       style={{
         position: 'fixed',
@@ -121,71 +70,119 @@ export default function GameActionBar({
         right: 0,
         bottom: 0,
         zIndex: 60,
-        alignItems: 'stretch',
-        height: 'calc(var(--bottom-nav-h) + env(safe-area-inset-bottom))',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-        background: 'var(--bottom-nav-bg)',
-        borderTop: '1px solid var(--bottom-nav-border)',
-        boxShadow: 'var(--bottom-nav-shadow)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
+        alignItems: 'center',
+        gap: 10,
+        padding: '10px 12px',
+        paddingBottom: 'calc(env(safe-area-inset-bottom) + 10px)',
+        background: 'linear-gradient(180deg, transparent, rgba(6,6,15,0.82) 38%)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
       }}
     >
-      {/* Hint — glowing bulb */}
-      <Cell accent="var(--candy-amber)" onClick={onHint} disabled={hintDisabled || isHintLoading}>
-        <span className="flex">
-          <HintBulbIcon size={23} glow={!hintDisabled && !isHintLoading} />
-        </span>
-        <span style={{ ...LABEL, color: hintDisabled ? 'var(--t3)' : 'var(--t1)' }}>
-          {isHintLoading ? '…' : 'Hint'}
-        </span>
-      </Cell>
+      {/* 80% — trapezoid CTA */}
+      {gameOver ? (
+        <motion.button
+          type="button"
+          onClick={onNewGame}
+          whileTap={{ scale: 0.97 }}
+          style={{
+            flex: '0 0 80%',
+            height: 56,
+            position: 'relative',
+            border: 'none',
+            cursor: 'pointer',
+            clipPath: TRAPEZOID,
+            background: 'var(--btn-face)',
+            color: 'var(--btn-text)',
+            boxShadow: 'var(--btn-shadow)',
+            WebkitTapHighlightColor: 'transparent',
+            ...LABEL,
+          }}
+        >
+          New Game
+        </motion.button>
+      ) : (
+        <motion.button
+          type="button"
+          onPointerDown={startHold}
+          onPointerUp={cancelHold}
+          onPointerLeave={cancelHold}
+          onPointerCancel={cancelHold}
+          whileTap={{ scale: 0.985 }}
+          aria-label={quitForfeits ? 'Hold to resign and quit' : 'Hold to quit'}
+          style={{
+            flex: '0 0 80%',
+            height: 56,
+            position: 'relative',
+            overflow: 'hidden',
+            border: 'none',
+            cursor: 'pointer',
+            clipPath: TRAPEZOID,
+            background: 'linear-gradient(180deg, #1a1a30, #111124)',
+            boxShadow: `inset 0 0 0 1.5px ${danger}55, 0 6px 0 rgba(0,0,0,.5), 0 10px 26px rgba(0,0,0,.45)`,
+            color: danger,
+            touchAction: 'none',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          {/* battery fill — grows left→right while holding */}
+          <motion.span
+            aria-hidden
+            initial={false}
+            animate={{ scaleX: holding ? 1 : 0 }}
+            transition={{ duration: holding ? HOLD_MS / 1000 : 0.16, ease: 'linear' }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              transformOrigin: 'left',
+              background: `linear-gradient(90deg, ${danger}cc, ${danger})`,
+              zIndex: 0,
+            }}
+          />
+          {/* battery cell separators */}
+          <span
+            aria-hidden
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 1,
+              opacity: holding ? 0.4 : 0,
+              transition: 'opacity .15s',
+              background: 'repeating-linear-gradient(90deg, transparent 0 22px, rgba(0,0,0,.35) 22px 24px)',
+            }}
+          />
+          <span className="relative" style={{ zIndex: 2, color: holding ? '#fff' : danger, ...LABEL }}>
+            {holding ? 'Keep holding…' : quitForfeits ? 'Hold to Resign' : 'Hold to Quit'}
+          </span>
+        </motion.button>
+      )}
 
-      {/* New Game */}
-      <Cell accent="var(--candy-lime)" onClick={onNewGame}>
-        <span className="flex"><NewGameGlyph /></span>
-        <span style={{ ...LABEL, color: 'var(--t1)' }}>New</span>
-      </Cell>
-
-      {/* Quit — hold to confirm */}
+      {/* 20% — bulb hint */}
       <motion.button
         type="button"
-        onPointerDown={startHold}
-        onPointerUp={cancelHold}
-        onPointerLeave={cancelHold}
-        onPointerCancel={cancelHold}
-        whileTap={{ scale: 0.96 }}
-        className="relative flex flex-1 flex-col items-center justify-center gap-1 select-none overflow-hidden"
+        onClick={hintDisabled || isHintLoading ? undefined : onHint}
+        disabled={hintDisabled || isHintLoading}
+        whileTap={hintDisabled || isHintLoading ? undefined : { scale: 0.93 }}
+        aria-label="Get hint"
         style={{
-          background: 'transparent',
+          flex: '1 1 0',
+          height: 56,
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           border: 'none',
-          cursor: 'pointer',
-          color: dangerColor,
+          cursor: hintDisabled || isHintLoading ? 'not-allowed' : 'pointer',
+          opacity: hintDisabled ? 0.4 : 1,
+          clipPath: 'polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%)',
+          background: 'linear-gradient(180deg, #1a1a30, #111124)',
+          boxShadow: 'inset 0 0 0 1.5px color-mix(in srgb, var(--candy-amber) 45%, transparent), 0 6px 0 rgba(0,0,0,.5)',
+          color: 'var(--candy-amber)',
           WebkitTapHighlightColor: 'transparent',
-          paddingTop: 9,
-          touchAction: 'none',
         }}
-        aria-label={quitForfeits ? 'Hold to resign and quit' : 'Hold to quit'}
       >
-        {/* hold-fill that rises from the bottom */}
-        <motion.span
-          aria-hidden
-          initial={false}
-          animate={{ scaleY: holding ? 1 : 0 }}
-          transition={{ duration: holding ? HOLD_MS / 1000 : 0.18, ease: 'linear' }}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            transformOrigin: 'bottom',
-            background: `color-mix(in srgb, ${dangerColor} 24%, transparent)`,
-            zIndex: 0,
-          }}
-        />
-        <span className="relative z-[1] flex"><QuitGlyph /></span>
-        <span className="relative z-[1]" style={{ ...LABEL, color: holding ? dangerColor : 'var(--t1)' }}>
-          {holding ? 'Hold…' : 'Quit'}
-        </span>
+        <HintBulbIcon size={26} glow={!hintDisabled && !isHintLoading} />
       </motion.button>
-    </nav>
+    </div>
   )
 }
