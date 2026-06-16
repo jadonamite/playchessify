@@ -460,7 +460,7 @@ export default function GameClient() {
           </Link>
         </div>
       ) : (
-        <main className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-6 md:py-12 pt-20 md:pt-32">
+        <main className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-6 md:py-12 pt-20 md:pt-32 overflow-x-clip">
 
           <GameHeader
             isBotGame={isBotGame}
