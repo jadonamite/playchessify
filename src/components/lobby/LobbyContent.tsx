@@ -231,47 +231,69 @@ export default function LobbyContent() {
 
             {/* ── CARD 1: Game Lobby Header ── */}
             <div className="rounded-[32px] border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-2xl relative overflow-hidden">
-              <BgIcon>
-                <svg viewBox="0 0 24 24" fill="none" width="100%" height="100%">
-                  <path d="M12 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </BgIcon>
-              <div className="p-6 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
-                  <h1
-                    className="text-4xl md:text-[52px] font-black uppercase tracking-tighter leading-none"
-                    style={{ fontFamily: 'var(--fd)', textShadow: 'var(--hero-text-shadow)' }}
-                  >
-                    Game{' '}
-                    <span style={{ color: 'var(--c)', textShadow: 'var(--king-text-shadow)' }}>
-                      Lobby
-                    </span>
-                  </h1>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2 bg-black/40 py-1.5 px-3 rounded-full border border-white/10 shadow-inner">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--c)] animate-pulse" />
-                      <span
-                        className="text-[11px] tracking-[0.2em] font-bold text-[var(--c)]"
-                        style={{ fontFamily: 'var(--fd)' }}
-                      >
-                        CELO
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-1 bg-black/20 rounded-full border border-white/5">
-                      <span
-                        className="text-[10px] tracking-[0.15em] uppercase font-bold text-[var(--t2)]"
-                        style={{ fontFamily: 'var(--fd)' }}
-                      >
-                        RATING
-                      </span>
-                      <span className="text-sm tracking-widest font-black text-white">
-                        {rating}{' '}
-                        <span className="text-[10px] text-[var(--c)] opacity-80">ELO</span>
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
+              {/* candy glow wash behind the hero */}
+              <div
+                className="absolute -top-1/3 -right-1/4 w-2/3 aspect-square rounded-full pointer-events-none z-0"
+                style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--c) 22%, transparent) 0%, transparent 70%)', filter: 'blur(8px)' }}
+              />
+              <div className="p-6 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-7 relative z-10">
 
+                {/* Emblem + heading — stacks on mobile, row on desktop */}
+                <div className="flex flex-col items-center md:items-start gap-5 text-center md:text-left">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.6, rotate: -12 }}
+                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 16 }}
+                    className="relative shrink-0"
+                    aria-hidden
+                  >
+                    {/* Glossy claymorphic orb */}
+                    <div
+                      className="flex items-center justify-center rounded-[28px]"
+                      style={{
+                        width: 84,
+                        height: 84,
+                        color: '#001a22',
+                        background: 'var(--btn-face)',
+                        boxShadow: 'var(--btn-shadow)',
+                      }}
+                    >
+                      <ChessKingIcon size={42} />
+                    </div>
+                    {/* top-edge specular highlight */}
+                    <div className="absolute inset-x-3 top-1.5 h-4 rounded-full pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,.7), transparent)', opacity: 0.55 }} />
+                  </motion.div>
+
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4 items-center md:items-start">
+                    <h1
+                      className="text-4xl md:text-[52px] font-black uppercase tracking-tighter leading-none"
+                      style={{ fontFamily: 'var(--fd)', textShadow: 'var(--hero-text-shadow)' }}
+                    >
+                      Game{' '}
+                      <span style={{ color: 'var(--c)', textShadow: 'var(--king-text-shadow)' }}>
+                        Lobby
+                      </span>
+                    </h1>
+
+                    {/* Candy stat chips */}
+                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
+                      <div className="flex items-center gap-2 bg-black/40 py-1.5 px-3 rounded-full border border-white/10 shadow-inner">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[var(--c)] animate-pulse" />
+                        <span className="text-[11px] tracking-[0.2em] font-bold text-[var(--c)]" style={{ fontFamily: 'var(--fd)' }}>CELO</span>
+                      </div>
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border" style={{ background: 'color-mix(in srgb, var(--candy-amber) 12%, transparent)', borderColor: 'color-mix(in srgb, var(--candy-amber) 30%, transparent)' }}>
+                        <span className="text-[10px] tracking-[0.15em] uppercase font-bold" style={{ fontFamily: 'var(--fd)', color: 'var(--candy-amber)' }}>RATING</span>
+                        <span className="text-sm tracking-widest font-black text-white">{rating}<span className="text-[10px] ml-1" style={{ color: 'var(--candy-amber)' }}>ELO</span></span>
+                      </div>
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border" style={{ background: 'color-mix(in srgb, var(--candy-lime) 12%, transparent)', borderColor: 'color-mix(in srgb, var(--candy-lime) 30%, transparent)' }}>
+                        <span className="text-[10px] tracking-[0.15em] uppercase font-bold" style={{ fontFamily: 'var(--fd)', color: 'var(--candy-lime)' }}>BAL</span>
+                        <span className="text-sm tracking-widest font-black text-white">{balance}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* CTAs — trapezoid brand buttons preserved, full-width on mobile */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
