@@ -115,6 +115,17 @@
 
   --hero-text-shadow: 2px 4px 0 rgba(0, 80, 140, .12), 4px 8px 0 rgba(0, 80, 140, .07), 0 12px 32px rgba(0, 80, 140, .08);
   --king-text-shadow: 2px 4px 0 rgba(0, 60, 110, .15), 4px 8px 0 rgba(0, 60, 110, .08), 0 0 40px rgba(0, 136, 187, .2);
+
+  /* Candy accents — slightly deepened for contrast on the light surface */
+  --candy-grape: #7c3aed;
+  --candy-lime:  #4faf37;
+  --candy-amber: #e08600;
+  --candy-rose:  #e1488f;
+
+  --bottom-nav-h: 64px;
+  --bottom-nav-bg: linear-gradient(180deg, #ffffff 0%, #eef0ff 100%);
+  --bottom-nav-border: rgba(0, 80, 160, .12);
+  --bottom-nav-shadow: 0 -1px 0 rgba(255, 255, 255, .8) inset, 0 -8px 24px rgba(0, 0, 80, .08);
 }
 
 /* ── BASE ── */
