@@ -106,3 +106,6 @@ foundry.lock
 
 # auto-checkpoint committer script (DEUS mode tooling)
 /.committer.sh
+
+# local screenshot helper (never commit)
+/pc-shot.mjs
