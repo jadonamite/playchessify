@@ -394,12 +394,13 @@ export default function LobbyContent() {
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
+                      whileTap={{ scale: 0.985 }}
                     >
                       {/*
                         Challenge row: also split — outer for visual chrome,
                         inner for padding. Keeps hover states clean.
                       */}
-                      <div className="rounded-2xl border border-white/5 bg-black/40 hover:bg-black/60 hover:border-white/10 transition-colors">
+                      <div className="rounded-2xl border border-white/5 bg-black/40 hover:bg-black/60 hover:border-white/10 transition-colors active:border-[var(--c)]/30">
                         <div className="p-5 md:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
 
                           <div className="flex items-center gap-5 w-full sm:w-auto min-w-0">
