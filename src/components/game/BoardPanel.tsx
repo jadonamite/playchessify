@@ -43,7 +43,7 @@ export default function BoardPanel(props: BoardPanelProps) {
   } = props
 
   return (
-    <ClayCard className="p-1.5 md:p-8 relative overflow-hidden">
+    <ClayCard padding="none" className="pc-board-card p-0 md:p-8">
       <div className="absolute -right-10 -bottom-10 opacity-[0.025] rotate-12 pointer-events-none">
         <svg width="300" height="300" viewBox="0 0 24 24" fill="currentColor">
           <path d="M19,22H5V20H19V22M17,10C17,8.9 16.1,8 15,8V7C15,5.34 13.66,4 12,4C10.34,4 9,5.34 9,7V8C7.9,8 7,8.9 7,10V11H17V10M15,13H9V18H15V13Z" />
