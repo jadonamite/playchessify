@@ -532,6 +532,22 @@ export default function GameClient() {
               onConnectWallet={connectWallet}
             />
           </div>
+
+          {/* Bottom clearance so the fixed mobile action bar never covers content */}
+          <div aria-hidden className="md:hidden" style={{ height: 'calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 12px)' }} />
+
+          {/* Fixed mobile game bar — replaces the bottom nav during gameplay */}
+          <GameActionBar
+            hintDisabled={gameOver || (isBotGame ? turn !== 'w' : !(contractActive && isMyTurn))}
+            isHintLoading={isHintLoading}
+            onHint={handleHint}
+            onNewGame={() => { if (isBotGame) resetBotGame(); else router.push('/app/lobby') }}
+            onQuit={() => {
+              if (!isBotGame && contractActive && !gameOver) handleResign()
+              router.push('/app/lobby')
+            }}
+            quitForfeits={!isBotGame && contractActive && !gameOver}
+          />
         </main>
       )}
 
