@@ -258,7 +258,7 @@ export default function LobbyContent() {
                         boxShadow: 'var(--btn-shadow)',
                       }}
                     >
-                      <ChessKingIcon size={42} />
+                      <CrownIcon size={42} />
                     </div>
                     {/* top-edge specular highlight */}
                     <div className="absolute inset-x-3 top-1.5 h-4 rounded-full pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,.7), transparent)', opacity: 0.55 }} />
