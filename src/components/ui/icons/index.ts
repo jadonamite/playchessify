@@ -1,0 +1,6 @@
+export { ChessKingIcon } from './ChessKingIcon'
+export { RankIcon } from './RankIcon'
+export { HistoryIcon } from './HistoryIcon'
+export { DropletIcon } from './DropletIcon'
+export { UserIcon } from './UserIcon'
+export type { AnimatedIconHandle, AnimatedIconProps } from './types'
