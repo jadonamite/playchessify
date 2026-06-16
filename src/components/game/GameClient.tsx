@@ -538,6 +538,7 @@ export default function GameClient() {
 
           {/* Fixed mobile game bar — replaces the bottom nav during gameplay */}
           <GameActionBar
+            gameOver={gameOver}
             hintDisabled={gameOver || (isBotGame ? turn !== 'w' : !(contractActive && isMyTurn))}
             isHintLoading={isHintLoading}
             onHint={handleHint}
