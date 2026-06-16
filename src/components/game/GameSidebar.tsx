@@ -5,6 +5,7 @@ import { useToastStore } from '@/hooks/useToastStore'
 import { TOKEN_DECIMALS } from '@/config/contracts'
 import { type GameData } from './types'
 import MoveLog from './MoveLog'
+import { HintBulbIcon } from '@/components/ui/icons'
 
 interface GameSidebarProps {
   canJoinFromPage: boolean
