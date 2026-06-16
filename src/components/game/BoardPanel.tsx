@@ -95,13 +95,13 @@ export default function BoardPanel(props: BoardPanelProps) {
           />
         </div>
         {/* Your captures (pieces you've taken) */}
-        <div className="mt-2 px-1">
+        <div className="mt-1.5 md:mt-2 px-1">
           <CapturedTray pieces={myCaptured} color={iAmWhite ? 'b' : 'w'} advantage={myAdvantage} set={pieceSet} />
         </div>
       </div>
 
       {/* Turn bar */}
-      <div className="mt-6 text-center">
+      <div className="mt-3 md:mt-6 text-center">
         {gameOver ? (
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
