@@ -74,8 +74,10 @@ function NavRow({ item, active, href }: { item: ItemDef; active: boolean; href: 
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
-      className="group relative flex items-center gap-3.5 rounded-2xl px-3.5 py-3 select-none"
+      className={`group relative flex items-center gap-3.5 rounded-2xl px-3.5 py-3 select-none transition-colors ${active ? '' : 'hover:bg-white/[0.055]'}`}
       style={{ textDecoration: 'none', color: active ? item.accent : 'var(--t2)', transition: 'color .18s ease' }}
+      onMouseEnter={active ? undefined : (e) => { e.currentTarget.style.color = item.accent }}
+      onMouseLeave={active ? undefined : (e) => { e.currentTarget.style.color = 'var(--t2)' }}
     >
       {active && (
         <motion.span
