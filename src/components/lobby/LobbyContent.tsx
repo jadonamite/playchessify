@@ -178,12 +178,7 @@ export default function LobbyContent() {
   }
 
   return (
-    <main className="pc-app-shell min-h-screen w-full max-w-[100vw] bg-[var(--bg)] text-[var(--t1)] relative flex flex-col box-border overflow-x-hidden">
-      {/* Desktop ≥769px: left rail replaces the top nav. Mobile: top Navbar + bottom nav. */}
-      <SideNav />
-      <div className="pc-mobile-chrome">
-        <Navbar />
-      </div>
+    <main className="min-h-screen w-full max-w-[100vw] bg-[var(--bg)] text-[var(--t1)] relative flex flex-col box-border overflow-x-hidden">
 
       {/* Static Background */}
       <div className="absolute inset-0 pointer-events-none z-0 opacity-50 bg-[var(--bg)]" />
