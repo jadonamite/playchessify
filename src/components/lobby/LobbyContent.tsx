@@ -429,24 +429,24 @@ export default function LobbyContent() {
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between w-full sm:w-auto sm:gap-8 border-t sm:border-t-0 border-white/5 pt-4 sm:pt-0 shrink-0">
+                          <div className="flex items-center justify-between w-full sm:w-auto sm:gap-5 border-t sm:border-t-0 border-white/5 pt-3 sm:pt-0 shrink-0">
                             <div className="flex flex-col justify-center sm:text-right">
                               <span
-                                className="text-[10px] tracking-[0.2em] text-gray-500 uppercase font-bold mb-1"
+                                className="text-[9px] tracking-[0.2em] text-gray-500 uppercase font-bold mb-0.5"
                                 style={{ fontFamily: 'var(--fd)' }}
                               >
                                 WAGER
                               </span>
-                              <div className="font-black text-cyan-400 text-lg leading-none">
+                              <div className="font-black text-cyan-400 text-base leading-none">
                                 {game.wager}{' '}
-                                <span className="text-[10px] text-cyan-700">CHESS</span>
+                                <span className="text-[9px] text-cyan-700">CHESS</span>
                               </div>
                             </div>
                             <GlowButton
-                              size="md"
+                              size="sm"
                               onClick={() => handleJoinGame(game.id, game.wager)}
                               disabled={isPending}
-                              className="min-w-[120px] shrink-0"
+                              className="min-w-[100px] shrink-0"
                             >
                               {isPending ? '...' : 'JOIN MATCH'}
                             </GlowButton>
