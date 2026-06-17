@@ -299,7 +299,7 @@ export default function LobbyContent() {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="shrink-0 flex flex-col gap-3 w-full md:w-auto"
+                  className="shrink-0 flex flex-col gap-3 w-full lg:w-auto"
                 >
                   <GlowButton
                     parallelogram
