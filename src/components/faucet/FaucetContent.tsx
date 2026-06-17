@@ -254,9 +254,6 @@ export default function FaucetContent() {
     <main className="relative min-h-screen w-full bg-[#06060f] text-[#eeeeff] overflow-x-hidden flex flex-col font-body">
       <style>{KEYFRAMES}</style>
 
-      {/* ── NAVBAR ── */}
-      <Navbar />
-
       {/* ── 3D BACKGROUND ── */}
       <div className="fixed inset-0 z-0 h-screen w-full pointer-events-none">
         <Canvas camera={{ position: [0, 0, 8], fov: 45 }}>
