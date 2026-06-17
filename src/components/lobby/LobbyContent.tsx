@@ -495,8 +495,8 @@ export default function LobbyContent() {
 
           </div>
 
-          {/* ── RIGHT COLUMN (widget rail) ── */}
-          <div className="lg:col-span-4 flex flex-col gap-5 md:gap-6 h-auto w-full min-w-0 box-border">
+          {/* ── RIGHT COLUMN (widget rail) — desktop only; mobile uses the hero chips ── */}
+          <div className="hidden lg:flex lg:col-span-4 flex-col gap-5 md:gap-6 h-auto w-full min-w-0 box-border">
 
             {/* ── CARD: CHESS balance ── */}
             <div className="rounded-[28px] border border-white/10 bg-slate-900/60 backdrop-blur-md shadow-2xl relative overflow-hidden">
