@@ -275,6 +275,22 @@ body {
   .pc-app-shell { padding-left: var(--side-nav-w); }
 }
 
+/* Board sizing.
+   • Mobile (≤768px): height-aware so the full-bleed board fills the screen
+     without pushing the action bar off — clamped by viewport height.
+   • Desktop/tablet (≥769px): width-based and bigger; the side rail replaced the
+     old top navbar, so the board no longer needs to reserve that vertical space.
+     The page scrolls if a short window can't fit the trays + bars. */
+.pc-board-wrap {
+  width: min(100%, calc(100svh - var(--board-reserve)));
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (min-width: 769px) {
+  .pc-board-wrap { width: 100%; max-width: 620px; }
+}
+
 /* In-game action bar — fixed to the viewport bottom at all widths; on desktop it
    starts after the side rail so it never sits beneath it. */
 .pc-game-bar {
