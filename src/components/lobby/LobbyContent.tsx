@@ -275,19 +275,21 @@ export default function LobbyContent() {
                       </span>
                     </h1>
 
-                    {/* Candy stat chips */}
-                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
-                      <div className="flex items-center gap-2 bg-black/40 py-1.5 px-3 rounded-full border border-white/10 shadow-inner">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[var(--c)] animate-pulse" />
-                        <span className="text-[11px] tracking-[0.2em] font-bold text-[var(--c)]" style={{ fontFamily: 'var(--fd)' }}>CELO</span>
+                    {/* Stat chips — mobile only (desktop shows the right-rail cards instead) */}
+                    <div className="lg:hidden grid grid-cols-2 gap-2.5 w-full max-w-xs">
+                      <div
+                        className="flex flex-col gap-1 px-4 py-3 rounded-2xl border"
+                        style={{ background: 'color-mix(in srgb, var(--candy-lime) 12%, transparent)', borderColor: 'color-mix(in srgb, var(--candy-lime) 28%, transparent)' }}
+                      >
+                        <span className="text-[9px] tracking-[0.18em] uppercase font-bold" style={{ fontFamily: 'var(--fd)', color: 'var(--candy-lime)' }}>Balance</span>
+                        <span className="text-xl leading-none font-black text-white" style={{ fontFamily: 'var(--fd)' }}>{balance}<span className="text-[10px] ml-1" style={{ color: 'var(--candy-lime)' }}>CHESS</span></span>
                       </div>
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border" style={{ background: 'color-mix(in srgb, var(--candy-amber) 12%, transparent)', borderColor: 'color-mix(in srgb, var(--candy-amber) 30%, transparent)' }}>
-                        <span className="text-[10px] tracking-[0.15em] uppercase font-bold" style={{ fontFamily: 'var(--fd)', color: 'var(--candy-amber)' }}>RATING</span>
-                        <span className="text-sm tracking-widest font-black text-white">{rating}<span className="text-[10px] ml-1" style={{ color: 'var(--candy-amber)' }}>ELO</span></span>
-                      </div>
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border" style={{ background: 'color-mix(in srgb, var(--candy-lime) 12%, transparent)', borderColor: 'color-mix(in srgb, var(--candy-lime) 30%, transparent)' }}>
-                        <span className="text-[10px] tracking-[0.15em] uppercase font-bold" style={{ fontFamily: 'var(--fd)', color: 'var(--candy-lime)' }}>BAL</span>
-                        <span className="text-sm tracking-widest font-black text-white">{balance}</span>
+                      <div
+                        className="flex flex-col gap-1 px-4 py-3 rounded-2xl border"
+                        style={{ background: 'color-mix(in srgb, var(--candy-amber) 12%, transparent)', borderColor: 'color-mix(in srgb, var(--candy-amber) 28%, transparent)' }}
+                      >
+                        <span className="text-[9px] tracking-[0.18em] uppercase font-bold" style={{ fontFamily: 'var(--fd)', color: 'var(--candy-amber)' }}>Rating</span>
+                        <span className="text-xl leading-none font-black text-white" style={{ fontFamily: 'var(--fd)' }}>{rating}<span className="text-[10px] ml-1" style={{ color: 'var(--candy-amber)' }}>ELO</span></span>
                       </div>
                     </div>
                   </motion.div>
