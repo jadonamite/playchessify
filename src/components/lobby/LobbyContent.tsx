@@ -216,10 +216,10 @@ export default function LobbyContent() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start w-full max-w-7xl mx-auto box-border">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6 items-start w-full max-w-7xl mx-auto box-border">
 
           {/* ── LEFT COLUMN ── */}
-          <div className="lg:col-span-8 flex flex-col gap-6 md:gap-8 w-full min-w-0 box-border">
+          <div className="lg:col-span-8 flex flex-col gap-5 md:gap-6 w-full min-w-0 box-border">
 
             {/*
               FIX: Shell/content split.
@@ -236,7 +236,7 @@ export default function LobbyContent() {
                 className="absolute -top-1/3 -right-1/4 w-2/3 aspect-square rounded-full pointer-events-none z-0"
                 style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--c) 22%, transparent) 0%, transparent 70%)', filter: 'blur(8px)' }}
               />
-              <div className="p-6 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-7 relative z-10">
+              <div className="p-5 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
 
                 {/* Emblem + heading — stacks on mobile, row on desktop */}
                 <div className="flex flex-col items-center md:items-start gap-5 text-center md:text-left">
