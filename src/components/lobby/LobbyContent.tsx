@@ -403,15 +403,15 @@ export default function LobbyContent() {
                         inner for padding. Keeps hover states clean.
                       */}
                       <div className="rounded-2xl border border-white/5 bg-black/40 hover:bg-black/60 hover:border-white/10 transition-colors active:border-[var(--c)]/30">
-                        <div className="p-5 md:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                        <div className="p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 md:gap-5">
 
-                          <div className="flex items-center gap-5 w-full sm:w-auto min-w-0">
-                            <div className="w-14 h-14 shrink-0 rounded-xl flex flex-col items-center justify-center font-bold text-cyan-400 bg-cyan-950/30 border border-cyan-500/20">
-                              <span className="text-[9px] uppercase tracking-widest opacity-60">ELO</span>
-                              <span className="text-base leading-none mt-1">{game.elo}</span>
+                          <div className="flex items-center gap-3.5 w-full sm:w-auto min-w-0">
+                            <div className="w-12 h-12 shrink-0 rounded-xl flex flex-col items-center justify-center font-bold text-cyan-400 bg-cyan-950/30 border border-cyan-500/20">
+                              <span className="text-[8px] uppercase tracking-widest opacity-60">ELO</span>
+                              <span className="text-sm leading-none mt-1">{game.elo}</span>
                             </div>
-                            <div className="flex items-center gap-3 min-w-0">
-                              <ChessAvatar address={game.creator} size={32} />
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <ChessAvatar address={game.creator} size={28} />
                               <div className="flex flex-col justify-center min-w-0">
                                 <span
                                   className="text-[10px] tracking-[0.2em] text-gray-500 uppercase font-bold mb-1"
@@ -423,7 +423,7 @@ export default function LobbyContent() {
                                   address={game.creator}
                                   profile={lobbyProfileMap[game.creator.toLowerCase()]}
                                   asLink
-                                  className="font-bold tracking-wide text-base text-gray-200 truncate max-w-full"
+                                  className="font-bold tracking-wide text-sm text-gray-200 truncate max-w-full"
                                 />
                               </div>
                             </div>
