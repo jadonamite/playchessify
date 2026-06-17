@@ -275,6 +275,20 @@ body {
   .pc-app-shell { padding-left: var(--side-nav-w); }
 }
 
+/* In-game action bar — fixed to the viewport bottom at all widths; on desktop it
+   starts after the side rail so it never sits beneath it. */
+.pc-game-bar {
+  display: flex;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+}
+@media (min-width: 769px) {
+  .pc-game-bar { left: var(--side-nav-w); }
+}
+
 /* Glowing hint bulb — gentle accent pulse via drop-shadow. */
 .pc-bulb-glow { animation: bulbGlow 1.8s ease-in-out infinite; }
 @keyframes bulbGlow {
