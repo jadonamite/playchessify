@@ -264,10 +264,10 @@ export default function LobbyContent() {
                     <div className="absolute inset-x-3 top-1.5 h-4 rounded-full pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,.7), transparent)', opacity: 0.55 }} />
                   </motion.div>
 
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4 items-center md:items-start">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4 items-center lg:items-start">
                     <h1
-                      className="text-4xl md:text-[52px] font-black uppercase tracking-tighter leading-none"
-                      style={{ fontFamily: 'var(--fd)', textShadow: 'var(--hero-text-shadow)' }}
+                      className="font-black uppercase tracking-tighter leading-none"
+                      style={{ fontFamily: 'var(--fd)', textShadow: 'var(--hero-text-shadow)', fontSize: 'clamp(2.1rem, 4.5vw, 3.25rem)' }}
                     >
                       Game{' '}
                       <span style={{ color: 'var(--c)', textShadow: 'var(--king-text-shadow)' }}>
