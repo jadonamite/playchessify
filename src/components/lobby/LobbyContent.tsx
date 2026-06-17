@@ -236,10 +236,10 @@ export default function LobbyContent() {
                 className="absolute -top-1/3 -right-1/4 w-2/3 aspect-square rounded-full pointer-events-none z-0"
                 style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--c) 22%, transparent) 0%, transparent 70%)', filter: 'blur(8px)' }}
               />
-              <div className="p-5 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+              <div className="p-5 md:p-7 flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
 
-                {/* Emblem + heading — stacks on mobile, row on desktop */}
-                <div className="flex flex-col items-center md:items-start gap-5 text-center md:text-left">
+                {/* Emblem + heading — stacks until desktop so the CTAs never collide */}
+                <div className="flex flex-col items-center lg:items-start gap-5 text-center lg:text-left">
                   <motion.div
                     initial={{ opacity: 0, scale: 0.6, rotate: -12 }}
                     animate={{ opacity: 1, scale: 1, rotate: 0 }}
