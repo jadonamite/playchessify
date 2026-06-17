@@ -55,14 +55,14 @@ function Tab({ tab, active, href }: { tab: TabDef; active: boolean; href: string
         {active && (
           <motion.span
             layoutId="pc-nav-chip"
-            transition={{ type: 'spring', stiffness: 520, damping: 40 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 34, mass: 0.7 }}
             style={{
               position: 'absolute',
               inset: 0,
-              clipPath: 'polygon(8px 0%, calc(100% - 8px) 0%, 100% 100%, 0% 100%)',
-              background: `color-mix(in srgb, ${tab.accent} 20%, transparent)`,
-              boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${tab.accent} 38%, transparent)`,
-              borderRadius: 12,
+              borderRadius: 14,
+              background: `color-mix(in srgb, ${tab.accent} 15%, transparent)`,
+              boxShadow: `inset 0 0 0 2px color-mix(in srgb, ${tab.accent} 42%, transparent)`,
+              willChange: 'transform',
             }}
           />
         )}
