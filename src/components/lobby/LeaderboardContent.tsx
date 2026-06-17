@@ -327,7 +327,6 @@ export default function LeaderboardContent() {
 
   return (
     <main className="min-h-screen w-full bg-[var(--bg)] text-[var(--t1)] relative overflow-x-hidden flex flex-col">
-      <Navbar />
 
       {/* Ambient blobs */}
       <div className="fixed inset-0 pointer-events-none z-0">
