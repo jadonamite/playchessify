@@ -8,7 +8,6 @@ import { useWallet } from '@/components/wallet-provider'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
 import { useSettingsStore, BOARD_THEMES, AI_DIFFICULTY_LABELS, PIECE_SETS, type BoardTheme, type AiDifficulty } from '@/hooks/useSettingsStore'
 import { piecePath } from '@/lib/chessPieces'
-import { Navbar } from '@/components/landing/Hero'
 import GlowButton from '@/components/ui/GlowButton'
 import ClayCard from '@/components/ui/ClayCard'
 import ChessAvatar from '@/components/ui/ChessAvatar'
@@ -111,8 +110,6 @@ export default function SettingsPage() {
           backgroundSize: '52px 52px',
         }}
       />
-
-      <Navbar />
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 md:px-8 py-12 md:py-24">
         <div className="flex items-center justify-between mb-10">
