@@ -204,8 +204,6 @@ export default function ProfilePage() {
         }}
       />
 
-      <Navbar />
-
       <div className="relative z-10 max-w-2xl mx-auto px-4 md:px-8 py-12 md:py-24">
         <GlowButton variant="ghost" size="sm" onClick={() => router.back()} className="mb-8">
           ← BACK
