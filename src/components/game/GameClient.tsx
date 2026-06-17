@@ -507,7 +507,7 @@ export default function GameClient() {
               />
             </div>
 
-            <GameSidebar
+            {!isBotGame && <GameSidebar
               canJoinFromPage={canJoinFromPage}
               gameIsWaiting={gameIsWaiting}
               isCreator={isCreator}
@@ -535,11 +535,11 @@ export default function GameClient() {
               onAcceptDraw={handleAcceptDraw}
               onResign={handleResign}
               onConnectWallet={connectWallet}
-            />
+            />}
           </div>
 
-          {/* Bottom clearance so the fixed mobile action bar never covers content */}
-          <div aria-hidden className="md:hidden" style={{ height: 'calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 12px)' }} />
+          {/* Bottom clearance so the fixed action bar never covers content */}
+          <div aria-hidden style={{ height: 'calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 24px)' }} />
 
           {/* Fixed mobile game bar — replaces the bottom nav during gameplay */}
           <GameActionBar
