@@ -458,7 +458,14 @@ export default function GameClient() {
           </Link>
         </div>
       ) : (
-        <main className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-6 md:py-12 pt-20 md:pt-32 overflow-x-clip">
+        <main className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-5 md:py-8 overflow-x-clip">
+
+          {/* Back to lobby */}
+          <div className="mb-4 md:mb-5 px-1">
+            <Link href="/app/lobby">
+              <GlowButton variant="ghost" size="sm" parallelogram>← LOBBY</GlowButton>
+            </Link>
+          </div>
 
           <GameHeader
             isBotGame={isBotGame}
