@@ -478,7 +478,7 @@ export default function GameClient() {
           />
 
           {/* ── board + sidebar ── */}
-          <div className={`grid grid-cols-1 gap-4 md:gap-8 items-start ${isBotGame ? 'max-w-2xl mx-auto' : 'lg:grid-cols-12'}`}>
+          <div className={`grid grid-cols-1 gap-4 md:gap-8 items-start ${isBotGame ? 'max-w-3xl mx-auto' : 'lg:grid-cols-12'}`}>
 
             <div className={isBotGame ? '' : 'lg:col-span-8'}>
               <BoardPanel
