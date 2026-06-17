@@ -8,6 +8,7 @@ import ClayCard from '@/components/ui/ClayCard'
 import ComingSoonOverlay from '@/components/ui/ComingSoonOverlay'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/landing/Hero'
+import SideNav from '@/components/ui/SideNav'
 import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID } from '@/config/contracts'
 import { useCeloChess } from '@/hooks/useCeloChess'
 import { useLobby } from '@/hooks/useLobby'
@@ -17,7 +18,7 @@ import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import ClaimModal from '@/components/ui/ClaimModal'
 import LoadingState from '@/components/ui/LoadingState'
-import { CrownIcon } from '@/components/ui/icons'
+import { CrownIcon, RankIcon } from '@/components/ui/icons'
 import { useReadContract } from 'wagmi'
 import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
 import { formatUnits } from 'viem'
@@ -60,6 +61,7 @@ export default function LobbyContent() {
   const [rating, setRating] = useState<number>(1200)
   const [wins, setWins] = useState(0)
   const [losses, setLosses] = useState(0)
+  const [draws, setDraws] = useState(0)
 
   // Balance/stats are keyed to the on-chain player identity (the smart account for
   // Tier A, otherwise the connected EOA) — the same identity the game contract sees.
@@ -95,6 +97,7 @@ export default function LobbyContent() {
         setRating(Number(s[3]))
         setWins(Number(s[0]))
         setLosses(Number(s[1]))
+        setDraws(Number(s[2]))
       }
     }
   }, [playerAddress, celoBalance, celoStats])
@@ -177,8 +180,12 @@ export default function LobbyContent() {
   }
 
   return (
-    <main className="min-h-screen w-full max-w-[100vw] bg-[var(--bg)] text-[var(--t1)] relative flex flex-col box-border overflow-x-hidden">
-      <Navbar />
+    <main className="pc-app-shell min-h-screen w-full max-w-[100vw] bg-[var(--bg)] text-[var(--t1)] relative flex flex-col box-border overflow-x-hidden">
+      {/* Desktop ≥769px: left rail replaces the top nav. Mobile: top Navbar + bottom nav. */}
+      <SideNav />
+      <div className="pc-mobile-chrome">
+        <Navbar />
+      </div>
 
       {/* Static Background */}
       <div className="absolute inset-0 pointer-events-none z-0 opacity-50 bg-[var(--bg)]" />
@@ -493,108 +500,100 @@ export default function LobbyContent() {
 
           </div>
 
-          {/* ── RIGHT COLUMN ── */}
-          <div className="lg:col-span-4 flex flex-col gap-6 md:gap-8 h-auto w-full min-w-0 box-border">
+          {/* ── RIGHT COLUMN (widget rail) ── */}
+          <div className="lg:col-span-4 flex flex-col gap-5 md:gap-6 h-auto w-full min-w-0 box-border">
 
-            {/* ── CARD 3: Profile Stats ── */}
-            <div className="rounded-[32px] border border-white/10 bg-slate-900/60 backdrop-blur-md shadow-2xl relative overflow-hidden">
-              <BgIcon>
-                <svg viewBox="0 0 24 24" fill="none" width="100%" height="100%">
-                  <polyline points="2 17 8.5 10.5 13.5 15.5 22 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                  <polyline points="16 7 22 7 22 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                </svg>
-              </BgIcon>
-              <div className="p-6 md:p-10 flex flex-col relative z-10">
-                <h3
-                  className="text-sm font-bold tracking-wider text-cyan-400 uppercase mb-8"
-                  style={{ fontFamily: 'var(--fd)' }}
-                >
-                  Profile Stats
-                </h3>
-
-                <div className="flex items-baseline gap-2 mb-10">
-                  <span
-                    className="text-5xl font-black text-white leading-none"
-                    style={{ fontFamily: 'var(--fd)' }}
-                  >
-                    {balance}
-                  </span>
-                  <span className="text-sm text-cyan-500 font-bold tracking-widest">CHESS</span>
+            {/* ── CARD: CHESS balance ── */}
+            <div className="rounded-[28px] border border-white/10 bg-slate-900/60 backdrop-blur-md shadow-2xl relative overflow-hidden">
+              <div className="p-6 md:p-7 flex flex-col gap-4 relative z-10">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[11px] font-bold tracking-[0.2em] uppercase" style={{ fontFamily: 'var(--fd)', color: 'var(--candy-lime)' }}>
+                    Balance
+                  </h3>
                   <button
                     onClick={() => refetchBalance()}
                     aria-label="Refresh balance"
                     title="Refresh balance"
-                    className="self-center ml-1 p-1.5 rounded-full border border-white/10 bg-black/30 text-cyan-400 hover:bg-black/50 hover:border-white/20 transition-colors"
+                    className="p-1.5 rounded-full border border-white/10 bg-black/30 text-[var(--candy-lime)] hover:bg-black/50 hover:border-white/20 transition-colors"
                   >
-                    <svg
-                      viewBox="0 0 24 24"
-                      width="14"
-                      height="14"
-                      fill="none"
-                      className={isBalanceUpdating ? 'animate-spin' : ''}
-                    >
-                      <path
-                        d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" className={isBalanceUpdating ? 'animate-spin' : ''}>
+                      <path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </button>
                 </div>
-
-                <div className="flex justify-between items-center bg-black/40 p-5 rounded-2xl border border-white/5 mb-8">
-                  <div className="flex flex-col flex-1">
-                    <span className="text-[11px] text-gray-500 font-bold tracking-widest uppercase mb-2">
-                      Wins
-                    </span>
-                    <span className="text-2xl font-bold text-white leading-none">{wins}</span>
-                  </div>
-                  <div className="w-[1px] h-10 bg-white/10 mx-4 shrink-0" />
-                  <div className="flex flex-col flex-1 text-right">
-                    <span className="text-[11px] text-gray-500 font-bold tracking-widest uppercase mb-2">
-                      Losses
-                    </span>
-                    <span className="text-2xl font-bold text-gray-300 leading-none">{losses}</span>
-                  </div>
-                </div>
-
-                <div className="mt-auto pt-2 w-full">
-                  <GlowButton
-                    variant="ghost"
-                    fullWidth
-                    onClick={() => handleAction(() => router.push('/app/history'))}
-                  >
-                    VIEW HISTORY
-                  </GlowButton>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[44px] font-black text-white leading-none" style={{ fontFamily: 'var(--fd)' }}>{balance}</span>
+                  <span className="text-xs font-bold tracking-widest" style={{ color: 'var(--candy-lime)' }}>CHESS</span>
                 </div>
               </div>
             </div>
 
-            {/* ── CARD 4: Need CHESS? ── */}
-            <div className="rounded-[32px] border border-white/10 bg-slate-900/60 backdrop-blur-md shadow-2xl relative overflow-hidden">
+            {/* ── CARD: Rating + rank (league-style) ── */}
+            <div className="rounded-[28px] border border-white/10 bg-slate-900/60 backdrop-blur-md shadow-2xl relative overflow-hidden">
+              <div className="absolute -top-1/4 -right-1/4 w-2/3 aspect-square rounded-full pointer-events-none z-0" style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--candy-amber) 18%, transparent) 0%, transparent 70%)' }} />
+              <div className="p-6 md:p-7 flex flex-col gap-4 relative z-10">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[11px] font-bold tracking-[0.2em] uppercase" style={{ fontFamily: 'var(--fd)', color: 'var(--candy-amber)' }}>
+                    Your Rating
+                  </h3>
+                  <button onClick={() => router.push('/app/leaderboard')} className="text-[10px] font-black tracking-widest uppercase text-[var(--candy-amber)] hover:opacity-80 transition-opacity">
+                    VIEW RANKS →
+                  </button>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center rounded-2xl shrink-0" style={{ width: 52, height: 52, background: 'color-mix(in srgb, var(--candy-amber) 14%, transparent)', border: '1px solid color-mix(in srgb, var(--candy-amber) 30%, transparent)', color: 'var(--candy-amber)' }}>
+                    <RankIcon size={28} />
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-4xl font-black text-white leading-none" style={{ fontFamily: 'var(--fd)' }}>{rating}</span>
+                    <span className="text-[11px] font-bold tracking-widest" style={{ color: 'var(--candy-amber)' }}>ELO</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── CARD: Record (W / D / L) ── */}
+            <div className="rounded-[28px] border border-white/10 bg-slate-900/60 backdrop-blur-md shadow-2xl relative overflow-hidden">
+              <div className="p-6 md:p-7 flex flex-col gap-4 relative z-10">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[11px] font-bold tracking-[0.2em] uppercase" style={{ fontFamily: 'var(--fd)', color: 'var(--candy-grape)' }}>
+                    Record
+                  </h3>
+                  <button onClick={() => handleAction(() => router.push('/app/history'))} className="text-[10px] font-black tracking-widest uppercase text-[var(--candy-grape)] hover:opacity-80 transition-opacity">
+                    HISTORY →
+                  </button>
+                </div>
+                <div className="flex items-stretch gap-2">
+                  {[
+                    { label: 'Wins', value: wins, color: 'var(--candy-lime)' },
+                    { label: 'Draws', value: draws, color: 'var(--t2)' },
+                    { label: 'Losses', value: losses, color: 'var(--candy-rose)' },
+                  ].map((s) => (
+                    <div key={s.label} className="flex-1 flex flex-col items-center gap-1.5 rounded-2xl py-3.5 bg-black/30 border border-white/5">
+                      <span className="text-2xl font-black leading-none" style={{ fontFamily: 'var(--fd)', color: s.color }}>{s.value}</span>
+                      <span className="text-[9px] font-bold tracking-[0.15em] uppercase text-gray-500">{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ── CARD: Need CHESS? (promo) ── */}
+            <div className="rounded-[28px] border border-[var(--c)]/20 bg-slate-900/60 backdrop-blur-md shadow-2xl relative overflow-hidden">
               <BgIcon>
                 <svg viewBox="0 0 24 24" fill="none" width="100%" height="100%">
                   <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
                 </svg>
               </BgIcon>
-              <div className="p-6 md:p-10 flex flex-col gap-3 relative z-10">
-                <h4
-                  className="font-bold text-[15px] tracking-widest text-white uppercase"
-                  style={{ fontFamily: 'var(--fd)' }}
-                >
+              <div className="p-6 md:p-7 flex flex-col gap-3 relative z-10">
+                <h4 className="font-bold text-[14px] tracking-widest text-white uppercase" style={{ fontFamily: 'var(--fd)' }}>
                   Need CHESS?
                 </h4>
                 <p className="text-[13px] text-gray-400 leading-relaxed">
-                  Top up your wallet with testnet tokens to start playing on Celo.
+                  Claim free testnet tokens to start playing on Celo.
                 </p>
-                <div className="mt-4 w-full">
-                  <GlowButton
-                    variant="brand"
-                    fullWidth
-                    onClick={() => handleAction(() => router.push('/app/faucet'))}
-                  >
+                <div className="mt-3 w-full">
+                  <GlowButton variant="brand" fullWidth onClick={() => handleAction(() => router.push('/app/faucet'))}>
                     VISIT FAUCET
                   </GlowButton>
                 </div>

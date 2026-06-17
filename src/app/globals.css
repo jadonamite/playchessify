@@ -260,6 +260,21 @@ body {
   }
 }
 
+/* ── DESKTOP SIDE NAV (Duolingo-style left rail) ──
+   Mirror image of the mobile chrome: on desktop (≥769px, i.e. where the bottom
+   nav disappears) the top Navbar is replaced by a fixed left rail; on mobile the
+   rail is hidden and the top Navbar + bottom nav own the chrome. Exactly one
+   primary nav is visible at any width. `.pc-app-shell` offsets page content by
+   the rail width on desktop. */
+:root { --side-nav-w: 248px; }
+.pc-side-nav { display: none; }
+.pc-mobile-chrome { display: block; }
+@media (min-width: 769px) {
+  .pc-side-nav { display: flex; }
+  .pc-mobile-chrome { display: none; }
+  .pc-app-shell { padding-left: var(--side-nav-w); }
+}
+
 /* Glowing hint bulb — gentle accent pulse via drop-shadow. */
 .pc-bulb-glow { animation: bulbGlow 1.8s ease-in-out infinite; }
 @keyframes bulbGlow {
