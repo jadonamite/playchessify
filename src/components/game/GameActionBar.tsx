@@ -40,6 +40,7 @@ export default function GameActionBar({
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const fired = useRef(false)
   const danger = '#ff5a5f'
+  const hintOff = hintDisabled || isHintLoading
 
   const startHold = useCallback(() => {
     if (timer.current) return
@@ -63,126 +64,128 @@ export default function GameActionBar({
 
   return (
     <div
-      className="pc-bottom-nav"
+      className="pc-game-bar"
       style={{
-        position: 'fixed',
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 60,
         alignItems: 'center',
-        gap: 10,
+        justifyContent: 'center',
         padding: '10px 12px',
         paddingBottom: 'calc(env(safe-area-inset-bottom) + 10px)',
-        background: 'linear-gradient(180deg, transparent, rgba(6,6,15,0.82) 38%)',
+        background: 'linear-gradient(180deg, transparent, rgba(6,6,15,0.85) 38%)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
       }}
     >
-      {/* 80% — trapezoid CTA */}
-      {gameOver ? (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', maxWidth: 660 }}>
+        {/* Primary CTA — hold-to-quit / new game (keeps the trapezoid shape) */}
+        {gameOver ? (
+          <motion.button
+            type="button"
+            onClick={onNewGame}
+            whileTap={{ scale: 0.97 }}
+            style={{
+              flex: 1,
+              height: 58,
+              position: 'relative',
+              border: 'none',
+              cursor: 'pointer',
+              clipPath: TRAPEZOID,
+              background: 'var(--btn-face)',
+              color: 'var(--btn-text)',
+              boxShadow: 'var(--btn-shadow)',
+              WebkitTapHighlightColor: 'transparent',
+              ...LABEL,
+            }}
+          >
+            New Game
+          </motion.button>
+        ) : (
+          <motion.button
+            type="button"
+            onPointerDown={startHold}
+            onPointerUp={cancelHold}
+            onPointerLeave={cancelHold}
+            onPointerCancel={cancelHold}
+            whileTap={{ scale: 0.985 }}
+            aria-label={quitForfeits ? 'Hold to resign and quit' : 'Hold to quit'}
+            style={{
+              flex: 1,
+              height: 58,
+              position: 'relative',
+              overflow: 'hidden',
+              border: 'none',
+              cursor: 'pointer',
+              clipPath: TRAPEZOID,
+              background: 'linear-gradient(180deg, #1a1a30, #111124)',
+              boxShadow: `inset 0 0 0 1.5px ${danger}55, 0 6px 0 rgba(0,0,0,.5), 0 10px 26px rgba(0,0,0,.45)`,
+              color: danger,
+              touchAction: 'none',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            {/* battery fill — grows left→right while holding */}
+            <motion.span
+              aria-hidden
+              initial={false}
+              animate={{ scaleX: holding ? 1 : 0 }}
+              transition={{ duration: holding ? HOLD_MS / 1000 : 0.16, ease: 'linear' }}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                transformOrigin: 'left',
+                background: `linear-gradient(90deg, ${danger}cc, ${danger})`,
+                zIndex: 0,
+              }}
+            />
+            <span
+              aria-hidden
+              style={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 1,
+                opacity: holding ? 0.4 : 0,
+                transition: 'opacity .15s',
+                background: 'repeating-linear-gradient(90deg, transparent 0 22px, rgba(0,0,0,.35) 22px 24px)',
+              }}
+            />
+            <span className="relative" style={{ zIndex: 2, color: holding ? '#fff' : danger, ...LABEL }}>
+              {holding ? 'Keep holding…' : quitForfeits ? 'Hold to Resign' : 'Hold to Quit'}
+            </span>
+          </motion.button>
+        )}
+
+        {/* Hint — juicy raised amber button */}
         <motion.button
           type="button"
-          onClick={onNewGame}
-          whileTap={{ scale: 0.97 }}
+          onClick={hintOff ? undefined : onHint}
+          disabled={hintOff}
+          whileTap={hintOff ? undefined : { scale: 0.95, y: 2 }}
+          aria-label="Get a hint"
           style={{
-            flex: '0 0 80%',
-            height: 56,
-            position: 'relative',
+            flex: '0 0 auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            height: 58,
+            padding: '0 22px',
+            borderRadius: 16,
             border: 'none',
-            cursor: 'pointer',
-            clipPath: TRAPEZOID,
-            background: 'var(--btn-face)',
-            color: 'var(--btn-text)',
-            boxShadow: 'var(--btn-shadow)',
+            cursor: hintOff ? 'not-allowed' : 'pointer',
+            background: 'linear-gradient(180deg, #ffd27a 0%, #ffb74d 55%, #f59e2e 100%)',
+            color: '#3a2400',
+            boxShadow: hintOff
+              ? 'none'
+              : '0 6px 0 #b9791f, 0 10px 22px rgba(245,158,46,.35)',
+            opacity: hintOff && !isHintLoading ? 0.45 : 1,
+            filter: hintOff && !isHintLoading ? 'grayscale(0.6)' : 'none',
             WebkitTapHighlightColor: 'transparent',
             ...LABEL,
           }}
         >
-          New Game
+          <HintBulbIcon size={22} glow={!hintOff} />
+          {isHintLoading ? '…' : 'Hint'}
         </motion.button>
-      ) : (
-        <motion.button
-          type="button"
-          onPointerDown={startHold}
-          onPointerUp={cancelHold}
-          onPointerLeave={cancelHold}
-          onPointerCancel={cancelHold}
-          whileTap={{ scale: 0.985 }}
-          aria-label={quitForfeits ? 'Hold to resign and quit' : 'Hold to quit'}
-          style={{
-            flex: '0 0 80%',
-            height: 56,
-            position: 'relative',
-            overflow: 'hidden',
-            border: 'none',
-            cursor: 'pointer',
-            clipPath: TRAPEZOID,
-            background: 'linear-gradient(180deg, #1a1a30, #111124)',
-            boxShadow: `inset 0 0 0 1.5px ${danger}55, 0 6px 0 rgba(0,0,0,.5), 0 10px 26px rgba(0,0,0,.45)`,
-            color: danger,
-            touchAction: 'none',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        >
-          {/* battery fill — grows left→right while holding */}
-          <motion.span
-            aria-hidden
-            initial={false}
-            animate={{ scaleX: holding ? 1 : 0 }}
-            transition={{ duration: holding ? HOLD_MS / 1000 : 0.16, ease: 'linear' }}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              transformOrigin: 'left',
-              background: `linear-gradient(90deg, ${danger}cc, ${danger})`,
-              zIndex: 0,
-            }}
-          />
-          {/* battery cell separators */}
-          <span
-            aria-hidden
-            style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 1,
-              opacity: holding ? 0.4 : 0,
-              transition: 'opacity .15s',
-              background: 'repeating-linear-gradient(90deg, transparent 0 22px, rgba(0,0,0,.35) 22px 24px)',
-            }}
-          />
-          <span className="relative" style={{ zIndex: 2, color: holding ? '#fff' : danger, ...LABEL }}>
-            {holding ? 'Keep holding…' : quitForfeits ? 'Hold to Resign' : 'Hold to Quit'}
-          </span>
-        </motion.button>
-      )}
-
-      {/* 20% — bulb hint */}
-      <motion.button
-        type="button"
-        onClick={hintDisabled || isHintLoading ? undefined : onHint}
-        disabled={hintDisabled || isHintLoading}
-        whileTap={hintDisabled || isHintLoading ? undefined : { scale: 0.93 }}
-        aria-label="Get hint"
-        style={{
-          flex: '1 1 0',
-          height: 56,
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: 'none',
-          cursor: hintDisabled || isHintLoading ? 'not-allowed' : 'pointer',
-          opacity: hintDisabled ? 0.4 : 1,
-          clipPath: 'polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%)',
-          background: 'linear-gradient(180deg, #1a1a30, #111124)',
-          boxShadow: 'inset 0 0 0 1.5px color-mix(in srgb, var(--candy-amber) 45%, transparent), 0 6px 0 rgba(0,0,0,.5)',
-          color: 'var(--candy-amber)',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        <HintBulbIcon size={26} glow={!hintDisabled && !isHintLoading} />
-      </motion.button>
+      </div>
     </div>
   )
 }
