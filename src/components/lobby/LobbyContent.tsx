@@ -333,7 +333,7 @@ export default function LobbyContent() {
                   <line x1="12" y1="12" x2="17.5" y2="8.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
                 </svg>
               </BgIcon>
-              <div className="p-6 md:p-10 flex flex-col gap-6 relative z-10">
+              <div className="p-5 md:p-7 flex flex-col gap-5 relative z-10">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2">
                   <div className="flex items-center gap-3">
                     <h3
