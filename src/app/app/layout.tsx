@@ -2,19 +2,29 @@
 
 import { usePathname } from 'next/navigation'
 import BottomNav from '@/components/ui/BottomNav'
+import SideNav from '@/components/ui/SideNav'
+import { Navbar } from '@/components/landing/Hero'
 
-// Shared layout for every /app/* route. Mounts the mobile bottom nav once and
-// adds bottom clearance so the fixed nav never covers content. On the game route
-// the nav is replaced by the in-screen game action bar, so we drop both the nav
-// and the bottom padding (the game bar provides its own clearance).
+// Shared chrome for every /app/* route.
+//  • Desktop (≥769px): the fixed SideNav rail replaces the top nav; content is
+//    offset by the rail width via `.pc-app-shell`.
+//  • Mobile (≤768px): the top Navbar + bottom nav own the chrome.
+// On the game route the bottom nav is replaced by the in-screen action bar, and
+// the mobile top Navbar is dropped (the board keeps its own header + back link).
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isGame = pathname.startsWith('/app/game')
 
   return (
-    <>
+    <div className="pc-app-shell">
+      <SideNav />
+      {!isGame && (
+        <div className="pc-mobile-chrome">
+          <Navbar />
+        </div>
+      )}
       <div className={isGame ? undefined : 'pc-app-scroll'}>{children}</div>
       {!isGame && <BottomNav />}
-    </>
+    </div>
   )
 }
