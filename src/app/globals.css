@@ -288,7 +288,12 @@ body {
   margin-right: auto;
 }
 @media (min-width: 769px) {
-  .pc-board-wrap { width: 100%; max-width: 620px; }
+  /* Scale with the viewport (smaller on tablets, larger on desktop) while still
+     capped by available height so it never overflows a short window. */
+  .pc-board-wrap {
+    width: min(100%, calc(100svh - 210px));
+    max-width: clamp(360px, 48vw, 600px);
+  }
 }
 
 /* In-game action bar — fixed to the viewport bottom at all widths; on desktop it
