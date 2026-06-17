@@ -19,6 +19,62 @@ oracle** — the contract itself never validates chess.
 
 ---
 
+## ⏳ ACTIVE SESSION HANDOVER — Mobile UI makeover (2026-06-17, in progress)
+
+**Status:** pushed to `main` (deployed to prod, `celo.playchessify.xyz`) but **NOT
+visually verified by Jadon yet** — `tsc`/`build` clean only. Iterating on look &
+feel. Full plan: `~/.claude/plans/goofy-tumbling-eclipse.md`.
+
+### Goal
+Turn the "shrunk-to-fit" desktop UI into a **mobile-first, playful** app
+(Duolingo-style feel). Jadon reacts strongly to half-baked visuals — get it right
+structurally AND have him eyeball it on device (automated screenshots are blocked,
+see below).
+
+### What shipped this session
+- **Icons** → real **Solar bold-duotone** set, transcribed into
+  `src/components/ui/icons/index.tsx` (`PlayIcon` gamepad, `RankIcon` cup,
+  `HistoryIcon` clock, `FaucetIcon` drop, `ProfileIcon` user, `CrownIcon` hero,
+  `HintBulbIcon` glowing). Earlier hand-drawn/pqoqubbw line icons were rejected.
+- **Bottom nav** `src/components/ui/BottomNav.tsx` — mobile-only fixed tab bar
+  (Play/Ranks/History/Faucet/You), 26px icons, candy-accent active **trapezoid**
+  chip via `layoutId`. Hidden on `/app/game/*`. Mounted once via new **client**
+  layout `src/app/app/layout.tsx` (drops bottom padding on game route).
+- **Board (mobile)** `src/components/game/BoardPanel.tsx` — now **full-bleed
+  100vw, square, height-aware**: `.pc-board-card` (globals.css) breaks out of
+  gutters; wrapper `width: min(100%, calc(100svh - var(--board-reserve)))`. Fixed
+  the real bug: `ClayCard` default `padding="md"` was overriding → now
+  `padding="none"`. `GameClient` main got `overflow-x-clip` + smaller gutters/top.
+- **Game action bar** `src/components/game/GameActionBar.tsx` — **80% trapezoid
+  CTA + 20% bulb**. Active play → "Hold to Quit/Resign" with **left→right battery
+  fill** (hold-to-confirm, release cancels). Game over → tappable cyan "New Game".
+  20% = glowing hint bulb. Wired in `GameClient` with `gameOver / quitForfeits /
+  hintDisabled / onHint / onNewGame / onQuit`.
+- **Tokens** (`globals.css`) — candy accents (`--candy-grape/lime/amber/rose`),
+  `--bottom-nav-h`, `--board-reserve` (mobile 150px), `.pc-bottom-nav` /
+  `.pc-app-scroll` / `.pc-board-card` / `.pc-bulb-glow`.
+- **Lobby** `src/components/lobby/LobbyContent.tsx` — mobile-first hero (glossy
+  orb w/ `CrownIcon`), candy stat chips, tactile cards. **Logo** bumped in `Navbar.tsx`.
+
+### Open / next up (start here in the new chat)
+1. **Jadon to review on device first** — board edge-to-edge & square? battery-fill
+   feel? icon choices? nav spacing? Iterate on whatever he flags.
+2. Roll the duotone/candy language across remaining screens: **leaderboard,
+   history, faucet, settings, profile** (only lobby done so far).
+3. Consider hiding/condensing more chrome if board still feels small on short phones.
+
+### Gotchas
+- **Headless screenshots render blank** — `/app/*` is Privy-wallet-gated; can't
+  auto-verify authed UI. Verify via device or mock the wallet.
+- **Clean build before trusting** — `rm -rf .next && npm run build` (stale cache
+  has hidden Turbopack errors before).
+- **Auto-commit worker:** gitignored `.committer.sh` commits every 10s as
+  `chore(wip): auto-checkpoint #N`. **It is currently RUNNING** — stop with
+  `pkill -f .committer.sh`. History on `main` now has these wip commits (Jadon
+  chose to push as-is).
+
+---
+
 ## Stack
 
 | Layer | Tech |
