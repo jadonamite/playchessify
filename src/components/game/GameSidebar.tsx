@@ -4,8 +4,6 @@ import GlowButton from '@/components/ui/GlowButton'
 import { useToastStore } from '@/hooks/useToastStore'
 import { TOKEN_DECIMALS } from '@/config/contracts'
 import { type GameData } from './types'
-import MoveLog from './MoveLog'
-import { HintBulbIcon } from '@/components/ui/icons'
 
 interface GameSidebarProps {
   canJoinFromPage: boolean
@@ -37,12 +35,15 @@ interface GameSidebarProps {
   onConnectWallet: () => void
 }
 
+// Right-column context for PvP games only (bot games render no sidebar). The
+// hold-to-quit (resign) and hint actions live in the bottom GameActionBar, so
+// this column carries only join/waiting state, the turn clock, and draw offers.
 export default function GameSidebar(props: GameSidebarProps) {
   const {
-    canJoinFromPage, gameIsWaiting, isCreator, isBotGame, gameOver, contractActive,
+    canJoinFromPage, gameIsWaiting, isCreator, gameOver, contractActive,
     isMyTurn, isConnected, canAct, iProposedDraw, opponentProposedDraw,
-    gameData, gameId, txPending, turn, turnSecondsLeft, relayError, hintMove, isHintLoading,
-    moveHistory, onJoinMatch, onResetBot, onHint, onProposeDraw, onAcceptDraw, onResign, onConnectWallet,
+    gameData, gameId, txPending, turnSecondsLeft, relayError,
+    onJoinMatch, onProposeDraw, onAcceptDraw, onConnectWallet,
   } = props
   const showToast = useToastStore((s) => s.showToast)
 
@@ -80,27 +81,6 @@ export default function GameSidebar(props: GameSidebarProps) {
           <div className="flex items-center justify-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--c)] animate-pulse" />
             <span className="text-[10px] text-[var(--t3)] tracking-widest uppercase font-bold">Watching for opponent…</span>
-          </div>
-        </ClayCard>
-
-      ) : isBotGame ? (
-        <ClayCard className="p-4 md:p-6">
-          <p className="text-[10px] font-black tracking-[0.2em] text-[var(--t3)] uppercase mb-4">Training Session</p>
-          <div className="space-y-3">
-            <GlowButton variant="brand" fullWidth parallelogram onClick={onResetBot}>
-              {gameOver ? 'PLAY AGAIN' : 'NEW GAME'}
-            </GlowButton>
-            {!gameOver && turn === 'w' && (
-              <GlowButton variant="ghost" fullWidth parallelogram onClick={onHint} disabled={isHintLoading}>
-                <span className="inline-flex items-center justify-center gap-2">
-                  <HintBulbIcon size={16} glow={!isHintLoading} />
-                  {isHintLoading ? 'ANALYSING…' : hintMove ? `HINT: ${hintMove.from.toUpperCase()} → ${hintMove.to.toUpperCase()}` : 'GET HINT'}
-                </span>
-              </GlowButton>
-            )}
-            <p className="text-[10px] text-[var(--t3)] text-center leading-relaxed">
-              {gameOver ? 'Game over — start a fresh match.' : 'Progress saved on reload.'}
-            </p>
           </div>
         </ClayCard>
 
@@ -147,24 +127,6 @@ export default function GameSidebar(props: GameSidebarProps) {
             </ClayCard>
           )}
 
-          {/* Hint */}
-          {contractActive && !gameOver && isMyTurn && (
-            <ClayCard className="p-5">
-              <p className="text-[10px] font-black tracking-[0.2em] text-[var(--t3)] uppercase mb-3">Analysis</p>
-              <GlowButton variant="ghost" fullWidth onClick={onHint} disabled={isHintLoading}>
-                <span className="inline-flex items-center justify-center gap-2">
-                  <HintBulbIcon size={16} glow={!isHintLoading} />
-                  {isHintLoading ? 'ANALYSING…' : hintMove ? `HINT: ${hintMove.from.toUpperCase()} → ${hintMove.to.toUpperCase()}` : 'GET HINT'}
-                </span>
-              </GlowButton>
-              {hintMove && (
-                <p className="text-[9px] text-green-400 font-bold tracking-widest uppercase text-center mt-2 opacity-70">
-                  Green squares show best move
-                </p>
-              )}
-            </ClayCard>
-          )}
-
           {/* Draw offer — only available during active play */}
           {contractActive && !gameOver && (
             <ClayCard className="p-5">
@@ -197,34 +159,11 @@ export default function GameSidebar(props: GameSidebarProps) {
               )}
             </ClayCard>
           )}
-
-          {/* Resign — only available during active play */}
-          {contractActive && !gameOver && (
-            <ClayCard className="p-5">
-              <p className="text-[10px] font-black tracking-[0.2em] text-[var(--t3)] uppercase mb-3">Forfeit</p>
-              <GlowButton
-                variant="ghost"
-                fullWidth
-                disabled={!canAct}
-                loading={txPending}
-                className="text-red-400 !border-red-500/20 hover:!bg-red-500/10"
-                onClick={onResign}
-              >
-                RESIGN
-              </GlowButton>
-              <p className="text-[9px] text-[var(--t3)] text-center mt-2 opacity-50">
-                Concedes the match and forfeits your wager.
-              </p>
-            </ClayCard>
-          )}
         </>
       )}
 
-      {/* Move log */}
-      <MoveLog moveHistory={moveHistory} />
-
       {/* Wallet connect nudge */}
-      {!isBotGame && !isConnected && (
+      {!isConnected && (
         <motion.div
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           className="p-4 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 text-center flex flex-col gap-3 items-center"
