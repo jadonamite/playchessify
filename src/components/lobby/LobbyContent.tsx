@@ -348,22 +348,22 @@ export default function LobbyContent() {
                   </div>
                   
                   {/* Search / Join by ID */}
-                  <div className="flex flex-col items-end gap-1">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-1 w-full md:w-auto md:min-w-[280px]">
+                    <div className="flex items-stretch gap-2">
                       <input
                         type="text"
                         inputMode="numeric"
-                        placeholder="ENTER MATCH ID..."
+                        placeholder="ENTER MATCH ID…"
                         value={searchId}
                         onChange={(e) => { setSearchId(e.target.value); setSearchError(null) }}
                         onKeyDown={(e) => e.key === 'Enter' && handleSearchJoin()}
-                        className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-[10px] tracking-widest uppercase font-bold text-white placeholder:text-white/20 focus:outline-none focus:border-[var(--c)]/50 transition-colors w-40"
+                        className="flex-1 min-w-0 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs tracking-widest uppercase font-bold text-white placeholder:text-white/25 focus:outline-none focus:border-[var(--c)]/60 focus:bg-black/60 transition-colors"
                       />
                       <GlowButton
                         variant="brand"
-                        size="sm"
                         onClick={handleSearchJoin}
                         disabled={!searchId}
+                        className="shrink-0"
                       >
                         GO
                       </GlowButton>
