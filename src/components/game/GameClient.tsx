@@ -442,7 +442,6 @@ export default function GameClient() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--t1)]">
-      <Navbar />
       <AmbientBackground />
 
       {!isBotGame && !gameData ? (
