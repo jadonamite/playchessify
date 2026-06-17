@@ -1,6 +1,6 @@
 # Playchessify — Handover Document
 
-**Last updated:** 2026-06-15 | **Live on:** Celo Mainnet (`42220`)
+**Last updated:** 2026-06-17 | **Live on:** Celo Mainnet (`42220`)
 **Repo:** `github.com/jadonamite/playchessify`
 
 Celo-only Next.js frontend + Foundry contracts for an on-chain, free-to-play chess
