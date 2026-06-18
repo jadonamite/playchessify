@@ -34,10 +34,6 @@ const LOCK_SECONDS = 60                 // one in-flight drip per address
 const DAILY_CAP = 1000                  // global drips per day (abuse ceiling)
 
 let _redis: Redis | null = null
-/**
- * getRedis
- * @returns {*}
- */
 function getRedis(): Redis {
   if (_redis) return _redis
   const url = process.env.UPSTASH_REDIS_REST_URL
@@ -59,10 +55,10 @@ const K = {
 // POST /api/gas/sponsor — Tier B (MiniPay) and Tier C (external EOA).
 // Tier B: makes a 0-balance MiniPay EOA able to transact (provisions CHESS + drips USDm gas).
 // Tier C: drips a small amount of native CELO so an empty external wallet can pay its own gas.
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   let body: Record<string, unknown>
   try {
-    body = await req.json()
+    body = await request.json()
   } catch {
     return NextResponse.json({ error: 'invalid json body' }, { status: 400 })
   }
