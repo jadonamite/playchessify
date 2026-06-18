@@ -1,8 +1,8 @@
-import {
 import { Chess } from 'chess.js'
 import { Redis } from '@upstash/redis'
-import { deriveResult, canonicalMoveMessage } from '@/lib/settlement'
 import { getMoves, unregisterActiveGame, type Chain, type MoveRecord } from '@/lib/moves-store'
+import { deriveResult, canonicalMoveMessage } from '@/lib/settlement'
+import {
   getOnchainGame,
   settleOnChain,
   verifyWalletSignature,

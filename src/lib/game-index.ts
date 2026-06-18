@@ -11,16 +11,18 @@ import { CHESS_GAME_ABI } from '@/config/abis'
 // load. A cursor records the highest gameId already folded into the index; each
 // sync only scans the delta (cursor+1 .. current gameNonce).
 // ─────────────────────────────────────────────────────────────────────────────
+
 const ZERO = '0x0000000000000000000000000000000000000000'
 const GAME = CELO_CONTRACTS.game as `0x${string}`
 const SCAN_CHUNK = 200
+
 const K = {
   cursor: 'chess:idx:cursor',
   players: 'chess:idx:players',
   playerGames: (a: string) => `chess:idx:player:${a.toLowerCase()}`,
 }
-let _redis: Redis | null = null
 
+let _redis: Redis | null = null
 function getRedis(): Redis {
   if (_redis) return _redis
   const url = process.env.UPSTASH_REDIS_REST_URL
@@ -30,49 +32,13 @@ function getRedis(): Redis {
   return _redis
 }
 
-const getGameNonce = async (): Promise<number> => {
+async function gameNonce(): Promise<number> {
   const n = (await getPublicClient().readContract({
     address: GAME,
     abi: CHESS_GAME_ABI as Abi,
     functionName: 'gameNonce',
   })) as bigint
   return Number(n)
-}
-
-const getGameIds = async (start: number, end: number): Promise<BigInt[]> => {
-  const ids = Array.from({ length: end - start + 1 }, (_, i) => BigInt(start + i))
-  return ids
-}
-
-const getGameResults = async (ids: BigInt[]): Promise<any[]> => {
-  const results = await getPublicClient().multicall({
-    contracts: ids.map((id) => ({
-      address: GAME,
-      abi: CHESS_GAME_ABI as Abi,
-      functionName: 'getGame',
-      args: [id],
-    })),
-    allowFailure: true,
-  })
-  return results
-}
-
-const processGameResults = async (results: any[], redis: Redis): Promise<void> => {
-  const pipe = redis.pipeline()
-  let queued = false
-  results.forEach((r, i) => {
-    if (r.status !== 'success') return
-    const g = r.result as { white: string; black: string }
-    const id = Number(BigInt(i + 1))
-    for (const raw of [g.white, g.black]) {
-      const addr = (raw ?? '').toLowerCase()
-      if (!addr || addr === ZERO || !addr.startsWith('0x')) continue
-      pipe.sadd(K.players, addr)
-      pipe.sadd(K.playerGames(addr), id)
-      queued = true
-    }
-  })
-  if (queued) await pipe.exec()
 }
 
 /**
@@ -82,17 +48,43 @@ const processGameResults = async (results: any[], redis: Redis): Promise<void> =
 export async function syncGameIndex(): Promise<number> {
   const redis = getRedis()
   const cursor = Number((await redis.get<number>(K.cursor)) ?? -1)
-  const nonce = await getGameNonce()
+  const nonce = await gameNonce()
   const lastGameId = nonce - 1
   if (lastGameId <= cursor) return nonce
+
+  const pub = getPublicClient()
   for (let start = cursor + 1; start <= lastGameId; start += SCAN_CHUNK) {
     const end = Math.min(start + SCAN_CHUNK - 1, lastGameId)
-    const ids = await getGameIds(start, end)
-    const results = await getGameResults(ids)
-    await processGameResults(results, redis)
+    const ids = Array.from({ length: end - start + 1 }, (_, i) => BigInt(start + i))
+    const results = await pub.multicall({
+      contracts: ids.map((id) => ({
+        address: GAME,
+        abi: CHESS_GAME_ABI as Abi,
+        functionName: 'getGame',
+        args: [id],
+      })),
+      allowFailure: true,
+    })
+
+    const pipe = redis.pipeline()
+    let queued = false
+    results.forEach((r, i) => {
+      if (r.status !== 'success') return
+      const g = r.result as { white: string; black: string }
+      const id = Number(ids[i])
+      for (const raw of [g.white, g.black]) {
+        const addr = (raw ?? '').toLowerCase()
+        if (!addr || addr === ZERO || !addr.startsWith('0x')) continue
+        pipe.sadd(K.players, addr)
+        pipe.sadd(K.playerGames(addr), id)
+        queued = true
+      }
+    })
+    if (queued) await pipe.exec()
     // Advance the cursor per chunk so a mid-scan failure resumes, not restarts.
     await redis.set(K.cursor, end)
   }
+
   return nonce
 }
 
