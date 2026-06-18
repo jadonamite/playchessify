@@ -30,7 +30,7 @@ export function useHistory() {
       console.error('[useHistory] fetch failed:', err)
       return []
     }
-  }, [celoAddress])
+  }, [playerAddress])
 
   const refreshHistory = useCallback(async () => {
     setIsLoading(true)
