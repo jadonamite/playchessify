@@ -1,31 +1,9 @@
 // Decorative blurred glow blobs behind the game view.
 export default function AmbientBackground() {
-  const GlowBlob = ({ className, style }) => (
-    <div className={className} style={style} />
-  );
-
   return (
     <div className="fixed inset-0 pointer-events-none">
-      <GlowBlob
-        className="absolute top-[10%] right-[10%] rounded-full"
-        style={{
-          width: '30%',
-          height: '30%',
-          backgroundColor: 'var(--c)',
-          filter: 'blur(120px)',
-          opacity: 0.04,
-        }}
-      />
-      <GlowBlob
-        className="absolute bottom-[10%] left-[10%] rounded-full"
-        style={{
-          width: '30%',
-          height: '30%',
-          backgroundColor: '#783cdc',
-          filter: 'blur(120px)',
-          opacity: 0.03,
-        }}
-      />
+      <div className="absolute top-[10%] right-[10%] w-[30%] h-[30%] bg-[var(--c)] blur-[120px] rounded-full opacity-[0.04]" />
+      <div className="absolute bottom-[10%] left-[10%] w-[30%] h-[30%] bg-[#783cdc] blur-[120px] rounded-full opacity-[0.03]" />
     </div>
-  );
+  )
 }
