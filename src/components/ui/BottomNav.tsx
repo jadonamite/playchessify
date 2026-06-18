@@ -91,6 +91,7 @@ export default function BottomNav() {
   const pathname = usePathname()
   const { playerAddress } = useWallet()
 
+  // Hidden during active gameplay — the game screen mounts its own action bar.
   if (pathname.startsWith('/app/game')) return null
 
   return (
