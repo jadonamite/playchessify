@@ -7,11 +7,10 @@
   "author": "jadonamite",
   "license": "MIT",
   "scripts": {
-    "dev": "npm run next dev",
-    "build": "npm run next build",
-    "start": "npm run next start",
-    "lint": "npm run next lint",
-    "next": "next"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "keywords": [
     "celo",
