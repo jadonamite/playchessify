@@ -34,6 +34,10 @@ const LOCK_SECONDS = 60                 // one in-flight drip per address
 const DAILY_CAP = 1000                  // global drips per day (abuse ceiling)
 
 let _redis: Redis | null = null
+/**
+ * getRedis
+ * @returns {*}
+ */
 function getRedis(): Redis {
   if (_redis) return _redis
   const url = process.env.UPSTASH_REDIS_REST_URL
