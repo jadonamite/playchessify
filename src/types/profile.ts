@@ -1,1 +1,19 @@
-export interface ChessProfile { address: string; username: string; displayName: string; bio: string; og: boolean; createdAt: number; updatedAt: number; usernameChangedAt: number; } export interface ProfileCheckResult { available: boolean; reason?: string; } export interface BatchProfileResult { profiles: Record<string, ChessProfile | null>; } export function validateChessProfile(profile: any): ProfileCheckResult { if (!profile || typeof profile !== 'object') { return { available: false, reason: 'Invalid profile object' }; } if (!profile.address || typeof profile.address !== 'string' || !profile.address.startsWith('0x')) { return { available: false, reason: 'Invalid address' }; } if (!profile.username || typeof profile.username !== 'string') { return { available: false, reason: 'Invalid username' }; } if (!profile.displayName || typeof profile.displayName !== 'string' || profile.displayName.length > 30) { return { available: false, reason: 'Invalid display name' }; } if (!profile.bio || typeof profile.bio !== 'string' || profile.bio.length > 120) { return { available: false, reason: 'Invalid bio' }; } if (typeof profile.og !== 'boolean') { return { available: false, reason: 'Invalid og flag' }; } if (typeof profile.createdAt !== 'number' || typeof profile.updatedAt !== 'number' || typeof profile.usernameChangedAt !== 'number') { return { available: false, reason: 'Invalid timestamp' }; } return { available: true }; }
+export interface ChessProfile {
+  address: string           // 0x... lowercase
+  username: string          // "jadon" — displayed as "jadon.chess"
+  displayName: string       // freeform, max 30 chars
+  bio: string               // max 120 chars
+  og: boolean               // first 100 profiles, locked forever
+  createdAt: number         // unix ms
+  updatedAt: number         // unix ms
+  usernameChangedAt: number // unix ms — 30-day username change lock
+}
+
+export interface ProfileCheckResult {
+  available: boolean
+  reason?: string
+}
+
+export interface BatchProfileResult {
+  profiles: Record<string, ChessProfile | null>
+}

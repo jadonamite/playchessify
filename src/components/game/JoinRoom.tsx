@@ -1,12 +1,12 @@
 'use client'
 
-import ChessAvatar from '@/components/ui/ChessAvatar'
-import ChessName from '@/components/ui/ChessName'
+import { motion } from 'framer-motion'
+import type { ChessProfile } from '@/types/profile'
 import GlowButton from '@/components/ui/GlowButton'
 import HoldButton from '@/components/ui/HoldButton'
-import type { ChessProfile } from '@/types/profile'
+import ChessAvatar from '@/components/ui/ChessAvatar'
+import ChessName from '@/components/ui/ChessName'
 import { TOKEN_DECIMALS } from '@/config/contracts'
-import { motion } from 'framer-motion'
 
 interface JoinRoomProps {
   gameId: number
