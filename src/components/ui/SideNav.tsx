@@ -34,6 +34,11 @@ type ItemDef = {
   accent: string
 }
 
+/**
+ * GearIcon
+ * @param {*} { size
+ * @returns {*}
+ */
 function GearIcon({ size = 24 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
