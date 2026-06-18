@@ -89,7 +89,7 @@ function Tab({ tab, active, href }: { tab: TabDef; active: boolean; href: string
 
 export default function BottomNav() {
   const pathname = usePathname()
-  const { address } = useWallet()
+  const { playerAddress } = useWallet()
 
   // Hidden during active gameplay — the game screen mounts its own action bar.
   if (pathname.startsWith('/app/game')) return null
@@ -117,7 +117,7 @@ export default function BottomNav() {
     >
       {TABS.map((tab) => {
         const active = tab.match.some((m) => pathname.startsWith(m))
-        const href = tab.key === 'profile' ? (address ? `/app/profile/${address}` : '/app/lobby') : tab.href
+        const href = tab.key === 'profile' ? (playerAddress ? `/app/profile/${playerAddress}` : '/app/lobby') : tab.href
         return <Tab key={tab.key} tab={tab} active={active} href={href} />
       })}
     </nav>

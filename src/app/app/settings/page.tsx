@@ -55,9 +55,9 @@ function Toggle({ label, sub, checked, onChange }: { label: string; sub?: string
 
 export default function SettingsPage() {
   const router = useRouter()
-  const { address, isConnected } = useWallet()
+  const { address, playerAddress, isConnected } = useWallet()
   const { soundEnabled, setSoundEnabled, boardTheme, setBoardTheme, pieceSet, setPieceSet, aiDifficulty, setAiDifficulty, showMoveHints, setShowMoveHints } = useSettingsStore()
-  const { data: profile } = useProfile(address ?? null)
+  const { data: profile } = useProfile(playerAddress ?? null)
   const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
   const { signMessageAsync } = useSignMessage()
 
@@ -78,13 +78,13 @@ export default function SettingsPage() {
   }, [profile, editDirty])
 
   const handleSaveProfile = async () => {
-    if (!address || !profile) return
+    if (!playerAddress || !profile) return
     setEditError('')
     try {
       const timestamp = new Date().toISOString()
-      const message = `Chessify Profile Update\n\nAddress: ${address}\nTimestamp: ${timestamp}`
+      const message = `Chessify Profile Update\n\nAddress: ${playerAddress}\nTimestamp: ${timestamp}`
       const signature = await signMessageAsync({ message })
-      await updateProfile({ address, displayName: editDisplayName.trim(), bio: editBio.trim(), signature, timestamp })
+      await updateProfile({ address: playerAddress, displayName: editDisplayName.trim(), bio: editBio.trim(), signature, timestamp })
       setEditDirty(false)
       setEditSaved(true)
       setTimeout(() => setEditSaved(false), 3000)
@@ -277,7 +277,7 @@ export default function SettingsPage() {
               <ClayCard className="p-6 flex flex-col gap-5">
                 {/* Profile header */}
                 <div className="flex items-center gap-4">
-                  {address && <ChessAvatar address={address} size={48} />}
+                  {playerAddress && <ChessAvatar address={playerAddress} size={48} />}
                   <div>
                     <p className="font-black text-lg" style={{ fontFamily: 'var(--fd)' }}>
                       {profile.username}<span style={{ color: 'var(--c)' }}>.chess</span>
@@ -285,7 +285,7 @@ export default function SettingsPage() {
                         <span className="ml-2 text-[#fbbf24] text-sm">✦</span>
                       )}
                     </p>
-                    <p className="text-[10px] text-[var(--t3)]">{address?.slice(0, 8)}…{address?.slice(-6)}</p>
+                    <p className="text-[10px] text-[var(--t3)]">{playerAddress?.slice(0, 8)}…{playerAddress?.slice(-6)}</p>
                   </div>
                 </div>
 
@@ -335,7 +335,7 @@ export default function SettingsPage() {
                   <GlowButton
                     variant="ghost"
                     fullWidth
-                    onClick={() => router.push(`/app/profile/${address}`)}
+                    onClick={() => router.push(`/app/profile/${playerAddress}`)}
                   >
                     VIEW FULL PROFILE →
                   </GlowButton>
@@ -347,10 +347,10 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {address && (
+      {playerAddress && (
         <ClaimModal
           open={claimOpen}
-          address={address}
+          address={playerAddress}
           onClose={() => setClaimOpen(false)}
           onSuccess={() => setClaimOpen(false)}
         />
