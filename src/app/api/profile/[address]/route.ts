@@ -19,6 +19,12 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
   return NextResponse.json({ profile })
 }
 
+/**
+ * PATCH
+ * @param {*} req: NextRequest
+ * @param {*} { params }: Ctx
+ * @returns {*}
+ */
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   const { address } = await params
   if (!address?.startsWith('0x')) {
