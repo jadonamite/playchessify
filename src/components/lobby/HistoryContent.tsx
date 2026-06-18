@@ -108,13 +108,13 @@ export function HistoryContent() {
                 ) : (
                   <div className="divide-y divide-white/5">
                     <AnimatePresence mode="popLayout">
-                      {history.map((item, idx) => (
+                      {history.map((item, index) => (
                         <motion.div
                           key={item.id + item.timestamp}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
-                          transition={{ delay: idx * 0.05 }}
+                          transition={{ delay: index * 0.05 }}
                           className="p-6 md:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 hover:bg-white/[0.02] transition-colors"
                         >
                           <div className="flex items-center gap-6 w-full sm:w-auto">
