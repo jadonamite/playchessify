@@ -1,14 +1,14 @@
 'use client'
 
-import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID, USDM_ADDRESS } from '@/config/contracts'
-import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
+import { useWriteContract, useAccount, usePublicClient } from 'wagmi'
+import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
 import { decodeEventLog, encodeFunctionData, type Abi, type Address } from 'viem'
+import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
+import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID, USDM_ADDRESS } from '@/config/contracts'
 import { parseUnits } from 'viem'
 import { useCallback, useState } from 'react'
-import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
 import { useToastStore } from '@/hooks/useToastStore'
 import { useWallet } from '@/components/wallet-provider'
-import { useWriteContract, useAccount, usePublicClient } from 'wagmi'
 
 const LOG_PREFIX = '[useCeloChess]'
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
