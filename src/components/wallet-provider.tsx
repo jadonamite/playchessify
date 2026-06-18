@@ -1,9 +1,9 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
+import { useAccount, useDisconnect, useConnect, useConnectors } from 'wagmi'
 import { usePrivy, useWallets, useCreateWallet } from '@privy-io/react-auth'
 import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
-import { useAccount, useDisconnect, useConnect, useConnectors } from 'wagmi'
 
 // Capability tier drives how on-chain writes are sponsored:
 //   'minipay' → legacy tx + USDm gas-drip (MiniPay can't sign typed data)
