@@ -29,7 +29,7 @@ const BASE_RATING = 1200
  * matching how the lobby treats an unseeded account.
  */
 export function usePlayerStats(address?: string | null): PlayerStats | null {
-  const enabled = !!address && address !== ZERO && address.startsWith('0x')
+  if (!address || address === ZERO || !address.startsWith('0x')) return null
 
   const { data } = useReadContract({
     address: CELO_CONTRACTS.game as `0x${string}`,
@@ -37,7 +37,7 @@ export function usePlayerStats(address?: string | null): PlayerStats | null {
     functionName: 'playerStats',
     args: [address as `0x${string}`],
     chainId: CELO_CHAIN_ID,
-    query: { enabled },
+    query: { enabled: true },
   })
 
   if (!data) return null
@@ -46,7 +46,6 @@ export function usePlayerStats(address?: string | null): PlayerStats | null {
   const s = data as readonly bigint[]
   const raw = Number(s[3])
   const rating = raw > 0 ? raw : BASE_RATING
-
   return {
     wins: Number(s[0]),
     losses: Number(s[1]),

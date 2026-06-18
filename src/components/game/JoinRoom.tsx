@@ -25,7 +25,7 @@ export default function JoinRoom({
 }: JoinRoomProps) {
   const wager = Number(wagerRaw) / Math.pow(10, TOKEN_DECIMALS)
   const pot = wager * 2
-  const accent = 'var(--candy-amber)'
+  const accent: string = 'var(--candy-amber)'
 
   return (
     <motion.div
