@@ -1,1 +1,7 @@
-import { NextResponse } from 'next/server'; import { getRecentProfiles } from '@/lib/profile-store'; const getRecentProfilesLimit = 10; const handleGetRecentProfiles = async (limit: number) => { const profiles = await getRecentProfiles(limit); return NextResponse.json({ profiles }); }; export async function GET() { return handleGetRecentProfiles(getRecentProfilesLimit); }
+import { NextResponse } from 'next/server'
+import { getRecentProfiles } from '@/lib/profile-store'
+
+export async function GET() {
+  const profiles = await getRecentProfiles(10)
+  return NextResponse.json({ profiles })
+}

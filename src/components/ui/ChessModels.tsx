@@ -79,7 +79,7 @@ function BasePiece({ modelPath, color = '#00ccff', emissive, emissiveIntensity, 
 }
 
 export const King = (props: PieceProps) => <BasePiece modelPath="/models/King.glb" scale={1.87} {...props} />
-export const Queen = (props: PieceProps) => <BasePiece modelPath='/models/QueenChess.glb' scale={1.62} {...props} />
+export const Queen = (props: PieceProps) => <BasePiece modelPath="/models/QueenChess.glb" scale={1.62} {...props} />
 export const Rook = (props: PieceProps) => <BasePiece modelPath="/models/Rook.glb" scale={1.37} {...props} />
 export const Pawn = (props: PieceProps) => <BasePiece modelPath="/models/pawn.glb" scale={1.25} {...props} />
 export const Bishop = (props: PieceProps) => <BasePiece modelPath="/models/Bishop.glb" scale={1.45} {...props} />
