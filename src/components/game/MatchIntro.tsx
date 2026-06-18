@@ -69,7 +69,7 @@ function PlayerSide({
       </span>
 
       {/* avatar with glossy ring */}
-      <div className='relative shrink-0'>
+      <div className="relative shrink-0">
         <div
           className="rounded-[26%] overflow-hidden"
           style={{ boxShadow: `0 0 0 3px color-mix(in srgb, ${accent} 55%, transparent), 0 12px 40px color-mix(in srgb, ${accent} 30%, transparent)` }}
