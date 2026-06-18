@@ -112,6 +112,11 @@ export async function getOnchainGame(gameId: number): Promise<OnchainGame> {
 const _gameCache = new Map<number, { at: number; game: OnchainGame }>()
 const GAME_CACHE_TTL_MS = 5_000
 
+/**
+ * getOnchainGameCached
+ * @param {*} gameId: number
+ * @returns {*}
+ */
 export async function getOnchainGameCached(gameId: number): Promise<OnchainGame> {
   const hit = _gameCache.get(gameId)
   if (hit && Date.now() - hit.at < GAME_CACHE_TTL_MS) return hit.game
