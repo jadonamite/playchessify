@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Chess, type Square, type Move } from 'chess.js'
+import { AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useWallet } from '@/components/wallet-provider'
 import { useCeloChess } from '@/hooks/useCeloChess'
@@ -23,6 +24,8 @@ import BoardPanel from './BoardPanel'
 import GameSidebar from './GameSidebar'
 import GameActionBar from './GameActionBar'
 import GameResultOverlay from './GameResultOverlay'
+import MatchIntro from './MatchIntro'
+import WaitingRoom from './WaitingRoom'
 import { BOT_SAVE_KEY, TURN_TIMEOUT_SECS, type GameResult } from './types'
 
 export default function GameClient() {
@@ -438,6 +441,30 @@ export default function GameClient() {
     return () => clearTimeout(t)
   }, [isBotGame, gameData])
 
+  // ── pre-match VS reveal ───────────────────────────────────────────────────────
+  // Fires once, the first time the game becomes active for a participant on this
+  // client (creator: opponent just joined; joiner: their tx confirmed). A per-game
+  // sessionStorage flag keeps a mid-game refresh from replaying the cutscene.
+  const [showIntro, setShowIntro] = useState(false)
+  const introHandledRef = useRef(false)
+
+  useEffect(() => {
+    if (isBotGame || !isParticipant || !contractActive || introHandledRef.current) return
+    introHandledRef.current = true
+    try {
+      if (sessionStorage.getItem(`vs-seen-${gameId}`)) return
+    } catch { /* storage unavailable */ }
+    setShowIntro(true)
+  }, [isBotGame, isParticipant, contractActive, gameId])
+
+  const dismissIntro = useCallback(() => {
+    try { sessionStorage.setItem(`vs-seen-${gameId}`, '1') } catch { /* ignore */ }
+    setShowIntro(false)
+  }, [gameId])
+
+  const opponentAddress = (myColor === 'white' ? gameData?.black : gameData?.white) ?? ''
+  const potFormatted = String(Number(wagerFormatted || '0') * 2)
+
   // ── render ────────────────────────────────────────────────────────────────────
 
   return (
@@ -556,6 +583,31 @@ export default function GameClient() {
           />
         </main>
       )}
+
+      {/* Creator waiting for an opponent → full-screen waiting room */}
+      <AnimatePresence>
+        {!isBotGame && isCreator && gameIsWaiting && celoAddress && (
+          <WaitingRoom
+            gameId={gameId}
+            pot={potFormatted}
+            myAddress={celoAddress}
+            myColor={myColor ?? 'white'}
+            profileMap={gameProfileMap}
+            onLeave={() => router.push('/app/lobby')}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Both players present → VS reveal, then board */}
+      <MatchIntro
+        open={showIntro}
+        myAddress={celoAddress ?? ''}
+        opponentAddress={opponentAddress}
+        myColor={myColor ?? 'white'}
+        pot={potFormatted}
+        profileMap={gameProfileMap}
+        onDone={dismissIntro}
+      />
 
       <GameResultOverlay
         gameResult={gameResult}
