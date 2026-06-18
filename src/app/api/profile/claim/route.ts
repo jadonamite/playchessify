@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'signature verification failed' }, { status: 401 })
   }
 
+  // Rate limit: 2 claims per address per 24h
   const allowed = await checkRateLimit(address, 'claim', 2, 86400)
   if (!allowed) return NextResponse.json({ error: 'rate limit exceeded — max 2 claims per day' }, { status: 429 })
 
