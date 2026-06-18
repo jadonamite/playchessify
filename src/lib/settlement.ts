@@ -17,6 +17,7 @@ export type ResultValue = (typeof RESULT)[keyof typeof RESULT]
 // forfeits on time. Mirrors the in-game 5-minute move clock.
 export const MOVE_TIMEOUT_MS = 5 * 60 * 1000
 
+// TODO: add input validation
 /**
  * The exact message a player signs to authenticate a move. Deterministic and
  * identical on client (signing) and server (verification): it binds the move to
