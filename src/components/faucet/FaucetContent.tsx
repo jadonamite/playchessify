@@ -142,7 +142,7 @@ export default function FaucetContent() {
   //   minipay → legacy tx with feeCurrency = cUSD
   //   eoa     → plain write, user pays
   const claimCelo = async () => {
-    const TIMEOUT_MS = 90_000
+    const TIMEOUT_MS: number = 90_000
 
     let hash: `0x${string}`
     if (walletTier === 'smart' && smartClient) {
