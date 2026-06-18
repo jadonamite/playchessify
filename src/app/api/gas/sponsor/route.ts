@@ -34,17 +34,13 @@ const LOCK_SECONDS = 60                 // one in-flight drip per address
 const DAILY_CAP = 1000                  // global drips per day (abuse ceiling)
 
 let _redis: Redis | null = null
-/**
- * getRedis
- * @returns {*}
- */
 function getRedis(): Redis {
   if (_redis) return _redis
   const url = process.env.UPSTASH_REDIS_REST_URL
   const token = process.env.UPSTASH_REDIS_REST_TOKEN
   if (!url || !token) throw new Error(`${LOG_PREFIX} Missing Upstash env vars`)
   _redis = new Redis({ url, token })
-  return _redis
+  return _redis,
 }
 
 const K = {
