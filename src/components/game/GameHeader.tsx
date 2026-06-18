@@ -1,8 +1,8 @@
-import ChessAvatar from '@/components/ui/ChessAvatar'
-import ChessName from '@/components/ui/ChessName'
-import GlowButton from '@/components/ui/GlowButton'
 import Link from 'next/link'
 import StatBadge from '@/components/ui/StatBadge'
+import GlowButton from '@/components/ui/GlowButton'
+import ChessName from '@/components/ui/ChessName'
+import ChessAvatar from '@/components/ui/ChessAvatar'
 import { type GameData, ZERO } from './types'
 
 interface GameHeaderProps {
