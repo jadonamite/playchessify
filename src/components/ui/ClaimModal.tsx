@@ -60,14 +60,6 @@ function Field({
   )
 }
 
-/**
- * ClaimModal
- * @param {*} { open
- * @param {*} address
- * @param {*} onClose
- * @param {*} onSuccess }: ClaimModalProps
- * @returns {*}
- */
 export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimModalProps) {
   const [step, setStep] = useState<'form' | 'success'>('form')
   const [username, setUsername] = useState('')

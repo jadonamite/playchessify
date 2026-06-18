@@ -1,61 +1,17 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import GlowButton from '@/components/ui/GlowButton';
-import { type GameData, type GameResult } from './types';
+import { motion, AnimatePresence } from 'framer-motion'
+import GlowButton from '@/components/ui/GlowButton'
+import { type GameData, type GameResult } from './types'
 
 interface GameResultOverlayProps {
-  gameResult: GameResult;
-  resultMessage: string;
-  gameData: GameData | null;
-  wagerFormatted: string;
-  payoutSettled: boolean;
-  onBackToLobby: () => void;
+  gameResult: GameResult
+  resultMessage: string
+  gameData: GameData | null
+  wagerFormatted: string
+  payoutSettled: boolean
+  onBackToLobby: () => void
 }
 
-const getGameResultStyles = (gameResult: GameResult) => {
-  switch (gameResult) {
-    case 'won':
-      return {
-        background: 'linear-gradient(145deg,rgba(0,204,255,0.1) 0%,rgba(6,6,15,0.97) 60%)',
-        borderColor: 'rgba(0,204,255,0.25)',
-        boxShadow: '0 0 80px rgba(0,204,255,0.15), 0 40px 80px rgba(0,0,0,0.6)',
-        icon: '♛',
-        resultLabel: 'VICTORY',
-        resultText: 'You Won',
-        color: 'var(--c)',
-      };
-    case 'lost':
-      return {
-        background: 'linear-gradient(145deg,rgba(239,68,68,0.1) 0%,rgba(6,6,15,0.97) 60%)',
-        borderColor: 'rgba(239,68,68,0.25)',
-        boxShadow: '0 0 80px rgba(239,68,68,0.12), 0 40px 80px rgba(0,0,0,0.6)',
-        icon: '♚',
-        resultLabel: 'DEFEAT',
-        resultText: 'You Lost',
-        color: '#ef4444',
-      };
-    default:
-      return {
-        background: 'linear-gradient(145deg,rgba(99,102,241,0.1) 0%,rgba(6,6,15,0.97) 60%)',
-        borderColor: 'rgba(99,102,241,0.25)',
-        boxShadow: '0 40px 80px rgba(0,0,0,0.6)',
-        icon: '♟',
-        resultLabel: 'DRAW',
-        resultText: 'Stalemate',
-        color: '#818cf8',
-      };
-  }
-};
-
-export default function GameResultOverlay({
-  gameResult,
-  resultMessage,
-  gameData,
-  wagerFormatted,
-  payoutSettled,
-  onBackToLobby,
-}: GameResultOverlayProps) {
-  const styles = getGameResultStyles(gameResult);
-
+export default function GameResultOverlay({ gameResult, resultMessage, gameData, wagerFormatted, payoutSettled, onBackToLobby }: GameResultOverlayProps) {
   return (
     <AnimatePresence>
       {gameResult && (
@@ -73,46 +29,67 @@ export default function GameResultOverlay({
             transition={{ type: 'spring', damping: 22, stiffness: 200 }}
             className="w-full max-w-md rounded-[32px] border overflow-hidden"
             style={{
-              background: styles.background,
-              borderColor: styles.borderColor,
-              boxShadow: styles.boxShadow,
+              background: gameResult === 'won'
+                ? 'linear-gradient(145deg,rgba(0,204,255,0.1) 0%,rgba(6,6,15,0.97) 60%)'
+                : gameResult === 'lost'
+                ? 'linear-gradient(145deg,rgba(239,68,68,0.1) 0%,rgba(6,6,15,0.97) 60%)'
+                : 'linear-gradient(145deg,rgba(99,102,241,0.1) 0%,rgba(6,6,15,0.97) 60%)',
+              borderColor: gameResult === 'won'
+                ? 'rgba(0,204,255,0.25)'
+                : gameResult === 'lost'
+                ? 'rgba(239,68,68,0.25)'
+                : 'rgba(99,102,241,0.25)',
+              boxShadow: gameResult === 'won'
+                ? '0 0 80px rgba(0,204,255,0.15), 0 40px 80px rgba(0,0,0,0.6)'
+                : gameResult === 'lost'
+                ? '0 0 80px rgba(239,68,68,0.12), 0 40px 80px rgba(0,0,0,0.6)'
+                : '0 40px 80px rgba(0,0,0,0.6)',
             }}
           >
             <div className="p-10 flex flex-col items-center gap-6 text-center">
+
               {/* Icon */}
-              <div className="text-7xl leading-none" style={{ filter: gameResult === 'won' ? 'drop-shadow(0 0 20px rgba(0,204,255,0.5))' : 'none' }}>
-                {styles.icon}
+              <div
+                className="text-7xl leading-none"
+                style={{ filter: gameResult === 'won' ? 'drop-shadow(0 0 20px rgba(0,204,255,0.5))' : 'none' }}
+              >
+                {gameResult === 'won' ? '♛' : gameResult === 'lost' ? '♚' : '♟'}
               </div>
+
               {/* Result label */}
               <div>
                 <p
                   className="text-[10px] font-black tracking-[0.5em] uppercase mb-3"
-                  style={{ color: styles.color }}
+                  style={{
+                    color: gameResult === 'won' ? 'var(--c)' : gameResult === 'lost' ? '#ef4444' : '#818cf8',
+                  }}
                 >
-                  {styles.resultLabel}
+                  {gameResult === 'won' ? 'VICTORY' : gameResult === 'lost' ? 'DEFEAT' : 'DRAW'}
                 </p>
                 <h2
                   className="text-5xl font-black uppercase tracking-tighter leading-none"
                   style={{ fontFamily: 'var(--fd)' }}
                 >
-                  {styles.resultText}
+                  {gameResult === 'won' ? 'You Won' : gameResult === 'lost' ? 'You Lost' : 'Stalemate'}
                 </h2>
-                <p className="text-sm text-[var(--t3)] mt-3 leading-relaxed">
-                  {resultMessage}
-                </p>
+                <p className="text-sm text-[var(--t3)] mt-3 leading-relaxed">{resultMessage}</p>
               </div>
+
               {/* Wager chip */}
               {gameData && (
                 <div className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10">
-                  <p className="text-[9px] text-[var(--t3)] uppercase tracking-widest mb-1">
-                    Wager
-                  </p>
-                  <p className="text-2xl font-black" style={{ fontFamily: 'var(--fd)', color: 'var(--c)' }}>
+                  <p className="text-[9px] text-[var(--t3)] uppercase tracking-widest mb-1">Wager</p>
+                  <p
+                    className="text-2xl font-black"
+                    style={{ fontFamily: 'var(--fd)', color: 'var(--c)' }}
+                  >
                     {wagerFormatted} <span className="text-base">CHESS</span>
                   </p>
                 </div>
               )}
-              {/* Actions — payout is settled automatically by the oracle; the panel below is a passive status driven by the getGame poll. */}
+
+              {/* Actions — payout is settled automatically by the oracle; the
+                  panel below is a passive status driven by the getGame poll. */}
               <div className="flex flex-col gap-3 w-full">
                 {gameData && Number(gameData.wager) > 0 && gameResult !== 'lost' && (
                   payoutSettled ? (
@@ -129,7 +106,7 @@ export default function GameResultOverlay({
                         Settling payout…
                       </span>
                     </div>
-                  )}
+                  )
                 )}
                 <GlowButton variant="ghost" fullWidth onClick={onBackToLobby}>
                   BACK TO LOBBY
@@ -140,5 +117,5 @@ export default function GameResultOverlay({
         </motion.div>
       )}
     </AnimatePresence>
-  );
+  )
 }

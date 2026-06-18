@@ -54,7 +54,7 @@ export default function TypingHeroText({
 
   return (
     <div className={`hero-headline-container flex flex-col items-center select-none w-full overflow-hidden px-4 ${className}`}>
-      <div className='flex flex-col items-center text-center w-full uppercase select-none'
+      <div className="flex flex-col items-center text-center w-full uppercase select-none"
         style={{ fontFamily: 'var(--fd)', fontWeight: 900, lineHeight: 0.88, letterSpacing: '-0.05em' }}
       >
         {/* Line 1: "THE CHECKMATE" */}

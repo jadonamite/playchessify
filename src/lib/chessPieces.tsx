@@ -8,24 +8,6 @@ export function piecePath(set: PieceSet, code: string): string {
   return `/pieces/${set}/${code}.svg`
 }
 
-// Creates an img element for a given piece.
-function createPieceElement(code: string, set: PieceSet): JSX.Element {
-  return (
-    // eslint-disable-next-line @next/next/no-img-element -- dynamic SVG piece sprite, next/image unsuitable
-    <img
-      src={piecePath(set, code)}
-      alt={code}
-      draggable={false}
-      style={{
-        width: '100%',
-        height: '100%',
-        userSelect: 'none',
-        pointerEvents: 'none',
-      }}
-    />
-  )
-}
-
 const cache: Partial<Record<PieceSet, PieceRenderObject>> = {}
 
 // Build the react-chessboard piece renderer for a given set (memoized per set).
@@ -34,8 +16,20 @@ export function buildPieces(set: PieceSet): PieceRenderObject {
   if (cached) return cached
 
   const pieces = Object.fromEntries(
-    CODES.map((code) => [code, () => createPieceElement(code, set)]),
+    CODES.map((code) => [
+      code,
+      () => (
+        // eslint-disable-next-line @next/next/no-img-element -- dynamic SVG piece sprite, next/image unsuitable
+        <img
+          src={piecePath(set, code)}
+          alt={code}
+          draggable={false}
+          style={{ width: '100%', height: '100%', userSelect: 'none', pointerEvents: 'none' }}
+        />
+      ),
+    ]),
   ) as PieceRenderObject
+
   cache[set] = pieces
   return pieces
 }
