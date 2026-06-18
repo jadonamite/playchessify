@@ -26,6 +26,7 @@ import GameActionBar from './GameActionBar'
 import GameResultOverlay from './GameResultOverlay'
 import MatchIntro from './MatchIntro'
 import WaitingRoom from './WaitingRoom'
+import JoinRoom from './JoinRoom'
 import { BOT_SAVE_KEY, TURN_TIMEOUT_SECS, type GameResult } from './types'
 
 export default function GameClient() {
@@ -487,8 +488,8 @@ export default function GameClient() {
         <main
           className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-5 md:py-8 overflow-x-clip"
           style={{
-            opacity: showIntro ? 0 : 1,
-            pointerEvents: showIntro ? 'none' : 'auto',
+            opacity: (showIntro || canJoinFromPage) ? 0 : 1,
+            pointerEvents: (showIntro || canJoinFromPage) ? 'none' : 'auto',
             transition: 'opacity 0.4s ease',
           }}
         >
@@ -599,6 +600,23 @@ export default function GameClient() {
             myAddress={playerAddress}
             myColor={myColor ?? 'white'}
             profileMap={gameProfileMap}
+            onLeave={() => router.push('/app/lobby')}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Joiner sees a full-screen challenge screen, not the board */}
+      <AnimatePresence>
+        {!isBotGame && canJoinFromPage && gameData && (
+          <JoinRoom
+            gameId={gameId}
+            creatorAddress={gameData.white}
+            wagerRaw={gameData.wager}
+            profileMap={gameProfileMap}
+            txPending={txPending}
+            isConnected={isConnected}
+            onJoin={handleJoinMatch}
+            onConnectWallet={connectWallet}
             onLeave={() => router.push('/app/lobby')}
           />
         )}
