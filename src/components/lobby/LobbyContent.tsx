@@ -41,7 +41,7 @@ function BgIcon({ children }: { children: React.ReactNode }) {
 
 export default function LobbyContent() {
   const { isConnected, isReady, playerAddress } = useWallet()
-  const { createGame: createCeloGame, joinGame: joinCeloGame } = useCeloChess()
+  const { createGame: createCeloGame } = useCeloChess()
   const router = useRouter()
 
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
@@ -129,20 +129,6 @@ export default function LobbyContent() {
     }
   }
 
-  const handleJoinGame = async (gameId: number, matchWager: number) => {
-    if (MAINTENANCE_MODE) return setIsComingSoonOpen(true)
-    setIsPending(true)
-    try {
-      await joinCeloGame(gameId, matchWager)
-      router.push(`/app/game/${gameId}`)
-    } catch (err) {
-      if (!(err instanceof Error ? err.message : '').includes('cancelled')) {
-        console.error('[LobbyContent] handleJoinGame failed:', err)
-      }
-    } finally {
-      setIsPending(false)
-    }
-  }
 
   const handleSearchJoin = () => {
     setSearchError(null)
@@ -444,11 +430,10 @@ export default function LobbyContent() {
                             </div>
                             <GlowButton
                               size="sm"
-                              onClick={() => handleJoinGame(game.id, game.wager)}
-                              disabled={isPending}
+                              onClick={() => handleAction(() => router.push(`/app/game/${game.id}`))}
                               className="min-w-[100px] shrink-0"
                             >
-                              {isPending ? '...' : 'JOIN MATCH'}
+                              JOIN MATCH
                             </GlowButton>
                           </div>
 

@@ -25,7 +25,6 @@ import GameSidebar from './GameSidebar'
 import GameActionBar from './GameActionBar'
 import GameResultOverlay from './GameResultOverlay'
 import MatchIntro from './MatchIntro'
-import WaitingRoom from './WaitingRoom'
 import JoinRoom from './JoinRoom'
 import { BOT_SAVE_KEY, TURN_TIMEOUT_SECS, type GameResult } from './types'
 
@@ -255,6 +254,7 @@ export default function GameClient() {
     setGame(new Chess())
     setMoveHistory([])
     setMoveFrom('')
+    setIntroDone(false)   // replay the VS intro for the new bot match
   }, [])
 
   // ── move execution ───────────────────────────────────────────────────────────
@@ -441,26 +441,26 @@ export default function GameClient() {
     return () => clearTimeout(t)
   }, [isBotGame, gameData])
 
-  // ── pre-match VS reveal ───────────────────────────────────────────────────────
-  // Fires once, the first time the game becomes active for a participant on this
-  // client (creator: opponent just joined; joiner: their tx confirmed). A per-game
-  // sessionStorage flag keeps a mid-game refresh from replaying the cutscene.
-  const [showIntro, setShowIntro] = useState(false)
-  const introHandledRef = useRef(false)
+  // ── pre-match VS gate ─────────────────────────────────────────────────────────
+  // One VS screen handles every pre-game state: bot "finding" (~7s), the creator
+  // waiting for an opponent, and the joiner's reveal. PvP uses a per-game
+  // sessionStorage flag so a mid-game refresh skips it; bot games gate on a fresh
+  // board (no moves) so every new match replays the intro.
+  const [introDone, setIntroDone] = useState<boolean>(() => {
+    if (typeof window === 'undefined' || isBotGame) return false
+    try { return !!sessionStorage.getItem(`vs-seen-${gameId}`) } catch { return false }
+  })
 
-  useEffect(() => {
-    if (isBotGame || !isParticipant || !contractActive || introHandledRef.current) return
-    introHandledRef.current = true
-    try {
-      if (sessionStorage.getItem(`vs-seen-${gameId}`)) return
-    } catch { /* storage unavailable */ }
-    setShowIntro(true)
-  }, [isBotGame, isParticipant, contractActive, gameId])
+  const finishIntro = useCallback(() => {
+    if (!isBotGame) { try { sessionStorage.setItem(`vs-seen-${gameId}`, '1') } catch { /* ignore */ } }
+    setIntroDone(true)
+  }, [isBotGame, gameId])
 
-  const dismissIntro = useCallback(() => {
-    try { sessionStorage.setItem(`vs-seen-${gameId}`, '1') } catch { /* ignore */ }
-    setShowIntro(false)
-  }, [gameId])
+  const introOpen = !introDone && (
+    isBotGame
+      ? moveHistory.length === 0
+      : isParticipant && (gameIsWaiting || contractActive)
+  )
 
   const opponentAddress = (myColor === 'white' ? gameData?.black : gameData?.white) ?? ''
   const potFormatted = String(Number(wagerFormatted || '0') * 2)
@@ -488,8 +488,8 @@ export default function GameClient() {
         <main
           className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-5 md:py-8 overflow-x-clip"
           style={{
-            opacity: (showIntro || canJoinFromPage) ? 0 : 1,
-            pointerEvents: (showIntro || canJoinFromPage) ? 'none' : 'auto',
+            opacity: (introOpen || canJoinFromPage) ? 0 : 1,
+            pointerEvents: (introOpen || canJoinFromPage) ? 'none' : 'auto',
             transition: 'opacity 0.4s ease',
           }}
         >
@@ -591,20 +591,6 @@ export default function GameClient() {
         </main>
       )}
 
-      {/* Creator waiting for an opponent → full-screen waiting room */}
-      <AnimatePresence>
-        {!isBotGame && isCreator && gameIsWaiting && playerAddress && (
-          <WaitingRoom
-            gameId={gameId}
-            pot={potFormatted}
-            myAddress={playerAddress}
-            myColor={myColor ?? 'white'}
-            profileMap={gameProfileMap}
-            onLeave={() => router.push('/app/lobby')}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Joiner sees a full-screen challenge screen, not the board */}
       <AnimatePresence>
         {!isBotGame && canJoinFromPage && gameData && (
@@ -622,15 +608,20 @@ export default function GameClient() {
         )}
       </AnimatePresence>
 
-      {/* Both players present → VS reveal, then board */}
+      {/* Unified VS gate — finding / reveal / countdown, for bot + PvP */}
       <MatchIntro
-        open={showIntro}
+        open={introOpen}
+        isBot={isBotGame}
         myAddress={playerAddress ?? ''}
-        opponentAddress={opponentAddress}
         myColor={myColor ?? 'white'}
+        opponentAddress={opponentAddress}
+        opponentReady={contractActive}
         pot={potFormatted}
         profileMap={gameProfileMap}
-        onDone={dismissIntro}
+        gameId={gameId}
+        botLabel="PLAYCHESSIFY AI"
+        onDone={finishIntro}
+        onLeave={() => router.push('/app/lobby')}
       />
 
       <GameResultOverlay
