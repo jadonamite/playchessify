@@ -27,25 +27,32 @@ export async function POST(
   const chain = parseChain(chainRaw)
   const gameId = parseGameId(idRaw)
 
-  if (!chain) return NextResponse.json({ error: 'invalid chain' }, { status: 400 })
-  if (gameId === null) return NextResponse.json({ error: 'invalid gameId' }, { status: 400 })
+  if (!chain) {
+    return NextResponse.json({ error: 'invalid chain' }, { status: 400 })
+  }
+
+  if (gameId === null) {
+    return NextResponse.json({ error: 'invalid gameId' }, { status: 400 })
+  }
 
   try {
     const outcome = await settleGameById(chain, gameId)
-    if (outcome.ok) {
-      return NextResponse.json({ ok: true, txHash: outcome.txHash, result: outcome.result })
+
+    if (!outcome.ok) {
+      const statusByReason: Record<string, number> = {
+        'not-active': 409,
+        'in-progress': 409,
+        'not-terminal': 400,
+        'illegal': 422,
+        'forged-signature': 422,
+      }
+      return NextResponse.json(
+        { error: outcome.reason, status: outcome.status },
+        { status: statusByReason[outcome.reason] ?? 400 },
+      )
     }
-    const statusByReason: Record<string, number> = {
-      'not-active': 409,
-      'in-progress': 409,
-      'not-terminal': 400,
-      'illegal': 422,
-      'forged-signature': 422,
-    }
-    return NextResponse.json(
-      { error: outcome.reason, status: outcome.status },
-      { status: statusByReason[outcome.reason] ?? 400 },
-    )
+
+    return NextResponse.json({ ok: true, txHash: outcome.txHash, result: outcome.result })
   } catch (err) {
     console.error(`${LOG_PREFIX} POST failed`, { chain, gameId, err: (err as Error)?.message })
     return NextResponse.json({ error: 'settlement failed' }, { status: 503 })

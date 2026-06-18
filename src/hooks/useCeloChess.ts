@@ -1,14 +1,14 @@
 'use client'
 
-import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID, USDM_ADDRESS } from '@/config/contracts'
-import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
+import { useWriteContract, useAccount, usePublicClient } from 'wagmi'
+import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
 import { decodeEventLog, encodeFunctionData, type Abi, type Address } from 'viem'
+import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
+import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID, USDM_ADDRESS } from '@/config/contracts'
 import { parseUnits } from 'viem'
 import { useCallback, useState } from 'react'
-import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
 import { useToastStore } from '@/hooks/useToastStore'
 import { useWallet } from '@/components/wallet-provider'
-import { useWriteContract, useAccount, usePublicClient } from 'wagmi'
 
 const LOG_PREFIX = '[useCeloChess]'
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -190,12 +190,12 @@ export function useCeloChess() {
       if ((await readUsdmBalance(addr)) >= MIN_GAS_USDM) return 'has-gas'
 
       try {
-        const res = await fetch('/api/gas/sponsor', {
+        const response = await fetch('/api/gas/sponsor', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ address: addr, chain: 'celo', tier: 'minipay' }),
         })
-        const body = (await res.json().catch(() => ({}))) as { degraded?: boolean }
+        const body = (await response.json().catch(() => ({}))) as { degraded?: boolean }
         if (body?.degraded) {
           showToast('Gasless service is busy — using your USDm for gas.', 'info')
           return 'self-pay'
@@ -213,12 +213,12 @@ export function useCeloChess() {
       if ((await readCeloBalance(addr)) >= MIN_GAS_CELO) return 'has-gas'
 
       try {
-        const res = await fetch('/api/gas/sponsor', {
+        const response = await fetch('/api/gas/sponsor', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ address: addr, chain: 'celo', tier: 'eoa' }),
         })
-        const body = (await res.json().catch(() => ({}))) as { ok?: boolean; degraded?: boolean; skipped?: boolean }
+        const body = (await response.json().catch(() => ({}))) as { ok?: boolean; degraded?: boolean; skipped?: boolean }
         if (!body?.ok || body?.degraded || body?.skipped) return 'self-pay'
       } catch (err) {
         console.warn(`${LOG_PREFIX} gas sponsor request failed (degrading to self-pay)`, err)
@@ -494,8 +494,8 @@ export function useCeloChess() {
   const requestSettle = useCallback(async (gameId: number): Promise<boolean> => {
     console.info(`${LOG_PREFIX} requestSettle`, { gameId })
     try {
-      const res = await fetch(`/api/games/celo/${gameId}/settle`, { method: 'POST' })
-      return res.ok
+      const response = await fetch(`/api/games/celo/${gameId}/settle`, { method: 'POST' })
+      return response.ok
     } catch (err) {
       console.error(`${LOG_PREFIX} requestSettle failed:`, err)
       return false
