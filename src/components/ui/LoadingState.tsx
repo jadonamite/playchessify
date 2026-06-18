@@ -11,12 +11,6 @@ interface LoadingStateProps {
   progress?: number // 0 to 100
 }
 
-/**
- * LoadingState
- * @param {*} { message
- * @param {*} progress }: LoadingStateProps
- * @returns {*}
- */
 export default function LoadingState({ message = 'SCANNING BLOCKCHAIN', progress }: LoadingStateProps) {
   // If progress is provided, we calculate the X position (-5 to 5)
   // If not, we use a jumping/looping animation

@@ -39,33 +39,43 @@ const RESULT_BADGE: Record<PlayerHistoryItem['result'], { label: string; bg: str
   waiting: { label: 'WAITING', bg: 'rgba(251,191,36,0.12)', color: '#fbbf24' },
 }
 
-  const saveEdit = async () => {
-    if (!myAddress || !profile) return
-    setEditError('')
-    try {
-      const timestamp = new Date().toISOString()
-      const message = `Chessify Profile Update\n\nAddress: ${myAddress}\nTimestamp: ${timestamp}`
-      const signature = await signMessageAsync({ message })
-      await updateProfile({
-        address: myAddress,
-        displayName: editDisplayName.trim(),
-        bio: editBio.trim(),
-        signature,
-        timestamp,
-      })
-      setEditing(false)
-    } catch (e) {
-      setEditError(e instanceof Error ? e.message : 'Update failed')
-    }
-  }
-
-export default function ProfilePage() {
-  const params = useParams()
-  const router = useRouter()
-  const identifier = decodeURIComponent(params.identifier as string)
-  const { address: myAddress, playerAddress: myPlayerAddress } = useWallet()
-  const { signMessageAsync } = useSignMessage()
-  const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
+function GameRow({ g, cta, onClick }: { g: PlayerHistoryItem; cta: string; onClick: () => void }) {
+  const badge = RESULT_BADGE[g.result]
+  const live = g.result === 'active'
+  return (
+    <div className="flex items-center justify-between py-3 gap-4">
+      <div className="flex items-center gap-3 min-w-0">
+        <span
+          className="flex items-center gap-1.5 text-[8px] font-black tracking-[0.2em] uppercase px-2 py-0.5 rounded"
+          style={{ background: badge.bg, color: badge.color }}
+        >
+          {live && <span className="w-1.5 h-1.5 rounded-full bg-[var(--c)] animate-pulse" />}
+          {badge.label}
+        </span>
+        {g.opponent ? (
+          <div className="flex items-center gap-2 min-w-0">
+            <ChessAvatar address={g.opponent} size={20} />
+            <ChessName address={g.opponent} short asLink className="text-xs text-[var(--t2)] truncate" />
+          </div>
+        ) : (
+          <span className="text-xs text-[var(--t3)]">Open challenge</span>
+        )}
+      </div>
+      <div className="flex items-center gap-4 shrink-0">
+        <span className="text-[9px] text-[var(--t3)] font-bold uppercase tracking-widest">{g.role}</span>
+        <span className="text-xs font-black text-[var(--c)]" style={{ fontFamily: 'var(--fd)' }}>
+          {g.wager} <span className="text-[9px] opacity-60">CHESS</span>
+        </span>
+        <button
+          onClick={onClick}
+          className="text-[8px] font-black tracking-widest uppercase text-[var(--t3)] hover:text-[var(--c)] transition-colors"
+        >
+          {cta}
+        </button>
+      </div>
+    </div>
+  )
+}
 
 function EditField({
   label, value, onChange, maxLength, placeholder,
@@ -85,6 +95,14 @@ function EditField({
     </div>
   )
 }
+
+export default function ProfilePage() {
+  const params = useParams()
+  const router = useRouter()
+  const identifier = decodeURIComponent(params.identifier as string)
+  const { address: myAddress, playerAddress: myPlayerAddress } = useWallet()
+  const { signMessageAsync } = useSignMessage()
+  const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
 
   const [editing, setEditing] = useState(false)
   const [editDisplayName, setEditDisplayName] = useState('')
@@ -149,43 +167,25 @@ function EditField({
     setEditing(true)
   }
 
-function GameRow({ g, cta, onClick }: { g: PlayerHistoryItem; cta: string; onClick: () => void }) {
-  const badge = RESULT_BADGE[g.result]
-  const live = g.result === 'active'
-  return (
-    <div className="flex items-center justify-between py-3 gap-4">
-      <div className="flex items-center gap-3 min-w-0">
-        <span
-          className="flex items-center gap-1.5 text-[8px] font-black tracking-[0.2em] uppercase px-2 py-0.5 rounded"
-          style={{ background: badge.bg, color: badge.color }}
-        >
-          {live && <span className="w-1.5 h-1.5 rounded-full bg-[var(--c)] animate-pulse" />}
-          {badge.label}
-        </span>
-        {g.opponent ? (
-          <div className="flex items-center gap-2 min-w-0">
-            <ChessAvatar address={g.opponent} size={20} />
-            <ChessName address={g.opponent} short asLink className="text-xs text-[var(--t2)] truncate" />
-          </div>
-        ) : (
-          <span className="text-xs text-[var(--t3)]">Open challenge</span>
-        )}
-      </div>
-      <div className="flex items-center gap-4 shrink-0">
-        <span className="text-[9px] text-[var(--t3)] font-bold uppercase tracking-widest">{g.role}</span>
-        <span className="text-xs font-black text-[var(--c)]" style={{ fontFamily: 'var(--fd)' }}>
-          {g.wager} <span className="text-[9px] opacity-60">CHESS</span>
-        </span>
-        <button
-          onClick={onClick}
-          className="text-[8px] font-black tracking-widest uppercase text-[var(--t3)] hover:text-[var(--c)] transition-colors"
-        >
-          {cta}
-        </button>
-      </div>
-    </div>
-  )
-}
+  const saveEdit = async () => {
+    if (!myAddress || !profile) return
+    setEditError('')
+    try {
+      const timestamp = new Date().toISOString()
+      const message = `Chessify Profile Update\n\nAddress: ${myAddress}\nTimestamp: ${timestamp}`
+      const signature = await signMessageAsync({ message })
+      await updateProfile({
+        address: myAddress,
+        displayName: editDisplayName.trim(),
+        bio: editBio.trim(),
+        signature,
+        timestamp,
+      })
+      setEditing(false)
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : 'Update failed')
+    }
+  }
 
   const joinedDate = profile
     ? new Date(profile.createdAt).toLocaleDateString('en', { month: 'long', year: 'numeric' })

@@ -15,11 +15,6 @@ interface ChessNameProps {
   asLink?: boolean   // wraps in Link → /app/profile/{address}
 }
 
-/**
- * fmtAddr
- * @param {*} addr: string
- * @returns {*}
- */
 function fmtAddr(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`
 }
