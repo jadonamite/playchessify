@@ -79,7 +79,7 @@ export default function GameActionBar({
         {/* Primary CTA — hold-to-quit / new game (keeps the trapezoid shape) */}
         {gameOver ? (
           <motion.button
-            type="button"
+            type='button'
             onClick={onNewGame}
             whileTap={{ scale: 0.97 }}
             style={{
