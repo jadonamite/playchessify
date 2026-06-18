@@ -55,10 +55,10 @@ const K = {
 // POST /api/gas/sponsor — Tier B (MiniPay) and Tier C (external EOA).
 // Tier B: makes a 0-balance MiniPay EOA able to transact (provisions CHESS + drips USDm gas).
 // Tier C: drips a small amount of native CELO so an empty external wallet can pay its own gas.
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   let body: Record<string, unknown>
   try {
-    body = await request.json()
+    body = await req.json()
   } catch {
     return NextResponse.json({ error: 'invalid json body' }, { status: 400 })
   }
