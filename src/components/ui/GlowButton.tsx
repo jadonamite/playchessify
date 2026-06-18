@@ -21,7 +21,6 @@ interface GlowButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const btnBase: React.CSSProperties = {
   fontFamily: 'var(--fd)',
   fontWeight: 800,
-  // TODO: consider memoizing this value
   letterSpacing: '.08em',
   color: 'var(--btn-text, #001a22)',
   background: 'var(--btn-face)',
