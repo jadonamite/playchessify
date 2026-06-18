@@ -35,7 +35,7 @@ function LogoutIcon() {
 
 export default function Navbar() {
   const {
-    isReady, address,
+    isReady, address, playerAddress,
     disconnectAll,
     connect,
   } = useWallet()
@@ -53,6 +53,7 @@ export default function Navbar() {
   }, [])
 
   const showWallet = mounted && isReady && !!address
+  const profileAddr = playerAddress ?? address
 
   return (
     <>
@@ -186,7 +187,7 @@ export default function Navbar() {
                 }}>
                   {/* Profile link area */}
                   <Link
-                    href={`/app/profile/${address}`}
+                    href={`/app/profile/${profileAddr}`}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -307,6 +308,36 @@ export default function Navbar() {
                 }} />
               ))}
             </button>
+
+            {/* Music toggle — always visible on mobile, next to hamburger */}
+            {mounted && (
+              <button
+                className="nav-mobile"
+                onClick={() => {
+                  const next = !soundEnabled
+                  setSoundEnabled(next)
+                  if (!next) stopAmbient()
+                }}
+                title={soundEnabled ? 'Mute music' : 'Play music'}
+                aria-label={soundEnabled ? 'Mute music' : 'Play music'}
+                style={{
+                  width: 36,
+                  height: 36,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 10,
+                  border: `1px solid ${soundEnabled ? 'rgba(0,204,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
+                  background: soundEnabled ? 'rgba(0,204,255,0.06)' : 'rgba(255,255,255,0.03)',
+                  color: soundEnabled ? 'var(--c)' : 'var(--t3)',
+                  cursor: 'pointer',
+                  transition: 'all .15s',
+                  flexShrink: 0,
+                  fontSize: 15,
+                }}
+              >
+                {soundEnabled ? '♪' : '♩'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -396,13 +427,13 @@ export default function Navbar() {
                   {showWallet ? (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                       <Link
-                        href={`/app/profile/${address}`}
+                        href={`/app/profile/${profileAddr}`}
                         onClick={() => setMobileOpen(false)}
                         style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flex: 1, minWidth: 0 }}
                       >
-                        <ChessAvatar address={address!} size={30} />
+                        <ChessAvatar address={profileAddr!} size={30} />
                         <div style={{ minWidth: 0 }}>
-                          <ChessName address={address!} short style={{ fontSize: 12, fontWeight: 700, color: 'var(--t1)', display: 'block' }} />
+                          <ChessName address={profileAddr!} short style={{ fontSize: 12, fontWeight: 700, color: 'var(--t1)', display: 'block' }} />
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
                             <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#35ee66' }} />
                             <span style={{ fontSize: 8, fontWeight: 700, color: '#35ee66', letterSpacing: '.12em', fontFamily: 'var(--fd)' }}>CELO</span>

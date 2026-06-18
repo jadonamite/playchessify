@@ -484,7 +484,14 @@ export default function GameClient() {
           </Link>
         </div>
       ) : (
-        <main className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-5 md:py-8 overflow-x-clip">
+        <main
+          className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-5 md:py-8 overflow-x-clip"
+          style={{
+            opacity: showIntro ? 0 : 1,
+            pointerEvents: showIntro ? 'none' : 'auto',
+            transition: 'opacity 0.4s ease',
+          }}
+        >
 
           {/* Back to lobby */}
           <div className="mb-4 md:mb-5 px-1">
