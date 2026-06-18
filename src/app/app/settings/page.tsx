@@ -1,17 +1,17 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { useSignMessage } from 'wagmi'
+import { useWallet } from '@/components/wallet-provider'
+import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
+import { useSettingsStore, BOARD_THEMES, AI_DIFFICULTY_LABELS, PIECE_SETS, type BoardTheme, type AiDifficulty } from '@/hooks/useSettingsStore'
+import { piecePath } from '@/lib/chessPieces'
+import GlowButton from '@/components/ui/GlowButton'
+import ClayCard from '@/components/ui/ClayCard'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import ClaimModal from '@/components/ui/ClaimModal'
-import ClayCard from '@/components/ui/ClayCard'
-import GlowButton from '@/components/ui/GlowButton'
-import { motion } from 'framer-motion'
-import { piecePath } from '@/lib/chessPieces'
-import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
-import { useRouter } from 'next/navigation'
-import { useSettingsStore, BOARD_THEMES, AI_DIFFICULTY_LABELS, PIECE_SETS, type BoardTheme, type AiDifficulty } from '@/hooks/useSettingsStore'
-import { useSignMessage } from 'wagmi'
-import { useState, useEffect } from 'react'
-import { useWallet } from '@/components/wallet-provider'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
