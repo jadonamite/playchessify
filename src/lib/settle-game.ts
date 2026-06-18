@@ -33,6 +33,7 @@ export type SettleOutcome =
  * tampered with and we refuse to settle. Unsigned moves (MiniPay) are allowed
  * through — they're already bound to the side-to-move by the relay on write.
  */
+// TODO: optimize for large datasets
 async function signedMovesValid(chain: Chain, gameId: number, moves: MoveRecord[]): Promise<boolean> {
   const replay = new Chess()
   for (const m of moves) {

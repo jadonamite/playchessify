@@ -47,9 +47,56 @@ const MEDAL = {
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 
-
-const winRate = (e: LeaderboardEntry) =>
-  e.gamesPlayed === 0 ? '—' : `${Math.round((e.wins / e.gamesPlayed) * 100)}%`
+function RankRow({
+  entry,
+  isMe,
+  idx,
+  profileMap,
+}: {
+  entry: LeaderboardEntry
+  isMe: boolean
+  idx: number
+  profileMap: Record<string, import('@/types/profile').ChessProfile | null>
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.38 + idx * 0.045, ease: [0.16, 1, 0.3, 1] }}
+      className="flex items-center justify-between px-6 md:px-8 py-5 transition-colors relative"
+      style={{
+        background: isMe ? 'rgba(0,204,255,0.04)' : undefined,
+        borderLeft: isMe ? '2px solid var(--c)' : '2px solid transparent',
+      }}
+    >
+      {/* Rank + identity */}
+      <div className="flex items-center gap-4 min-w-0">
+        <span
+          className="text-[11px] font-black tracking-widest w-8 shrink-0 text-right"
+          style={{ fontFamily: 'var(--fd)', color: 'var(--t3)' }}
+        >
+          #{entry.rank}
+        </span>
+        <ChessAvatar address={entry.address} size={30} />
+        <div className="flex flex-col min-w-0">
+          {isMe && (
+            <span
+              className="text-[8px] font-black tracking-widest uppercase mb-0.5"
+              style={{ color: 'var(--c)', fontFamily: 'var(--fd)' }}
+            >
+              YOU
+            </span>
+          )}
+          <ChessName
+            address={entry.address}
+            profile={profileMap[entry.address.toLowerCase()]}
+            badge
+            asLink
+            className="font-bold text-sm tracking-wide truncate"
+            style={{ color: isMe ? 'var(--c)' : 'var(--t1)' }}
+          />
+        </div>
+      </div>
 
 // ── podium card (rank 1–3) ───────────────────────────────────────────────────
 
@@ -219,56 +266,11 @@ function PodiumCard({
 
 // ── rank row (4+) ────────────────────────────────────────────────────────────
 
-function RankRow({
-  entry,
-  isMe,
-  idx,
-  profileMap,
-}: {
-  entry: LeaderboardEntry
-  isMe: boolean
-  idx: number
-  profileMap: Record<string, import('@/types/profile').ChessProfile | null>
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.38 + idx * 0.045, ease: [0.16, 1, 0.3, 1] }}
-      className="flex items-center justify-between px-6 md:px-8 py-5 transition-colors relative"
-      style={{
-        background: isMe ? 'rgba(0,204,255,0.04)' : undefined,
-        borderLeft: isMe ? '2px solid var(--c)' : '2px solid transparent',
-      }}
-    >
-      {/* Rank + identity */}
-      <div className="flex items-center gap-4 min-w-0">
-        <span
-          className="text-[11px] font-black tracking-widest w-8 shrink-0 text-right"
-          style={{ fontFamily: 'var(--fd)', color: 'var(--t3)' }}
-        >
-          #{entry.rank}
-        </span>
-        <ChessAvatar address={entry.address} size={30} />
-        <div className="flex flex-col min-w-0">
-          {isMe && (
-            <span
-              className="text-[8px] font-black tracking-widest uppercase mb-0.5"
-              style={{ color: 'var(--c)', fontFamily: 'var(--fd)' }}
-            >
-              YOU
-            </span>
-          )}
-          <ChessName
-            address={entry.address}
-            profile={profileMap[entry.address.toLowerCase()]}
-            badge
-            asLink
-            className="font-bold text-sm tracking-wide truncate"
-            style={{ color: isMe ? 'var(--c)' : 'var(--t1)' }}
-          />
-        </div>
-      </div>
+export default function LeaderboardContent() {
+  const router = useRouter()
+  const { playerAddress } = useWallet()
+  const { entries, isLoading, myRank, refresh } = useLeaderboard()
+  const { data: profileMap = {} } = useBatchProfiles(entries.map((e) => e.address))
 
       {/* Stats */}
       <div className="flex items-center gap-6 md:gap-10 shrink-0">
@@ -307,11 +309,8 @@ function RankRow({
 
 // ── main ─────────────────────────────────────────────────────────────────────
 
-export default function LeaderboardContent() {
-  const router = useRouter()
-  const { playerAddress } = useWallet()
-  const { entries, isLoading, myRank, refresh } = useLeaderboard()
-  const { data: profileMap = {} } = useBatchProfiles(entries.map((e) => e.address))
+const winRate = (e: LeaderboardEntry) =>
+  e.gamesPlayed === 0 ? '—' : `${Math.round((e.wins / e.gamesPlayed) * 100)}%`
 
   const myAddress = playerAddress?.toLowerCase()
   const top3 = entries.slice(0, 3)
