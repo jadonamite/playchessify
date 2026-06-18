@@ -28,7 +28,6 @@ const CHESS_PROVISION = 1_000_000_000n         // 1,000 CHESS minted to fresh wa
 const MIN_GAS_CELO = parseEther('0.01')   // above this, the wallet can already pay its own gas
 const CELO_DRIP_AMOUNT = parseEther('0.005') // covers a handful of txs at Celo's tiny gas costs
 
-// ── Sybil guards ─────────────────────────────────────────────────────────────
 const COOLDOWN_SECONDS = 60 * 60        // one funded drip per address per hour
 const LOCK_SECONDS = 60                 // one in-flight drip per address
 const DAILY_CAP = 1000                  // global drips per day (abuse ceiling)
