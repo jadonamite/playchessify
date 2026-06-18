@@ -1,4 +1,5 @@
 'use client'
+
 import { forwardRef, HTMLAttributes } from 'react'
 
 interface ClayCardProps extends HTMLAttributes<HTMLDivElement> {
@@ -22,21 +23,6 @@ const variantMap = {
   elevated: 'clay',
 }
 
-const getClasses = (
-  variant: ClayCardProps['variant'],
-  padding: ClayCardProps['padding'],
-  glow: ClayCardProps['glow'],
-  hover: ClayCardProps['hover'],
-  className: string
-) => [
-  variantMap[variant],
-  paddingMap[padding],
-  glow ? 'glow-cyan' : '',
-  hover ? 'cursor-pointer active:scale-[0.98]' : '',
-  'relative overflow-hidden',
-  className,
-].filter(Boolean).join(' ')
-
 const ClayCard = forwardRef<HTMLDivElement, ClayCardProps>(
   (
     {
@@ -50,7 +36,17 @@ const ClayCard = forwardRef<HTMLDivElement, ClayCardProps>(
     },
     ref
   ) => {
-    const classes = getClasses(variant, padding, glow, hover, className)
+    const classes = [
+      variantMap[variant],
+      paddingMap[padding],
+      glow ? 'glow-cyan' : '',
+      hover ? 'cursor-pointer active:scale-[0.98]' : '',
+      'relative overflow-hidden',
+      className,
+    ]
+      .filter(Boolean)
+      .join(' ')
+
     return (
       <div ref={ref} className={classes} {...props}>
         {children}

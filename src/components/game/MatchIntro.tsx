@@ -20,22 +20,20 @@ interface MatchIntroProps {
   onDone: () => void
 }
 
-export default function MatchIntro(props: MatchIntroProps) {
-  return (
-    <AnimatePresence>
-      {props.open && <MatchIntroInner {...props} />}
-    </AnimatePresence>
-  )
+const colorOf = (c: Color) => (c === 'white' ? 'var(--c)' : 'var(--candy-grape)')
+
+/** `(min-width:1024px)` reactive flag — drives the slide direction per layout. */
+function useIsDesktop() {
+  const [desktop, setDesktop] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)')
+    const sync = () => setDesktop(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+  return desktop
 }
-
-
-/* ── the actual reveal (only mounted while open) ── */
-function MatchIntroInner({
-  myAddress, opponentAddress, myColor, pot, profileMap, onDone,
-}: Omit<MatchIntroProps, 'open'>) {
-  const isDesktop = useIsDesktop()
-  const [count, setCount] = useState<number | null>(null)
-  const oppColor: Color = myColor === 'white' ? 'black' : 'white'
 
 /* ── one player's side of the split ── */
 function PlayerSide({
@@ -124,18 +122,13 @@ function PlayerSide({
   )
 }
 
-/** `(min-width:1024px)` reactive flag — drives the slide direction per layout. */
-function useIsDesktop() {
-  const [desktop, setDesktop] = useState(false)
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1024px)')
-    const sync = () => setDesktop(mq.matches)
-    sync()
-    mq.addEventListener('change', sync)
-    return () => mq.removeEventListener('change', sync)
-  }, [])
-  return desktop
-}
+/* ── the actual reveal (only mounted while open) ── */
+function MatchIntroInner({
+  myAddress, opponentAddress, myColor, pot, profileMap, onDone,
+}: Omit<MatchIntroProps, 'open'>) {
+  const isDesktop = useIsDesktop()
+  const [count, setCount] = useState<number | null>(null)
+  const oppColor: Color = myColor === 'white' ? 'black' : 'white'
 
   // entrance → then start the 3·2·1 countdown
   useEffect(() => {
@@ -249,4 +242,10 @@ function useIsDesktop() {
   )
 }
 
-const colorOf = (c: Color) => (c === 'white' ? 'var(--c)' : 'var(--candy-grape)')
+export default function MatchIntro(props: MatchIntroProps) {
+  return (
+    <AnimatePresence>
+      {props.open && <MatchIntroInner {...props} />}
+    </AnimatePresence>
+  )
+}
