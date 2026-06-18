@@ -50,7 +50,7 @@ function Scene() {
         </Text>
       </Float>
     </>
-  )
+  ),
 }
 
 export function HistoryContent() {
