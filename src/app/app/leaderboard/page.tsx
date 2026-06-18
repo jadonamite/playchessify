@@ -1,7 +1,5 @@
-import LeaderboardContent from '@/components/lobby/LeaderboardContent';
-
-const renderLeaderboard = () => <LeaderboardContent />;
+import LeaderboardContent from '@/components/lobby/LeaderboardContent'
 
 export default function LeaderboardPage() {
-  return renderLeaderboard();
+  return <LeaderboardContent />
 }
