@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion'
 import type { ChessProfile } from '@/types/profile'
 import GlowButton from '@/components/ui/GlowButton'
-import HoldButton from '@/components/ui/HoldButton'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import ChessName from '@/components/ui/ChessName'
 import { TOKEN_DECIMALS } from '@/config/contracts'
@@ -138,13 +137,9 @@ export default function JoinRoom({
           className="w-full flex flex-col gap-3 pt-2"
         >
           {isConnected ? (
-            <HoldButton
-              label="Hold to Accept Challenge"
-              holdingLabel="Keep holding to confirm…"
-              loadingLabel="Confirming on-chain…"
-              loading={txPending}
-              onComplete={onJoin}
-            />
+            <GlowButton variant="brand" fullWidth parallelogram loading={txPending} onClick={onJoin}>
+              ⚔ ACCEPT CHALLENGE
+            </GlowButton>
           ) : (
             <GlowButton variant="brand" fullWidth parallelogram onClick={onConnectWallet}>
               CONNECT WALLET TO JOIN

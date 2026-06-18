@@ -12,31 +12,9 @@ import GlowButton from './GlowButton'
 useGLTF.preload('/models/King.glb')
 useGLTF.preload('/models/QueenChess.glb')
 
-export default function ChainSelectModal({
-  isOpen,
-  onClose,
-  onSelectCelo,
-  onSelectSocial,
-}: ChainSelectModalProps) {
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 box-border overflow-y-auto"
-          style={{ background: 'rgba(5, 5, 15, 0.92)', backdropFilter: 'blur(20px)' }}
-        >
-          {/* Grid Background */}
-          <div style={{
-            position: 'absolute', inset: 0,
-            backgroundImage: 'linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px)',
-            backgroundSize: '52px 52px', pointerEvents: 'none',
-            WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 70%)',
-            maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 70%)',
-            opacity: 0.3,
-          }} />
+/* ── 3D Pieces ── */
+function ChainPiece({ modelPath, color, emissive, scale = 1.5 }: { modelPath: string; color: string; emissive: string; scale?: number }) {
+  const { scene } = useGLTF(modelPath)
 
   const material = useMemo(() => new THREE.MeshStandardMaterial({
     color,
@@ -62,9 +40,48 @@ export default function ChainSelectModal({
   )
 }
 
-/* ── 3D Pieces ── */
-function ChainPiece({ modelPath, color, emissive, scale = 1.5 }: { modelPath: string; color: string; emissive: string; scale?: number }) {
-  const { scene } = useGLTF(modelPath)
+/* ── Chain Card ── */
+function ChainCard({
+  name,
+  ecosystem,
+  description,
+  accentColor,
+  accentGlow,
+  iconUrl,
+  onClick,
+  delay = 0,
+  children,
+}: {
+  name: string
+  ecosystem: string
+  description: string
+  accentColor: string
+  accentGlow: string
+  iconUrl: string
+  onClick: () => void
+  delay?: number
+  children: React.ReactNode
+}) {
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ delay, type: 'spring', stiffness: 180, damping: 20 }}
+      whileHover={{ scale: 1.02, y: -4 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className="relative w-full rounded-[28px] border border-white/10 bg-slate-900/60 backdrop-blur-xl overflow-hidden text-left cursor-pointer group transition-all"
+      style={{
+        boxShadow: `0 0 0 1px rgba(255,255,255,0.05), 0 20px 60px rgba(0,0,0,0.4)`,
+      }}
+    >
+      {/* Hover glow */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{
+          background: `radial-gradient(ellipse at 50% 80%, ${accentGlow}, transparent 70%)`,
+        }}
+      />
 
       {/* 3D Scene */}
       <div className="w-full h-40 md:h-48 relative">
@@ -152,48 +169,31 @@ const SOCIAL_PROVIDERS = [
   { name: 'Apple',   icon: 'https://www.svgrepo.com/show/452188/apple.svg' },
 ]
 
-/* ── Chain Card ── */
-function ChainCard({
-  name,
-  ecosystem,
-  description,
-  accentColor,
-  accentGlow,
-  iconUrl,
-  onClick,
-  delay = 0,
-  children,
-}: {
-  name: string
-  ecosystem: string
-  description: string
-  accentColor: string
-  accentGlow: string
-  iconUrl: string
-  onClick: () => void
-  delay?: number
-  children: React.ReactNode
-}) {
+export default function ChainSelectModal({
+  isOpen,
+  onClose,
+  onSelectCelo,
+  onSelectSocial,
+}: ChainSelectModalProps) {
   return (
-    <motion.button
-      initial={{ opacity: 0, y: 30, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay, type: 'spring', stiffness: 180, damping: 20 }}
-      whileHover={{ scale: 1.02, y: -4 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className="relative w-full rounded-[28px] border border-white/10 bg-slate-900/60 backdrop-blur-xl overflow-hidden text-left cursor-pointer group transition-all"
-      style={{
-        boxShadow: `0 0 0 1px rgba(255,255,255,0.05), 0 20px 60px rgba(0,0,0,0.4)`,
-      }}
-    >
-      {/* Hover glow */}
-      <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{
-          background: `radial-gradient(ellipse at 50% 80%, ${accentGlow}, transparent 70%)`,
-        }}
-      />
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 box-border overflow-y-auto"
+          style={{ background: 'rgba(5, 5, 15, 0.92)', backdropFilter: 'blur(20px)' }}
+        >
+          {/* Grid Background */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: 'linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px)',
+            backgroundSize: '52px 52px', pointerEvents: 'none',
+            WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 70%)',
+            maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 70%)',
+            opacity: 0.3,
+          }} />
 
           {/* Content */}
           <div className="relative z-10 my-auto w-full max-w-3xl flex flex-col items-center gap-8 py-4">
