@@ -390,7 +390,7 @@ export default function LeaderboardContent() {
 
           {/* ── My rank callout (if connected + not in top 3) ── */}
           <AnimatePresence>
-            {address && myEntryNotInPodium && myEntry && myRank && (
+            {playerAddress && myEntryNotInPodium && myEntry && myRank && (
               <motion.div
                 key="my-rank-banner"
                 initial={{ opacity: 0, y: -10 }}
