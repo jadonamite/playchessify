@@ -79,6 +79,12 @@ themechanic.cjs
 TheQueenGambit.cjs
 simulate-celo.cjs
 fix_env.js
+# scratch reference images / design dumps (never commit)
+/public/scratch/
+/*.jpeg
+/*.jpg
+/*.png
+
 # large files
 *.deb
 *.crdownload
