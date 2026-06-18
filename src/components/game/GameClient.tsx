@@ -35,7 +35,7 @@ export default function GameClient() {
   const isBotGame = params?.id === 'bot'
   const gameId    = isBotGame ? 0 : Number(params?.id ?? 0)
 
-  const { address: celoAddress, playerAddress, isConnected, connectWallet } = useWallet()
+  const { playerAddress, isConnected, connectWallet } = useWallet()
   const { joinGame: joinCelo, resign: resignCelo, proposeDraw: proposeDrawCelo, acceptDraw: acceptDrawCelo, requestSettle } = useCeloChess()
   const { signMove } = useMoveSigner()
   const showToast = useToastStore((s) => s.showToast)
@@ -305,7 +305,7 @@ export default function GameClient() {
       // (playerAddress) so it matches white/black, and sign the move where the
       // wallet can (Tier A/C); MiniPay submits unsigned.
       if (!isBotGame) {
-        const player = playerAddress ?? celoAddress ?? ''
+        const player = playerAddress ?? ''
         void relaySubmitMove(move.san, player, next.fen(), signMove).then((ok) => {
           if (!ok) showToast('Move conflict with opponent — resyncing board.', 'invalid')
         })
@@ -338,7 +338,7 @@ export default function GameClient() {
       showToast(game.inCheck() ? 'Your King is in check — resolve it first.' : "You can't move there.", 'invalid')
       return false
     }
-  }, [game, isBotGame, celoAddress, playerAddress, signMove, relaySubmitMove, showToast, getCtx])
+  }, [game, isBotGame, playerAddress, signMove, relaySubmitMove, showToast, getCtx])
 
   // ── board event handlers ─────────────────────────────────────────────────────
 
@@ -586,11 +586,11 @@ export default function GameClient() {
 
       {/* Creator waiting for an opponent → full-screen waiting room */}
       <AnimatePresence>
-        {!isBotGame && isCreator && gameIsWaiting && celoAddress && (
+        {!isBotGame && isCreator && gameIsWaiting && playerAddress && (
           <WaitingRoom
             gameId={gameId}
             pot={potFormatted}
-            myAddress={celoAddress}
+            myAddress={playerAddress}
             myColor={myColor ?? 'white'}
             profileMap={gameProfileMap}
             onLeave={() => router.push('/app/lobby')}
@@ -601,7 +601,7 @@ export default function GameClient() {
       {/* Both players present → VS reveal, then board */}
       <MatchIntro
         open={showIntro}
-        myAddress={celoAddress ?? ''}
+        myAddress={playerAddress ?? ''}
         opponentAddress={opponentAddress}
         myColor={myColor ?? 'white'}
         pot={potFormatted}

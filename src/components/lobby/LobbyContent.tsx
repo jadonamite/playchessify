@@ -40,7 +40,7 @@ function BgIcon({ children }: { children: React.ReactNode }) {
 }
 
 export default function LobbyContent() {
-  const { isConnected, isReady, address: celoAddress, playerAddress } = useWallet()
+  const { isConnected, isReady, playerAddress } = useWallet()
   const { createGame: createCeloGame, joinGame: joinCeloGame } = useCeloChess()
   const router = useRouter()
 
@@ -103,9 +103,9 @@ export default function LobbyContent() {
   const { games: openGames, isLoading: isLobbyLoading, refresh: refreshLobby } = useLobby()
   const { data: lobbyProfileMap = {} } = useBatchProfiles(openGames.map((g) => g.creator))
 
-  const { data: myProfile } = useProfile(celoAddress ?? null)
+  const { data: myProfile } = useProfile(playerAddress ?? null)
   const [claimModalOpen, setClaimModalOpen] = useState(false)
-  const showClaimBanner = isConnected && !!celoAddress && myProfile === null
+  const showClaimBanner = isConnected && !!playerAddress && myProfile === null
 
   const handleCreateGame = async () => {
     if (MAINTENANCE_MODE) return setIsComingSoonOpen(true)
@@ -169,7 +169,7 @@ export default function LobbyContent() {
   }
 
   // Authenticated but wallet still being provisioned
-  if (!isReady || !celoAddress) {
+  if (!isReady || !playerAddress) {
     return (
       <main className="min-h-screen w-full bg-[var(--bg)] flex items-center justify-center">
         <LoadingState message="SETTING UP WALLET" />
@@ -188,7 +188,7 @@ export default function LobbyContent() {
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-full box-border px-4 md:px-8 py-6 md:py-10">
 
         {/* ── .chess onboarding banner ── */}
-        {showClaimBanner && celoAddress && (
+        {showClaimBanner && playerAddress && (
           <div className="w-full max-w-7xl mx-auto mb-6">
             <motion.div
               initial={{ opacity: 0, y: -8 }}
@@ -742,10 +742,10 @@ export default function LobbyContent() {
       </AnimatePresence>
 
       <ComingSoonOverlay isOpen={isComingSoonOpen} onClose={() => setIsComingSoonOpen(false)} />
-      {celoAddress && (
+      {playerAddress && (
         <ClaimModal
           open={claimModalOpen}
-          address={celoAddress}
+          address={playerAddress}
           onClose={() => setClaimModalOpen(false)}
         />
       )}

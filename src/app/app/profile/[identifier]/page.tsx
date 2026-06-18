@@ -100,7 +100,7 @@ export default function ProfilePage() {
   const params = useParams()
   const router = useRouter()
   const identifier = decodeURIComponent(params.identifier as string)
-  const { address: myAddress } = useWallet()
+  const { address: myAddress, playerAddress: myPlayerAddress } = useWallet()
   const { signMessageAsync } = useSignMessage()
   const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
 
@@ -109,6 +109,7 @@ export default function ProfilePage() {
   const [editBio, setEditBio] = useState('')
   const [editError, setEditError] = useState('')
   const [claimOpen, setClaimOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   // Resolve profile — address or username
   const isAddress = identifier.startsWith('0x')
@@ -131,8 +132,9 @@ export default function ProfilePage() {
   const profile: ChessProfile | null | undefined = isAddress ? profileByAddress : profileByName
   const profileAddress = profile?.address ?? (isAddress ? identifier : null)
   const isLoading = isAddress ? loadingByAddr : loadingByName
-  const isOwn = !!myAddress && !!profileAddress &&
-    myAddress.toLowerCase() === profileAddress.toLowerCase()
+  const isOwn = !!(myPlayerAddress || myAddress) && !!profileAddress &&
+    ((myPlayerAddress?.toLowerCase() === profileAddress.toLowerCase()) ||
+     (myAddress?.toLowerCase() === profileAddress.toLowerCase()))
 
   // On-chain stats
   const { data: stats } = useReadContract({
@@ -395,10 +397,15 @@ export default function ProfilePage() {
                 <span className="text-[9px] font-black tracking-[0.2em] uppercase text-[var(--t3)]">ADDRESS</span>
                 <span className="text-xs font-mono text-[var(--t2)] break-all flex-1">{profileAddress}</span>
                 <button
-                  onClick={() => navigator.clipboard.writeText(profileAddress)}
-                  className="text-[9px] font-black tracking-widest uppercase text-[var(--t3)] hover:text-[var(--c)] transition-colors shrink-0"
+                  onClick={() => {
+                    navigator.clipboard.writeText(profileAddress)
+                    setCopied(true)
+                    setTimeout(() => setCopied(false), 2000)
+                  }}
+                  className="text-[9px] font-black tracking-widest uppercase transition-colors shrink-0"
+                  style={{ color: copied ? 'var(--c)' : 'var(--t3)' }}
                 >
-                  COPY
+                  {copied ? '✓ COPIED' : 'COPY'}
                 </button>
               </div>
             )}
