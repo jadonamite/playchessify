@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useAccount } from 'wagmi'
+import { useWallet } from '@/components/wallet-provider'
 
 export interface LeaderboardEntry {
   address: string
@@ -14,7 +14,7 @@ export interface LeaderboardEntry {
 }
 
 export function useLeaderboard() {
-  const { address: myAddress } = useAccount()
+  const { playerAddress: myAddress } = useWallet()
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
   const [isLoading, setIsLoading] = useState(false)
 

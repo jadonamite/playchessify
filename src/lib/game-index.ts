@@ -47,13 +47,14 @@ async function gameNonce(): Promise<number> {
  */
 export async function syncGameIndex(): Promise<number> {
   const redis = getRedis()
-  const cursor = Number((await redis.get<number>(K.cursor)) ?? 0)
+  const cursor = Number((await redis.get<number>(K.cursor)) ?? -1)
   const nonce = await gameNonce()
-  if (nonce <= cursor) return nonce
+  const lastGameId = nonce - 1
+  if (lastGameId <= cursor) return nonce
 
   const pub = getPublicClient()
-  for (let start = cursor + 1; start <= nonce; start += SCAN_CHUNK) {
-    const end = Math.min(start + SCAN_CHUNK - 1, nonce)
+  for (let start = cursor + 1; start <= lastGameId; start += SCAN_CHUNK) {
+    const end = Math.min(start + SCAN_CHUNK - 1, lastGameId)
     const ids = Array.from({ length: end - start + 1 }, (_, i) => BigInt(start + i))
     const results = await pub.multicall({
       contracts: ids.map((id) => ({

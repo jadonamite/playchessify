@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAccount } from 'wagmi'
+import { useWallet } from '@/components/wallet-provider'
 import GlowButton from '@/components/ui/GlowButton'
 import LoadingState from '@/components/ui/LoadingState'
 import { useLeaderboard, type LeaderboardEntry } from '@/hooks/useLeaderboard'
@@ -309,11 +309,11 @@ function RankRow({
 
 export default function LeaderboardContent() {
   const router = useRouter()
-  const { address } = useAccount()
+  const { playerAddress } = useWallet()
   const { entries, isLoading, myRank, refresh } = useLeaderboard()
   const { data: profileMap = {} } = useBatchProfiles(entries.map((e) => e.address))
 
-  const myAddress = address?.toLowerCase()
+  const myAddress = playerAddress?.toLowerCase()
   const top3 = entries.slice(0, 3)
   const rest = entries.slice(3)
   const myEntry = myAddress ? entries.find((e) => e.address === myAddress) : null

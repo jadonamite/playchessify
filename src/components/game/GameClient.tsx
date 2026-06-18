@@ -85,7 +85,7 @@ export default function GameClient() {
     iProposedDraw, opponentProposedDraw,
     gameIsWaiting, contractActive, contractDone, contractDraw, payoutSettled, canJoinFromPage,
     wagerFormatted, statusLabel, gameProfileMap,
-  } = useGameData({ gameId, isBotGame, celoAddress, isConnected })
+  } = useGameData({ gameId, isBotGame, celoAddress: playerAddress, isConnected })
 
   // ── opponent turn timer (5 min) ─────────────────────────────────────────────
   const [turnSecondsLeft, setTurnSecondsLeft] = useState(TURN_TIMEOUT_SECS)
