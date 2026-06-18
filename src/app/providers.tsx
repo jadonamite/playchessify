@@ -10,8 +10,14 @@ import { wagmiConfig } from '@/config/wagmi'
 import { ThemeProvider } from 'next-themes'
 import CenterToast from '@/components/ui/CenterToast'
 
-const WalletProvider = dynamic(() => import('@/components/wallet-provider').then(mod => mod.WalletProvider), { ssr: false })
-const AudioManager = dynamic(() => import('@/components/AudioManager'), { ssr: false })
+const WalletProvider = dynamic(
+  () => import('@/components/wallet-provider').then(mod => mod.WalletProvider),
+  { ssr: false }
+)
+const AudioManager = dynamic(
+  () => import('@/components/AudioManager'),
+  { ssr: false }
+)
 
 const getPrivyConfig = () => ({
   defaultChain: celo,
@@ -38,10 +44,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
       },
     },
   }))
-
   return (
     <QueryClientProvider client={queryClient}>
-      <PrivyProvider appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? 'placeholder-set-env-var'} config={getPrivyConfig()}>
+      <PrivyProvider
+        appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? 'placeholder-set-env-var'}
+        config={getPrivyConfig()}
+      >
         <WagmiProvider config={wagmiConfig} reconnectOnMount>
           {/* Tier A — ERC-4337 smart wallets for social/email/embedded users. The Celo custom-chain config (forno RPC + Pimlico bundler/paymaster URLs, PIMLICO_API_KEY) is set in the Privy dashboard; sponsorship is then automatic. */}
           <SmartWalletsProvider>
