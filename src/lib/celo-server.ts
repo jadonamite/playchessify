@@ -86,7 +86,7 @@ export async function getOnchainGame(gameId: number): Promise<OnchainGame> {
     address: GAME_ADDRESS,
     abi: CHESS_GAME_ABI,
     functionName: 'getGame',
-    args: [BigInt(gameId)],
+    params: [BigInt(gameId)],
   })) as unknown as {
     white: Address
     black: Address
@@ -145,7 +145,7 @@ export async function settleOnChain(gameId: number, result: GameResult): Promise
     address: GAME_ADDRESS,
     abi: CHESS_GAME_ABI,
     functionName: 'settleGame',
-    args: [BigInt(gameId), result],
+    params: [BigInt(gameId), result],
   })
   await getPublicClient().waitForTransactionReceipt({ hash })
   return hash
@@ -160,7 +160,7 @@ export async function mintChessTo(to: Address, amount: bigint): Promise<Hash> {
     address: TOKEN_ADDRESS,
     abi: CHESS_TOKEN_ABI,
     functionName: 'mintTo',
-    args: [to, amount],
+    params: [to, amount],
   })
   await getPublicClient().waitForTransactionReceipt({ hash })
   return hash
@@ -175,7 +175,7 @@ export async function sponsorGas(to: Address, amountUsdm: bigint): Promise<Hash>
     address: USDM_ADDRESS,
     abi: ERC20_MIN_ABI,
     functionName: 'transfer',
-    args: [to, amountUsdm],
+    params: [to, amountUsdm],
   })
   await getPublicClient().waitForTransactionReceipt({ hash })
   return hash
@@ -193,7 +193,7 @@ export async function gasSponsorCanCover(amountUsdm: bigint): Promise<boolean> {
         address: USDM_ADDRESS,
         abi: ERC20_MIN_ABI,
         functionName: 'balanceOf',
-        args: [account.address],
+        params: [account.address],
       }) as Promise<bigint>,
       pub.getBalance({ address: account.address }),
     ])
@@ -241,7 +241,7 @@ export async function chessBalanceOf(addr: Address): Promise<bigint> {
     address: TOKEN_ADDRESS,
     abi: CHESS_TOKEN_ABI,
     functionName: 'balanceOf',
-    args: [addr],
+    params: [addr],
   })) as bigint
 }
 
@@ -251,7 +251,7 @@ export async function usdmBalanceOf(addr: Address): Promise<bigint> {
     address: USDM_ADDRESS,
     abi: ERC20_MIN_ABI,
     functionName: 'balanceOf',
-    args: [addr],
+    params: [addr],
   })) as bigint
 }
 
