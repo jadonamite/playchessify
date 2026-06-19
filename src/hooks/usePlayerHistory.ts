@@ -1,5 +1,4 @@
 'use client'
-
 import { useQuery } from '@tanstack/react-query'
 
 export type PlayerHistoryItem = {
@@ -11,7 +10,20 @@ export type PlayerHistoryItem = {
   result: 'win' | 'loss' | 'draw' | 'active' | 'waiting'
 }
 
-type ApiHistoryItem = PlayerHistoryItem & { chain: string; opponent: string; timestamp: number }
+type ApiHistoryItem = PlayerHistoryItem & {
+  chain: string
+  opponent: string
+  timestamp: number
+}
+
+const transformHistoryItem = (item: ApiHistoryItem): PlayerHistoryItem => ({
+  id: item.id,
+  role: item.role,
+  opponent: item.opponent === 'Waiting...' ? '' : item.opponent,
+  wager: item.wager,
+  status: item.status,
+  result: item.result,
+})
 
 export function usePlayerHistory(playerAddress: string | null | undefined) {
   return useQuery({
@@ -23,14 +35,7 @@ export function usePlayerHistory(playerAddress: string | null | undefined) {
       const res = await fetch(`/api/history?address=${playerAddress}`)
       const body = (await res.json().catch(() => ({}))) as { history?: ApiHistoryItem[] }
       if (!Array.isArray(body.history)) return []
-      return body.history.map((h) => ({
-        id: h.id,
-        role: h.role,
-        opponent: h.opponent === 'Waiting...' ? '' : h.opponent,
-        wager: h.wager,
-        status: h.status,
-        result: h.result,
-      }))
+      return body.history.map(transformHistoryItem)
     },
     enabled: !!playerAddress,
     staleTime: 2 * 60 * 1000,
