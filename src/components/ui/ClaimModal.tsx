@@ -88,8 +88,7 @@ export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimM
     if (debouncedUsername.length < 3) return null
     if (isChecking) return 'checking'
     if (!checkResult) return null
-    const result = checkResult.available ? 'available' : checkResult.reason ?? 'taken';
-    return result;
+    return checkResult.available ? 'available' : checkResult.reason ?? 'taken'
   })()
 
   const canSubmit =
