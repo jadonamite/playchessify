@@ -307,10 +307,6 @@ function RankRow({
 
 // ── main ─────────────────────────────────────────────────────────────────────
 
-/**
- * LeaderboardContent
- * @returns {*}
- */
 export default function LeaderboardContent() {
   const router = useRouter()
   const { playerAddress } = useWallet()

@@ -71,7 +71,6 @@ export function useUpdateProfile() {
     mutationFn: async (body: {
       address: string
       username?: string
-      // NOTE: revisit this logic after API migration
       displayName?: string
       bio?: string
       signature: string

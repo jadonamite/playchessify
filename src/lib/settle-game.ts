@@ -83,8 +83,8 @@ export async function settleGameById(chain: Chain, gameId: number): Promise<Sett
     const txHash = await settleOnChain(gameId, derived.result as GameResult)
     await unregisterActiveGame(chain, gameId)
     return { ok: true, txHash, result: derived.result as GameResult }
-  } catch (error) {
+  } catch (err) {
     await getRedis().del(lockKey)
-    throw error
+    throw err
   }
 }
