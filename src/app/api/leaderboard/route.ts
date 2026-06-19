@@ -35,6 +35,7 @@ function getRedis(): Redis {
 export async function GET() {
   try {
     const redis = getRedis()
+
     const cached = await redis.get<LeaderboardEntry[]>(CACHE_KEY)
     if (cached) return NextResponse.json({ entries: cached, cached: true })
 
@@ -52,36 +53,31 @@ export async function GET() {
       allowFailure: true,
     })
 
-    const entries = processLeaderboardEntries(addresses, statsResults)
+    const entries: LeaderboardEntry[] = []
+    for (let i = 0; i < addresses.length; i++) {
+      const result = statsResults[i]
+      if (result.status !== 'success') continue
+      const r = result.result as readonly [bigint, bigint, bigint, bigint, bigint]
+      const gamesPlayed = Number(r[4])
+      if (gamesPlayed === 0) continue
+      entries.push({
+        address: addresses[i],
+        wins: Number(r[0]),
+        losses: Number(r[1]),
+        draws: Number(r[2]),
+        rating: Number(r[3]),
+        gamesPlayed,
+        rank: 0,
+      })
+    }
+
+    entries.sort((a, b) => b.rating - a.rating || b.wins - a.wins)
+    entries.forEach((e, i) => { e.rank = i + 1 })
+
     await redis.set(CACHE_KEY, entries, { ex: CACHE_TTL })
     return NextResponse.json({ entries })
   } catch (err) {
     console.error('[api/leaderboard] failed:', (err as Error)?.message)
     return NextResponse.json({ error: 'leaderboard unavailable' }, { status: 503 })
   }
-}
-
-function processLeaderboardEntries(addresses: string[], statsResults: any[]): LeaderboardEntry[] {
-  const entries: LeaderboardEntry[] = []
-  for (let i = 0; i < addresses.length; i++) {
-    const result = statsResults[i]
-    if (result.status !== 'success') continue
-    const r = result.result as readonly [bigint, bigint, bigint, bigint, bigint]
-    const gamesPlayed = Number(r[4])
-    if (gamesPlayed === 0) continue
-    entries.push({
-      address: addresses[i],
-      wins: Number(r[0]),
-      losses: Number(r[1]),
-      draws: Number(r[2]),
-      rating: Number(r[3]),
-      gamesPlayed,
-      rank: 0,
-    })
-  }
-  entries.sort((a, b) => b.rating - a.rating || b.wins - a.wins)
-  entries.forEach((e, i) => {
-    e.rank = i + 1
-  })
-  return entries
 }
