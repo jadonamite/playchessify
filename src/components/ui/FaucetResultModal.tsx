@@ -11,7 +11,7 @@ import GlowButton from './GlowButton'
 const KEYFRAMES = `
 @keyframes confetti-fall {
   0%   { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; },
 }
 @keyframes coin-glow {
   0%, 100% { filter: drop-shadow(0 0 15px rgba(0,204,255,0.6)); }

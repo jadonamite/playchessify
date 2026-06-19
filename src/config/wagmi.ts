@@ -3,14 +3,16 @@ import { celo, celoAlfajores, mainnet } from 'viem/chains'
 import { http } from 'wagmi'
 import { injected } from 'wagmi/connectors'
 
-export const wagmiConfig = createConfig({
-  // Alfajores included so a testnet rehearsal build can target it via env.
-  chains: [celo, celoAlfajores, mainnet],
-  // Injected connector lets us auto-connect MiniPay's in-app wallet.
-  connectors: [injected()],
-  transports: {
+const createWagmiConfig = () => {
+  const chains = [celo, celoAlfajores, mainnet]
+  const connectors = [injected()]
+  const transports = {
     [celo.id]: http('https://forno.celo.org'),
     [celoAlfajores.id]: http('https://alfajores-forno.celo-testnet.org'),
     [mainnet.id]: http(),
-  },
-})
+  }
+
+  return createConfig({ chains, connectors, transports })
+}
+
+export const wagmiConfig = createWagmiConfig()
