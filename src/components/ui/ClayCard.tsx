@@ -1,5 +1,4 @@
 'use client'
-
 import { forwardRef, HTMLAttributes } from 'react'
 
 interface ClayCardProps extends HTMLAttributes<HTMLDivElement> {
@@ -23,38 +22,40 @@ const variantMap = {
   elevated: 'clay',
 }
 
-const ClayCard = forwardRef<HTMLDivElement, ClayCardProps>(
-  (
-    {
-      variant = 'default',
-      hover = false,
-      glow = false,
-      padding = 'md',
-      className = '',
-      children,
-      ...props
-    },
-    ref
-  ) => {
-    const classes = [
-      variantMap[variant],
-      paddingMap[padding],
-      glow ? 'glow-cyan' : '',
-      hover ? 'cursor-pointer active:scale-[0.98]' : '',
-      'relative overflow-hidden',
-      className,
-    ]
-      .filter(Boolean)
-      .join(' ')
+const getClasses = (
+  variant: ClayCardProps['variant'],
+  hover: ClayCardProps['hover'],
+  glow: ClayCardProps['glow'],
+  padding: ClayCardProps['padding'],
+  className: string
+) => [
+  variantMap[variant],
+  paddingMap[padding],
+  glow ? 'glow-cyan' : '',
+  hover ? 'cursor-pointer active:scale-[0.98]' : '',
+  'relative overflow-hidden',
+  className,
+].filter(Boolean).join(' ')
 
-    return (
-      <div ref={ref} className={classes} {...props}>
-        {children}
-      </div>
-    )
-  }
-)
+const ClayCard = forwardRef<HTMLDivElement, ClayCardProps>((
+  {
+    variant = 'default',
+    hover = false,
+    glow = false,
+    padding = 'md',
+    className = '',
+    children,
+    ...props
+  },
+  ref
+) => {
+  const classes = getClasses(variant, hover, glow, padding, className)
+  return (
+    <div ref={ref} className={classes} {...props}>
+      {children}
+    </div>
+  )
+})
 
 ClayCard.displayName = 'ClayCard'
-
 export default ClayCard
