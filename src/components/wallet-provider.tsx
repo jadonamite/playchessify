@@ -47,6 +47,11 @@ const WalletContext = createContext<WalletContextType>({
 
 export const useWallet = () => useContext(WalletContext)
 
+/**
+ * WalletProvider
+ * @param {*} { children }: { children: React.ReactNode }
+ * @returns {*}
+ */
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const { login, logout, authenticated, ready } = usePrivy()
   const { address: evmAddress } = useAccount()
