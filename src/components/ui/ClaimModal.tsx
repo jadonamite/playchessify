@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-// TODO: optimize for large datasets
 import { useSignMessage } from 'wagmi'
 import { useQuery } from '@tanstack/react-query'
 import { useCheckUsername, useClaimProfile } from '@/hooks/useProfile'
