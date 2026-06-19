@@ -277,7 +277,7 @@ export default function FaucetContent() {
           {/* Header */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-              <GlowButton variant='ghost' size='sm' onClick={() => router.push('/app/lobby')}>
+              <GlowButton variant="ghost" size="sm" onClick={() => router.push('/app/lobby')}>
                 ← BACK TO LOBBY
               </GlowButton>
             </motion.div>
