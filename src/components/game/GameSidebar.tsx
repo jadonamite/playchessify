@@ -35,7 +35,6 @@ interface GameSidebarProps {
   onConnectWallet: () => void
 }
 
-// Right-column context for PvP games only (bot games render no sidebar). The
 // hold-to-quit (resign) and hint actions live in the bottom GameActionBar, so
 // this column carries only join/waiting state, the turn clock, and draw offers.
 export default function GameSidebar(props: GameSidebarProps) {
