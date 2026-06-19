@@ -106,13 +106,6 @@ const STATUS_CONFIG = {
   }
 }
 
-/**
- * GameStatusModal
- * @param {*} { type
- * @param {*} message
- * @param {*} onClose }: GameStatusModalProps
- * @returns {*}
- */
 export default function GameStatusModal({ type, message, onClose }: GameStatusModalProps) {
   const [mounted, setMounted] = useState(false)
   
