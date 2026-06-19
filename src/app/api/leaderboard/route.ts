@@ -20,7 +20,7 @@ export interface LeaderboardEntry {
   draws: number
   rating: number
   gamesPlayed: number
-  rank: number
+  rank: number,
 }
 
 function getRedis(): Redis {
