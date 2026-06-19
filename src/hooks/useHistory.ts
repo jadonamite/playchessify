@@ -1,4 +1,5 @@
 'use client'
+
 import { useState, useEffect, useCallback } from 'react'
 import { useWallet } from '@/components/wallet-provider'
 
@@ -13,16 +14,6 @@ export type HistoryItem = {
   timestamp: number
 }
 
-const parseHistoryResponse = (response: any): HistoryItem[] => {
-  if (!response || !response.history) return []
-  return Array.isArray(response.history) ? response.history : []
-}
-
-const handleFetchError = (err: any) => {
-  console.error('[useHistory] fetch failed:', err)
-  return []
-}
-
 export function useHistory() {
   const { playerAddress } = useWallet()
   const [history, setHistory] = useState<HistoryItem[]>([])
@@ -33,10 +24,11 @@ export function useHistory() {
     if (!playerAddress) return []
     try {
       const res = await fetch(`/api/history?address=${playerAddress}`)
-      const body = await res.json().catch(() => ({}))
-      return parseHistoryResponse(body)
+      const body = (await res.json().catch(() => ({}))) as { history?: HistoryItem[] }
+      return Array.isArray(body.history) ? body.history : []
     } catch (err) {
-      return handleFetchError(err)
+      console.error('[useHistory] fetch failed:', err)
+      return []
     }
   }, [playerAddress])
 

@@ -15,48 +15,6 @@ interface Track {
 const tracks: Record<TrackId, Track | null> = { landing: null, game: null }
 let activeTrack: TrackId | null = null
 
-function stopTrack(id: TrackId, durationMs = 1200) {
-  const track = tracks[id]
-  if (!track || track.audio.paused) return
-  fadeTo(track, 0, durationMs, () => {
-    track.audio.pause()
-    track.audio.currentTime = 0
-  })
-}
-
-export function setMuted(muted: boolean) {
-  if (muted) {
-    Object.values(tracks).forEach(t => { if (t) t.audio.volume = 0 })
-  } else if (activeTrack) {
-    const vol = activeTrack === 'game' ? 0.5 : 0.55
-    const track = tracks[activeTrack]
-    if (track) fadeTo(track, vol, 800)
-  }
-}
-
-export function startAmbient() {
-  if (activeTrack === 'landing') return
-  stopTrack('game', 800)
-  startTrack('landing', 0.55)
-}
-
-export function stopAmbient() {
-  stopTrack('landing')
-  stopTrack('game')
-  activeTrack = null
-}
-
-// ─── public API ─────────────────────────────────────────────────────────────
-
-function startTrack(id: TrackId, volume = 0.55) {
-  const track = getTrack(id)
-  if (track.audio.paused) {
-    track.audio.play().catch(() => {})
-  }
-  fadeTo(track, volume, 2500)
-  activeTrack = id
-}
-
 function getTrack(id: TrackId): Track {
   if (tracks[id]) return tracks[id]!
   const audio = new Audio(id === 'game' ? GAME_TRACK : LANDING_TRACK)
@@ -66,19 +24,6 @@ function getTrack(id: TrackId): Track {
   tracks[id] = t
   return t
 }
-
-export function playMoveSound(ctx: AudioContext, isOpponent = false) {
-  if (ctx.state === 'suspended') ctx.resume()
-  const t = ctx.currentTime
-  const buf = noiseBuf(ctx)
-
-export function startGameTrack() {
-  if (activeTrack === 'game') return
-  stopTrack('landing', 800)
-  startTrack('game', 0.5)
-}
-
-// ─── move sound (Web Audio API) ─────────────────────────────────────────────
 
 function fadeTo(track: Track, target: number, durationMs: number, onDone?: () => void) {
   if (track.fadeTimer) clearInterval(track.fadeTimer)
@@ -97,6 +42,56 @@ function fadeTo(track: Track, target: number, durationMs: number, onDone?: () =>
   }, 30)
 }
 
+function startTrack(id: TrackId, volume = 0.55) {
+  const track = getTrack(id)
+  if (track.audio.paused) {
+    track.audio.play().catch(() => {})
+  }
+  fadeTo(track, volume, 2500)
+  activeTrack = id
+}
+
+function stopTrack(id: TrackId, durationMs = 1200) {
+  const track = tracks[id]
+  if (!track || track.audio.paused) return
+  fadeTo(track, 0, durationMs, () => {
+    track.audio.pause()
+    track.audio.currentTime = 0
+  })
+}
+
+// ─── public API ─────────────────────────────────────────────────────────────
+
+export function startAmbient() {
+  if (activeTrack === 'landing') return
+  stopTrack('game', 800)
+  startTrack('landing', 0.55)
+}
+
+export function startGameTrack() {
+  if (activeTrack === 'game') return
+  stopTrack('landing', 800)
+  startTrack('game', 0.5)
+}
+
+export function stopAmbient() {
+  stopTrack('landing')
+  stopTrack('game')
+  activeTrack = null
+}
+
+export function setMuted(muted: boolean) {
+  if (muted) {
+    Object.values(tracks).forEach(t => { if (t) t.audio.volume = 0 })
+  } else if (activeTrack) {
+    const vol = activeTrack === 'game' ? 0.5 : 0.55
+    const track = tracks[activeTrack]
+    if (track) fadeTo(track, vol, 800)
+  }
+}
+
+// ─── move sound (Web Audio API) ─────────────────────────────────────────────
+
 function noiseBuf(ctx: AudioContext): AudioBuffer {
   const len = ctx.sampleRate * 3
   const buf = ctx.createBuffer(1, len, ctx.sampleRate)
@@ -104,6 +99,11 @@ function noiseBuf(ctx: AudioContext): AudioBuffer {
   for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1
   return buf
 }
+
+export function playMoveSound(ctx: AudioContext, isOpponent = false) {
+  if (ctx.state === 'suspended') ctx.resume()
+  const t = ctx.currentTime
+  const buf = noiseBuf(ctx)
 
   const ns = ctx.createBufferSource()
   ns.buffer = buf
