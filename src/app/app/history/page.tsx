@@ -1,10 +1,5 @@
-import { useState, useEffect } from 'react';
-import { HistoryContent } from '@/components/lobby/HistoryContent';
-
-const useHistoryPage = () => {
-  return <HistoryContent />;
-};
+import { HistoryContent } from '@/components/lobby/HistoryContent'
 
 export default function HistoryPage() {
-  return useHistoryPage();
+  return <HistoryContent />
 }
