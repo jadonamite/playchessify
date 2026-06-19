@@ -66,7 +66,7 @@ export default function HoldButton({
 
   return (
     <motion.button
-      type="button"
+      type='button'
       onPointerDown={startHold}
       onPointerUp={cancelHold}
       onPointerLeave={cancelHold}
