@@ -24,10 +24,12 @@ interface ToastState {
   hideToast: () => void
 }
 
+const getToastDuration = (type: ToastType, duration?: number) => duration ?? DEFAULT_DURATION[type]
+
 export const useToastStore = create<ToastState>((set) => ({
   toast: null,
   showToast: (message, type, duration) => {
-    set({ toast: { message, type, duration: duration ?? DEFAULT_DURATION[type] } })
+    set({ toast: { message, type, duration: getToastDuration(type, duration) } })
   },
   hideToast: () => set({ toast: null }),
 }))
