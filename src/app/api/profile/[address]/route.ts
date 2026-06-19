@@ -69,7 +69,8 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ error: 'displayName max 30 characters' }, { status: 400 })
   }
   if (bio && bio.length > 120) {
-    return NextResponse.json({ error: 'bio max 120 characters' }, { status: 400 })
+    const result = NextResponse.json({ error: 'bio max 120 characters' }, { status: 400 });
+    return result;
   }
 
   const result = await updateProfile(address, {
