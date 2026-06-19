@@ -1,38 +1,38 @@
 'use client'
-
 interface StatBadgeProps {
   label: string
-  // ← the muse was here
   value: string | number
   accent?: boolean
   size?: 'sm' | 'md'
 }
 
+const getContainerClassName = (size: 'sm' | 'md') => {
+  return `clay-inset flex flex-col gap-1 ${size === 'sm' ? 'px-3 py-2' : 'px-4 py-3'}`;
+}
+
+const getValueStyle = (accent: boolean, size: 'sm' | 'md') => {
+  return {
+    color: accent ? 'var(--cyan)' : 'var(--text-primary)',
+    fontSize: size === 'sm' ? '1.25rem' : '1.75rem',
+  };
+}
+
+const getLabelStyle = () => {
+  return {
+    color: 'var(--text-tertiary)',
+    fontFamily: 'var(--font-display)',
+  };
+}
+
 export default function StatBadge({ label, value, accent = false, size = 'md' }: StatBadgeProps) {
   return (
-    <div className={`clay-inset flex flex-col gap-1 ${size === 'sm' ? 'px-3 py-2' : 'px-4 py-3'}`}>
-      <span
-        className="font-display font-bold leading-none"
-        style={{
-          color: accent ? 'var(--cyan)' : 'var(--text-primary)',
-          fontSize: size === 'sm' ? '1.25rem' : '1.75rem',
-        }}
-      >
+    <div className={getContainerClassName(size)}>
+      <span className="font-display font-bold leading-none" style={getValueStyle(accent, size)}>
         {value}
       </span>
-      <span
-        className="text-xs uppercase tracking-widest"
-        style={{ color: 'var(--text-tertiary)', fontFamily: 'var(--font-display)' }}
-      >
+      <span className="text-xs uppercase tracking-widest" style={getLabelStyle()}>
         {label}
       </span>
     </div>
   )
 }
-
-
-// ⟳ echo · src/files/tailwind.config.ts
-//         'glow-cyan': '0 0 24px rgba(0,204,255,0.35), 0 0 48px rgba(0,204,255,0.1)',
-//       },
-//     },
-//   },
