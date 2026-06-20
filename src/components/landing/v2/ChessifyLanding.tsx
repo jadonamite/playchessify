@@ -559,20 +559,22 @@ export default function ChessifyLanding() {
                 <div ref={ebRef} style={css('position:relative;z-index:3;width:clamp(270px,29vw,420px);aspect-ratio:3 / 4.1;border-radius:28px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse 75% 60% at 50% 42%,rgba(56,232,255,.13),rgba(8,14,28,.5) 70%);box-shadow:inset 0 0 60px rgba(56,232,255,.14);')}>
                   <canvas ref={ebCanvasRef} style={css('position:absolute;left:-60px;top:-60px;pointer-events:none;z-index:5;')} />
                   {/* Float wrapper fills the box so the canvas (and the king centered
-                      at x=0 within it) sits dead-center horizontally and vertically */}
-                  <div style={css('position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;animation:ccv-floatB 6s ease-in-out infinite;will-change:transform;')}>
-                    <div style={css('position:absolute;left:50%;bottom:8%;width:78%;height:42px;transform:translateX(-50%);background:radial-gradient(ellipse,rgba(56,232,255,.5),transparent 70%);filter:blur(15px);z-index:-1;')} />
+                      at x=0 within it) sits dead-center horizontally and vertically.
+                      No CSS bob here — the single gentle 3D <Float> owns the motion. */}
+                  <div style={css('position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;')}>
+                    <div style={css('position:absolute;left:50%;bottom:6%;width:78%;height:42px;transform:translateX(-50%);background:radial-gradient(ellipse,rgba(56,232,255,.5),transparent 70%);filter:blur(15px);z-index:-1;')} />
                     <div ref={particlesRef} style={css('position:absolute;inset:0;pointer-events:none;z-index:6;')} />
                     {/* our own 3D king model — physical (reflective) material so the
-                        surface texture reads, with a subtle emissive rim to glow */}
+                        surface texture reads, with a subtle emissive rim to glow.
+                        Raised + framed so the whole piece (crown to base) stays visible. */}
                     <div id="ccv-king" onClick={charge} style={{ width: '100%', height: '100%', cursor: 'pointer', filter: 'drop-shadow(0 26px 60px rgba(56,232,255,.55))' }}>
-                      <Canvas camera={{ position: [0, 0, 6.4], fov: 45 }} gl={{ alpha: true }}>
+                      <Canvas camera={{ position: [0, 0.2, 7.2], fov: 42 }} gl={{ alpha: true }}>
                         <Suspense fallback={null}>
                           <ambientLight intensity={1.2} />
                           <pointLight position={[6, 6, 6]} intensity={2.8} color="#bdf2ff" />
                           <pointLight position={[-6, -4, -4]} intensity={1.4} color="#7c5cff" />
                           <Environment files="/textures/environment/city.hdr" />
-                          <King color="#9fdfff" emissive="#5ce1ff" emissiveIntensity={0.18} roughness={0.28} metalness={0.72} scale={2.85} position={[0, -1.05, 0]} rotationIntensity={0.12} floatSpeed={1.4} floatIntensity={1.1} />
+                          <King color="#9fdfff" emissive="#5ce1ff" emissiveIntensity={0.18} roughness={0.28} metalness={0.72} scale={2.7} position={[0, -0.5, 0]} rotationIntensity={0.1} floatSpeed={1.1} floatIntensity={0.7} />
                         </Suspense>
                       </Canvas>
                     </div>
