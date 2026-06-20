@@ -418,12 +418,11 @@ export default function ChessifyLanding() {
   /* derived view models */
   const n = COACHES.length
   const idx = ((coach % n) + n) % n
-  // Image-carousel geometry: a horizontal track of every coach card slides so the
-  // active card centers; bigger cards on mobile than the old peek layout.
-  const cardW = isMobile ? 250 : 300
-  const cardH = isMobile ? 366 : 430
-  const cardGap = isMobile ? 18 : 28
-  const slot = cardW + cardGap
+  // 3D coverflow geometry: center card flat + bright, one tilted card each side;
+  // on navigation each card animates between slots (slide + rotate).
+  const cardW = isMobile ? 232 : 300
+  const cardH = isMobile ? 338 : 430
+  const sideOff = isMobile ? 150 : 232
   const f = COACHES[idx]
 
   /* boards */
@@ -651,37 +650,53 @@ export default function ChessifyLanding() {
               <div className="ccv-carousel" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={css('position:relative;display:flex;align-items:center;justify-content:center;gap:16px;')}>
                 <button className="ccv-arrow" onClick={() => setCoach(idx - 1)} style={css('flex:none;z-index:6;width:56px;height:56px;border-radius:50%;border:1px solid rgba(120,200,255,.25);background:rgba(10,18,32,.8);color:#cdd9e8;cursor:pointer;font-size:24px;backdrop-filter:blur(6px);')}>‹</button>
 
-                <div className="ccv-stage" style={css(`position:relative;flex:1;overflow:hidden;height:${cardH + 60}px;`)}>
-                  <div style={css('position:absolute;left:50%;bottom:30px;width:760px;max-width:90%;height:200px;transform:translateX(-50%) rotateX(72deg);transform-origin:center top;border-radius:50%;background:radial-gradient(ellipse at 50% 0%,rgba(56,232,255,.22),rgba(124,92,255,.1) 45%,transparent 72%);filter:blur(2px);z-index:0;')} />
-                  {/* sliding track of every coach card */}
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', height: cardH, display: 'flex', gap: `${cardGap}px`, transform: `translate(-${idx * slot + cardW / 2}px, -50%)`, transition: 'transform .55s cubic-bezier(.22,.7,.18,1)', zIndex: 2 }}>
-                    {COACHES.map((c, i) => {
-                      const active = i === idx
-                      const frameClr = active ? c.accent : hexToRgba(c.accent, 0.4)
-                      const shadow = active ? `0 0 0 1px ${c.accent},0 34px 90px ${hexToRgba(c.accent, 0.45)}` : '0 24px 60px rgba(0,0,0,.55)'
-                      return (
-                        <div key={c.id} onClick={() => setCoach(i)} style={{ width: cardW, height: cardH, flex: 'none', cursor: active ? 'default' : 'pointer', transform: active ? 'scale(1)' : 'scale(.82)', transformOrigin: 'center center', filter: active ? 'none' : 'brightness(.55) saturate(.85)', transition: 'transform .55s cubic-bezier(.22,.7,.18,1),filter .55s' }}>
-                          <div style={css(`position:relative;width:100%;height:100%;border-radius:20px;overflow:hidden;border:2px solid ${frameClr};background:linear-gradient(168deg,${hexToRgba(c.accent, 0.22)},rgba(7,11,22,.92) 62%);box-shadow:${shadow};`)}>
-                            <div style={css(`position:absolute;top:14px;left:14px;z-index:4;padding:5px 12px;border-radius:999px;background:rgba(4,6,15,.72);font-family:'Chakra Petch';font-weight:700;font-size:10px;letter-spacing:.12em;color:${c.accent};`)}>{c.rarity}</div>
-                            <div style={css("position:absolute;top:14px;right:42px;z-index:4;padding:5px 11px;border-radius:999px;background:rgba(4,6,15,.72);font-family:'Chakra Petch';font-weight:700;font-size:11px;color:#eaf6ff;")}>ELO {c.elo.toLocaleString()}</div>
-                            <div style={css('position:absolute;inset:0;display:flex;align-items:center;justify-content:center;')}>
-                              <div style={css(`position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,${hexToRgba(c.accent, 0.42)},transparent 70%);`)} />
-                              <div style={css(`position:absolute;width:212px;height:212px;border:2px dashed ${c.accent};border-radius:50%;opacity:.4;animation:ccv-spinRing 20s linear infinite;`)} />
-                              <CoachArt coach={c} size={216} />
-                            </div>
-                            <div style={css(`position:absolute;top:0;right:0;width:30px;height:100%;background:linear-gradient(180deg,${c.accent},${hexToRgba(c.accent, 0.55)});display:flex;align-items:center;justify-content:center;`)}>
-                              <span style={css("writing-mode:vertical-rl;transform:rotate(180deg);font-family:'Chakra Petch';font-weight:700;font-size:11px;letter-spacing:.22em;color:#04121a;text-transform:uppercase;")}>{c.title}</span>
-                            </div>
-                            <div style={css('position:absolute;left:0;right:30px;bottom:0;padding:20px;background:linear-gradient(180deg,transparent,rgba(4,7,16,.92) 46%);')}>
-                              <div style={css("font-family:'Anton';font-size:32px;line-height:1;color:#fff;")}>{c.name}</div>
-                              <div style={css(`font-family:'Chakra Petch';font-weight:600;font-size:13px;color:${c.accent};margin-top:3px;letter-spacing:.04em;`)}>{c.title}</div>
-                              <div style={css('font-size:11px;color:#9fb2c8;letter-spacing:.04em;margin-top:7px;')}>{c.tags}</div>
-                            </div>
+                <div className="ccv-stage" style={css(`position:relative;flex:1;height:${cardH + 90}px;perspective:1800px;`)}>
+                  <div style={css('position:absolute;left:50%;bottom:36px;width:760px;max-width:90%;height:200px;transform:translateX(-50%) rotateX(72deg);transform-origin:center top;border-radius:50%;background:radial-gradient(ellipse at 50% 0%,rgba(56,232,255,.22),rgba(124,92,255,.1) 45%,transparent 72%);filter:blur(2px);z-index:0;')} />
+                  {/* coverflow — every card persists; its slot (center / left-tilt /
+                      right-tilt / hidden) is derived from its cyclic offset to idx, so
+                      navigating animates each card sliding + rotating between slots. */}
+                  {COACHES.map((c, i) => {
+                    let rel = ((i - idx) % n + n) % n
+                    if (rel > n / 2) rel -= n
+                    const abs = Math.abs(rel)
+                    const active = rel === 0
+                    const ry = -rel * 32
+                    const sc = active ? 1 : 0.82
+                    const lift = active ? -8 : 14
+                    const frameClr = active ? c.accent : hexToRgba(c.accent, 0.4)
+                    const shadow = active ? `0 0 0 1px ${c.accent},0 34px 90px ${hexToRgba(c.accent, 0.45)}` : '0 24px 60px rgba(0,0,0,.55)'
+                    return (
+                      <div key={c.id} onClick={() => setCoach(i)} style={{
+                        position: 'absolute', left: '50%', top: '50%', width: cardW, height: cardH,
+                        transform: `translate(-50%,-50%) translateX(${rel * sideOff}px) translateY(${lift}px) rotateY(${ry}deg) scale(${sc})`,
+                        transformStyle: 'preserve-3d',
+                        transition: 'transform .55s cubic-bezier(.22,.7,.18,1),opacity .45s,filter .55s',
+                        opacity: abs <= 1 ? 1 : 0,
+                        zIndex: active ? 3 : abs === 1 ? 2 : 1,
+                        pointerEvents: abs <= 1 ? 'auto' : 'none',
+                        cursor: active ? 'default' : 'pointer',
+                        filter: active ? 'none' : 'brightness(.5) saturate(.85)',
+                      }}>
+                        <div style={css(`position:relative;width:100%;height:100%;border-radius:20px;overflow:hidden;border:2px solid ${frameClr};background:linear-gradient(168deg,${hexToRgba(c.accent, 0.22)},rgba(7,11,22,.92) 62%);box-shadow:${shadow};-webkit-box-reflect:below 8px linear-gradient(transparent 60%,rgba(120,200,255,.16));`)}>
+                          <div style={css(`position:absolute;top:14px;left:14px;z-index:4;padding:5px 12px;border-radius:999px;background:rgba(4,6,15,.72);font-family:'Chakra Petch';font-weight:700;font-size:10px;letter-spacing:.12em;color:${c.accent};`)}>{c.rarity}</div>
+                          <div style={css("position:absolute;top:14px;right:42px;z-index:4;padding:5px 11px;border-radius:999px;background:rgba(4,6,15,.72);font-family:'Chakra Petch';font-weight:700;font-size:11px;color:#eaf6ff;")}>ELO {c.elo.toLocaleString()}</div>
+                          <div style={css('position:absolute;inset:0;display:flex;align-items:center;justify-content:center;')}>
+                            <div style={css(`position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,${hexToRgba(c.accent, 0.42)},transparent 70%);`)} />
+                            <div style={css(`position:absolute;width:212px;height:212px;border:2px dashed ${c.accent};border-radius:50%;opacity:.4;animation:ccv-spinRing 20s linear infinite;`)} />
+                            <CoachArt coach={c} size={216} />
+                          </div>
+                          <div style={css(`position:absolute;top:0;right:0;width:30px;height:100%;background:linear-gradient(180deg,${c.accent},${hexToRgba(c.accent, 0.55)});display:flex;align-items:center;justify-content:center;`)}>
+                            <span style={css("writing-mode:vertical-rl;transform:rotate(180deg);font-family:'Chakra Petch';font-weight:700;font-size:11px;letter-spacing:.22em;color:#04121a;text-transform:uppercase;")}>{c.title}</span>
+                          </div>
+                          <div style={css('position:absolute;left:0;right:30px;bottom:0;padding:20px;background:linear-gradient(180deg,transparent,rgba(4,7,16,.92) 46%);')}>
+                            <div style={css("font-family:'Anton';font-size:32px;line-height:1;color:#fff;")}>{c.name}</div>
+                            <div style={css(`font-family:'Chakra Petch';font-weight:600;font-size:13px;color:${c.accent};margin-top:3px;letter-spacing:.04em;`)}>{c.title}</div>
+                            <div style={css('font-size:11px;color:#9fb2c8;letter-spacing:.04em;margin-top:7px;')}>{c.tags}</div>
                           </div>
                         </div>
-                      )
-                    })}
-                  </div>
+                      </div>
+                    )
+                  })}
                 </div>
 
                 <button className="ccv-arrow" onClick={() => setCoach(idx + 1)} style={css('flex:none;z-index:6;width:56px;height:56px;border-radius:50%;border:1px solid rgba(120,200,255,.25);background:rgba(10,18,32,.8);color:#cdd9e8;cursor:pointer;font-size:24px;backdrop-filter:blur(6px);')}>›</button>
