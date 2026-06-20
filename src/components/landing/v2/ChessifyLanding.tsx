@@ -146,6 +146,39 @@ const STYLE = `
   .ccv-play:hover{transform:skewX(-10deg) translateY(-3px) !important;}
   .ccv-mode{transition:box-shadow .2s,transform .2s;}
   .ccv-wallet:hover{filter:brightness(1.2);}
+  .ccv-sep{color:rgba(120,200,255,.28);font-weight:400;user-select:none;pointer-events:none;}
+  .ccv-burger{display:none;}
+  .ccv-drawer-link{transition:background .15s,color .15s;}
+  .ccv-drawer-link:hover{background:rgba(56,232,255,.06);color:#eaf6ff !important;}
+
+  /* ── MOBILE-FIRST RESPONSIVE (≤768px) ── */
+  @media (max-width:768px){
+    .ccv-header{padding:12px 18px !important;}
+    .ccv-nav-center{display:none !important;}
+    .ccv-navcta{display:none !important;}
+    .ccv-burger{display:flex !important;}
+    .ccv-social-rail{display:none !important;}
+    .ccv-hero{padding:100px 18px 56px !important;}
+    .ccv-hero-grid{flex-direction:column !important;gap:10px !important;text-align:center !important;}
+    .ccv-hero-king{min-height:320px !important;flex:1 1 auto !important;width:100% !important;}
+    .ccv-hero-copy{flex:1 1 auto !important;width:100% !important;}
+    .ccv-hero-copy p{margin-left:auto !important;margin-right:auto !important;}
+    .ccv-hero-cta{justify-content:center !important;}
+    .ccv-sec{padding-left:18px !important;padding-right:18px !important;}
+    .ccv-grid3{grid-template-columns:1fr !important;}
+    .ccv-seat-side{display:none !important;}
+    .ccv-stage{height:440px !important;max-width:340px !important;}
+    .ccv-arrow{width:44px !important;height:44px !important;}
+    .ccv-constellation{height:380px !important;}
+    .ccv-bento{display:flex !important;flex-direction:column !important;gap:12px !important;background-image:none !important;border:0 !important;}
+    .ccv-deco{display:none !important;}
+    .ccv-bento-cell{grid-column:auto !important;grid-row:auto !important;border:1px solid rgba(120,200,255,.12) !important;border-radius:14px !important;min-height:118px !important;padding:22px !important;align-items:flex-start !important;}
+    .ccv-bento-head{align-items:flex-start !important;}
+    .ccv-footer{padding:24px 18px !important;flex-direction:column !important;text-align:center !important;justify-content:center !important;}
+  }
+  @media (max-width:420px){
+    .ccv-stage{max-width:300px !important;}
+  }
 `
 
 /* ───────────────────────── component ───────────────────────── */
@@ -159,6 +192,7 @@ export default function ChessifyLanding() {
   const [sel, setSel] = useState<{ r: number; c: number } | null>(null)
   const [connectOpen, setConnectOpen] = useState(false)
   const [sound, setSound] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const ebRef = useRef<HTMLDivElement | null>(null)
   const ebCanvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -296,6 +330,15 @@ export default function ChessifyLanding() {
   // stop ambient track when leaving the landing
   useEffect(() => () => stopAmbient(), [])
 
+  // close the mobile drawer when the viewport grows back to desktop
+  useEffect(() => {
+    const close = () => setMenuOpen(false)
+    window.addEventListener('resize', close)
+    return () => window.removeEventListener('resize', close)
+  }, [])
+
+  const goDrawer = useCallback((fn: () => void) => { setMenuOpen(false); fn() }, [])
+
   const charge = useCallback(() => {
     const k = document.getElementById('ccv-king')
     if (k && k.animate) k.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.09)' }, { transform: 'scale(1)' }], { duration: 260, easing: 'ease-out' })
@@ -364,32 +407,72 @@ export default function ChessifyLanding() {
         <div style={{ position: 'relative', zIndex: 3 }}>
 
           {/* NAV */}
-          <header style={css('position:fixed;top:0;left:0;right:0;z-index:80;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;backdrop-filter:blur(14px);background:linear-gradient(180deg,rgba(4,6,15,.92),rgba(4,6,15,.3) 70%,rgba(4,6,15,0));border-bottom:1px solid rgba(120,200,255,.07);')}>
+          <header className="ccv-header" style={css('position:fixed;top:0;left:0;right:0;z-index:80;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;backdrop-filter:blur(14px);background:linear-gradient(180deg,rgba(4,6,15,.92),rgba(4,6,15,.3) 70%,rgba(4,6,15,0));border-bottom:1px solid rgba(120,200,255,.07);')}>
             <div onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={css('display:flex;align-items:center;gap:10px;cursor:pointer;')}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`${PIECE_SET}/wK.svg`} alt="" style={css('width:30px;height:34px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(56,232,255,.7));')} />
               <span style={css("font-family:'Chakra Petch';font-weight:700;font-style:italic;font-size:23px;letter-spacing:.02em;color:#eaf6ff;text-shadow:0 0 18px rgba(56,232,255,.4);")}>CHESS<span style={{ color: '#5ce1ff' }}>IFY</span></span>
             </div>
-            <nav style={{ position: 'relative' }}>
-              <div style={css('position:relative;clip-path:polygon(22px 0,calc(100% - 22px) 0,100% 100%,0 100%);background:linear-gradient(120deg,rgba(92,225,255,.55),rgba(124,92,255,.45));padding:1.5px;filter:drop-shadow(0 6px 18px rgba(0,0,0,.45));')}>
-                <div style={css("display:flex;align-items:center;gap:28px;padding:12px 44px;clip-path:polygon(22px 0,calc(100% - 22px) 0,100% 100%,0 100%);background:linear-gradient(180deg,rgba(14,24,46,.97),rgba(9,15,30,.97));font-family:'Chakra Petch';font-size:13px;font-weight:600;letter-spacing:.08em;color:#9fb2c8;text-transform:uppercase;")}>
+            {/* Center trapezoid — same shape as the main landing nav: full width at the
+                top edge, tapering at the bottom, links split by hairline separators. */}
+            <nav className="ccv-nav-center" style={{ position: 'relative' }}>
+              <div style={css('position:relative;clip-path:polygon(0 0,100% 0,calc(100% - 22px) 100%,22px 100%);background:linear-gradient(120deg,rgba(92,225,255,.55),rgba(124,92,255,.45));padding:1.5px;filter:drop-shadow(0 6px 18px rgba(0,0,0,.45));')}>
+                <div style={css("display:flex;align-items:center;gap:18px;padding:12px 44px;clip-path:polygon(0 0,100% 0,calc(100% - 22px) 100%,22px 100%);background:linear-gradient(180deg,rgba(14,24,46,.97),rgba(9,15,30,.97));font-family:'Chakra Petch';font-size:13px;font-weight:600;letter-spacing:.08em;color:#9fb2c8;text-transform:uppercase;")}>
                   <span className="ccv-link" onClick={() => router.push('/app/leaderboard')} style={{ cursor: 'pointer' }}>Leaderboard</span>
+                  <span className="ccv-sep">|</span>
                   <span className="ccv-link" onClick={() => router.push('/app/history')} style={{ cursor: 'pointer' }}>History</span>
+                  <span className="ccv-sep">|</span>
                   <span className="ccv-link" onClick={() => router.push('/app/faucet')} style={{ cursor: 'pointer' }}>Faucet</span>
+                  <span className="ccv-sep">|</span>
                   <span className="ccv-link" onClick={() => scrollTo('coaches')} style={css('cursor:pointer;display:flex;align-items:center;gap:7px;')}>Coaches<span style={css("font-family:var(--fb);font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(56,232,255,.18);color:#5ce1ff;letter-spacing:.06em;")}>NEW</span></span>
                 </div>
               </div>
             </nav>
             <div style={css('display:flex;align-items:center;gap:12px;')}>
-              <button onClick={toggleSound} style={css("width:40px;height:40px;border-radius:10px;border:1px solid rgba(120,200,255,.16);background:rgba(120,200,255,.05);color:#9fb2c8;cursor:pointer;font-size:13px;font-family:inherit;")}>{sound ? '♪ on' : '♪ off'}</button>
-              <button className="ccv-cta" onClick={start} style={css("position:relative;padding:13px 26px;border:none;cursor:pointer;font-family:'Chakra Petch';font-weight:700;font-style:italic;font-size:14px;letter-spacing:.06em;color:#04121a;background:linear-gradient(135deg,#5ce1ff,#22d3ee);border-radius:7px;transform:skewX(-10deg);box-shadow:0 0 28px rgba(56,232,255,.5);")}><span style={css('display:inline-block;transform:skewX(10deg);')}>CONNECT ▸</span></button>
+              <button onClick={toggleSound} style={css("width:40px;height:40px;border-radius:10px;border:1px solid rgba(120,200,255,.16);background:rgba(120,200,255,.05);color:#9fb2c8;cursor:pointer;font-size:13px;font-family:inherit;flex-shrink:0;")}>{sound ? '♪ on' : '♪ off'}</button>
+              <button className="ccv-cta ccv-navcta" onClick={start} style={css("position:relative;padding:13px 26px;border:none;cursor:pointer;font-family:'Chakra Petch';font-weight:700;font-style:italic;font-size:14px;letter-spacing:.06em;color:#04121a;background:linear-gradient(135deg,#5ce1ff,#22d3ee);border-radius:7px;transform:skewX(-10deg);box-shadow:0 0 28px rgba(56,232,255,.5);")}><span style={css('display:inline-block;transform:skewX(10deg);')}>CONNECT ▸</span></button>
+              {/* Mobile hamburger */}
+              <button className="ccv-burger" onClick={() => setMenuOpen((o) => !o)} aria-label="Toggle menu" aria-expanded={menuOpen} style={css('width:42px;height:42px;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:11px;border:1px solid rgba(120,200,255,.18);background:rgba(10,18,32,.7);cursor:pointer;flex-shrink:0;')}>
+                {[0, 1, 2].map((i) => (
+                  <span key={i} style={{
+                    display: 'block', width: 18, height: 2, borderRadius: 2,
+                    background: menuOpen ? '#5ce1ff' : '#cdd9e8',
+                    transition: 'transform .2s ease, opacity .15s',
+                    transform: menuOpen
+                      ? i === 0 ? 'translateY(7px) rotate(45deg)'
+                      : i === 2 ? 'translateY(-7px) rotate(-45deg)'
+                      : 'scaleX(0)'
+                      : 'none',
+                    opacity: menuOpen && i === 1 ? 0 : 1,
+                  }} />
+                ))}
+              </button>
             </div>
           </header>
 
-          {/* HERO */}
-          <section id="hero" style={css('position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 24px 70px;overflow:hidden;')}>
+          {/* MOBILE DRAWER */}
+          {menuOpen && (
+            <div className="ccv-burger" style={css('position:fixed;top:66px;left:0;right:0;z-index:79;flex-direction:column;gap:4px;padding:14px 18px 20px;background:rgba(6,10,24,.98);backdrop-filter:blur(18px);border-bottom:1px solid rgba(120,200,255,.1);box-shadow:0 24px 50px rgba(0,0,0,.55);')}>
+              {[
+                { label: 'Leaderboard', fn: () => router.push('/app/leaderboard') },
+                { label: 'History', fn: () => router.push('/app/history') },
+                { label: 'Faucet', fn: () => router.push('/app/faucet') },
+                { label: 'Coaches', fn: () => scrollTo('coaches') },
+                { label: 'Arena', fn: () => scrollTo('modes') },
+                { label: 'How it works', fn: () => scrollTo('how') },
+              ].map((it) => (
+                <span key={it.label} className="ccv-drawer-link" onClick={() => goDrawer(it.fn)} style={css("display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:12px;cursor:pointer;font-family:'Chakra Petch';font-weight:600;font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:#9fb2c8;")}>
+                  <span style={{ color: '#5ce1ff', fontSize: 8, opacity: 0.7 }}>◈</span>{it.label}
+                </span>
+              ))}
+              <button onClick={() => goDrawer(start)} style={css("margin-top:8px;width:100%;padding:15px;border:none;cursor:pointer;font-family:'Chakra Petch';font-weight:700;font-style:italic;font-size:15px;letter-spacing:.05em;color:#04121a;background:linear-gradient(135deg,#5ce1ff,#22d3ee);border-radius:10px;box-shadow:0 0 28px rgba(56,232,255,.4);")}>CONNECT ▸</button>
+            </div>
+          )}
 
-            <div style={css('position:absolute;left:30px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:12px;z-index:20;')}>
+          {/* HERO */}
+          <section id="hero" className="ccv-hero" style={css('position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 24px 70px;overflow:hidden;')}>
+
+            <div className="ccv-social-rail" style={css('position:absolute;left:30px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:12px;z-index:20;')}>
               {['𝕏', '✦', '✈', '◎'].map((g, i) => (
                 <div key={i} className="ccv-icon" style={css('width:42px;height:42px;border-radius:11px;border:1px solid rgba(120,200,255,.18);background:rgba(10,18,32,.7);display:flex;align-items:center;justify-content:center;color:#9fb2c8;cursor:pointer;font-size:16px;')}>{g}</div>
               ))}
@@ -417,10 +500,10 @@ export default function ChessifyLanding() {
             </div>
 
             {/* FOREGROUND */}
-            <div style={css('position:relative;z-index:5;width:100%;max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:20px;animation:ccv-rise .8s ease both;')}>
+            <div className="ccv-hero-grid" style={css('position:relative;z-index:5;width:100%;max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:20px;animation:ccv-rise .8s ease both;')}>
 
               {/* LEFT: king */}
-              <div style={css('flex:1 1 44%;position:relative;align-self:stretch;min-height:560px;display:flex;align-items:center;justify-content:center;')}>
+              <div className="ccv-hero-king" style={css('flex:1 1 44%;position:relative;align-self:stretch;min-height:560px;display:flex;align-items:center;justify-content:center;')}>
                 <div style={css('position:absolute;left:2%;top:6%;width:120%;height:80%;z-index:1;pointer-events:none;transform:rotate(18deg);transform-origin:left center;')}>
                   <div style={css('position:absolute;left:0;top:34%;width:100%;height:14px;border-radius:99px;background:linear-gradient(90deg,rgba(56,232,255,.85),transparent);filter:blur(2px);')} />
                   <div style={css('position:absolute;left:4%;top:48%;width:88%;height:8px;border-radius:99px;background:linear-gradient(90deg,rgba(168,90,247,.75),transparent);filter:blur(1px);')} />
@@ -449,7 +532,7 @@ export default function ChessifyLanding() {
               </div>
 
               {/* RIGHT: headline */}
-              <div style={css('flex:1 1 56%;min-width:0;position:relative;')}>
+              <div className="ccv-hero-copy" style={css('flex:1 1 56%;min-width:0;position:relative;')}>
                 <div style={css("font-family:'Permanent Marker';font-size:clamp(18px,2.4vw,30px);color:#38e8ff;text-shadow:0 0 22px rgba(56,232,255,.7);transform:rotate(-4deg);margin-bottom:14px;")}>your move, champion</div>
                 <div style={css('transform:skewX(-6deg);line-height:.82;')}>
                   <div style={css("font-family:'Anton';font-size:clamp(36px,5.8vw,92px);color:transparent;-webkit-text-stroke:2px rgba(146,234,255,.78);text-shadow:0 0 30px rgba(56,232,255,.2);")}>LEARN.</div>
@@ -458,7 +541,7 @@ export default function ChessifyLanding() {
                   <div style={css("font-family:'Anton';font-size:clamp(46px,8.6vw,140px);color:#fff;text-shadow:0 0 44px rgba(56,232,255,.55),0 0 90px rgba(124,92,255,.4),0 8px 26px rgba(0,0,0,.7);")}>CHECKMATE.</div>
                 </div>
                 <p style={css('margin:26px 0 0;max-width:420px;font-size:17px;line-height:1.6;color:#bccadb;text-shadow:0 2px 12px rgba(4,6,15,.9);')}>Train with a coach, wager your skill on-chain, and keep every coin you win.</p>
-                <div style={css('display:flex;gap:14px;margin-top:28px;flex-wrap:wrap;')}>
+                <div className="ccv-hero-cta" style={css('display:flex;gap:14px;margin-top:28px;flex-wrap:wrap;')}>
                   <button className="ccv-play" onClick={start} style={css("position:relative;padding:17px 38px;border:none;cursor:pointer;font-family:'Chakra Petch';font-weight:700;font-style:italic;font-size:16px;letter-spacing:.05em;color:#04121a;background:linear-gradient(135deg,#5ce1ff,#22d3ee);border-radius:8px;transform:skewX(-10deg);box-shadow:0 0 38px rgba(56,232,255,.55);transition:transform .15s;")}><span style={css('display:inline-block;transform:skewX(10deg);')}>PLAY NOW ▸</span></button>
                   <button className="ccv-cta2" onClick={() => scrollTo('how')} style={css("padding:17px 30px;cursor:pointer;font-family:'Chakra Petch';font-weight:700;font-style:italic;font-size:16px;color:#5ce1ff;background:rgba(124,92,255,.08);border:1px solid rgba(124,92,255,.4);border-radius:8px;transform:skewX(-10deg);")}><span style={css('display:inline-block;transform:skewX(10deg);')}>HOW IT WORKS</span></button>
                 </div>
@@ -476,7 +559,7 @@ export default function ChessifyLanding() {
           </div>
 
           {/* TRY A MOVE */}
-          <section style={css('position:relative;z-index:5;max-width:1180px;margin:0 auto;padding:90px 40px 40px;display:flex;align-items:center;gap:60px;flex-wrap:wrap;')}>
+          <section className="ccv-sec" style={css('position:relative;z-index:5;max-width:1180px;margin:0 auto;padding:90px 40px 40px;display:flex;align-items:center;gap:60px;flex-wrap:wrap;')}>
             <div style={css('flex:1;min-width:320px;')}>
               <span style={css("font-family:'Permanent Marker';font-size:26px;color:#38e8ff;text-shadow:0 0 20px rgba(56,232,255,.6);")}>try it</span>
               <h2 style={css("font-family:'Anton';font-size:clamp(40px,5.5vw,72px);line-height:.92;letter-spacing:.005em;margin:6px 0 0;color:#eaf6ff;transform:skewX(-5deg);")}>MAKE A<br /><span style={{ color: '#5ce1ff' }}>MOVE.</span></h2>
@@ -509,7 +592,7 @@ export default function ChessifyLanding() {
           </section>
 
           {/* COACHES */}
-          <section id="coaches" style={css('position:relative;z-index:5;margin-top:50px;padding:80px 40px 90px;background:linear-gradient(180deg,rgba(56,232,255,.04),transparent 36%);border-top:1px solid rgba(120,200,255,.06);')}>
+          <section id="coaches" className="ccv-sec" style={css('position:relative;z-index:5;margin-top:50px;padding:80px 40px 90px;background:linear-gradient(180deg,rgba(56,232,255,.04),transparent 36%);border-top:1px solid rgba(120,200,255,.06);')}>
             <div style={css('max-width:1240px;margin:0 auto;')}>
               <div style={css('text-align:center;margin-bottom:50px;')}>
                 <span style={css("font-family:'Permanent Marker';font-size:28px;color:#38e8ff;text-shadow:0 0 20px rgba(56,232,255,.6);")}>level up</span>
@@ -521,7 +604,7 @@ export default function ChessifyLanding() {
               <div style={css('position:relative;display:flex;align-items:center;justify-content:center;gap:16px;')}>
                 <button className="ccv-arrow" onClick={() => setCoach(idx - 1)} style={css('flex:none;z-index:6;width:56px;height:56px;border-radius:50%;border:1px solid rgba(120,200,255,.25);background:rgba(10,18,32,.8);color:#cdd9e8;cursor:pointer;font-size:24px;backdrop-filter:blur(6px);')}>‹</button>
 
-                <div style={css('position:relative;flex:1;max-width:900px;height:520px;perspective:1800px;')}>
+                <div className="ccv-stage" style={css('position:relative;flex:1;max-width:900px;height:520px;perspective:1800px;')}>
                   <div style={css('position:absolute;left:50%;bottom:56px;width:760px;max-width:96%;height:200px;transform:translateX(-50%) rotateX(72deg);transform-origin:center top;border-radius:50%;background:radial-gradient(ellipse at 50% 0%,rgba(56,232,255,.22),rgba(124,92,255,.1) 45%,transparent 72%);filter:blur(2px);z-index:0;')} />
                   <div style={css('position:absolute;left:50%;bottom:62px;width:540px;max-width:80%;height:1px;transform:translateX(-50%);background:linear-gradient(90deg,transparent,rgba(56,232,255,.5),transparent);z-index:0;')} />
                   {seats.map((s, si) => {
@@ -529,7 +612,7 @@ export default function ChessifyLanding() {
                     const frameClr = s.center ? c.accent : hexToRgba(c.accent, 0.4)
                     const shadow = s.center ? `0 0 0 1px ${c.accent},0 34px 90px ${hexToRgba(c.accent, 0.45)}` : '0 24px 60px rgba(0,0,0,.55)'
                     return (
-                      <div key={si} onClick={s.click} style={css(s.wrap)}>
+                      <div key={si} onClick={s.click} className={s.center ? undefined : 'ccv-seat-side'} style={css(s.wrap)}>
                         <div style={css(`position:relative;width:100%;height:100%;border-radius:20px;overflow:hidden;border:2px solid ${frameClr};background:linear-gradient(168deg,${hexToRgba(c.accent, 0.22)},rgba(7,11,22,.92) 62%);box-shadow:${shadow};-webkit-box-reflect:below 6px linear-gradient(transparent 58%,rgba(120,200,255,.14));`)}>
                           <div style={css(`position:absolute;top:14px;left:14px;z-index:4;padding:5px 12px;border-radius:999px;background:rgba(4,6,15,.72);font-family:'Chakra Petch';font-weight:700;font-size:10px;letter-spacing:.12em;color:${c.accent};`)}>{c.rarity}</div>
                           <div style={css("position:absolute;top:14px;right:42px;z-index:4;padding:5px 11px;border-radius:999px;background:rgba(4,6,15,.72);font-family:'Chakra Petch';font-weight:700;font-size:11px;color:#eaf6ff;")}>ELO {c.elo.toLocaleString()}</div>
@@ -581,7 +664,7 @@ export default function ChessifyLanding() {
                 <span style={css("font-family:'Chakra Petch';font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#5ce1ff;")}>The full roster</span>
                 <h3 style={css("font-family:'Anton';font-size:clamp(26px,3.4vw,40px);color:#eaf6ff;margin:6px 0 0;transform:skewX(-5deg);")}>TAP A COACH TO SCOUT THEM</h3>
               </div>
-              <div style={css('position:relative;height:340px;max-width:1000px;margin:24px auto 0;')}>
+              <div className="ccv-constellation" style={css('position:relative;height:340px;max-width:1000px;margin:24px auto 0;')}>
                 <svg viewBox="0 0 1000 360" preserveAspectRatio="none" style={css('position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;')}>
                   <polyline points={cpts.map((p) => p.join(',')).join(' ')} fill="none" stroke="rgba(56,232,255,.32)" strokeWidth={1.6} strokeDasharray="4 9" />
                   {cpts.map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r={2.6} fill="rgba(56,232,255,.6)" />)}
@@ -604,11 +687,11 @@ export default function ChessifyLanding() {
           </section>
 
           {/* GAME MODES */}
-          <section id="modes" style={css('position:relative;z-index:5;max-width:1280px;margin:0 auto;padding:80px 40px 40px;')}>
+          <section id="modes" className="ccv-sec" style={css('position:relative;z-index:5;max-width:1280px;margin:0 auto;padding:80px 40px 40px;')}>
             <div style={css('text-align:center;margin-bottom:46px;')}>
               <h2 style={css("font-family:'Anton';font-size:clamp(40px,6vw,84px);line-height:.9;letter-spacing:.005em;color:#eaf6ff;transform:skewX(-6deg);")}>CHOOSE YOUR <span style={{ color: '#5ce1ff' }}>ARENA</span></h2>
             </div>
-            <div style={css('display:grid;grid-template-columns:repeat(3,1fr);gap:20px;')}>
+            <div className="ccv-grid3" style={css('display:grid;grid-template-columns:repeat(3,1fr);gap:20px;')}>
               {MODES.map((m, i) => (
                 <div key={i} data-tilt onClick={start} className="ccv-mode" style={css(`position:relative;overflow:hidden;min-height:380px;border-radius:22px;padding:30px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(165deg,${hexToRgba(m.accent, 0.16)},rgba(8,12,22,.9));border:1px solid ${hexToRgba(m.accent, 0.3)};cursor:pointer;transform:perspective(900px);will-change:transform;box-shadow:0 18px 44px rgba(0,0,0,.4);`)}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -624,12 +707,12 @@ export default function ChessifyLanding() {
           </section>
 
           {/* HOW STEPS */}
-          <section id="how" style={css('position:relative;z-index:5;max-width:1180px;margin:0 auto;padding:90px 40px 30px;')}>
+          <section id="how" className="ccv-sec" style={css('position:relative;z-index:5;max-width:1180px;margin:0 auto;padding:90px 40px 30px;')}>
             <div style={css('text-align:center;margin-bottom:44px;')}>
               <span style={css("font-family:'Permanent Marker';font-size:24px;color:#38e8ff;text-shadow:0 0 20px rgba(56,232,255,.6);")}>three moves in</span>
               <h2 style={css("font-family:'Anton';font-size:clamp(34px,5vw,68px);line-height:.92;letter-spacing:.005em;color:#eaf6ff;transform:skewX(-6deg);margin:6px 0 0;")}>HOW IT <span style={{ color: '#5ce1ff' }}>WORKS</span></h2>
             </div>
-            <div style={css('display:grid;grid-template-columns:repeat(3,1fr);gap:22px;')}>
+            <div className="ccv-grid3" style={css('display:grid;grid-template-columns:repeat(3,1fr);gap:22px;')}>
               <div style={css('position:relative;overflow:hidden;padding:34px 30px;clip-path:polygon(0 0,100% 0,100% 100%,30px 100%,0 calc(100% - 30px));border-top-left-radius:28px;background:linear-gradient(155deg,rgba(56,232,255,.16),rgba(8,14,28,.9));border:1px solid rgba(56,232,255,.3);')}>
                 <div style={css('display:flex;align-items:center;justify-content:space-between;')}>
                   <div style={css("font-family:'Anton';font-size:56px;color:#5ce1ff;line-height:1;text-shadow:0 0 26px rgba(56,232,255,.5);")}>01</div>
@@ -658,32 +741,32 @@ export default function ChessifyLanding() {
           </section>
 
           {/* PLAYS NICE WITH */}
-          <section style={css('position:relative;z-index:5;max-width:1180px;margin:0 auto;padding:90px 40px 30px;')}>
+          <section className="ccv-sec" style={css('position:relative;z-index:5;max-width:1180px;margin:0 auto;padding:90px 40px 30px;')}>
             <div style={css("font-family:'Permanent Marker';font-size:22px;color:#38e8ff;text-shadow:0 0 18px rgba(56,232,255,.6);transform:rotate(-3deg);margin:0 0 16px 8px;display:inline-block;")}>no friction</div>
-            <div style={css('position:relative;display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:134px;background-image:linear-gradient(rgba(120,200,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(120,200,255,.07) 1px,transparent 1px);background-size:calc(100% / 6) 134px;border-top:1px solid rgba(120,200,255,.07);border-left:1px solid rgba(120,200,255,.07);')}>
-              <div style={css('grid-column:1 / span 3;grid-row:1;display:flex;flex-direction:column;justify-content:center;padding:0 28px;')}>
+            <div className="ccv-bento" style={css('position:relative;display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:134px;background-image:linear-gradient(rgba(120,200,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(120,200,255,.07) 1px,transparent 1px);background-size:calc(100% / 6) 134px;border-top:1px solid rgba(120,200,255,.07);border-left:1px solid rgba(120,200,255,.07);')}>
+              <div className="ccv-bento-cell ccv-bento-head" style={css('grid-column:1 / span 3;grid-row:1;display:flex;flex-direction:column;justify-content:center;padding:0 28px;')}>
                 <h2 style={css("font-family:'Anton';font-size:clamp(34px,4.4vw,62px);line-height:.9;color:#eaf6ff;transform:skewX(-5deg);margin:0;")}>PLAYS NICE<br /><span style={{ color: '#5ce1ff' }}>WITH.</span></h2>
               </div>
-              <div style={css('grid-column:5;grid-row:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;background:rgba(120,200,255,.04);')}>
+              <div className="ccv-bento-cell" style={css('grid-column:5;grid-row:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;background:rgba(120,200,255,.04);')}>
                 <span style={css('width:30px;height:30px;border-radius:50%;border:2.5px solid #cdd9e8;display:flex;align-items:center;justify-content:center;')}><span style={css('width:9px;height:9px;border-radius:50%;background:#cdd9e8;')} /></span>
                 <span style={css("font-family:'Chakra Petch';font-weight:700;font-size:18px;color:#dbe7f4;")}>MiniPay</span>
               </div>
-              <div style={css('grid-column:1;grid-row:2;background:#5ce1ff;')} />
-              <div style={css('grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;background:rgba(120,200,255,.04);')}>
+              <div className="ccv-deco" style={css('grid-column:1;grid-row:2;background:#5ce1ff;')} />
+              <div className="ccv-bento-cell" style={css('grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;background:rgba(120,200,255,.04);')}>
                 <span style={css('width:30px;height:30px;border-radius:50%;border:3px solid #cdd9e8;')} />
                 <span style={css("font-family:'Chakra Petch';font-weight:700;font-size:18px;color:#dbe7f4;")}>Celo</span>
               </div>
-              <div style={css('grid-column:4;grid-row:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;background:rgba(120,200,255,.04);')}>
+              <div className="ccv-bento-cell" style={css('grid-column:4;grid-row:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;background:rgba(120,200,255,.04);')}>
                 <span style={css('width:28px;height:28px;transform:rotate(45deg);border:2.5px solid #cdd9e8;border-radius:5px;')} />
                 <span style={css("font-family:'Chakra Petch';font-weight:700;font-size:18px;color:#dbe7f4;")}>MetaMask</span>
               </div>
-              <div style={css('grid-column:6;grid-row:2;background:#a78bfa;')} />
-              <div style={css('grid-column:3;grid-row:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;background:rgba(120,200,255,.04);')}>
+              <div className="ccv-deco" style={css('grid-column:6;grid-row:2;background:#a78bfa;')} />
+              <div className="ccv-bento-cell" style={css('grid-column:3;grid-row:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;background:rgba(120,200,255,.04);')}>
                 <span style={css('width:32px;height:20px;border-radius:11px;border:2.5px solid #cdd9e8;')} />
                 <span style={css("font-family:'Chakra Petch';font-weight:700;font-size:16px;color:#dbe7f4;letter-spacing:.01em;")}>WalletConnect</span>
               </div>
-              <div style={css('grid-column:5;grid-row:3;background:#5ce1ff;opacity:.85;')} />
-              <div style={css('grid-column:2 / span 2;grid-row:4;position:relative;overflow:hidden;display:flex;align-items:center;gap:18px;padding:0 28px;background:linear-gradient(135deg,rgba(56,232,255,.13),rgba(8,14,28,.4));')}>
+              <div className="ccv-deco" style={css('grid-column:5;grid-row:3;background:#5ce1ff;opacity:.85;')} />
+              <div className="ccv-bento-cell" style={css('grid-column:2 / span 2;grid-row:4;position:relative;overflow:hidden;display:flex;align-items:center;gap:18px;padding:0 28px;background:linear-gradient(135deg,rgba(56,232,255,.13),rgba(8,14,28,.4));')}>
                 <div>
                   <div style={css("font-family:'Chakra Petch';font-size:10px;letter-spacing:.16em;color:#7f94ad;text-transform:uppercase;")}>Daily drop</div>
                   <div style={css("font-family:'Anton';font-size:42px;line-height:.95;color:#fff;")}>1,000</div>
@@ -691,7 +774,7 @@ export default function ChessifyLanding() {
                 </div>
                 <span style={css('margin-left:auto;font-size:58px;line-height:1;color:rgba(56,232,255,.2);')}>♚</span>
               </div>
-              <div style={css('grid-column:5;grid-row:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;background:rgba(120,200,255,.04);')}>
+              <div className="ccv-bento-cell" style={css('grid-column:5;grid-row:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;background:rgba(120,200,255,.04);')}>
                 <span style={css('width:28px;height:28px;background:#cdd9e8;clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);')} />
                 <span style={css("font-family:'Chakra Petch';font-weight:700;font-size:18px;color:#dbe7f4;")}>Any EVM</span>
               </div>
@@ -699,7 +782,7 @@ export default function ChessifyLanding() {
           </section>
 
           {/* FOOTER */}
-          <footer style={css('position:relative;z-index:5;border-top:1px solid rgba(120,200,255,.07);padding:30px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;')}>
+          <footer className="ccv-footer" style={css('position:relative;z-index:5;border-top:1px solid rgba(120,200,255,.07);padding:30px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;')}>
             <div style={css('display:flex;align-items:center;gap:9px;')}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`${PIECE_SET}/wK.svg`} alt="" style={css('width:22px;height:26px;object-fit:contain;')} />
