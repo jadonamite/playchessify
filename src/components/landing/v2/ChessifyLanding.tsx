@@ -567,13 +567,13 @@ export default function ChessifyLanding() {
                         surface texture reads, with a subtle emissive rim to glow.
                         Raised + framed so the whole piece (crown to base) stays visible. */}
                     <div id="ccv-king" onClick={charge} style={{ width: '100%', height: '100%', cursor: 'pointer', filter: 'drop-shadow(0 26px 60px rgba(56,232,255,.55))' }}>
-                      <Canvas camera={{ position: [0, 0.2, 7.2], fov: 42 }} gl={{ alpha: true }}>
+                      <Canvas camera={{ position: [0, 0, 6.8], fov: 44 }} gl={{ alpha: true }}>
                         <Suspense fallback={null}>
                           <ambientLight intensity={1.2} />
                           <pointLight position={[6, 6, 6]} intensity={2.8} color="#bdf2ff" />
                           <pointLight position={[-6, -4, -4]} intensity={1.4} color="#7c5cff" />
                           <Environment files="/textures/environment/city.hdr" />
-                          <King color="#9fdfff" emissive="#5ce1ff" emissiveIntensity={0.18} roughness={0.28} metalness={0.72} scale={2.7} position={[0, -0.5, 0]} rotationIntensity={0.1} floatSpeed={1.1} floatIntensity={0.7} />
+                          <King color="#9fdfff" emissive="#5ce1ff" emissiveIntensity={0.18} roughness={0.28} metalness={0.72} scale={2.7} position={[0, -0.85, 0]} rotationIntensity={0.1} floatSpeed={1.1} floatIntensity={0.7} />
                         </Suspense>
                       </Canvas>
                     </div>
