@@ -77,11 +77,12 @@ const SUP = {
 }
 type BCell = { k: 'head' | 'e' | 'a' | 'logo' | 'feat'; c?: string; logo?: { src: string; name: string } }
 const BENTO: BCell[] = [
-  { k: 'head' },
-  { k: 'e' }, { k: 'a', c: '#5ce1ff' }, { k: 'e' }, { k: 'logo', logo: SUP.minipay }, { k: 'e' }, { k: 'a', c: '#7c5cff' },
-  { k: 'a', c: '#7c5cff' }, { k: 'e' }, { k: 'logo', logo: SUP.celo }, { k: 'e' }, { k: 'e' }, { k: 'logo', logo: SUP.metamask }, { k: 'e' }, { k: 'a', c: '#5ce1ff' },
-  { k: 'e' }, { k: 'a', c: '#a855f7' }, { k: 'e' }, { k: 'logo', logo: SUP.privy }, { k: 'feat' }, { k: 'e' }, { k: 'a', c: 'rgba(92,225,255,.45)' },
-  { k: 'a', c: '#5ce1ff' }, { k: 'e' }, { k: 'e' }, { k: 'e' }, { k: 'a', c: 'rgba(124,92,255,.45)' }, { k: 'e' }, { k: 'e' }, { k: 'e' },
+  // row 1 — logos are the focus; a single brand square bleeds off the right edge
+  { k: 'head' }, { k: 'e' }, { k: 'e' }, { k: 'logo', logo: SUP.minipay }, { k: 'e' }, { k: 'e' }, { k: 'a', c: '#7c5cff' },
+  // row 2 — cyan square off the left edge, two logos floating in the negative space
+  { k: 'a', c: '#5ce1ff' }, { k: 'e' }, { k: 'logo', logo: SUP.celo }, { k: 'e' }, { k: 'logo', logo: SUP.metamask }, { k: 'e' }, { k: 'e' }, { k: 'e' },
+  // row 3 — purple square off the left edge, privy + the daily-drop feature, cyan off the right
+  { k: 'a', c: '#a855f7' }, { k: 'e' }, { k: 'logo', logo: SUP.privy }, { k: 'feat' }, { k: 'e' }, { k: 'e' }, { k: 'a', c: 'rgba(92,225,255,.5)' },
 ]
 
 /* ───────────────────────── chess logic ───────────────────────── */
@@ -173,11 +174,10 @@ const STYLE = `
   /* ── 'Plays nice with' bento — uniform inset gridlines so it reads as one grid
      at any column count; clamps from 6→4→2 columns across breakpoints ── */
   .ccv-bento-fb{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);}
-  .ccv-bcell{border-right:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;position:relative;}
-  .ccv-blabel{font-family:'Chakra Petch';font-weight:700;font-size:clamp(10px,1.2vw,15px);color:#cfdae6;letter-spacing:.02em;text-align:center;}
-  .ccv-blogo{flex-direction:column;gap:clamp(7px,1.2vw,12px);background:rgba(255,255,255,.022);transition:background .2s;}
-  .ccv-blogo:hover{background:rgba(255,255,255,.05) !important;}
-  .ccv-blogo img{max-width:clamp(34px,4.4vw,64px);max-height:clamp(26px,3.4vw,46px);object-fit:contain;}
+  .ccv-bcell{border-right:1px solid rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;position:relative;}
+  .ccv-blogo{transition:background .2s;}
+  .ccv-blogo:hover{background:rgba(255,255,255,.03) !important;}
+  .ccv-blogo img{max-width:clamp(58px,7.5vw,118px);max-height:clamp(44px,5.4vw,82px);object-fit:contain;}
   @media (max-width:960px){ .ccv-bento{grid-template-columns:repeat(6,1fr) !important;grid-auto-rows:16.66vw !important;} }
   @media (max-width:560px){ .ccv-bento{grid-template-columns:repeat(4,1fr) !important;grid-auto-rows:25vw !important;} }
 
@@ -830,7 +830,6 @@ export default function ChessifyLanding() {
                   <div key={i} className="ccv-bcell ccv-blogo">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={cell.logo!.src} alt={cell.logo!.name} />
-                    <span className="ccv-blabel">{cell.logo!.name}</span>
                   </div>
                 )
                 return <div key={i} className="ccv-bcell" />
