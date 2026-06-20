@@ -232,7 +232,8 @@ export async function gasSponsorCanCoverCelo(amountCelo: bigint): Promise<boolea
 
 /** Current CELO balance of an address. */
 export async function celoBalanceOf(addr: Address): Promise<bigint> {
-  return getPublicClient().getBalance({ address: addr })
+  const result = getPublicClient().getBalance({ address: addr });
+  return result;
 }
 
 /** Current CHESS balance of an address. */
