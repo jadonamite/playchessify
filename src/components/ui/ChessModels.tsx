@@ -23,9 +23,13 @@ interface PieceProps {
   floatSpeed?: number
   floatIntensity?: number
   rotationIntensity?: number
+  /* Optional PBR overrides so a caller can dial in a more physical, reflective
+     material (e.g. the hero king) without affecting the default matte pieces. */
+  roughness?: number
+  metalness?: number
 }
 
-function BasePiece({ modelPath, color = '#00ccff', emissive, emissiveIntensity, scale = 1, position = [0, 0, 0], rotation = [0, 0, 0], floatSpeed = 1, floatIntensity = 0.5, rotationIntensity = 0.3 }: PieceProps & { modelPath: string }) {
+function BasePiece({ modelPath, color = '#00ccff', emissive, emissiveIntensity, scale = 1, position = [0, 0, 0], rotation = [0, 0, 0], floatSpeed = 1, floatIntensity = 0.5, rotationIntensity = 0.3, roughness, metalness }: PieceProps & { modelPath: string }) {
   const { scene } = useGLTF(modelPath)
 
   const material = useMemo(() => {
@@ -37,10 +41,10 @@ function BasePiece({ modelPath, color = '#00ccff', emissive, emissiveIntensity, 
       color: color === '#ffffff' ? '#ffffff' : (color === '#111111' ? '#080808' : color),
       emissive: resolvedEmissive,
       emissiveIntensity: resolvedEmissiveIntensity,
-      roughness: 0.88,
-      metalness: 0.1,
+      roughness: roughness ?? 0.88,
+      metalness: metalness ?? 0.1,
     })
-  }, [color, emissive, emissiveIntensity])
+  }, [color, emissive, emissiveIntensity, roughness, metalness])
 
   const meshRef = useRef<THREE.Group>(null)
 
