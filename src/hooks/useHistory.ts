@@ -1,4 +1,5 @@
 'use client'
+
 import { useState, useEffect, useCallback } from 'react'
 import { useWallet } from '@/components/wallet-provider'
 
@@ -13,16 +14,6 @@ export type HistoryItem = {
   timestamp: number
 }
 
-const handleFetchResponse = async (res: Response): Promise<HistoryItem[]> => {
-  try {
-    const body = (await res.json().catch(() => ({}))) as { history?: HistoryItem[] }
-    return Array.isArray(body.history) ? body.history : []
-  } catch (err) {
-    console.error('[useHistory] fetch failed:', err)
-    return []
-  }
-}
-
 export function useHistory() {
   const { playerAddress } = useWallet()
   const [history, setHistory] = useState<HistoryItem[]>([])
@@ -31,8 +22,14 @@ export function useHistory() {
   // Server-side, Redis-indexed: only this player's gameIds are read on-chain.
   const fetchHistory = useCallback(async (): Promise<HistoryItem[]> => {
     if (!playerAddress) return []
-    const res = await fetch(`/api/history?address=${playerAddress}`)
-    return handleFetchResponse(res)
+    try {
+      const res = await fetch(`/api/history?address=${playerAddress}`)
+      const body = (await res.json().catch(() => ({}))) as { history?: HistoryItem[] }
+      return Array.isArray(body.history) ? body.history : []
+    } catch (err) {
+      console.error('[useHistory] fetch failed:', err)
+      return []
+    }
   }, [playerAddress])
 
   const refreshHistory = useCallback(async () => {
