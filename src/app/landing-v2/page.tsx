@@ -1,7 +1,5 @@
-import ChessifyLanding from '@/components/landing/v2/ChessifyLanding';
-
-const renderLanding = () => <ChessifyLanding />;
+import ChessifyLanding from '@/components/landing/v2/ChessifyLanding'
 
 export default function LandingV2Page() {
-  return renderLanding();
+  return <ChessifyLanding />
 }
