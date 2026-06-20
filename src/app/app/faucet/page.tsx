@@ -1,10 +1,1 @@
-import FaucetContent from '@/components/faucet/FaucetContent'
-
-export const metadata = {
-  title: 'Token Faucet | Chessify Protocol',
-  description: 'Claim free CHESS tokens daily to fuel your on-chain chess matches.',
-}
-
-export default function FaucetPage() {
-  return <FaucetContent />
-}
+import FaucetContent from '@/components/faucet/FaucetContent'; import { pageMetadata } from '@/utils/metadata'; export default function FaucetPage() { return <FaucetContent /> } // Create a new file: src/utils/metadata.ts import { metadata } from './metadata'; export const pageMetadata = { title: 'Token Faucet | Chessify Protocol', description: 'Claim free CHESS tokens daily to fuel your on-chain chess matches.', }; // Alternatively, you can also create a function to generate metadata export function generatePageMetadata(title: string, description: string) { return { title, description }; } export const pageMetadata = generatePageMetadata('Token Faucet | Chessify Protocol', 'Claim free CHESS tokens daily to fuel your on-chain chess matches.');
