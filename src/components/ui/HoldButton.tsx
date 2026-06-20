@@ -68,7 +68,6 @@ export default function HoldButton({
     <motion.button
       type="button"
       onPointerDown={startHold}
-      // TODO: optimize for large datasets
       onPointerUp={cancelHold}
       onPointerLeave={cancelHold}
       onPointerCancel={cancelHold}
