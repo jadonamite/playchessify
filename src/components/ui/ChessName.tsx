@@ -15,10 +15,6 @@ interface ChessNameProps {
   asLink?: boolean   // wraps in Link → /app/profile/{address}
 }
 
-function fmtAddr(addr: string) {
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`
-}
-
 export default function ChessName({
   address,
   profile: preloaded,
@@ -30,6 +26,10 @@ export default function ChessName({
 }: ChessNameProps) {
   const skip = preloaded !== undefined
   const { data: fetched, isLoading } = useProfile(skip ? null : address)
+
+function fmtAddr(addr: string) {
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`
+}
 
   const profile = skip ? preloaded : fetched
 

@@ -1,14 +1,14 @@
 'use client'
 import GlowButton from '@/components/ui/GlowButton'
 import Link from 'next/link'
-import { Suspense, useEffect, useState } from 'react'
+import NavbarComponent from '@/components/ui/Navbar'
+import TypingHeroText from '@/components/ui/TypingHeroText'
 import { Canvas } from '@react-three/fiber'
 import { Environment } from '@react-three/drei'
-import { useWallet } from '@/components/wallet-provider'
 import { King, Queen, Bishop, Knight, Pawn } from '@/components/ui/ChessModels'
-import TypingHeroText from '@/components/ui/TypingHeroText'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import NavbarComponent from '@/components/ui/Navbar'
+import { useWallet } from '@/components/wallet-provider'
 
 // Re-export so all existing `import { Navbar } from '@/components/landing/Hero'` keep working
 export { default as Navbar } from '@/components/ui/Navbar'
