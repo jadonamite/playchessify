@@ -23,13 +23,7 @@ export const MOVE_TIMEOUT_MS = 5 * 60 * 1000
  * this game, this ply, this SAN, and the resulting position, so a signature for
  * one move can never be replayed onto another.
  */
-export function canonicalMoveMessage(p: {
-  chain: string
-  gameId: number
-  moveNumber: number
-  san: string
-  fen: string
-}): string {
+export function canonicalMoveMessage(p: { chain: string; gameId: number; moveNumber: number; san: string; fen: string }): string {
   return [
     'playchessify:move',
     `chain:${p.chain}`,
@@ -44,6 +38,17 @@ export type Terminal =
   | { kind: 'result'; result: ResultValue }
   | { kind: 'not-terminal' }
   | { kind: 'illegal' }
+
+function getGameResult(chess: Chess): ResultValue | null {
+  if (chess.isCheckmate()) {
+    const loserIsWhite = chess.turn() === 'w'
+    return loserIsWhite ? RESULT.BlackWins : RESULT.WhiteWins
+  }
+  if (chess.isStalemate() || chess.isInsufficientMaterial() || chess.isDraw()) {
+    return RESULT.Draw
+  }
+  return null
+}
 
 /**
  * Replay the authoritative move list and decide the result. NEVER trusts the
@@ -60,18 +65,10 @@ export function deriveResult(moves: MoveRecord[], white: string, black: string):
       return { kind: 'illegal' }
     }
   }
-
-  // Checkmate: the side to move is mated → opponent wins.
-  if (chess.isCheckmate()) {
-    const loserIsWhite = chess.turn() === 'w'
-    return { kind: 'result', result: loserIsWhite ? RESULT.BlackWins : RESULT.WhiteWins }
+  const result = getGameResult(chess)
+  if (result !== null) {
+    return { kind: 'result', result }
   }
-
-  // Any drawn terminal position (stalemate, insufficient material, 3-fold, 50-move).
-  if (chess.isStalemate() || chess.isInsufficientMaterial() || chess.isDraw()) {
-    return { kind: 'result', result: RESULT.Draw }
-  }
-
   // Not terminal by board — check the move clock for a timeout forfeit.
   if (moves.length > 0) {
     const last = moves[moves.length - 1]
@@ -80,11 +77,13 @@ export function deriveResult(moves: MoveRecord[], white: string, black: string):
       const winnerIsWhite = chess.turn() !== 'w'
       const winnerAddr = winnerIsWhite ? white : black
       if (last.player.toLowerCase() === winnerAddr.toLowerCase()) {
-        return { kind: 'result', result: winnerIsWhite ? RESULT.WhiteWins : RESULT.BlackWins }
+        return {
+          kind: 'result',
+          result: winnerIsWhite ? RESULT.WhiteWins : RESULT.BlackWins,
+        }
       }
     }
   }
-
   return { kind: 'not-terminal' }
 }
 
