@@ -178,8 +178,8 @@ const STYLE = `
   .ccv-blogo{flex-direction:column;gap:clamp(7px,1.2vw,12px);background:rgba(255,255,255,.022);transition:background .2s;}
   .ccv-blogo:hover{background:rgba(255,255,255,.05) !important;}
   .ccv-blogo img{max-width:clamp(34px,4.4vw,64px);max-height:clamp(26px,3.4vw,46px);object-fit:contain;}
-  @media (max-width:960px){ .ccv-bento{grid-template-columns:repeat(6,1fr) !important;} }
-  @media (max-width:560px){ .ccv-bento{grid-template-columns:repeat(4,1fr) !important;} }
+  @media (max-width:960px){ .ccv-bento{grid-template-columns:repeat(6,1fr) !important;grid-auto-rows:16.66vw !important;} }
+  @media (max-width:560px){ .ccv-bento{grid-template-columns:repeat(4,1fr) !important;grid-auto-rows:25vw !important;} }
 
   /* ── MOBILE-FIRST RESPONSIVE (≤768px) ── */
   @media (max-width:768px){
@@ -790,15 +790,15 @@ export default function ChessifyLanding() {
           {/* PLAYS NICE WITH */}
           <section className="ccv-sec" style={css('position:relative;z-index:5;max-width:1180px;margin:0 auto;padding:90px 40px 30px;')}>
             <div style={css("font-family:'Permanent Marker';font-size:22px;color:#38e8ff;text-shadow:0 0 18px rgba(56,232,255,.6);transform:rotate(-3deg);margin:0 0 16px 8px;display:inline-block;")}>no friction</div>
-            <div className="ccv-bento ccv-bento-fb" style={css('position:relative;display:grid;grid-template-columns:repeat(8,1fr);background:#04060d;border-top:1px solid rgba(255,255,255,.06);border-left:1px solid rgba(255,255,255,.06);')}>
+            <div className="ccv-bento ccv-bento-fb" style={css('position:relative;display:grid;grid-template-columns:repeat(8,1fr);grid-auto-rows:12.5vw;background:#04060d;border-top:1px solid rgba(255,255,255,.06);border-left:1px solid rgba(255,255,255,.06);')}>
               {BENTO.map((cell, i) => {
                 if (cell.k === 'head') return (
-                  <div key={i} className="ccv-bcell" style={css('grid-column:span 2;aspect-ratio:2 / 1;justify-content:flex-start;padding:0 clamp(14px,2.4vw,28px);')}>
+                  <div key={i} className="ccv-bcell" style={css('grid-column:span 2;justify-content:flex-start;padding:0 clamp(14px,2.4vw,28px);')}>
                     <h2 style={css("font-family:'Anton';font-size:clamp(22px,3.4vw,50px);line-height:.92;color:#f3f7fc;transform:skewX(-5deg);margin:0;")}>PLAYS NICE<br /><span style={{ color: '#5ce1ff' }}>WITH.</span></h2>
                   </div>
                 )
                 if (cell.k === 'feat') return (
-                  <div key={i} className="ccv-bcell" style={css('grid-column:span 2;aspect-ratio:2 / 1;justify-content:flex-start;gap:clamp(10px,1.6vw,18px);padding:0 clamp(14px,2.4vw,26px);background:linear-gradient(135deg,rgba(56,232,255,.16),rgba(8,14,28,.25));')}>
+                  <div key={i} className="ccv-bcell" style={css('grid-column:span 2;justify-content:flex-start;gap:clamp(10px,1.6vw,18px);padding:0 clamp(14px,2.4vw,26px);background:linear-gradient(135deg,rgba(56,232,255,.16),rgba(8,14,28,.25));')}>
                     <div>
                       <div style={css("font-family:'Chakra Petch';font-size:clamp(8px,1.1vw,10px);letter-spacing:.16em;color:#7f94ad;text-transform:uppercase;")}>Daily drop</div>
                       <div style={css("font-family:'Anton';font-size:clamp(24px,3.2vw,42px);line-height:.95;color:#fff;")}>1,000</div>
@@ -808,15 +808,15 @@ export default function ChessifyLanding() {
                     <img src={`${PIECE_SET}/wK.svg`} alt="" style={css('margin-left:auto;width:clamp(26px,3.4vw,46px);height:auto;object-fit:contain;opacity:.5;filter:drop-shadow(0 0 10px rgba(56,232,255,.5));')} />
                   </div>
                 )
-                if (cell.k === 'a') return <div key={i} className="ccv-bcell" style={css(`aspect-ratio:1;background:${cell.c};`)} />
+                if (cell.k === 'a') return <div key={i} className="ccv-bcell" style={css(`background:${cell.c};`)} />
                 if (cell.k === 'logo') return (
-                  <div key={i} className="ccv-bcell ccv-blogo" style={css('aspect-ratio:1;')}>
+                  <div key={i} className="ccv-bcell ccv-blogo">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={cell.logo!.src} alt={cell.logo!.name} />
                     <span className="ccv-blabel">{cell.logo!.name}</span>
                   </div>
                 )
-                return <div key={i} className="ccv-bcell" style={css('aspect-ratio:1;')} />
+                return <div key={i} className="ccv-bcell" />
               })}
             </div>
           </section>
