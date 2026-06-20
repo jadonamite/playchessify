@@ -1,9 +1,7 @@
 'use client'
-
 import { useToastStore, type ToastType } from '@/hooks/useToastStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect } from 'react'
-
 type Config = {
   bg: string
   border: string
@@ -13,7 +11,6 @@ type Config = {
   icon: string
   position: 'center' | 'bottom'
 }
-
 const CONFIGS: Record<ToastType, Config> = {
   success: {
     bg: 'linear-gradient(135deg,rgba(6,182,212,.15) 0%,rgba(8,47,73,.5) 100%)',
@@ -30,7 +27,7 @@ const CONFIGS: Record<ToastType, Config> = {
     glow: 'rgba(220,38,38,.25)',
     label: 'ERROR',
     labelColor: '#ef4444',
-    icon: '✕',
+    icon: '✗',
     position: 'center',
   },
   info: {
@@ -55,9 +52,9 @@ const CONFIGS: Record<ToastType, Config> = {
     bg: 'linear-gradient(135deg,rgba(239,68,68,.18) 0%,rgba(88,28,28,.6) 100%)',
     border: 'rgba(239,68,68,.55)',
     glow: 'rgba(239,68,68,.35)',
-    label: '⚔ KING IN CHECK',
+    label: '♜ KING IN CHECK',
     labelColor: '#f87171',
-    icon: '♚',
+    icon: '♔',
     position: 'bottom',
   },
   checkmate: {
@@ -66,7 +63,7 @@ const CONFIGS: Record<ToastType, Config> = {
     glow: 'rgba(109,40,217,.4)',
     label: '☠ CHECKMATE',
     labelColor: '#a78bfa',
-    icon: '♛',
+    icon: '♕',
     position: 'bottom',
   },
   draw: {
@@ -79,74 +76,58 @@ const CONFIGS: Record<ToastType, Config> = {
     position: 'bottom',
   },
 }
-
+const renderToastContent = (cfg: Config, toast: any, hideToast: () => void) => (
+  <div className="rounded-2xl border backdrop-blur-xl shadow-2xl overflow-hidden flex items-center gap-4 px-5 py-4" style={{
+    background: cfg.bg,
+    borderColor: cfg.border,
+    boxShadow: `0 0 32px ${cfg.glow}, 0 20px 40px rgba(0,0,0,0.5)`,
+  }}>
+    {/* Icon bubble */}
+    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black shrink-0" style={{
+      background: `${cfg.glow}`,
+      border: `1px solid ${cfg.border}`,
+      color: cfg.labelColor
+    }}>
+      {cfg.icon}
+    </div>
+    {/* Text */}
+    <div className="flex flex-col flex-1 min-w-0">
+      <span className="text-[9px] font-black tracking-[0.25em] uppercase mb-0.5" style={{
+        color: cfg.labelColor,
+        fontFamily: 'var(--fd)'
+      }}>
+        {cfg.label}
+      </span>
+      <p className="text-[12px] font-semibold text-gray-100 leading-snug truncate">
+        {toast.message}
+      </p>
+    </div>
+    {/* Dismiss */}
+    <button onClick={hideToast} className="shrink-0 p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/5 transition-colors" aria-label="Dismiss">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+        <path d="M18 6L6 18M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+)
 export default function CenterToast() {
   const { toast, hideToast } = useToastStore()
-
   useEffect(() => {
     if (!toast) return
     const t = setTimeout(hideToast, toast.duration ?? 4000)
     return () => clearTimeout(t)
   }, [toast, hideToast])
-
   const cfg = toast ? CONFIGS[toast.type] : null
   const isBottom = cfg?.position === 'bottom'
-
   return (
     <AnimatePresence>
       {toast && cfg && (
-        <div
-          className="fixed inset-0 pointer-events-none z-[9999] flex justify-center"
-          style={{ alignItems: isBottom ? 'flex-end' : 'center', paddingBottom: isBottom ? '1.5rem' : 0 }}
-        >
-          <motion.div
-            key={toast.type + toast.message}
-            initial={{ opacity: 0, y: isBottom ? 24 : 0, scale: isBottom ? 0.97 : 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: isBottom ? 12 : -12, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 26, stiffness: 340 }}
-            className="pointer-events-auto mx-4 w-full max-w-sm"
-          >
-            <div
-              className="rounded-2xl border backdrop-blur-xl shadow-2xl overflow-hidden flex items-center gap-4 px-5 py-4"
-              style={{
-                background: cfg.bg,
-                borderColor: cfg.border,
-                boxShadow: `0 0 32px ${cfg.glow}, 0 20px 40px rgba(0,0,0,0.5)`,
-              }}
-            >
-              {/* Icon bubble */}
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black shrink-0"
-                style={{ background: `${cfg.glow}`, border: `1px solid ${cfg.border}`, color: cfg.labelColor }}
-              >
-                {cfg.icon}
-              </div>
-
-              {/* Text */}
-              <div className="flex flex-col flex-1 min-w-0">
-                <span
-                  className="text-[9px] font-black tracking-[0.25em] uppercase mb-0.5"
-                  style={{ color: cfg.labelColor, fontFamily: 'var(--fd)' }}
-                >
-                  {cfg.label}
-                </span>
-                <p className="text-[12px] font-semibold text-gray-100 leading-snug truncate">
-                  {toast.message}
-                </p>
-              </div>
-
-              {/* Dismiss */}
-              <button
-                onClick={hideToast}
-                className="shrink-0 p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/5 transition-colors"
-                aria-label="Dismiss"
-              >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+        <div className="fixed inset-0 pointer-events-none z-[9999] flex justify-center" style={{
+          alignItems: isBottom ? 'flex-end' : 'center',
+          paddingBottom: isBottom ? '1.5rem' : 0
+        }}>
+          <motion.div key={toast.type + toast.message} initial={{ opacity: 0, y: isBottom ? 24 : 0, scale: isBottom ? 0.97 : 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: isBottom ? 12 : -12, scale: 0.95 }} transition={{ type: 'spring', damping: 26, stiffness: 340 }} className="pointer-events-auto mx-4 w-full max-w-sm">
+            {renderToastContent(cfg, toast, hideToast)}
           </motion.div>
         </div>
       )}
