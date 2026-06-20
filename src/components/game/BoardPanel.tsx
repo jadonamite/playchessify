@@ -34,6 +34,11 @@ interface BoardPanelProps {
   handleSquareClick: (args: { piece: unknown; square: string }) => void
 }
 
+/**
+ * BoardPanel
+ * @param {*} props: BoardPanelProps
+ * @returns {*}
+ */
 export default function BoardPanel(props: BoardPanelProps) {
   const {
     game, customPieces, myColor, canAct, gameOver, isBotGame, turn, isMyTurn,
