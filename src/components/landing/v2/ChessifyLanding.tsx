@@ -1,13 +1,13 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import GlowButton from '@/components/ui/GlowButton'
 import { Canvas } from '@react-three/fiber'
 import { Environment } from '@react-three/drei'
 import { King } from '@/components/ui/ChessModels'
-import { useWallet } from '@/components/wallet-provider'
-import GlowButton from '@/components/ui/GlowButton'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { startAmbient, stopAmbient, setMuted } from '@/lib/audio'
+import { useRouter } from 'next/navigation'
+import { useWallet } from '@/components/wallet-provider'
 
 /* ───────────────────────── helpers ───────────────────────── */
 

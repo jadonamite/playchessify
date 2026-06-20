@@ -22,6 +22,13 @@ const NAV_LINKS = [
 // hamburger drawer only needs the overflow items not covered there (Settings).
 const MOBILE_DRAWER_LINKS = NAV_LINKS.filter((l) => l.path === '/app/settings')
 
+export default function Navbar() {
+  const {
+    isReady, address, playerAddress,
+    disconnectAll,
+    connect,
+  } = useWallet()
+
 function LogoutIcon() {
   return (
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -32,13 +39,6 @@ function LogoutIcon() {
     </svg>
   )
 }
-
-export default function Navbar() {
-  const {
-    isReady, address, playerAddress,
-    disconnectAll,
-    connect,
-  } = useWallet()
 
   const { soundEnabled, setSoundEnabled } = useSettingsStore()
   const [mobileOpen, setMobileOpen] = useState(false)
