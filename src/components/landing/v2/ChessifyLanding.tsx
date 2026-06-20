@@ -306,7 +306,7 @@ export default function ChessifyLanding() {
     const updateSize = () => {
       const rect = container.getBoundingClientRect()
       width = rect.width + borderOffset * 2; height = rect.height + borderOffset * 2
-      const dpr = Math.min(window.devicePixelRatio ?? 1, 2)
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
       canvas.width = width * dpr; canvas.height = height * dpr
       canvas.style.width = width + 'px'; canvas.style.height = height + 'px'
     }
@@ -314,7 +314,7 @@ export default function ChessifyLanding() {
     let last = performance.now()
     let raf = 0
     const draw = (now: number) => {
-      const dpr = Math.min(window.devicePixelRatio ?? 1, 2)
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
       ebTime += ((now - last) / 1000) * speed; last = now
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.scale(dpr, dpr)
       const left = borderOffset, top = borderOffset, bw = width - 2 * borderOffset, bh = height - 2 * borderOffset
