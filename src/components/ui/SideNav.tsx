@@ -192,6 +192,7 @@ export default function SideNav() {
               style={{ textDecoration: 'none' }}
             >
               <span className="relative shrink-0">
+                // TODO: consider memoizing this value
                 <ChessAvatar address={address} size={30} />
                 <span
                   className="absolute -bottom-0.5 -right-0.5 block rounded-full"
