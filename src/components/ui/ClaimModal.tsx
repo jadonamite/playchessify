@@ -172,7 +172,7 @@ export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimM
                     <span className="text-amber-400 text-base leading-none">✦</span>
                     <div>
                       <p className="text-[10px] font-black tracking-[0.18em] uppercase text-amber-400">OG Status Available</p>
-                      <p className='text-[9px] text-white/40 mt-0.5'>
+                      <p className="text-[9px] text-white/40 mt-0.5">
                         {total !== null && total !== undefined
                           ? `${100 - total} of 100 OG spots remaining — first 100 profiles get the ✦ badge forever.`
                           : 'First 100 profiles get the ✦ OG badge permanently.'}
