@@ -493,7 +493,7 @@ export default function ChessifyLanding() {
                 <div style={css('position:relative;z-index:3;width:clamp(270px,29vw,420px);aspect-ratio:3 / 4.1;display:flex;align-items:center;justify-content:center;')}>
                   {/* magic rings aura — radiates from behind the king (own WebGL context) */}
                   <div style={css('position:absolute;left:50%;top:48%;width:150%;height:150%;transform:translate(-50%,-50%);z-index:1;pointer-events:none;')}>
-                    <MagicRings color="#5ce1ff" colorTwo="#92eaff" ringCount={6} speed={0.9} lineThickness={2} baseRadius={0.32} radiusStep={0.11} scaleRate={0.12} ringGap={1.5} attenuation={9} opacity={0.95} noiseAmount={0.06} followMouse mouseInfluence={0.12} parallax={0.04} clickBurst />
+                    <MagicRings color="#5ce1ff" colorTwo="#92eaff" ringCount={6} speed={0.9} lineThickness={2} baseRadius={0.32} radiusStep={0.11} scaleRate={0.12} ringGap={1.5} attenuation={9} opacity={0.95} noiseAmount={0} followMouse mouseInfluence={0.12} parallax={0.04} clickBurst />
                   </div>
                   {/* Float wrapper fills the box so the canvas (and the king centered
                       at x=0 within it) sits dead-center horizontally and vertically.
@@ -506,12 +506,16 @@ export default function ChessifyLanding() {
                         Raised + framed so the whole piece (crown to base) stays visible. */}
                     <div id="ccv-king" onClick={charge} style={{ width: '100%', height: '100%', cursor: 'pointer', filter: 'drop-shadow(0 26px 60px rgba(56,232,255,.55))' }}>
                       <Canvas camera={{ position: [0, 0, 6.8], fov: 44 }} gl={{ alpha: true }}>
+                        <ambientLight intensity={1.2} />
+                        <pointLight position={[6, 6, 6]} intensity={2.8} color="#bdf2ff" />
+                        <pointLight position={[-6, -4, -4]} intensity={1.4} color="#7c5cff" />
+                        {/* king reveals as soon as its (small) model loads — the heavier
+                            HDR environment loads in its own boundary and refines lighting after */}
                         <Suspense fallback={null}>
-                          <ambientLight intensity={1.2} />
-                          <pointLight position={[6, 6, 6]} intensity={2.8} color="#bdf2ff" />
-                          <pointLight position={[-6, -4, -4]} intensity={1.4} color="#7c5cff" />
-                          <Environment files="/textures/environment/city.hdr" />
                           <King color="#9fdfff" emissive="#5ce1ff" emissiveIntensity={0.18} roughness={0.28} metalness={0.72} scale={2.7} position={[0, 0.4, 0]} rotationIntensity={0.1} floatSpeed={1.1} floatIntensity={0.7} />
+                        </Suspense>
+                        <Suspense fallback={null}>
+                          <Environment files="/textures/environment/city.hdr" />
                         </Suspense>
                       </Canvas>
                     </div>

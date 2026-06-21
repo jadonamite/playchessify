@@ -5,13 +5,11 @@ import { useGLTF, Float } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
-/* ── PRELOADS ── */
+/* ── PRELOADS ──
+   Only the King is shown above the fold (landing hero). The other pieces
+   load on demand where they are actually rendered (e.g. the game board),
+   so we don't saturate the hero's bandwidth fetching ~6MB of unused GLBs. */
 useGLTF.preload('/models/King.glb')
-useGLTF.preload('/models/QueenChess.glb')
-useGLTF.preload('/models/Rook.glb')
-useGLTF.preload('/models/pawn.glb')
-useGLTF.preload('/models/Bishop.glb')
-useGLTF.preload('/models/WhiteKnight.glb')
 
 interface PieceProps {
   color?: string
