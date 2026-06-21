@@ -494,7 +494,7 @@ export default function ChessifyLanding() {
                   {/* magic rings aura — radiates from behind the king (own WebGL context).
                       Square host so the radial edge-mask fades all sides equally (no rectangular frame). */}
                   <div style={css('position:absolute;left:50%;top:50%;width:150%;aspect-ratio:1;transform:translate(-50%,-50%);z-index:1;pointer-events:none;')}>
-                    <MagicRings color="#5ce1ff" colorTwo="#92eaff" ringCount={6} speed={0.9} lineThickness={2} baseRadius={0.16} radiusStep={0.06} scaleRate={0.08} ringGap={1.5} attenuation={9} opacity={0.95} noiseAmount={0} followMouse mouseInfluence={0.12} parallax={0.04} clickBurst />
+                    <MagicRings color="#5ce1ff" colorTwo="#92eaff" ringCount={3} speed={0.9} lineThickness={2} baseRadius={0.16} radiusStep={0.06} scaleRate={0.08} ringGap={1.5} attenuation={9} opacity={0.95} noiseAmount={0} followMouse mouseInfluence={0.12} parallax={0.04} clickBurst />
                   </div>
                   {/* Float wrapper fills the box so the canvas (and the king centered
                       at x=0 within it) sits dead-center horizontally and vertically.
@@ -784,7 +784,7 @@ export default function ChessifyLanding() {
             <div style={css('display:flex;align-items:center;gap:12px;')}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/chessify.png" alt="Chessify" style={css('height:26px;width:auto;object-fit:contain;')} />
-              <span style={css('font-size:13px;color:#5b7290;')}>@2026 Chess Protocol</span>
+              <span style={css('font-size:13px;color:#5b7290;')}>© 2026 Playchessify</span>
             </div>
             <div style={css('display:flex;align-items:center;gap:clamp(16px,3vw,28px);flex-wrap:wrap;justify-content:center;')}>
               <div style={css('display:flex;align-items:center;gap:10px;')}>
