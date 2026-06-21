@@ -38,6 +38,7 @@ const PIECE_SET = '/pieces/maestro'
 type Coach = {
   id: string
   name: string
+  short: string // one-word label for the bubble map
   title: string
   elo: number
   accent: string
@@ -48,13 +49,13 @@ type Coach = {
 }
 
 const COACHES: Coach[] = [
-  { id: 'kasparov', name: 'Garry Kasparov', title: 'The Firebrand Titan', elo: 2851, accent: '#fb7185', rarity: 'LEGENDARY', tags: 'Aggressive · Analytical · Dominant', img: '/Coaches/Garry Kasparov.webp', about: 'Kasparov plays like a storm — relentless attacks, razor-sharp preparation, and total mental dominance. Train with him to seize the initiative from move one, calculate forcing lines deep, and crush hesitation wherever you find it.' },
-  { id: 'fischer', name: 'Bobby Fischer', title: 'The Obsessive Genius', elo: 2785, accent: '#60a5fa', rarity: 'MYTHIC', tags: 'Uncompromising · Precise · Relentless', img: '/Coaches/Fischer.webp', about: 'Fischer demands pure, logical chess and nothing less. Learn clean principled play, surgical endgame technique, and the iron will to keep fighting for the win when others would take the draw.' },
-  { id: 'carlsen', name: 'Magnus Carlsen', title: 'The Endgame Virtuoso', elo: 2882, accent: '#34d399', rarity: 'MYTHIC', tags: 'Pragmatic · Intuitive · Unshakeable', img: '/Coaches/Magnus.webp', about: 'Carlsen turns the smallest edge into a full point. Master the art of grinding — practical intuition, flawless endgames, and the calm endurance to outlast anyone across a long, patient battle.' },
-  { id: 'karpov', name: 'Anatoly Karpov', title: 'The Python', elo: 2780, accent: '#a78bfa', rarity: 'LEGENDARY', tags: 'Patient · Positional · Subtle', img: '/Coaches/Anatoly Karpov.webp', about: 'Karpov squeezes the life from a position before a single piece falls. Learn prophylaxis — quietly killing your opponent’s every idea — and the patience to coil tighter and tighter until they have nowhere left to move.' },
-  { id: 'polgar', name: 'Judit Polgar', title: 'The Tactician Queen', elo: 2735, accent: '#f472b6', rarity: 'LEGENDARY', tags: 'Fearless · Creative · Sharp', img: '/Coaches/Judit Polgar.webp', about: 'Polgar attacks with fearless imagination and dazzling tactics. Sharpen your tactical vision, find the brilliant sacrifice no one else sees, and keep the pressure roaring until the enemy king has nowhere to hide.' },
-  { id: 'houyifan', name: 'Hou Yifan', title: 'The Balanced Academic', elo: 2686, accent: '#22d3ee', rarity: 'EPIC', tags: 'Versatile · Structured · Composed', img: '/Coaches/Hou Yifan.webp', about: 'Hou Yifan plays a calm, universal game built on rock-solid foundations. Train well-rounded positional understanding, clean structure, and the ice-cool composure to calculate clearly under any pressure.' },
-  { id: 'harmon', name: 'Beth Harmon', title: 'The Intuitive Prodigy', elo: 2650, accent: '#fbbf24', rarity: 'EPIC', tags: 'Visionary · Daring · Instinctive', img: '/Coaches/Beth Harmon.webp', about: 'Harmon sees the whole board light up before she touches a piece. Train bold intuitive leaps, fearless attacking lines, and the rare nerve to find brilliance — and to recover when a blunder threatens to bring it all down.' },
+  { id: 'kasparov', name: 'Garry Kasparov', short: 'Kasparov', title: 'The Attacker', elo: 2851, accent: '#fb7185', rarity: 'LEGENDARY', tags: 'Aggressive · Analytical · Dominant', img: '/Coaches/Garry Kasparov.webp', about: 'Kasparov plays like a storm — relentless attacks, razor-sharp preparation, and total mental dominance. Train with him to seize the initiative from move one, calculate forcing lines deep, and crush hesitation wherever you find it.' },
+  { id: 'fischer', name: 'Bobby Fischer', short: 'Fischer', title: 'The Genius', elo: 2785, accent: '#60a5fa', rarity: 'MYTHIC', tags: 'Uncompromising · Precise · Relentless', img: '/Coaches/Fischer.webp', about: 'Fischer demands pure, logical chess and nothing less. Learn clean principled play, surgical endgame technique, and the iron will to keep fighting for the win when others would take the draw.' },
+  { id: 'carlsen', name: 'Magnus Carlsen', short: 'Magnus', title: 'The Endgame', elo: 2882, accent: '#34d399', rarity: 'MYTHIC', tags: 'Pragmatic · Intuitive · Unshakeable', img: '/Coaches/Magnus.webp', about: 'Carlsen turns the smallest edge into a full point. Master the art of grinding — practical intuition, flawless endgames, and the calm endurance to outlast anyone across a long, patient battle.' },
+  { id: 'karpov', name: 'Anatoly Karpov', short: 'Karpov', title: 'The Maverick', elo: 2780, accent: '#a78bfa', rarity: 'LEGENDARY', tags: 'Patient · Positional · Subtle', img: '/Coaches/Anatoly Karpov.webp', about: 'Karpov squeezes the life from a position before a single piece falls. Learn prophylaxis — quietly killing your opponent’s every idea — and the patience to coil tighter and tighter until they have nowhere left to move.' },
+  { id: 'polgar', name: 'Judit Polgar', short: 'Polgar', title: 'The Tactician', elo: 2735, accent: '#f472b6', rarity: 'LEGENDARY', tags: 'Fearless · Creative · Sharp', img: '/Coaches/Judit Polgar.webp', about: 'Polgar attacks with fearless imagination and dazzling tactics. Sharpen your tactical vision, find the brilliant sacrifice no one else sees, and keep the pressure roaring until the enemy king has nowhere to hide.' },
+  { id: 'houyifan', name: 'Hou Yifan', short: 'Yifan', title: 'The Scholar', elo: 2686, accent: '#22d3ee', rarity: 'EPIC', tags: 'Versatile · Structured · Composed', img: '/Coaches/Hou Yifan.webp', about: 'Hou Yifan plays a calm, universal game built on rock-solid foundations. Train well-rounded positional understanding, clean structure, and the ice-cool composure to calculate clearly under any pressure.' },
+  { id: 'harmon', name: 'Beth Harmon', short: 'Beth', title: 'The Prodigy', elo: 2650, accent: '#fbbf24', rarity: 'EPIC', tags: 'Visionary · Daring · Instinctive', img: '/Coaches/Beth Harmon.webp', about: 'Harmon sees the whole board light up before she touches a piece. Train bold intuitive leaps, fearless attacking lines, and the rare nerve to find brilliance — and to recover when a blunder threatens to bring it all down.' },
 ]
 
 type Mode = { accent: string; tag: string; title: string; desc: string; piece: string }
@@ -131,12 +132,24 @@ function legalMoves(b: Board, r: number, c: number): [number, number][] {
 
 function CoachArt({ coach, size }: { coach: Coach; size: number }) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={encodeURI(coach.img)}
-      alt={coach.name}
-      style={{ position: 'relative', width: size, height: size, objectFit: 'contain', filter: `drop-shadow(0 16px 40px ${hexToRgba(coach.accent, 0.5)})` }}
-    />
+    <div
+      style={{
+        position: 'relative',
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        overflow: 'hidden',
+        border: `2px solid ${hexToRgba(coach.accent, 0.7)}`,
+        boxShadow: `0 16px 40px ${hexToRgba(coach.accent, 0.5)}, inset 0 0 0 1px rgba(255,255,255,.08)`,
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={encodeURI(coach.img)}
+        alt={coach.name}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }}
+      />
+    </div>
   )
 }
 
@@ -420,8 +433,8 @@ export default function ChessifyLanding() {
   const idx = ((coach % n) + n) % n
   // 3D coverflow geometry: center card flat + bright, one tilted card each side;
   // on navigation each card animates between slots (slide + rotate).
-  const cardW = isMobile ? 232 : 300
-  const cardH = isMobile ? 338 : 430
+  const cardW = isMobile ? 262 : 300
+  const cardH = isMobile ? 382 : 430
   const sideOff = isMobile ? 150 : 232
   const f = COACHES[idx]
 
@@ -683,7 +696,7 @@ export default function ChessifyLanding() {
                           <div style={css('position:absolute;inset:0;display:flex;align-items:center;justify-content:center;')}>
                             <div style={css(`position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,${hexToRgba(c.accent, 0.42)},transparent 70%);`)} />
                             <div style={css(`position:absolute;width:212px;height:212px;border:2px dashed ${c.accent};border-radius:50%;opacity:.4;animation:ccv-spinRing 20s linear infinite;`)} />
-                            <CoachArt coach={c} size={216} />
+                            <CoachArt coach={c} size={206} />
                           </div>
                           <div style={css(`position:absolute;top:0;right:0;width:30px;height:100%;background:linear-gradient(180deg,${c.accent},${hexToRgba(c.accent, 0.55)});display:flex;align-items:center;justify-content:center;`)}>
                             <span style={css("writing-mode:vertical-rl;transform:rotate(180deg);font-family:'Chakra Petch';font-weight:700;font-size:11px;letter-spacing:.22em;color:#04121a;text-transform:uppercase;")}>{c.title}</span>
@@ -742,7 +755,7 @@ export default function ChessifyLanding() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={encodeURI(c.img)} alt={c.name} style={css(`width:100%;height:100%;object-fit:cover;object-position:center top;filter:drop-shadow(0 6px 14px ${hexToRgba(c.accent, 0.55)});`)} />
                       </div>
-                      <div style={css(`font-family:'Chakra Petch';font-weight:700;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:${active ? '#eaf6ff' : '#7f94ad'};`)}>{c.name}</div>
+                      <div style={css(`font-family:'Chakra Petch';font-weight:700;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:${active ? '#eaf6ff' : '#7f94ad'};`)}>{c.short}</div>
                     </div>
                   )
                 })}
