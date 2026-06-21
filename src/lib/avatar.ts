@@ -1,16 +1,19 @@
 const PIECES = ['♟', '♞', '♝', '♜', '♛', '♚']
 
-function addrByte(addr: string, idx: number): number {
-  const hex = addr.replace('0x', '').toLowerCase()
-  return parseInt(hex.slice(idx * 2, idx * 2 + 2) || '00', 16)
+export function avatarDataUrl(address: string, size = 100): string {
+  const svg = generateAvatarSvg(address, size)
+  return `data:image/svg+xml;base64,${btoa(svg)}`
 }
 
 function toHex(r: number, g: number, b: number): string {
   return `#${[r, g, b].map((v) => Math.min(255, v).toString(16).padStart(2, '0')).join('')}`
 }
 
-export function generateAvatarSvg(address: string, size = 100): string {
-  const addr = address.toLowerCase()
+export function avatarSvgUrl(address: string): string {
+  const svg = generateAvatarSvg(address)
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+
 
   // Derive two distinct colours from address bytes
   const r1 = addrByte(addr, 1)
@@ -41,12 +44,10 @@ export function generateAvatarSvg(address: string, size = 100): string {
 </svg>`
 }
 
-export function avatarDataUrl(address: string, size = 100): string {
-  const svg = generateAvatarSvg(address, size)
-  return `data:image/svg+xml;base64,${btoa(svg)}`
-}
+export function generateAvatarSvg(address: string, size = 100): string {
+  const addr = address.toLowerCase()
 
-export function avatarSvgUrl(address: string): string {
-  const svg = generateAvatarSvg(address)
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+function addrByte(addr: string, idx: number): number {
+  const hex = addr.replace('0x', '').toLowerCase()
+  return parseInt(hex.slice(idx * 2, idx * 2 + 2) || '00', 16)
 }
