@@ -6,8 +6,8 @@
   pointer-events: none;
   /* fade every canvas edge to transparent (closest-side => all four sides fade
      equally on a square host) so the rings never read as a rectangular frame */
-  -webkit-mask-image: radial-gradient(closest-side at 50% 50%, #000 55%, transparent 85%);
-  mask-image: radial-gradient(closest-side at 50% 50%, #000 55%, transparent 85%);
+  -webkit-mask-image: radial-gradient(closest-side at 50% 50%, #000 64%, transparent 96%);
+  mask-image: radial-gradient(closest-side at 50% 50%, #000 64%, transparent 96%);
 }
 
 .magic-rings-container canvas {

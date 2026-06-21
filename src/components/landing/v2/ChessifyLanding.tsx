@@ -494,7 +494,7 @@ export default function ChessifyLanding() {
                   {/* magic rings aura — radiates from behind the king (own WebGL context).
                       Square host so the radial edge-mask fades all sides equally (no rectangular frame). */}
                   <div style={css('position:absolute;left:50%;top:50%;width:150%;aspect-ratio:1;transform:translate(-50%,-50%);z-index:1;pointer-events:none;')}>
-                    <MagicRings color="#5ce1ff" colorTwo="#92eaff" ringCount={6} speed={0.9} lineThickness={2} baseRadius={0.32} radiusStep={0.11} scaleRate={0.12} ringGap={1.5} attenuation={9} opacity={0.95} noiseAmount={0} followMouse mouseInfluence={0.12} parallax={0.04} clickBurst />
+                    <MagicRings color="#5ce1ff" colorTwo="#92eaff" ringCount={6} speed={0.9} lineThickness={2} baseRadius={0.16} radiusStep={0.06} scaleRate={0.08} ringGap={1.5} attenuation={9} opacity={0.95} noiseAmount={0} followMouse mouseInfluence={0.12} parallax={0.04} clickBurst />
                   </div>
                   {/* Float wrapper fills the box so the canvas (and the king centered
                       at x=0 within it) sits dead-center horizontally and vertically.
@@ -784,15 +784,9 @@ export default function ChessifyLanding() {
             <div style={css('display:flex;align-items:center;gap:12px;')}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/chessify.png" alt="Chessify" style={css('height:26px;width:auto;object-fit:contain;')} />
-              <span style={css('font-size:13px;color:#5b7290;')}>© 2025 Chess Protocol</span>
+              <span style={css('font-size:13px;color:#5b7290;')}>@2026 Chess Protocol</span>
             </div>
             <div style={css('display:flex;align-items:center;gap:clamp(16px,3vw,28px);flex-wrap:wrap;justify-content:center;')}>
-              <div style={css("display:flex;gap:24px;font-family:'Chakra Petch';font-size:13px;font-weight:600;letter-spacing:.06em;color:#7f94ad;text-transform:uppercase;")}>
-                <span className="ccv-link" onClick={start} style={{ cursor: 'pointer' }}>Play</span>
-                <span className="ccv-link" onClick={() => scrollTo('coaches')} style={{ cursor: 'pointer' }}>Coaches</span>
-                <span className="ccv-link" onClick={() => scrollTo('modes')} style={{ cursor: 'pointer' }}>Arena</span>
-                <span className="ccv-link" onClick={() => scrollTo('how')} style={{ cursor: 'pointer' }}>Docs</span>
-              </div>
               <div style={css('display:flex;align-items:center;gap:10px;')}>
                 <a href="https://github.com/jadonamite/playchessify" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="ccv-icon" style={css('width:36px;height:36px;border-radius:10px;border:1px solid rgba(120,200,255,.18);background:rgba(10,18,32,.7);display:flex;align-items:center;justify-content:center;color:#9fb2c8;')}>
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56 0-.27-.01-1.16-.02-2.1-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.68 0-1.25.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.8 1.18 1.83 1.18 3.08 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.8-.01 3.18 0 .31.21.67.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5Z"/></svg>
