@@ -404,7 +404,7 @@ export default function ChessifyLanding() {
                   <span className="ccv-sep">|</span>
                   <span className="ccv-link" onClick={() => router.push('/app/faucet')} style={{ cursor: 'pointer' }}>Faucet</span>
                   <span className="ccv-sep">|</span>
-                  <span className="ccv-link" onClick={() => scrollTo('coaches')} style={css('cursor:pointer;display:flex;align-items:center;gap:7px;')}>Coaches<span style={css("font-family:var(--fb);font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(56,232,255,.18);color:#5ce1ff;letter-spacing:.06em;")}>NEW</span></span>
+                  <span className="ccv-link" onClick={() => scrollTo('coaches')} style={css('cursor:pointer;display:flex;align-items:center;gap:7px;')}>Coaches<span style={css("font-family:var(--fb);font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(56,232,255,.18);color:#5ce1ff;letter-spacing:.06em;white-space:nowrap;")}>COMING SOON</span></span>
                 </div>
               </div>
             </nav>
