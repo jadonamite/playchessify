@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Canvas } from '@react-three/fiber'
 import { Environment } from '@react-three/drei'
 import { King } from '@/components/ui/ChessModels'
+import MagicRings from './MagicRings'
 import { useWallet } from '@/components/wallet-provider'
 import GlowButton from '@/components/ui/GlowButton'
 import { startAmbient, stopAmbient, setMuted } from '@/lib/audio'
@@ -233,8 +234,6 @@ export default function ChessifyLanding() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
-  const ebRef = useRef<HTMLDivElement | null>(null)
-  const ebCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const particlesRef = useRef<HTMLDivElement | null>(null)
   const touchX = useRef<number | null>(null)
 
@@ -274,83 +273,6 @@ export default function ChessifyLanding() {
       return { el, move, leave }
     })
     return () => handlers.forEach((h) => { h.el.removeEventListener('mousemove', h.move); h.el.removeEventListener('mouseleave', h.leave) })
-  }, [])
-
-  /* electric border canvas around the hero king */
-  useEffect(() => {
-    const container = ebRef.current
-    const canvas = ebCanvasRef.current
-    if (!container || !canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    const color = '#5ce1ff'
-    const speed = 1, octaves = 10, lacunarity = 1.6, gain = 0.7, amplitude = 0.12,
-      frequency = 10, baseFlatness = 0, displacement = 30, borderOffset = 60, borderRadius = 28
-    let ebTime = 0
-    const random = (x: number) => (Math.sin(x * 12.9898) * 43758.5453) % 1
-    const noise2D = (x: number, y: number) => {
-      const i = Math.floor(x), j = Math.floor(y), fx = x - i, fy = y - j
-      const a = random(i + j * 57), b = random(i + 1 + j * 57), c = random(i + (j + 1) * 57), d = random(i + 1 + (j + 1) * 57)
-      const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy)
-      return a * (1 - ux) * (1 - uy) + b * ux * (1 - uy) + c * (1 - ux) * uy + d * ux * uy
-    }
-    const oct = (x: number, seed: number) => {
-      let y = 0, amp = amplitude, freq = frequency
-      for (let i = 0; i < octaves; i++) {
-        let oa = amp; if (i === 0) oa *= baseFlatness
-        y += oa * noise2D(freq * x + seed * 100, ebTime * freq * 0.3)
-        freq *= lacunarity; amp *= gain
-      }
-      return y
-    }
-    const corner = (cx: number, cy: number, r: number, sa: number, al: number, p: number) => { const a = sa + p * al; return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) } }
-    const rr = (t: number, left: number, top: number, w: number, h: number, r: number) => {
-      const sw = w - 2 * r, sh = h - 2 * r, ca = (Math.PI * r) / 2, tot = 2 * sw + 2 * sh + 4 * ca, d = t * tot; let acc = 0
-      if (d <= acc + sw) return { x: left + r + (d - acc), y: top }; acc += sw
-      if (d <= acc + ca) return corner(left + w - r, top + r, r, -Math.PI / 2, Math.PI / 2, (d - acc) / ca); acc += ca
-      if (d <= acc + sh) return { x: left + w, y: top + r + (d - acc) }; acc += sh
-      if (d <= acc + ca) return corner(left + w - r, top + h - r, r, 0, Math.PI / 2, (d - acc) / ca); acc += ca
-      if (d <= acc + sw) return { x: left + w - r - (d - acc), y: top + h }; acc += sw
-      if (d <= acc + ca) return corner(left + r, top + h - r, r, Math.PI / 2, Math.PI / 2, (d - acc) / ca); acc += ca
-      if (d <= acc + sh) return { x: left, y: top + h - r - (d - acc) }; acc += sh
-      return corner(left + r, top + r, r, Math.PI, Math.PI / 2, (d - acc) / ca)
-    }
-    let width = 0, height = 0
-    const updateSize = () => {
-      const rect = container.getBoundingClientRect()
-      width = rect.width + borderOffset * 2; height = rect.height + borderOffset * 2
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      canvas.width = width * dpr; canvas.height = height * dpr
-      canvas.style.width = width + 'px'; canvas.style.height = height + 'px'
-    }
-    updateSize()
-    let last = performance.now()
-    let raf = 0
-    const draw = (now: number) => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      ebTime += ((now - last) / 1000) * speed; last = now
-      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.scale(dpr, dpr)
-      const left = borderOffset, top = borderOffset, bw = width - 2 * borderOffset, bh = height - 2 * borderOffset
-      const r = Math.min(borderRadius, Math.min(bw, bh) / 2)
-      const samples = Math.floor((2 * (bw + bh) + 2 * Math.PI * r) / 2)
-      ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = color; ctx.shadowColor = color
-      const passes = [{ w: 3.4, blur: 20, a: 0.85 }, { w: 1.3, blur: 6, a: 1 }]
-      for (const ps of passes) {
-        ctx.beginPath()
-        for (let i = 0; i <= samples; i++) {
-          const pr = i / samples, pt = rr(pr, left, top, bw, bh, r)
-          const dx = pt.x + oct(pr * 8, 0) * displacement, dy = pt.y + oct(pr * 8, 1) * displacement
-          if (i === 0) ctx.moveTo(dx, dy); else ctx.lineTo(dx, dy)
-        }
-        ctx.closePath(); ctx.globalAlpha = ps.a; ctx.lineWidth = ps.w; ctx.shadowBlur = ps.blur; ctx.stroke()
-      }
-      ctx.globalAlpha = 1; ctx.shadowBlur = 0
-      raf = requestAnimationFrame(draw)
-    }
-    raf = requestAnimationFrame(draw)
-    const ro = new ResizeObserver(() => updateSize())
-    ro.observe(container)
-    return () => { cancelAnimationFrame(raf); ro.disconnect() }
   }, [])
 
   /* redirect once connected */
@@ -568,8 +490,11 @@ export default function ChessifyLanding() {
                   <div style={css('position:absolute;left:8%;top:60%;width:74%;height:5px;border-radius:99px;background:linear-gradient(90deg,rgba(146,234,255,.9),transparent);')} />
                 </div>
 
-                <div ref={ebRef} style={css('position:relative;z-index:3;width:clamp(270px,29vw,420px);aspect-ratio:3 / 4.1;border-radius:28px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse 75% 60% at 50% 42%,rgba(56,232,255,.13),rgba(8,14,28,.5) 70%);box-shadow:inset 0 0 60px rgba(56,232,255,.14);')}>
-                  <canvas ref={ebCanvasRef} style={css('position:absolute;left:-60px;top:-60px;pointer-events:none;z-index:5;')} />
+                <div style={css('position:relative;z-index:3;width:clamp(270px,29vw,420px);aspect-ratio:3 / 4.1;display:flex;align-items:center;justify-content:center;')}>
+                  {/* magic rings aura — radiates from behind the king (own WebGL context) */}
+                  <div style={css('position:absolute;left:50%;top:48%;width:150%;height:150%;transform:translate(-50%,-50%);z-index:1;pointer-events:none;')}>
+                    <MagicRings color="#7c5cff" colorTwo="#5ce1ff" ringCount={6} speed={0.9} lineThickness={2} baseRadius={0.32} radiusStep={0.11} scaleRate={0.12} ringGap={1.5} attenuation={9} opacity={0.95} noiseAmount={0.06} followMouse mouseInfluence={0.12} parallax={0.04} clickBurst />
+                  </div>
                   {/* Float wrapper fills the box so the canvas (and the king centered
                       at x=0 within it) sits dead-center horizontally and vertically.
                       No CSS bob here — the single gentle 3D <Float> owns the motion. */}
