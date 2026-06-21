@@ -43,18 +43,18 @@ type Coach = {
   accent: string
   rarity: string
   tags: string
-  piece: string // white piece svg file (w/o ext) used as our own art
+  img: string // portrait art in /public/Coaches
   about: string
 }
 
 const COACHES: Coach[] = [
-  { id: 'cipher', name: 'Cipher', title: 'The Tactician', elo: 2720, accent: '#22d3ee', rarity: 'LEGENDARY', tags: 'Sharp · Calculating · Universal', piece: 'wN', about: 'Cipher sees the board as a web of threats. Train with Cipher to set deep traps, calculate clean lines three moves ahead, and punish every inaccuracy your opponent makes.' },
-  { id: 'magna', name: 'Magna', title: 'The Attacker', elo: 2700, accent: '#fb7185', rarity: 'LEGENDARY', tags: 'Aggressive · Tactical · Bold', piece: 'wQ', about: 'Magna hunts the enemy king from move one. Learn to seize the initiative, sacrifice for a roaring attack, and turn relentless pressure into checkmate.' },
-  { id: 'sol', name: 'Sol', title: 'The Strategist', elo: 2740, accent: '#a78bfa', rarity: 'MYTHIC', tags: 'Positional · Patient · Precise', piece: 'wB', about: 'Sol owns the board before a single piece falls. Master pawn structures, trade into commanding squares, and squeeze your opponent until the position collapses.' },
-  { id: 'vera', name: 'Vera', title: 'The Endgame', elo: 2680, accent: '#34d399', rarity: 'EPIC', tags: 'Technical · Cool · Relentless', piece: 'wK', about: 'Two pawns and a plan is all Vera needs. Sharpen your king activity, calculate to the last move, and convert winning endgames with surgical precision.' },
-  { id: 'blitz', name: 'Blitz', title: 'The Speedster', elo: 2660, accent: '#fbbf24', rarity: 'RARE', tags: 'Blitz · Bullet · Instinct', piece: 'wP', about: 'Blitz thinks fast and moves faster. Build razor instincts, premove with purpose, and flag your opponent before they ever find the right idea.' },
-  { id: 'nova', name: 'Nova', title: 'The Prodigy', elo: 2710, accent: '#60a5fa', rarity: 'EPIC', tags: 'Creative · Fearless · Modern', piece: 'wR', about: 'Nova plays the bold, modern lines top engines love. Train to break the rules with purpose, create chaos your rivals cannot read, and win from the wildest positions.' },
-  { id: 'onyx', name: 'Onyx', title: 'The Maverick', elo: 2735, accent: '#f472b6', rarity: 'MYTHIC', tags: 'Unorthodox · Sharp · Daring', piece: 'wB', about: 'Onyx drags opponents into uncharted territory. Learn surprise openings, off-book traps, and the art of making every game a fight on your terms.' },
+  { id: 'kasparov', name: 'Garry Kasparov', title: 'The Firebrand Titan', elo: 2851, accent: '#fb7185', rarity: 'LEGENDARY', tags: 'Aggressive · Analytical · Dominant', img: '/Coaches/Garry Kasparov.webp', about: 'Kasparov plays like a storm — relentless attacks, razor-sharp preparation, and total mental dominance. Train with him to seize the initiative from move one, calculate forcing lines deep, and crush hesitation wherever you find it.' },
+  { id: 'fischer', name: 'Bobby Fischer', title: 'The Obsessive Genius', elo: 2785, accent: '#60a5fa', rarity: 'MYTHIC', tags: 'Uncompromising · Precise · Relentless', img: '/Coaches/Fischer.webp', about: 'Fischer demands pure, logical chess and nothing less. Learn clean principled play, surgical endgame technique, and the iron will to keep fighting for the win when others would take the draw.' },
+  { id: 'carlsen', name: 'Magnus Carlsen', title: 'The Endgame Virtuoso', elo: 2882, accent: '#34d399', rarity: 'MYTHIC', tags: 'Pragmatic · Intuitive · Unshakeable', img: '/Coaches/Magnus.webp', about: 'Carlsen turns the smallest edge into a full point. Master the art of grinding — practical intuition, flawless endgames, and the calm endurance to outlast anyone across a long, patient battle.' },
+  { id: 'karpov', name: 'Anatoly Karpov', title: 'The Python', elo: 2780, accent: '#a78bfa', rarity: 'LEGENDARY', tags: 'Patient · Positional · Subtle', img: '/Coaches/Anatoly Karpov.webp', about: 'Karpov squeezes the life from a position before a single piece falls. Learn prophylaxis — quietly killing your opponent’s every idea — and the patience to coil tighter and tighter until they have nowhere left to move.' },
+  { id: 'polgar', name: 'Judit Polgar', title: 'The Tactician Queen', elo: 2735, accent: '#f472b6', rarity: 'LEGENDARY', tags: 'Fearless · Creative · Sharp', img: '/Coaches/Judit Polgar.webp', about: 'Polgar attacks with fearless imagination and dazzling tactics. Sharpen your tactical vision, find the brilliant sacrifice no one else sees, and keep the pressure roaring until the enemy king has nowhere to hide.' },
+  { id: 'houyifan', name: 'Hou Yifan', title: 'The Balanced Academic', elo: 2686, accent: '#22d3ee', rarity: 'EPIC', tags: 'Versatile · Structured · Composed', img: '/Coaches/Hou Yifan.webp', about: 'Hou Yifan plays a calm, universal game built on rock-solid foundations. Train well-rounded positional understanding, clean structure, and the ice-cool composure to calculate clearly under any pressure.' },
+  { id: 'harmon', name: 'Beth Harmon', title: 'The Intuitive Prodigy', elo: 2650, accent: '#fbbf24', rarity: 'EPIC', tags: 'Visionary · Daring · Instinctive', img: '/Coaches/Beth Harmon.webp', about: 'Harmon sees the whole board light up before she touches a piece. Train bold intuitive leaps, fearless attacking lines, and the rare nerve to find brilliance — and to recover when a blunder threatens to bring it all down.' },
 ]
 
 type Mode = { accent: string; tag: string; title: string; desc: string; piece: string }
@@ -127,13 +127,13 @@ function legalMoves(b: Board, r: number, c: number): [number, number][] {
   return moves
 }
 
-/* ───────────────────────── coach art (our own piece set) ───────────────────────── */
+/* ───────────────────────── coach art (real coach portraits) ───────────────────────── */
 
 function CoachArt({ coach, size }: { coach: Coach; size: number }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={`${PIECE_SET}/${coach.piece}.svg`}
+      src={encodeURI(coach.img)}
       alt={coach.name}
       style={{ position: 'relative', width: size, height: size, objectFit: 'contain', filter: `drop-shadow(0 16px 40px ${hexToRgba(coach.accent, 0.5)})` }}
     />
@@ -740,7 +740,7 @@ export default function ChessifyLanding() {
                     <div key={c.id} onClick={() => setCoach(i)} style={css(`position:absolute;left:${nodePos[i][0]}%;top:${nodePos[i][1]}%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;z-index:3;`)}>
                       <div style={css(`width:${sz}px;height:${sz}px;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(circle at 50% 38%,${hexToRgba(c.accent, 0.32)},rgba(8,13,26,.94));border:2px solid ${active ? c.accent : hexToRgba(c.accent, 0.45)};box-shadow:${active ? `0 0 0 4px ${hexToRgba(c.accent, 0.16)},0 0 40px ${hexToRgba(c.accent, 0.6)}` : '0 8px 22px rgba(0,0,0,.5)'};transition:all .25s;`)}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={`${PIECE_SET}/${c.piece}.svg`} alt={c.name} style={css(`width:64%;height:80%;object-fit:contain;filter:drop-shadow(0 6px 14px ${hexToRgba(c.accent, 0.55)});`)} />
+                        <img src={encodeURI(c.img)} alt={c.name} style={css(`width:100%;height:100%;object-fit:cover;object-position:center top;filter:drop-shadow(0 6px 14px ${hexToRgba(c.accent, 0.55)});`)} />
                       </div>
                       <div style={css(`font-family:'Chakra Petch';font-weight:700;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:${active ? '#eaf6ff' : '#7f94ad'};`)}>{c.name}</div>
                     </div>
