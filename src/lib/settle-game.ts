@@ -1,18 +1,10 @@
-import { Chess } from 'chess.js'
+import { Chess } from 'chess.js' 
 import { Redis } from '@upstash/redis'
 import { getMoves, unregisterActiveGame, type Chain, type MoveRecord } from '@/lib/moves-store'
 import { deriveResult, canonicalMoveMessage } from '@/lib/settlement'
-import {
-  getOnchainGame,
-  settleOnChain,
-  verifyWalletSignature,
-  GameStatus,
-  GameResult,
-  type Address,
-} from '@/lib/celo-server'
-
+import { getOnchainGame, settleOnChain, verifyWalletSignature, GameStatus, GameResult, type Address, }
+from '@/lib/celo-server'
 const LOG_PREFIX = '[settle-game]'
-
 let _redis: Redis | null = null
 function getRedis(): Redis {
   if (_redis) return _redis
@@ -22,11 +14,9 @@ function getRedis(): Redis {
   _redis = new Redis({ url, token })
   return _redis
 }
-
 export type SettleOutcome =
   | { ok: true; txHash: string; result: GameResult }
   | { ok: false; reason: 'not-active' | 'not-terminal' | 'illegal' | 'forged-signature' | 'in-progress'; status?: number }
-
 /**
  * Re-verify every *signed* move during settlement. A move that carries a
  * signature must verify against its `player`; if any fails, the history has been
@@ -51,7 +41,6 @@ async function signedMovesValid(chain: Chain, gameId: number, moves: MoveRecord[
   }
   return true
 }
-
 /**
  * Replay a game and settle it on-chain via the oracle. Shared by the manual
  * settle route (client-triggered) and the cron worker (guaranteed settlement).
@@ -60,25 +49,20 @@ async function signedMovesValid(chain: Chain, gameId: number, moves: MoveRecord[
  */
 export async function settleGameById(chain: Chain, gameId: number): Promise<SettleOutcome> {
   const moves = await getMoves(chain, gameId)
-
   const game = await getOnchainGame(gameId)
   if (game.status !== GameStatus.Active) {
     await unregisterActiveGame(chain, gameId)
     return { ok: false, reason: 'not-active', status: game.status }
   }
-
   if (!(await signedMovesValid(chain, gameId, moves))) {
     return { ok: false, reason: 'forged-signature' }
   }
-
   const derived = deriveResult(moves, game.white, game.black)
   if (derived.kind === 'illegal') return { ok: false, reason: 'illegal' }
   if (derived.kind === 'not-terminal') return { ok: false, reason: 'not-terminal' }
-
   const lockKey = `chess:settle:${chain}:${gameId}`
   const acquired = await getRedis().set(lockKey, '1', { nx: true, ex: 120 })
   if (acquired !== 'OK') return { ok: false, reason: 'in-progress' }
-
   try {
     const txHash = await settleOnChain(gameId, derived.result as GameResult)
     await unregisterActiveGame(chain, gameId)
