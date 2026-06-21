@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server' 
 import { Redis } from '@upstash/redis'
 import type { Abi } from 'viem'
 import { getPublicClient } from '@/lib/celo-server'
@@ -30,19 +30,38 @@ function getRedis(): Redis {
   })
 }
 
+// Helper function to process player stats results and create leaderboard entries
+function createLeaderboardEntries(addresses: string[], statsResults: any[]): LeaderboardEntry[] {
+  const entries: LeaderboardEntry[] = []
+  for (let i = 0; i < addresses.length; i++) {
+    const result = statsResults[i]
+    if (result.status !== 'success') continue
+    const r = result.result as readonly [bigint, bigint, bigint, bigint, bigint]
+    const gamesPlayed = Number(r[4])
+    if (gamesPlayed === 0) continue
+    entries.push({
+      address: addresses[i],
+      wins: Number(r[0]),
+      losses: Number(r[1]),
+      draws: Number(r[2]),
+      rating: Number(r[3]),
+      gamesPlayed,
+      rank: 0,
+    })
+  }
+  return entries
+}
+
 // GET /api/leaderboard — Redis-indexed leaderboard. Scans only games created
 // since the last index sync (cursor), then reads playerStats for known players.
 export async function GET() {
   try {
     const redis = getRedis()
-
     const cached = await redis.get<LeaderboardEntry[]>(CACHE_KEY)
     if (cached) return NextResponse.json({ entries: cached, cached: true })
-
     await syncGameIndex()
     const addresses = await getIndexedPlayers()
     if (addresses.length === 0) return NextResponse.json({ entries: [] })
-
     const statsResults = await getPublicClient().multicall({
       contracts: addresses.map((addr) => ({
         address: GAME,
@@ -52,28 +71,11 @@ export async function GET() {
       })),
       allowFailure: true,
     })
-
-    const entries: LeaderboardEntry[] = []
-    for (let i = 0; i < addresses.length; i++) {
-      const result = statsResults[i]
-      if (result.status !== 'success') continue
-      const r = result.result as readonly [bigint, bigint, bigint, bigint, bigint]
-      const gamesPlayed = Number(r[4])
-      if (gamesPlayed === 0) continue
-      entries.push({
-        address: addresses[i],
-        wins: Number(r[0]),
-        losses: Number(r[1]),
-        draws: Number(r[2]),
-        rating: Number(r[3]),
-        gamesPlayed,
-        rank: 0,
-      })
-    }
-
+    const entries = createLeaderboardEntries(addresses, statsResults)
     entries.sort((a, b) => b.rating - a.rating || b.wins - a.wins)
-    entries.forEach((e, i) => { e.rank = i + 1 })
-
+    entries.forEach((e, i) => {
+      e.rank = i + 1
+    })
     await redis.set(CACHE_KEY, entries, { ex: CACHE_TTL })
     return NextResponse.json({ entries })
   } catch (err) {
