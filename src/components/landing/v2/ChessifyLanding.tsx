@@ -491,8 +491,9 @@ export default function ChessifyLanding() {
                 </div>
 
                 <div style={css('position:relative;z-index:3;width:clamp(270px,29vw,420px);aspect-ratio:3 / 4.1;display:flex;align-items:center;justify-content:center;')}>
-                  {/* magic rings aura — radiates from behind the king (own WebGL context) */}
-                  <div style={css('position:absolute;left:50%;top:48%;width:150%;height:150%;transform:translate(-50%,-50%);z-index:1;pointer-events:none;')}>
+                  {/* magic rings aura — radiates from behind the king (own WebGL context).
+                      Square host so the radial edge-mask fades all sides equally (no rectangular frame). */}
+                  <div style={css('position:absolute;left:50%;top:50%;width:150%;aspect-ratio:1;transform:translate(-50%,-50%);z-index:1;pointer-events:none;')}>
                     <MagicRings color="#5ce1ff" colorTwo="#92eaff" ringCount={6} speed={0.9} lineThickness={2} baseRadius={0.32} radiusStep={0.11} scaleRate={0.12} ringGap={1.5} attenuation={9} opacity={0.95} noiseAmount={0} followMouse mouseInfluence={0.12} parallax={0.04} clickBurst />
                   </div>
                   {/* Float wrapper fills the box so the canvas (and the king centered
