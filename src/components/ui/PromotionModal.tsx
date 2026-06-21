@@ -68,7 +68,6 @@ export default function PromotionModal({ open, color, onSelect, onCancel }: Prom
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            // TODO: add input validation
             <div className="px-8 pt-8 pb-4 border-b border-white/5">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--c)] animate-pulse" />
