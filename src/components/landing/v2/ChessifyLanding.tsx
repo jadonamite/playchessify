@@ -606,7 +606,6 @@ export default function ChessifyLanding() {
                 <p style={css('margin:26px 0 0;max-width:420px;font-size:17px;line-height:1.6;color:#bccadb;text-shadow:0 2px 12px rgba(4,6,15,.9);')}>Train with a coach, wager your skill on-chain, and keep every coin you win.</p>
                 <div className="ccv-hero-cta" style={css('display:flex;gap:14px;margin-top:28px;flex-wrap:wrap;align-items:stretch;')}>
                   <GlowButton variant="brand" parallelogram onClick={start} style={{ fontSize: 15 }}>PLAY NOW ▸</GlowButton>
-                  <button className="ccv-cta2" onClick={() => scrollTo('how')} style={css("padding:16px 34px;cursor:pointer;font-family:var(--fd);font-weight:800;letter-spacing:.08em;font-size:14px;color:#5ce1ff;background:rgba(124,92,255,.08);border:1px solid rgba(124,92,255,.45);clip-path:polygon(16px 0%,100% 0%,calc(100% - 16px) 100%,0% 100%);")}>HOW IT WORKS</button>
                 </div>
               </div>
             </div>
