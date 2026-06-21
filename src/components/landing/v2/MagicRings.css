@@ -4,6 +4,9 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
+  /* fade the rectangular canvas edges so the rings never read as a square frame */
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 52%, transparent 76%);
+  mask-image: radial-gradient(circle at 50% 50%, #000 52%, transparent 76%);
 }
 
 .magic-rings-container canvas {
