@@ -19,7 +19,7 @@ export function useProfile(address: string | null | undefined) {
   return useQuery({
     queryKey: profileKey(address ?? ''),
     queryFn: () => fetchProfile(address!),
-    enabled: !!address && address.startsWith('0x'),
+    enabled: !!address?.startsWith('0x'),
     staleTime: 5 * 60 * 1000,
     retry: false,
   })
