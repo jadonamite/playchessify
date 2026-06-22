@@ -4,7 +4,7 @@ import { Redis } from '@upstash/redis'
 // client will throw on first use, which is the correct fail-loud behaviour.
 let _redis: Redis | null = null
 
-function getRedis(): Redis {
+function initializeRedis(): Redis {
   if (_redis) return _redis
   const url = process.env.UPSTASH_REDIS_REST_URL
   const token = process.env.UPSTASH_REDIS_REST_TOKEN
@@ -15,13 +15,16 @@ function getRedis(): Redis {
   return _redis
 }
 
-export type Chain = 'celo'
+function getRedis(): Redis {
+  return _redis ?? initializeRedis()
+}
 
+export type Chain = 'celo'
 export interface MoveRecord {
-  san: string         // standard algebraic notation, e.g. "e4", "Nxe5", "O-O"
-  player: string      // player wallet address (creator or opponent) — the on-chain identity
-  moveNumber: number  // 1-indexed, monotonically increasing
-  ts: number          // unix ms when the relay accepted it
+  san: string // standard algebraic notation, e.g. "e4", "Nxe5", "O-O"
+  player: string // player wallet address (creator or opponent) — the on-chain identity
+  moveNumber: number // 1-indexed, monotonically increasing
+  ts: number // unix ms when the relay accepted it
   // Optional wallet signature over canonicalMoveMessage(...). Present for wallets
   // that can sign (Tier A smart accounts, Tier C EOAs); absent for MiniPay, which
   // cannot sign messages — those moves rely on the relay's participant/turn binding.
