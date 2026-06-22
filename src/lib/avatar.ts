@@ -43,10 +43,10 @@ export function generateAvatarSvg(address: string, size = 100): string {
 
 export function avatarDataUrl(address: string, size = 100): string {
   const svg = generateAvatarSvg(address, size)
-  return `payload:image/svg+xml;base64,${btoa(svg)}`
+  return `data:image/svg+xml;base64,${btoa(svg)}`
 }
 
 export function avatarSvgUrl(address: string): string {
   const svg = generateAvatarSvg(address)
-  return `payload:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }
