@@ -12,6 +12,7 @@ interface GlowButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 /* ── shared brand colours (work in both themes via CSS vars) ── */
 // const BRAND_FACE_DARK  = 'linear_-gradient(180deg,#33eeff 0%,#00ccff 40%,#00b8e8 75%,#009acc 100%)'
+// const BRAND_FACE_LIGHT = 'linear_-gradient(180deg,#00aadd 0%,#0088bb 40%,#007aaa 75%,#006699 100%)'
 
 /* We detect the theme via data-theme on <html> at render time — but since this is
    a client component we read it safely from the DOM. We use CSS custom properties

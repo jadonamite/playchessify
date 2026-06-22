@@ -1,11 +1,11 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import GlowButton from './GlowButton'
 import { Canvas } from '@react-three/fiber'
 import { Environment } from '@react-three/drei'
 import { King, Queen, Pawn } from './ChessModels'
-import GlowButton from './GlowButton'
+import { Suspense, useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 /* ── KEYFRAMES ── */
 const KEYFRAMES = `
