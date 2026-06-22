@@ -60,7 +60,6 @@ export function useGameData({ gameId, isBotGame, celoAddress, isConnected }: Use
   const drawPending = drawProposer !== '' && drawProposer !== ZERO
   const iProposedDraw = drawPending && drawProposer === me
   const opponentProposedDraw = drawPending && !iProposedDraw
-// TODO: add error boundary here
 
   // ── status flags ──
   const gameIsWaiting   = gameData?.status === '0'
