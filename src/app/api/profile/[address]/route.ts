@@ -55,6 +55,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ error: 'signature verification failed' }, { status: 401 })
   }
 
+  // Rate limit: 5 updates per address per hour
   const allowed = await checkRateLimit(address, 'update', 5, 3600)
   if (!allowed) return NextResponse.json({ error: 'rate limit exceeded' }, { status: 429 })
 
