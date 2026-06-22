@@ -32,25 +32,17 @@ function getRedis(): Redis {
   return _redis
 }
 
-async function gameNonce(): Promise<number> {
-  const n = (await getPublicClient().readContract({
-    address: GAME,
-    abi: CHESS_GAME_ABI as Abi,
-    functionName: 'gameNonce',
-  })) as bigint
-  return Number(n)
+/** gameIds a given address has participated in, newest-id first. */
+export async function getPlayerGameIds(address: string): Promise<number[]> {
+  const ids = (await getRedis().smembers(K.playerGames(address))) as Array<string | number>
+  return ids.map(Number).sort((a, b) => b - a)
 }
 
-/**
- * Fold any games created since the last sync into the index. Bounded by the
- * number of *new* games, not the total. Returns the current gameNonce.
- */
-export async function syncGameIndex(): Promise<number> {
-  const redis = getRedis()
-  const cursor = Number((await redis.get<number>(K.cursor)) ?? -1)
-  const nonce = await gameNonce()
-  const lastGameId = nonce - 1
-  if (lastGameId <= cursor) return nonce
+
+/** All addresses that have ever appeared in a game (lowercased). */
+export async function getIndexedPlayers(): Promise<string[]> {
+  return (await getRedis().smembers(K.players)) as string[]
+}
 
   const pub = getPublicClient()
   for (let start = cursor + 1; start <= lastGameId; start += SCAN_CHUNK) {
@@ -88,13 +80,22 @@ export async function syncGameIndex(): Promise<number> {
   return nonce
 }
 
-/** All addresses that have ever appeared in a game (lowercased). */
-export async function getIndexedPlayers(): Promise<string[]> {
-  return (await getRedis().smembers(K.players)) as string[]
+async function gameNonce(): Promise<number> {
+  const n = (await getPublicClient().readContract({
+    address: GAME,
+    abi: CHESS_GAME_ABI as Abi,
+    functionName: 'gameNonce',
+  })) as bigint
+  return Number(n)
 }
 
-/** gameIds a given address has participated in, newest-id first. */
-export async function getPlayerGameIds(address: string): Promise<number[]> {
-  const ids = (await getRedis().smembers(K.playerGames(address))) as Array<string | number>
-  return ids.map(Number).sort((a, b) => b - a)
-}
+/**
+ * Fold any games created since the last sync into the index. Bounded by the
+ * number of *new* games, not the total. Returns the current gameNonce.
+ */
+export async function syncGameIndex(): Promise<number> {
+  const redis = getRedis()
+  const cursor = Number((await redis.get<number>(K.cursor)) ?? -1)
+  const nonce = await gameNonce()
+  const lastGameId = nonce - 1
+  if (lastGameId <= cursor) return nonce
