@@ -1,5 +1,5 @@
-import { Redis } from '@upstash/redis'
 import type { ChessProfile } from '@/types/profile'
+import { Redis } from '@upstash/redis'
 
 let _redis: Redis | null = null
 
