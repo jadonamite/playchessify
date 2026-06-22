@@ -1,5 +1,4 @@
 'use client'
-
 import { useToastStore, type ToastType } from '@/hooks/useToastStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect } from 'react'
@@ -80,9 +79,66 @@ const CONFIGS: Record<ToastType, Config> = {
   },
 }
 
+const renderToast = (
+  cfg: Config | null,
+  toast: any,
+  hideToast: () => void,
+  isBottom: boolean
+) => {
+  if (!cfg) return null
+  return (
+    <motion.div
+      key={toast.type + toast.message}
+      initial={{ opacity: 0, y: isBottom ? 24 : 0, scale: isBottom ? 0.97 : 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: isBottom ? 12 : -12, scale: 0.95 }}
+      transition={{ type: 'spring', damping: 26, stiffness: 340 }}
+      className="pointer-events-auto mx-4 w-full max-w-sm"
+    >
+      <div
+        className="rounded-2xl border backdrop-blur-xl shadow-2xl overflow-hidden flex items-center gap-4 px-5 py-4"
+        style={{
+          background: cfg.bg,
+          borderColor: cfg.border,
+          boxShadow: `0 0 32px ${cfg.glow}, 0 20px 40px rgba(0,0,0,0.5)`,
+        }}
+      >
+        {/* Icon bubble */}
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black shrink-0"
+          style={{ background: `${cfg.glow}`, border: `1px solid ${cfg.border}`, color: cfg.labelColor }}
+        >
+          {cfg.icon}
+        </div>
+        {/* Text */}
+        <div className="flex flex-col flex-1 min-w-0">
+          <span
+            className="text-[9px] font-black tracking-[0.25em] uppercase mb-0.5"
+            style={{ color: cfg.labelColor, fontFamily: 'var(--fd)' }}
+          >
+            {cfg.label}
+          </span>
+          <p className="text-[12px] font-semibold text-gray-100 leading-snug truncate">
+            {toast.message}
+          </p>
+        </div>
+        {/* Dismiss */}
+        <button
+          onClick={hideToast}
+          className="shrink-0 p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/5 transition-colors"
+          aria-label="Dismiss"
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
 export default function CenterToast() {
   const { toast, hideToast } = useToastStore()
-
   useEffect(() => {
     if (!toast) return
     const t = setTimeout(hideToast, toast.duration ?? 4000)
@@ -94,62 +150,7 @@ export default function CenterToast() {
 
   return (
     <AnimatePresence>
-      {toast && cfg && (
-        <div
-          className="fixed inset-0 pointer-events-none z-[9999] flex justify-center"
-          style={{ alignItems: isBottom ? 'flex-end' : 'center', paddingBottom: isBottom ? '1.5rem' : 0 }}
-        >
-          <motion.div
-            key={toast.type + toast.message}
-            initial={{ opacity: 0, y: isBottom ? 24 : 0, scale: isBottom ? 0.97 : 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: isBottom ? 12 : -12, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 26, stiffness: 340 }}
-            className="pointer-events-auto mx-4 w-full max-w-sm"
-          >
-            <div
-              className="rounded-2xl border backdrop-blur-xl shadow-2xl overflow-hidden flex items-center gap-4 px-5 py-4"
-              style={{
-                background: cfg.bg,
-                borderColor: cfg.border,
-                boxShadow: `0 0 32px ${cfg.glow}, 0 20px 40px rgba(0,0,0,0.5)`,
-              }}
-            >
-              {/* Icon bubble */}
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black shrink-0"
-                style={{ background: `${cfg.glow}`, border: `1px solid ${cfg.border}`, color: cfg.labelColor }}
-              >
-                {cfg.icon}
-              </div>
-
-              {/* Text */}
-              <div className="flex flex-col flex-1 min-w-0">
-                <span
-                  className="text-[9px] font-black tracking-[0.25em] uppercase mb-0.5"
-                  style={{ color: cfg.labelColor, fontFamily: 'var(--fd)' }}
-                >
-                  {cfg.label}
-                </span>
-                <p className="text-[12px] font-semibold text-gray-100 leading-snug truncate">
-                  {toast.message}
-                </p>
-              </div>
-
-              {/* Dismiss */}
-              <button
-                onClick={hideToast}
-                className="shrink-0 p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/5 transition-colors"
-                aria-label="Dismiss"
-              >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      {renderToast(cfg, toast, hideToast, isBottom)}
     </AnimatePresence>
   )
 }
