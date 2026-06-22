@@ -3,6 +3,11 @@
 import { useQuery } from '@tanstack/react-query'
 import type { ChessProfile } from '@/types/profile'
 
+/**
+ * useBatchProfiles
+ * @param {*} addresses: string[]
+ * @returns {*}
+ */
 export function useBatchProfiles(addresses: string[]) {
   const sorted = [...addresses].map((a) => a.toLowerCase()).sort()
   return useQuery({
