@@ -1,12 +1,14 @@
+'use client'
+
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { usePrivy, useWallets, useCreateWallet } from '@privy-io/react-auth'
 import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
 import { useAccount, useDisconnect, useConnect, useConnectors } from 'wagmi'
 
 // Capability tier drives how on-chain writes are sponsored:
-// 'minipay' → legacy tx + USDm gas-drip (MiniPay can't sign typed data)
-// 'smart' → ERC-4337 userOp sponsored by the Pimlico paymaster
-// 'eoa' → external injected wallet pays its own gas
+//   'minipay' → legacy tx + USDm gas-drip (MiniPay can't sign typed data)
+//   'smart'   → ERC-4337 userOp sponsored by the Pimlico paymaster
+//   'eoa'     → external injected wallet pays its own gas
 export type WalletTier = 'minipay' | 'smart' | 'eoa'
 
 interface WalletContextType {
@@ -54,6 +56,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const { connect: wagmiConnect } = useConnect()
   const connectors = useConnectors()
   const { client: smartWalletClient } = useSmartWallets()
+
   const [isMiniPay, setIsMiniPay] = useState(false)
   const [showChainSelect, setShowChainSelect] = useState(false)
   const miniPayConnectTried = useRef(false)
@@ -64,23 +67,22 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   // Authenticated via Privy, OR auto-connected MiniPay (injected wallet, no Privy session)
   const isConnected = (ready && authenticated) || (isMiniPay && !!evmAddress)
-
   // Fully ready = connected + has wallet address
   const isReady = isConnected && !!address
 
-  const getWalletTier = (isMiniPay: boolean, smartWalletClient: any, evmAddress: string | undefined) => {
-    if (isMiniPay) return 'minipay'
-    if (smartWalletClient?.account) return 'smart'
-    return 'eoa'
-  }
+  // Capability tier — MiniPay first (most constrained), then a Privy smart wallet
+  // if one is active, otherwise a plain external EOA.
+  const walletTier: WalletTier = isMiniPay
+    ? 'minipay'
+    : smartWalletClient?.account
+      ? 'smart'
+      : 'eoa'
 
-  const getPlayerAddress = (walletTier: WalletTier, smartWalletClient: any, address: string | null) => {
-    if (walletTier === 'smart' && smartWalletClient?.account) return smartWalletClient.account.address
-    return address
-  }
-
-  const walletTier: WalletTier = getWalletTier(isMiniPay, smartWalletClient, evmAddress)
-  const playerAddress = getPlayerAddress(walletTier, smartWalletClient, address)
+  // On-chain identity = smart-account address for Tier A, else the connected EOA.
+  const playerAddress =
+    walletTier === 'smart' && smartWalletClient?.account
+      ? smartWalletClient.account.address
+      : address
 
   // MiniPay runs the dApp in an in-app browser with an injected wallet.
   // Detect it and auto-connect the injected connector — MiniPay grants without
@@ -106,8 +108,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, [ready, authenticated, wallets.length, evmAddress, createWallet])
 
   const connect = useCallback(async () => {
-    if (authenticated) return
-    // already logged in, don't re-trigger login()
+    if (authenticated) return // already logged in, don't re-trigger
+    login()
     setShowChainSelect(false)
   }, [login, authenticated])
 
