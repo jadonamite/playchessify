@@ -55,6 +55,10 @@ const innerStyle: React.CSSProperties = {
   height: '100%', display: 'flex', flexDirection: 'column',
 }
 
+/**
+ * Features
+ * @returns {*}
+ */
 export default function Features() {
   return (
     <section id="how-it-works" className="features-section" style={{ padding: '80px 56px', background: 'var(--bg)' }}>
