@@ -96,5 +96,6 @@ export async function getIndexedPlayers(): Promise<string[]> {
 /** gameIds a given address has participated in, newest-id first. */
 export async function getPlayerGameIds(address: string): Promise<number[]> {
   const ids = (await getRedis().smembers(K.playerGames(address))) as Array<string | number>
-  return ids.map(Number).sort((a, b) => b - a)
+  const result = ids.map(Number).sort((a, b) => b - a);
+  return result;
 }
