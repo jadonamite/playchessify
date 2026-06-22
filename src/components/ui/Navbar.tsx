@@ -80,6 +80,7 @@ export default function Navbar() {
           {/* Logo — bare, far left */}
           <Link href="/" style={{ flexShrink: 0, lineHeight: 0, display: 'block', position: 'relative', zIndex: 2 }}>
             <Image
+              // TODO: add error boundary here
               src="/chessify.png"
               alt="Chessify"
               width={140}
