@@ -11,16 +11,18 @@ import { CHESS_GAME_ABI } from '@/config/abis'
 // load. A cursor records the highest gameId already folded into the index; each
 // sync only scans the delta (cursor+1 .. current gameNonce).
 // ─────────────────────────────────────────────────────────────────────────────
+
 const ZERO = '0x0000000000000000000000000000000000000000'
 const GAME = CELO_CONTRACTS.game as `0x${string}`
 const SCAN_CHUNK = 200
+
 const K = {
   cursor: 'chess:idx:cursor',
   players: 'chess:idx:players',
   playerGames: (a: string) => `chess:idx:player:${a.toLowerCase()}`,
 }
-let _redis: Redis | null = null
 
+let _redis: Redis | null = null
 function getRedis(): Redis {
   if (_redis) return _redis
   const url = process.env.UPSTASH_REDIS_REST_URL
@@ -40,30 +42,6 @@ async function gameNonce(): Promise<number> {
 }
 
 /**
- * Process game results and update the Redis index.
- * @param redis Redis client
- * @param results Game results
- * @param ids Game IDs
- */
-async function processGameResults(redis: Redis, results: any[], ids: bigint[]) {
-  const pipe = redis.pipeline()
-  let queued = false
-  results.forEach((r, i) => {
-    if (r.status !== 'success') return
-    const g = r.result as { white: string; black: string }
-    const id = Number(ids[i])
-    for (const raw of [g.white, g.black]) {
-      const addr = (raw ?? '').toLowerCase()
-      if (!addr || addr === ZERO || !addr.startsWith('0x')) continue
-      pipe.sadd(K.players, addr)
-      pipe.sadd(K.playerGames(addr), id)
-      queued = true
-    }
-  })
-  if (queued) await pipe.exec()
-}
-
-/**
  * Fold any games created since the last sync into the index. Bounded by the
  * number of *new* games, not the total. Returns the current gameNonce.
  */
@@ -73,6 +51,7 @@ export async function syncGameIndex(): Promise<number> {
   const nonce = await gameNonce()
   const lastGameId = nonce - 1
   if (lastGameId <= cursor) return nonce
+
   const pub = getPublicClient()
   for (let start = cursor + 1; start <= lastGameId; start += SCAN_CHUNK) {
     const end = Math.min(start + SCAN_CHUNK - 1, lastGameId)
@@ -86,10 +65,26 @@ export async function syncGameIndex(): Promise<number> {
       })),
       allowFailure: true,
     })
-    await processGameResults(redis, results, ids)
+
+    const pipe = redis.pipeline()
+    let queued = false
+    results.forEach((r, i) => {
+      if (r.status !== 'success') return
+      const g = r.result as { white: string; black: string }
+      const id = Number(ids[i])
+      for (const raw of [g.white, g.black]) {
+        const addr = (raw ?? '').toLowerCase()
+        if (!addr || addr === ZERO || !addr.startsWith('0x')) continue
+        pipe.sadd(K.players, addr)
+        pipe.sadd(K.playerGames(addr), id)
+        queued = true
+      }
+    })
+    if (queued) await pipe.exec()
     // Advance the cursor per chunk so a mid-scan failure resumes, not restarts.
     await redis.set(K.cursor, end)
   }
+
   return nonce
 }
 
