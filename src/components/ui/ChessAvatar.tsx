@@ -1,4 +1,5 @@
 'use client'
+
 import { avatarSvgUrl } from '@/lib/avatar'
 
 interface ChessAvatarProps {
@@ -7,14 +8,12 @@ interface ChessAvatarProps {
   className?: string
 }
 
-const getAltText = (address: string) => `${address.slice(0, 6)} avatar`;
-
 export default function ChessAvatar({ address, size = 40, className = '' }: ChessAvatarProps) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={avatarSvgUrl(address)}
-      alt={getAltText(address)}
+      alt={`${address.slice(0, 6)} avatar`}
       width={size}
       height={size}
       className={className}

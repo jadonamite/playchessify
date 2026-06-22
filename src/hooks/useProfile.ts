@@ -1,4 +1,5 @@
 'use client'
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ChessProfile } from '@/types/profile'
 
@@ -38,29 +39,28 @@ export function useCheckUsername(username: string) {
   })
 }
 
-const handleProfileMutation = (
-  qc: ReturnType<typeof useQueryClient>,
-  address: string,
-  res: Response,
-  onSuccess: (data: any) => void
-) => {
-  const data = res.json()
-  if (!res.ok) throw new Error(data.error ?? 'Mutation failed')
-  onSuccess(data)
-  qc.invalidateQueries({ queryKey: profileKey(address) })
-}
-
 export function useClaimProfile() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (body: { address: string; username: string; displayName: string; bio: string; signature: string; timestamp: string }) => {
+    mutationFn: async (body: {
+      address: string
+      username: string
+      displayName: string
+      bio: string
+      signature: string
+      timestamp: string
+    }) => {
       const res = await fetch('/api/profile/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      await handleProfileMutation(qc, body.address, res, (data) => data)
-      return res
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Claim failed')
+      return data
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: profileKey(vars.address) })
     },
   })
 }
@@ -68,15 +68,26 @@ export function useClaimProfile() {
 export function useUpdateProfile() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (body: { address: string; username?: string; displayName?: string; bio?: string; signature: string; timestamp: string }) => {
+    mutationFn: async (body: {
+      address: string
+      username?: string
+      displayName?: string
+      bio?: string
+      signature: string
+      timestamp: string
+    }) => {
       const { address, ...rest } = body
       const res = await fetch(`/api/profile/${address}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rest),
       })
-      await handleProfileMutation(qc, address, res, (data) => data)
-      return res
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Update failed')
+      return data
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: profileKey(vars.address) })
     },
   })
 }
