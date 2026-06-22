@@ -19,11 +19,6 @@ const DISPLAY_ORDER = ['q', 'r', 'b', 'n', 'p'] as const
 // Working from the board (not move history) keeps this correct even when the
 // game is rebuilt from a FEN — which drops chess.js move history — and naturally
 // accounts for promotions in the material count.
-/**
- * getCaptureSummary
- * @param {*} board: ReturnType<Chess['board']>
- * @returns {*}
- */
 export function getCaptureSummary(board: ReturnType<Chess['board']>): CaptureSummary {
   const remaining = {
     w: { p: 0, n: 0, b: 0, r: 0, q: 0 } as Record<string, number>,

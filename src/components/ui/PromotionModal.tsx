@@ -30,6 +30,7 @@ export default function PromotionModal({ open, color, onSelect, onCancel }: Prom
   // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration mount flag
   useEffect(() => { setMounted(true) }, [])
 
+  // Keyboard shortcuts: Q/R/B/N pick; Escape cancels
   useEffect(() => {
     if (!open) return
     const handler = (e: KeyboardEvent) => {
