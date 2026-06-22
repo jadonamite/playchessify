@@ -178,7 +178,6 @@ export function useCeloChess() {
   // Ensure a MiniPay wallet has USDm gas before it writes. No-op (→ 'self-pay') for
   // other tiers. Degrades gracefully: if the wallet already has gas, if the faucet
   // is exhausted, or if the request fails, we fall through to self-pay instead of
-  // blocking — the caller then decides whether the user can actually cover it.
   //
   // Tier C (external EOA) gets the same "free first transaction" treatment, but
   // dripped in native CELO (the currency they actually pay gas in) instead of USDm.
