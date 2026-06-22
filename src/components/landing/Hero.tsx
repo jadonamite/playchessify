@@ -10,7 +10,6 @@ import TypingHeroText from '@/components/ui/TypingHeroText'
 import { useRouter } from 'next/navigation'
 import NavbarComponent from '@/components/ui/Navbar'
 
-// Re-export so all existing `import { Navbar } from '@/components/landing/Hero'` keep working
 export { default as Navbar } from '@/components/ui/Navbar'
 
 const KEYFRAMES = `
