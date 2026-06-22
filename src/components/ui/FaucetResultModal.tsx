@@ -159,7 +159,6 @@ const RESULT_CONFIG = {
 export default function FaucetResultModal({
   type,
   onClose,
-  // FIXME: handle edge case when value is null
   txHash,
   amount,
   errorMessage,

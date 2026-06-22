@@ -10,16 +10,8 @@ import { useCallback, useState } from 'react'
 import { useToastStore } from '@/hooks/useToastStore'
 import { useWallet } from '@/components/wallet-provider'
 
-      const allowance = (await publicClient.readContract({
-        address: CELO_CONTRACTS.token as Address,
-        abi: CHESS_TOKEN_ABI,
-        functionName: 'allowance',
-        args: [playerAddress, CELO_CONTRACTS.game as Address],
-      })) as bigint
-      if (allowance >= amount) {
-        console.info(`${LOG_PREFIX} allowance sufficient (${allowance} >= ${amount})`)
-        return
-      }
+const LOG_PREFIX = '[useCeloChess]'
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // Option A — approve a large-but-finite allowance so repeat games skip the approve tx
 // (the allowance check below only re-approves once this is exhausted). A finite cap keeps
@@ -61,8 +53,14 @@ interface WriteRequest {
   args: readonly unknown[]
 }
 
-const LOG_PREFIX = '[useCeloChess]'
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+export function useCeloChess() {
+  const { address } = useAccount()
+  const { writeContractAsync } = useWriteContract()
+  const publicClient = usePublicClient({ chainId: CELO_CHAIN_ID })
+  const { walletTier } = useWallet()
+  const { client: smartClient } = useSmartWallets()
+  const [isPending, setIsPending] = useState(false)
+  const showToast = useToastStore((state) => state.showToast)
 
   // The on-chain "player" identity. For Tier A this is the smart-account address
   // (not the embedded EOA); for B/C it's the connected EOA.
@@ -282,14 +280,16 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
     async (amount: bigint): Promise<void> => {
       if (!publicClient || !playerAddress) throw new Error(`${LOG_PREFIX} not ready`)
 
-export function useCeloChess() {
-  const { address } = useAccount()
-  const { writeContractAsync } = useWriteContract()
-  const publicClient = usePublicClient({ chainId: CELO_CHAIN_ID })
-  const { walletTier } = useWallet()
-  const { client: smartClient } = useSmartWallets()
-  const [isPending, setIsPending] = useState(false)
-  const showToast = useToastStore((state) => state.showToast)
+      const allowance = (await publicClient.readContract({
+        address: CELO_CONTRACTS.token as Address,
+        abi: CHESS_TOKEN_ABI,
+        functionName: 'allowance',
+        args: [playerAddress, CELO_CONTRACTS.game as Address],
+      })) as bigint
+      if (allowance >= amount) {
+        console.info(`${LOG_PREFIX} allowance sufficient (${allowance} >= ${amount})`)
+        return
+      }
 
       showToast('Please approve the CHESS token spending limit...', 'info')
       const approveHash = await sendWrite({
