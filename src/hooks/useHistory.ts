@@ -26,8 +26,8 @@ export function useHistory() {
       const res = await fetch(`/api/history?address=${playerAddress}`)
       const body = (await res.json().catch(() => ({}))) as { history?: HistoryItem[] }
       return Array.isArray(body.history) ? body.history : []
-    } catch (error) {
-      console.error('[useHistory] fetch failed:', error)
+    } catch (err) {
+      console.error('[useHistory] fetch failed:', err)
       return []
     }
   }, [playerAddress])

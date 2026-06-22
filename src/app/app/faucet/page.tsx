@@ -1,1 +1,10 @@
-import FaucetContent from '@/components/faucet/FaucetContent'; import { pageMetadata } from '@/utils/metadata'; export default function FaucetPage() { return <FaucetContent /> }; export const metadata = pageMetadata('Token Faucet | Chessify Protocol', 'Claim free CHESS tokens daily to fuel your on-chain chess matches.');
+import FaucetContent from '@/components/faucet/FaucetContent'
+
+export const metadata = {
+  title: 'Token Faucet | Chessify Protocol',
+  description: 'Claim free CHESS tokens daily to fuel your on-chain chess matches.',
+}
+
+export default function FaucetPage() {
+  return <FaucetContent />
+}
