@@ -21,7 +21,6 @@ import {
 
 // Desktop left rail — the signed-in counterpart to the mobile top Navbar +
 // BottomNav. It rehomes everything the top nav used to carry (links, music
-// toggle, wallet pill + disconnect) into a single Duolingo-style vertical rail.
 // Visible only ≥769px via the `.pc-side-nav` helper (see globals.css); below
 // that the mobile chrome takes over.
 
