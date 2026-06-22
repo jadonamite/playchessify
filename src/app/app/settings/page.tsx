@@ -71,7 +71,6 @@ export default function SettingsPage() {
   // Sync fields when profile loads
   useEffect(() => {
     if (profile && !editDirty) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync form fields from loaded profile
       setEditDisplayName(profile.displayName ?? '')
       setEditBio(profile.bio ?? '')
     }
