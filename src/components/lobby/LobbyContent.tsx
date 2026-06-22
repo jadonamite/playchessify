@@ -376,12 +376,12 @@ export default function LobbyContent() {
                     </div>
                   ) : (
                     <>
-                      {openGames.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((game, index) => (
+                      {openGames.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((game, idx) => (
                     <motion.div
                       key={game.id}
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={{ delay: idx * 0.1 }}
                       whileTap={{ scale: 0.985 }}
                     >
                       {/*

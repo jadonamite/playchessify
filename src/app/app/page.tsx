@@ -1,7 +1,5 @@
-import { redirect } from 'next/navigation';
-
-const getRedirectUrl = () => '/app/lobby';
+import { redirect } from 'next/navigation'
 
 export default function AppPage() {
-  redirect(getRedirectUrl())
+  redirect('/app/lobby')
 }
