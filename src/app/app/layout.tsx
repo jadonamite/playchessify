@@ -1,9 +1,9 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import BottomNav from '@/components/ui/BottomNav'
 import SideNav from '@/components/ui/SideNav'
 import { Navbar } from '@/components/landing/Hero'
-import { usePathname } from 'next/navigation'
 
 // Shared chrome for every /app/* route.
 //  • Desktop (≥769px): the fixed SideNav rail replaces the top nav; content is
