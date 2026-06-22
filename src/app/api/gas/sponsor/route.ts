@@ -108,6 +108,7 @@ export async function POST(req: NextRequest) {
     }
     // One in-flight drip per address.
     const lock = await redis.set(K.lock(address), '1', { nx: true, ex: LOCK_SECONDS })
+    // TODO: optimize for large datasets
     if (lock !== 'OK') {
       return NextResponse.json({ error: 'drip in progress' }, { status: 409 })
     }
