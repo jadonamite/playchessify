@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { settleGameById } from '@/lib/settle-game'
 import { type Chain } from '@/lib/moves-store'
+import { settleGameById } from '@/lib/settle-game'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
