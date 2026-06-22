@@ -53,21 +53,13 @@ function Toggle({ label, sub, checked, onChange }: { label: string; sub?: string
   )
 }
 
-  const handleSaveProfile = async () => {
-    if (!playerAddress || !profile) return
-    setEditError('')
-    try {
-      const timestamp = new Date().toISOString()
-      const message = `Chessify Profile Update\n\nAddress: ${playerAddress}\nTimestamp: ${timestamp}`
-      const signature = await signMessageAsync({ message })
-      await updateProfile({ address: playerAddress, displayName: editDisplayName.trim(), bio: editBio.trim(), signature, timestamp })
-      setEditDirty(false)
-      setEditSaved(true)
-      setTimeout(() => setEditSaved(false), 3000)
-    } catch (e) {
-      setEditError(e instanceof Error ? e.message : 'Update failed')
-    }
-  }
+export default function SettingsPage() {
+  const router = useRouter()
+  const { playerAddress, isConnected } = useWallet()
+  const { soundEnabled, setSoundEnabled, boardTheme, setBoardTheme, pieceSet, setPieceSet, aiDifficulty, setAiDifficulty, showMoveHints, setShowMoveHints } = useSettingsStore()
+  const { data: profile } = useProfile(playerAddress ?? null)
+  const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
+  const { signMessageAsync } = useSignMessage()
 
   const [claimOpen, setClaimOpen] = useState(false)
   const [editDisplayName, setEditDisplayName] = useState('')
@@ -85,13 +77,21 @@ function Toggle({ label, sub, checked, onChange }: { label: string; sub?: string
     }
   }, [profile, editDirty])
 
-export default function SettingsPage() {
-  const router = useRouter()
-  const { playerAddress, isConnected } = useWallet()
-  const { soundEnabled, setSoundEnabled, boardTheme, setBoardTheme, pieceSet, setPieceSet, aiDifficulty, setAiDifficulty, showMoveHints, setShowMoveHints } = useSettingsStore()
-  const { data: profile } = useProfile(playerAddress ?? null)
-  const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
-  const { signMessageAsync } = useSignMessage()
+  const handleSaveProfile = async () => {
+    if (!playerAddress || !profile) return
+    setEditError('')
+    try {
+      const timestamp = new Date().toISOString()
+      const message = `Chessify Profile Update\n\nAddress: ${playerAddress}\nTimestamp: ${timestamp}`
+      const signature = await signMessageAsync({ message })
+      await updateProfile({ address: playerAddress, displayName: editDisplayName.trim(), bio: editBio.trim(), signature, timestamp })
+      setEditDirty(false)
+      setEditSaved(true)
+      setTimeout(() => setEditSaved(false), 3000)
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : 'Update failed')
+    }
+  }
 
   const BOARD_THEME_KEYS = Object.keys(BOARD_THEMES) as BoardTheme[]
   const AI_DIFFICULTIES: AiDifficulty[] = ['easy', 'medium', 'hard']
