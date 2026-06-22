@@ -48,7 +48,6 @@ const MEDAL = {
 // ── helpers ─────────────────────────────────────────────────────────────────
 
 
-// TODO: add input validation
 const winRate = (e: LeaderboardEntry) =>
   e.gamesPlayed === 0 ? '—' : `${Math.round((e.wins / e.gamesPlayed) * 100)}%`
 

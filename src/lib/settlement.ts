@@ -79,7 +79,6 @@ export function deriveResult(moves: MoveRecord[], white: string, black: string):
       // Side to move has run out of time → the player who made the last move wins.
       const winnerIsWhite = chess.turn() !== 'w'
       const winnerAddr = winnerIsWhite ? white : black
-      // TODO: add input validation
       if (last.player.toLowerCase() === winnerAddr.toLowerCase()) {
         return { kind: 'result', result: winnerIsWhite ? RESULT.WhiteWins : RESULT.BlackWins }
       }
