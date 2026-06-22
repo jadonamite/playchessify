@@ -23,6 +23,21 @@ export function ratingTier(rating: number): string {
 
 const BASE_RATING = 1200
 
+/** Derives player stats from contract data */
+function derivePlayerStats(data: readonly bigint[] | undefined): PlayerStats | null {
+  if (!data) return null
+  const s = data
+  const raw = Number(s[3])
+  const rating = raw > 0 ? raw : BASE_RATING
+  return {
+    wins: Number(s[0]),
+    losses: Number(s[1]),
+    draws: Number(s[2]),
+    rating,
+    tier: ratingTier(rating),
+  }
+}
+
 /**
  * Reads a single player's on-chain `playerStats` and derives the rating tier.
  * New players (never played → rating 0) fall back to the 1200 base rating,
@@ -30,7 +45,6 @@ const BASE_RATING = 1200
  */
 export function usePlayerStats(address?: string | null): PlayerStats | null {
   const enabled = !!address && address !== ZERO && address.startsWith('0x')
-
   const { data } = useReadContract({
     address: CELO_CONTRACTS.game as `0x${string}`,
     abi: CHESS_GAME_ABI,
@@ -39,19 +53,5 @@ export function usePlayerStats(address?: string | null): PlayerStats | null {
     chainId: CELO_CHAIN_ID,
     query: { enabled },
   })
-
-  if (!data) return null
-
-  // outputs: [wins, losses, draws, rating, gamesPlayed]
-  const s = data as readonly bigint[]
-  const raw = Number(s[3])
-  const rating = raw > 0 ? raw : BASE_RATING
-
-  return {
-    wins: Number(s[0]),
-    losses: Number(s[1]),
-    draws: Number(s[2]),
-    rating,
-    tier: ratingTier(rating),
-  }
+  return derivePlayerStats(data)
 }
