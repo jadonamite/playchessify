@@ -12,6 +12,10 @@ import { Queen, PieceView } from '@/components/ui/ChessModels'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
 import ChessName from '@/components/ui/ChessName'
 
+/**
+ * Scene
+ * @returns {*}
+ */
 function Scene() {
   return (
     <>
