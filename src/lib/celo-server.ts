@@ -58,11 +58,6 @@ export function getPublicClient(): ReturnType<typeof makePublicClient> {
 }
 
 // ── Wallet clients (writes) ──────────────────────────────────────────────────
-/**
- * requireKey
- * @param {*} name: string
- * @returns {*}
- */
 function requireKey(name: string): `0x${string}` {
   const raw = process.env[name]
   if (!raw) throw new Error(`[celo-server] ${name} must be set`)
