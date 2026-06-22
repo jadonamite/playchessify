@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server' 
 import { Redis } from '@upstash/redis'
 import type { Abi } from 'viem'
 import { getPublicClient } from '@/lib/celo-server'
@@ -52,16 +52,6 @@ function createLeaderboardEntries(addresses: string[], statsResults: any[]): Lea
   return entries
 }
 
-// Helper function to create, sort, and rank leaderboard entries
-function createAndRankLeaderboardEntries(addresses: string[], statsResults: any[]): LeaderboardEntry[] {
-  const entries = createLeaderboardEntries(addresses, statsResults)
-  entries.sort((a, b) => b.rating - a.rating || b.wins - a.wins)
-  entries.forEach((e, i) => {
-    e.rank = i + 1
-  })
-  return entries
-}
-
 // GET /api/leaderboard — Redis-indexed leaderboard. Scans only games created
 // since the last index sync (cursor), then reads playerStats for known players.
 export async function GET() {
@@ -81,7 +71,11 @@ export async function GET() {
       })),
       allowFailure: true,
     })
-    const entries = createAndRankLeaderboardEntries(addresses, statsResults)
+    const entries = createLeaderboardEntries(addresses, statsResults)
+    entries.sort((a, b) => b.rating - a.rating || b.wins - a.wins)
+    entries.forEach((e, i) => {
+      e.rank = i + 1
+    })
     await redis.set(CACHE_KEY, entries, { ex: CACHE_TTL })
     return NextResponse.json({ entries })
   } catch (err) {
