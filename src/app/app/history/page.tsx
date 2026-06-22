@@ -1,7 +1,5 @@
-import { HistoryContent } from '@/components/lobby/HistoryContent';
-
-const renderHistoryContent = () => <HistoryContent />;
+import { HistoryContent } from '@/components/lobby/HistoryContent'
 
 export default function HistoryPage() {
-  return renderHistoryContent();
+  return <HistoryContent />
 }

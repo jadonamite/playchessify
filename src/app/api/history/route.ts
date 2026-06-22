@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
         address: GAME,
         abi: CHESS_GAME_ABI as Abi,
         functionName: 'getGame',
-        params: [BigInt(id)],
+        args: [BigInt(id)],
       })),
       allowFailure: true,
     })
