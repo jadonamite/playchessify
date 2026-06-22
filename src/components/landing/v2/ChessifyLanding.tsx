@@ -229,7 +229,6 @@ export default function ChessifyLanding() {
   const [coach, setCoach] = useState(0)
   const [board, setBoard] = useState<Board>(() => makeBoard())
   const [sel, setSel] = useState<{ r: number; c: number } | null>(null)
-  const [connectOpen, setConnectOpen] = useState(false)
   const [sound, setSound] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -286,10 +285,8 @@ export default function ChessifyLanding() {
 
   const start = useCallback(() => {
     if (isConnected) { router.push('/app/lobby'); return }
-    setConnectOpen(true)
-  }, [isConnected, router])
-
-  const closeConnect = useCallback(() => setConnectOpen(false), [])
+    connectWallet() // straight to Privy — no intermediary modal
+  }, [isConnected, router, connectWallet])
 
   const toggleSound = useCallback(() => {
     setSound((on) => {
@@ -800,24 +797,6 @@ export default function ChessifyLanding() {
 
         </div>
 
-        {/* CONNECT MODAL */}
-        {connectOpen && (
-          <div onClick={closeConnect} style={css('position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(2,4,10,.78);backdrop-filter:blur(10px);')}>
-            <div onClick={(e) => e.stopPropagation()} style={css('position:relative;width:100%;max-width:420px;padding:36px;border-radius:22px;background:linear-gradient(180deg,#0b1426,#070d1c);border:1px solid rgba(56,232,255,.28);box-shadow:0 30px 90px rgba(0,0,0,.7);')}>
-              <button onClick={closeConnect} style={css('position:absolute;top:18px;right:18px;width:32px;height:32px;border-radius:8px;border:1px solid rgba(120,200,255,.14);background:transparent;color:#9fb2c8;cursor:pointer;font-size:16px;')}>✕</button>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`${PIECE_SET}/wK.svg`} alt="" style={css('width:40px;height:48px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(56,232,255,.7));')} />
-              <h3 style={css("font-family:'Anton';font-size:30px;color:#fff;margin:12px 0 6px;letter-spacing:.01em;")}>CONNECT WALLET</h3>
-              <p style={css('color:#a7b8cd;font-size:14px;line-height:1.5;margin:0 0 24px;')}>Pick a wallet to start playing. No wallet? Grab 1,000 free CHESS to begin.</p>
-              <div style={css('display:flex;flex-direction:column;gap:10px;')}>
-                <button className="ccv-wallet" onClick={connectWallet} style={css("display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-radius:12px;border:1px solid rgba(52,211,153,.4);background:rgba(52,211,153,.06);color:#eafff6;font-family:'Chakra Petch';font-size:15px;font-weight:700;cursor:pointer;")}><span>MiniPay</span><span style={{ color: '#34d399' }}>▸</span></button>
-                <button className="ccv-wallet" onClick={connectWallet} style={css("display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-radius:12px;border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.06);color:#fff6e6;font-family:'Chakra Petch';font-size:15px;font-weight:700;cursor:pointer;")}><span>MetaMask</span><span style={{ color: '#fbbf24' }}>▸</span></button>
-                <button className="ccv-wallet" onClick={connectWallet} style={css("display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-radius:12px;border:1px solid rgba(56,232,255,.4);background:rgba(56,232,255,.06);color:#e6fbff;font-family:'Chakra Petch';font-size:15px;font-weight:700;cursor:pointer;")}><span>Any EVM Wallet</span><span style={{ color: '#5ce1ff' }}>▸</span></button>
-              </div>
-              <div style={css('text-align:center;margin-top:20px;font-size:12px;color:#5b7290;')}>Secured on Celo Mainnet · 0% platform fees</div>
-            </div>
-          </div>
-        )}
       </div>
     </main>
   )

@@ -3,11 +3,54 @@ import type { Metadata } from 'next'
 import { Providers } from './providers'
 
 export const metadata: Metadata = {
-  title: "CHESSIFY — Play Chess on Celo",
-  description: "Wager CHESS tokens, play on-chain. Built by Velocity Labs.",
+  metadataBase: new URL("https://celo.playchessify.xyz"),
+  title: {
+    default: "Chessify — Learn, Play & Stake Chess On-Chain",
+    template: "%s · Chessify",
+  },
+  description:
+    "Train with grandmaster AI coaches, wager CHESS tokens on real games, and keep every coin you win. On-chain chess across Celo, Stacks and Base.",
+  applicationName: "Chessify",
+  keywords: [
+    "chess",
+    "play chess online",
+    "crypto chess",
+    "on-chain chess",
+    "chess wager",
+    "CHESS token",
+    "Celo",
+    "Base",
+    "Stacks",
+    "chess coach",
+    "web3 chess",
+  ],
+  alternates: { canonical: "/" },
   icons: {
     icon: "/playchessify.svg",
     apple: "/playchessify.svg",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Chessify",
+    url: "/",
+    title: "Chessify — Learn, Play & Stake Chess On-Chain",
+    description:
+      "Train with grandmaster AI coaches, wager CHESS tokens on real games, and keep every coin you win.",
+    images: [{ url: "/chessify.png", width: 1522, height: 294, alt: "Chessify" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@playchessify",
+    creator: "@playchessify",
+    title: "Chessify — Learn, Play & Stake Chess On-Chain",
+    description:
+      "Train with grandmaster AI coaches, wager CHESS tokens on real games, and keep every coin you win.",
+    images: ["/chessify.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
   },
   other: {
     "talentapp:project_verification":
