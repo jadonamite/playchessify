@@ -49,7 +49,7 @@ const TOKEN_ADDRESS = CELO_CONTRACTS.token as Address
 
 // ── Public client (reads) ────────────────────────────────────────────────────
 function makePublicClient() {
-  return createPublicClient({ chain: CHAIN, transport: http(RPC_URL) }),
+  return createPublicClient({ chain: CHAIN, transport: http(RPC_URL) })
 }
 let _publicClient: ReturnType<typeof makePublicClient> | null = null
 export function getPublicClient(): ReturnType<typeof makePublicClient> {
