@@ -19,18 +19,16 @@ export function useMoveSigner() {
 
   const signMove = useCallback(
     async (message: string): Promise<`0x${string}` | null> => {
-      if (walletTier === 'minipay') return null
       try {
-        if (walletTier === 'smart' && smartClient) {
-          return await smartClient.signMessage({ message })
-        }
-        if (walletTier === 'eoa') {
-          return await signMessageAsync({ message })
-        }
+        if (walletTier === 'minipay') return null
+        if (walletTier === 'smart' && smartClient) return await smartClient.signMessage({ message })
+        if (walletTier === 'eoa') return await signMessageAsync({ message })
+        console.warn('[useMoveSigner] unknown wallet tier')
+        return null
       } catch (err) {
         console.warn('[useMoveSigner] sign failed, submitting unsigned', err)
+        return null
       }
-      return null
     },
     [walletTier, smartClient, signMessageAsync],
   )

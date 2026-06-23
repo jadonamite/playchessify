@@ -1,22 +1,59 @@
-'use client'
-
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 
 interface HoldButtonProps {
   /** Fired once the user holds the button to completion. */
-  onComplete: () => void
-  label: string
-  holdingLabel?: string
+  onComplete: () => void;
+  label: string;
+  holdingLabel?: string;
   /** Hold duration in ms before firing. */
-  holdMs?: number
-  disabled?: boolean
-  loading?: boolean
-  loadingLabel?: string
+  holdMs?: number;
+  disabled?: boolean;
+  loading?: boolean;
+  loadingLabel?: string;
   /** Accent colour for the fill (defaults to the brand cyan). */
-  accent?: string
-  fullWidth?: boolean
+  accent?: string;
+  fullWidth?: boolean;
 }
+
+const useHoldButtonState = (
+  disabled: boolean,
+  loading: boolean,
+  holdMs: number,
+  onComplete: () => void
+) => {
+  const [holding, setHolding] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fired = useRef(false);
+
+  const clear = useCallback(() => {
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
+    }
+  }, []);
+
+  const startHold = useCallback(() => {
+    if (timer.current || disabled || loading) return;
+    fired.current = false;
+    setHolding(true);
+    timer.current = setTimeout(() => {
+      fired.current = true;
+      timer.current = null;
+      setHolding(false);
+      onComplete();
+    }, holdMs);
+  }, [disabled, loading, holdMs, onComplete]);
+
+  const cancelHold = useCallback(() => {
+    clear();
+    if (!fired.current) setHolding(false);
+  }, [clear]);
+
+  useEffect(() => clear, [clear]);
+
+  return { holding, startHold, cancelHold };
+};
 
 /**
  * Press-and-hold confirmation button — same gesture as the in-game hold-to-quit
@@ -34,35 +71,15 @@ export default function HoldButton({
   accent = 'var(--c)',
   fullWidth = true,
 }: HoldButtonProps) {
-  const [holding, setHolding] = useState(false)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const fired = useRef(false)
+  const { holding, startHold, cancelHold } = useHoldButtonState(
+    disabled,
+    loading,
+    holdMs,
+    onComplete
+  );
 
-  const clear = useCallback(() => {
-    if (timer.current) { clearTimeout(timer.current); timer.current = null }
-  }, [])
-
-  const startHold = useCallback(() => {
-    if (timer.current || disabled || loading) return
-    fired.current = false
-    setHolding(true)
-    timer.current = setTimeout(() => {
-      fired.current = true
-      timer.current = null
-      setHolding(false)
-      onComplete()
-    }, holdMs)
-  }, [disabled, loading, holdMs, onComplete])
-
-  const cancelHold = useCallback(() => {
-    clear()
-    if (!fired.current) setHolding(false)
-  }, [clear])
-
-  useEffect(() => clear, [clear])
-
-  const inactive = disabled || loading
-  const text = loading ? loadingLabel : holding ? holdingLabel : label
+  const inactive = disabled || loading;
+  const text = loading ? loadingLabel : holding ? holdingLabel : label;
 
   return (
     <motion.button
@@ -107,8 +124,11 @@ export default function HoldButton({
       <span
         aria-hidden
         style={{
-          position: 'absolute', inset: 0, zIndex: 1,
-          opacity: holding ? 0.4 : 0, transition: 'opacity .15s',
+          position: 'absolute',
+          inset: 0,
+          zIndex: 1,
+          opacity: holding ? 0.4 : 0,
+          transition: 'opacity .15s',
           background: 'repeating-linear-gradient(90deg, transparent 0 22px, rgba(0,0,0,.35) 22px 24px)',
         }}
       />
@@ -116,9 +136,16 @@ export default function HoldButton({
         <span
           aria-hidden
           style={{
-            position: 'absolute', left: 18, top: '50%', marginTop: -8, zIndex: 2,
-            width: 16, height: 16, borderRadius: '50%',
-            border: `2px solid ${accent}`, borderTopColor: 'transparent',
+            position: 'absolute',
+            left: 18,
+            top: '50%',
+            marginTop: -8,
+            zIndex: 2,
+            width: 16,
+            height: 16,
+            borderRadius: '50%',
+            border: `2px solid ${accent}`,
+            borderTopColor: 'transparent',
             animation: 'spin .6s linear infinite',
           }}
         />
@@ -136,5 +163,5 @@ export default function HoldButton({
         {text}
       </span>
     </motion.button>
-  )
+  );
 }
