@@ -75,6 +75,7 @@ export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimM
 
   useEffect(() => {
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset modal state on close
       setStep('form')
       setUsername('')
       setDisplayName('')
