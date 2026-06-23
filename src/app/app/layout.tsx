@@ -26,5 +26,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className={isGame ? undefined : 'pc-app-scroll'}>{children}</div>
       {!isGame && <BottomNav />}
     </div>
-  ),
+  )
 }

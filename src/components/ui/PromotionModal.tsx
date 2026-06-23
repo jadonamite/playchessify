@@ -33,7 +33,6 @@ export default function PromotionModal({ open, color, onSelect, onCancel }: Prom
   // Keyboard shortcuts: Q/R/B/N pick; Escape cancels
   useEffect(() => {
     if (!open) return
-    // TODO: optimize for large datasets
     const handler = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase()
       if (k === 'q') onSelect('q')
