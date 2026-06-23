@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const LOG_PREFIX = '[useGameMoves]'
+const LOG_PREFIX: string = '[useGameMoves]'
 const POLL_INTERVAL_MS = 1_500
 
 export type Chain = 'celo'
