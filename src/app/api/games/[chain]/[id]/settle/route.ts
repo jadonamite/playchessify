@@ -33,8 +33,7 @@ export async function POST(
   try {
     const outcome = await settleGameById(chain, gameId)
     if (outcome.ok) {
-      const result = NextResponse.json({ ok: true, txHash: outcome.txHash, result: outcome.result });
-      return result;
+      return NextResponse.json({ ok: true, txHash: outcome.txHash, result: outcome.result })
     }
     const statusByReason: Record<string, number> = {
       'not-active': 409,
