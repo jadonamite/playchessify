@@ -59,11 +59,6 @@ export const metadata: Metadata = {
 };
 
 
-/**
- * RootLayout
- * @param {*} { children }: { children: React.ReactNode }
- * @returns {*}
- */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
