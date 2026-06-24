@@ -216,10 +216,10 @@ export function getHintMove(game: Chess, depth = 3): Move | null {
 
   for (const move of moves) {
     game.move(move)
-    const value = minimax(game, depth - 1, -Infinity, Infinity, !isWhite)
+    const val = minimax(game, depth - 1, -Infinity, Infinity, !isWhite)
     game.undo()
-    if (isWhite ? value > bestVal : value < bestVal) {
-      bestVal = value
+    if (isWhite ? val > bestVal : val < bestVal) {
+      bestVal = val
       best = move
     }
   }
