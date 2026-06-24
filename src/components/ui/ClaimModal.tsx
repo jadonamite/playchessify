@@ -245,7 +245,7 @@ export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimM
                 />
 
                 {error && (
-                  <p className="text-xs text-red-400 font-bold text-center">{error}</p>
+                  <p className='text-xs text-red-400 font-bold text-center'>{error}</p>
                 )}
 
                 <div className="flex gap-3">
