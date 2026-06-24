@@ -17,9 +17,9 @@ const GAME = CELO_CONTRACTS.game as `0x${string}`
 const SCAN_CHUNK = 200
 
 const K = {
-  cursor: 'chess:index:cursor',
-  players: 'chess:index:players',
-  playerGames: (a: string) => `chess:index:player:${a.toLowerCase()}`,
+  cursor: 'chess:idx:cursor',
+  players: 'chess:idx:players',
+  playerGames: (a: string) => `chess:idx:player:${a.toLowerCase()}`,
 }
 
 let _redis: Redis | null = null
