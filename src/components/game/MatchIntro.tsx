@@ -1,10 +1,10 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import type { ChessProfile } from '@/types/profile'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import ChessName from '@/components/ui/ChessName'
-import type { ChessProfile } from '@/types/profile'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useEffect, useState } from 'react'
 import { usePlayerStats } from '@/hooks/usePlayerStats'
 import { useToastStore } from '@/hooks/useToastStore'
 
