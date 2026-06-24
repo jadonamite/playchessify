@@ -23,7 +23,7 @@ export function FreeCTA() {
           fontFamily: 'var(--fd)', fontSize: 10, letterSpacing: '.12em',
           color: 'var(--t3)', marginBottom: 22,
         }}>START FOR FREE</p>
-        <Link href='/app/faucet'>
+        <Link href="/app/faucet">
           <GlowButton variant="ghost">Get Free CHESS Tokens</GlowButton>
         </Link>
       </div>

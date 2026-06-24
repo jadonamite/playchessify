@@ -183,7 +183,6 @@ export default function FaucetContent() {
 
   // Human-readable time left on the faucet cooldown, e.g. "23h 12m".
   const formatCooldown = (blocksLeft: bigint): string => {
-    // FIXME: handle edge case when value is null
     const secs = Number(blocksLeft) * BLOCK_TIME_SECS
     const h = Math.floor(secs / 3600)
     const m = Math.ceil((secs % 3600) / 60)
