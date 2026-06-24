@@ -1,43 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useWallet } from '@/components/wallet-provider'
-import GlowButton from '@/components/ui/GlowButton'
-import ClayCard from '@/components/ui/ClayCard'
-import ComingSoonOverlay from '@/components/ui/ComingSoonOverlay'
-import { useRouter } from 'next/navigation'
-import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID } from '@/config/contracts'
-import { useCeloChess } from '@/hooks/useCeloChess'
-import { useLobby } from '@/hooks/useLobby'
-import { useBatchProfiles } from '@/hooks/useBatchProfiles'
-import { useProfile } from '@/hooks/useProfile'
-import ChessName from '@/components/ui/ChessName'
-import ChessAvatar from '@/components/ui/ChessAvatar'
-import ClaimModal from '@/components/ui/ClaimModal'
-import LoadingState from '@/components/ui/LoadingState'
-import { CrownIcon, RankIcon } from '@/components/ui/icons'
-import { useReadContract } from 'wagmi'
-import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
-import { formatUnits } from 'viem'
-function BgIcon({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{
-      position: 'absolute',
-      bottom: '-8%',
-      right: '-4%',
-      height: '80%',
-      aspectRatio: '1',
-      opacity: 0.04,
-      pointerEvents: 'none',
-      transition: 'opacity .3s',
-      overflow: 'hidden',
-      zIndex: 0,
-    }}>
-      {children}
-    </div>
-  )
-}
+  const handleAction = (action: () => void) => MAINTENANCE_MODE ? setIsComingSoonOpen(true) : action()
 
 export default function LobbyContent() {
   const { isConnected, isReady, playerAddress } = useWallet()
@@ -107,6 +70,17 @@ export default function LobbyContent() {
   const [claimModalOpen, setClaimModalOpen] = useState(false)
   const showClaimBanner = isConnected && !!playerAddress && myProfile === null
 
+  const handleSearchJoin = () => {
+    setSearchError(null)
+    const id = parseInt(searchId, 10)
+    if (!searchId || isNaN(id) || id <= 0) {
+      setSearchError('Enter a valid numeric match ID.')
+      return
+    }
+    // Navigate to the game page — it will handle join/spectate logic based on game state
+    router.push(`/app/game/${id}`)
+  }
+
   const handleCreateGame = async () => {
     if (MAINTENANCE_MODE) return setIsComingSoonOpen(true)
     setIsPending(true)
@@ -129,19 +103,44 @@ export default function LobbyContent() {
     }
   }
 
-
-  const handleSearchJoin = () => {
-    setSearchError(null)
-    const id = parseInt(searchId, 10)
-    if (!searchId || isNaN(id) || id <= 0) {
-      setSearchError('Enter a valid numeric match ID.')
-      return
-    }
-    // Navigate to the game page — it will handle join/spectate logic based on game state
-    router.push(`/app/game/${id}`)
-  }
-
-  const handleAction = (action: () => void) => MAINTENANCE_MODE ? setIsComingSoonOpen(true) : action()
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useWallet } from '@/components/wallet-provider'
+import GlowButton from '@/components/ui/GlowButton'
+import ClayCard from '@/components/ui/ClayCard'
+import ComingSoonOverlay from '@/components/ui/ComingSoonOverlay'
+import { useRouter } from 'next/navigation'
+import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID } from '@/config/contracts'
+import { useCeloChess } from '@/hooks/useCeloChess'
+import { useLobby } from '@/hooks/useLobby'
+import { useBatchProfiles } from '@/hooks/useBatchProfiles'
+import { useProfile } from '@/hooks/useProfile'
+import ChessName from '@/components/ui/ChessName'
+import ChessAvatar from '@/components/ui/ChessAvatar'
+import ClaimModal from '@/components/ui/ClaimModal'
+import LoadingState from '@/components/ui/LoadingState'
+import { CrownIcon, RankIcon } from '@/components/ui/icons'
+import { useReadContract } from 'wagmi'
+import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
+import { formatUnits } from 'viem'
+function BgIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      position: 'absolute',
+      bottom: '-8%',
+      right: '-4%',
+      height: '80%',
+      aspectRatio: '1',
+      opacity: 0.04,
+      pointerEvents: 'none',
+      transition: 'opacity .3s',
+      overflow: 'hidden',
+      zIndex: 0,
+    }}>
+      {children}
+    </div>
+  )
+}
 
   useEffect(() => {
     if (!isConnected) {
