@@ -80,6 +80,7 @@ export async function GET() {
     return NextResponse.json({ entries })
   } catch (err) {
     console.error('[api/leaderboard] failed:', (err as Error)?.message)
-    return NextResponse.json({ error: 'leaderboard unavailable' }, { status: 503 })
+    const result = NextResponse.json({ error: 'leaderboard unavailable' }, { status: 503 });
+    return result;
   }
 }
