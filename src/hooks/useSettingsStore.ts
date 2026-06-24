@@ -1,10 +1,8 @@
 'use client'
-
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 export type BoardTheme = 'dark' | 'forest' | 'classic' | 'midnight'
-
 export const BOARD_THEMES: Record<BoardTheme, { dark: string; light: string; name: string }> = {
   dark: { dark: '#0f172a', light: '#1e293b', name: 'Dark (Default)' },
   forest: { dark: '#1a3a2a', light: '#2d5a3d', name: 'Forest' },
@@ -13,7 +11,6 @@ export const BOARD_THEMES: Record<BoardTheme, { dark: string; light: string; nam
 }
 
 export type PieceSet = 'chessnut' | 'caliente' | 'maestro' | 'fresca' | 'cooke'
-
 // Available in-game piece sets. SVG assets live in `public/pieces/<id>/`.
 export const PIECE_SETS: { id: PieceSet; name: string }[] = [
   { id: 'chessnut', name: 'Chessnut' },
@@ -24,7 +21,6 @@ export const PIECE_SETS: { id: PieceSet; name: string }[] = [
 ]
 
 export type AiDifficulty = 'easy' | 'medium' | 'hard'
-
 // Difficulty maps to minimax search depth. Capped at 3 — deeper search
 // gets sluggish in-browser.
 export const AI_DEPTH: Record<AiDifficulty, number> = {
@@ -32,7 +28,6 @@ export const AI_DEPTH: Record<AiDifficulty, number> = {
   medium: 2,
   hard: 3,
 }
-
 export const AI_DIFFICULTY_LABELS: Record<AiDifficulty, string> = {
   easy: 'Easy',
   medium: 'Medium',
@@ -52,6 +47,8 @@ interface SettingsState {
   setShowMoveHints: (v: boolean) => void
 }
 
+const createSetter = (set: any, key: keyof SettingsState) => (value: any) => set({ [key]: value })
+
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
@@ -60,11 +57,11 @@ export const useSettingsStore = create<SettingsState>()(
       pieceSet: 'chessnut',
       aiDifficulty: 'medium',
       showMoveHints: true,
-      setSoundEnabled: (v) => set({ soundEnabled: v }),
-      setBoardTheme: (t) => set({ boardTheme: t }),
-      setPieceSet: (p) => set({ pieceSet: p }),
-      setAiDifficulty: (d) => set({ aiDifficulty: d }),
-      setShowMoveHints: (v) => set({ showMoveHints: v }),
+      setSoundEnabled: createSetter(set, 'soundEnabled'),
+      setBoardTheme: createSetter(set, 'boardTheme'),
+      setPieceSet: createSetter(set, 'pieceSet'),
+      setAiDifficulty: createSetter(set, 'aiDifficulty'),
+      setShowMoveHints: createSetter(set, 'showMoveHints'),
     }),
     { name: 'chessify-settings' },
   ),
