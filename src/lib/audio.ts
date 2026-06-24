@@ -92,11 +92,6 @@ export function setMuted(muted: boolean) {
 
 // ─── move sound (Web Audio API) ─────────────────────────────────────────────
 
-/**
- * noiseBuf
- * @param {*} ctx: AudioContext
- * @returns {*}
- */
 function noiseBuf(ctx: AudioContext): AudioBuffer {
   const len = ctx.sampleRate * 3
   const buf = ctx.createBuffer(1, len, ctx.sampleRate)
