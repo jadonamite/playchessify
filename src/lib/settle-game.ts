@@ -2,18 +2,12 @@ import { Chess } from 'chess.js'
 import { Redis } from '@upstash/redis'
 import { getMoves, unregisterActiveGame, type Chain, type MoveRecord } from '@/lib/moves-store'
 import { deriveResult, canonicalMoveMessage } from '@/lib/settlement'
-import {
-  getOnchainGame,
-  settleOnChain,
-  verifyWalletSignature,
-  GameStatus,
-  GameResult,
-  type Address,
-} from '@/lib/celo-server'
+import { getOnchainGame, settleOnChain, verifyWalletSignature, GameStatus, GameResult, type Address, }
+  from '@/lib/celo-server'
 
 const LOG_PREFIX = '[settle-game]'
-
 let _redis: Redis | null = null
+
 function getRedis(): Redis {
   if (_redis) return _redis
   const url = process.env.UPSTASH_REDIS_REST_URL
@@ -60,8 +54,8 @@ async function signedMovesValid(chain: Chain, gameId: number, moves: MoveRecord[
  */
 export async function settleGameById(chain: Chain, gameId: number): Promise<SettleOutcome> {
   const moves = await getMoves(chain, gameId)
-
   const game = await getOnchainGame(gameId)
+
   if (game.status !== GameStatus.Active) {
     await unregisterActiveGame(chain, gameId)
     return { ok: false, reason: 'not-active', status: game.status }
