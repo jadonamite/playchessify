@@ -92,6 +92,10 @@ const BENTO: BCell[] = [
 type Piece = { t: string; c: 'w' | 'b' }
 type Board = (Piece | null)[][]
 
+/**
+ * makeBoard
+ * @returns {*}
+ */
 function makeBoard(): Board {
   const P = (t: string, c: 'w' | 'b'): Piece => ({ t, c })
   const b: Board = Array.from({ length: 8 }, () => Array(8).fill(null))
