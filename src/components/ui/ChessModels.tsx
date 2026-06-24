@@ -85,7 +85,7 @@ export const Queen = (props: PieceProps) => <BasePiece modelPath="/models/QueenC
 export const Rook = (props: PieceProps) => <BasePiece modelPath="/models/Rook.glb" scale={1.37} {...props} />
 export const Pawn = (props: PieceProps) => <BasePiece modelPath="/models/pawn.glb" scale={1.25} {...props} />
 export const Bishop = (props: PieceProps) => <BasePiece modelPath="/models/Bishop.glb" scale={1.45} {...props} />
-export const Knight = (props: PieceProps) => <BasePiece modelPath="/models/WhiteKnight.glb" scale={1.4} {...props} />
+export const Knight = (props: PieceProps) => <BasePiece modelPath='/models/WhiteKnight.glb' scale={1.4} {...props} />
 
 /* ── SMALL CANVAS COMPONENT FOR LISTS ── */
 import { Canvas } from '@react-three/fiber'
