@@ -96,7 +96,7 @@ export default function CenterToast() {
     <AnimatePresence>
       {toast && cfg && (
         <div
-          className='fixed inset-0 pointer-events-none z-[9999] flex justify-center'
+          className="fixed inset-0 pointer-events-none z-[9999] flex justify-center"
           style={{ alignItems: isBottom ? 'flex-end' : 'center', paddingBottom: isBottom ? '1.5rem' : 0 }}
         >
           <motion.div
