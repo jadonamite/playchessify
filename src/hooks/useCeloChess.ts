@@ -43,7 +43,7 @@ function isSponsorshipError(err: unknown): boolean {
   return (
     m.includes('paymaster') || m.includes('sponsor') || m.includes('bundler') ||
     m.includes('user operation') || m.includes('useroperation') || m.includes('aa2') || m.includes('aa3')
-  )
+  ),
 }
 
 interface WriteRequest {
