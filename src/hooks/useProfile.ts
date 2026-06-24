@@ -8,10 +8,10 @@ export function profileKey(address: string) {
 }
 
 async function fetchProfile(address: string): Promise<ChessProfile | null> {
-  const res = await fetch(`/api/profile/${address}`)
-  if (res.status === 404) return null
-  if (!res.ok) throw new Error('Failed to fetch profile')
-  const data = await res.json()
+  const response = await fetch(`/api/profile/${address}`)
+  if (response.status === 404) return null
+  if (!response.ok) throw new Error('Failed to fetch profile')
+  const data = await response.json()
   return data.profile as ChessProfile
 }
 
@@ -30,8 +30,8 @@ export function useCheckUsername(username: string) {
     queryKey: ['profile-check', username.toLowerCase()],
     queryFn: async () => {
       if (username.length < 3) return { available: false, reason: 'Too short' }
-      const res = await fetch(`/api/profile/check/${username.toLowerCase()}`)
-      return res.json() as Promise<{ available: boolean; reason?: string }>
+      const response = await fetch(`/api/profile/check/${username.toLowerCase()}`)
+      return response.json() as Promise<{ available: boolean; reason?: string }>
     },
     enabled: username.length >= 3,
     staleTime: 30 * 1000,
@@ -50,13 +50,13 @@ export function useClaimProfile() {
       signature: string
       timestamp: string
     }) => {
-      const res = await fetch('/api/profile/claim', {
+      const response = await fetch('/api/profile/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Claim failed')
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error ?? 'Claim failed')
       return data
     },
     onSuccess: (_data, vars) => {
@@ -77,13 +77,13 @@ export function useUpdateProfile() {
       timestamp: string
     }) => {
       const { address, ...rest } = body
-      const res = await fetch(`/api/profile/${address}`, {
+      const response = await fetch(`/api/profile/${address}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rest),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Update failed')
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error ?? 'Update failed')
       return data
     },
     onSuccess: (_data, vars) => {
