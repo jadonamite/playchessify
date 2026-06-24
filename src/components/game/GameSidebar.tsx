@@ -32,7 +32,7 @@ interface GameSidebarProps {
   onProposeDraw: () => void
   onAcceptDraw: () => void
   onResign: () => void
-  onConnectWallet: () => void,
+  onConnectWallet: () => void
 }
 
 // Right-column context for PvP games only (bot games render no sidebar). The
