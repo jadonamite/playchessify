@@ -35,7 +35,7 @@ export function usePlayerStats(address?: string | null): PlayerStats | null {
     address: CELO_CONTRACTS.game as `0x${string}`,
     abi: CHESS_GAME_ABI,
     functionName: 'playerStats',
-    args: [address as `0x${string}`],
+    params: [address as `0x${string}`],
     chainId: CELO_CHAIN_ID,
     query: { enabled },
   })
