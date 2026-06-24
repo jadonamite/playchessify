@@ -1,5 +1,5 @@
-import ChessifyLanding from '@/components/landing/v2/ChessifyLanding';
-const LandingComponent = ChessifyLanding;
+import ChessifyLanding from '@/components/landing/v2/ChessifyLanding'
+
 export default function LandingPage() {
-  return <LandingComponent />;
+  return <ChessifyLanding />
 }
