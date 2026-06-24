@@ -117,7 +117,8 @@ export async function POST(req: NextRequest) {
     if (count === 1) await redis.expire(dailyKey, 86_400)
     if (count > DAILY_CAP) {
       await redis.del(K.lock(address))
-      return NextResponse.json({ error: 'daily sponsor cap reached' }, { status: 429 })
+      const result = NextResponse.json({ error: 'daily sponsor cap reached' }, { status: 429 });
+      return result;
     }
 
     try {
