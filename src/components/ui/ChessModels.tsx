@@ -27,6 +27,26 @@ interface PieceProps {
   metalness?: number
 }
 
+/**
+ * BasePiece
+ * @param {*} { modelPath
+ * @param {*} color
+ * @param {*} emissive
+ * @param {*} emissiveIntensity
+ * @param {*} scale
+ * @param {*} position
+ * @param {*} 0
+ * @param {*} 0]
+ * @param {*} rotation
+ * @param {*} 0
+ * @param {*} 0]
+ * @param {*} floatSpeed
+ * @param {*} floatIntensity
+ * @param {*} rotationIntensity
+ * @param {*} roughness
+ * @param {*} metalness }: PieceProps & { modelPath: string }
+ * @returns {*}
+ */
 function BasePiece({ modelPath, color = '#00ccff', emissive, emissiveIntensity, scale = 1, position = [0, 0, 0], rotation = [0, 0, 0], floatSpeed = 1, floatIntensity = 0.5, rotationIntensity = 0.3, roughness, metalness }: PieceProps & { modelPath: string }) {
   const { scene } = useGLTF(modelPath)
 
