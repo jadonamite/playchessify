@@ -34,7 +34,7 @@ function Toggle({ label, sub, checked, onChange }: { label: string; sub?: string
     <div className="flex items-center justify-between gap-4 px-5 py-4 rounded-2xl bg-black/20 border border-white/5">
       <div>
         <p className="text-sm font-bold text-[var(--t1)]">{label}</p>
-        {sub && <p className="text-[10px] text-[var(--t3)] mt-0.5">{sub}</p>}
+        {sub && <p className='text-[10px] text-[var(--t3)] mt-0.5'>{sub}</p>}
       </div>
       <button
         type="button"
