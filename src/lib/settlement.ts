@@ -60,10 +60,7 @@ export function deriveResult(moves: MoveRecord[], white: string, black: string):
       return { kind: 'illegal' }
     }
   }
-  return getGameResult(chess, moves, white, black)
-}
 
-function getGameResult(chess: Chess, moves: MoveRecord[], white: string, black: string): Terminal {
   // Checkmate: the side to move is mated → opponent wins.
   if (chess.isCheckmate()) {
     const loserIsWhite = chess.turn() === 'w'
@@ -87,6 +84,7 @@ function getGameResult(chess: Chess, moves: MoveRecord[], white: string, black: 
       }
     }
   }
+
   return { kind: 'not-terminal' }
 }
 
