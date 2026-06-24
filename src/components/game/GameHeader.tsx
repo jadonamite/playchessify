@@ -57,7 +57,7 @@ export default function GameHeader({ isBotGame, gameId, gameData, wagerFormatted
                   />
                 </div>
               ) : (
-                <span className='text-xs text-[var(--t3)] italic'>waiting…</span>
+                <span className="text-xs text-[var(--t3)] italic">waiting…</span>
               )}
             </div>
           </>
