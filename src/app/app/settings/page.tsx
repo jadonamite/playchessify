@@ -226,7 +226,7 @@ export default function SettingsPage() {
                   return (
                     <button
                       key={set.id}
-                      type='button'
+                      type="button"
                       onClick={() => setPieceSet(set.id)}
                       className="flex flex-col gap-2 p-3 rounded-2xl border transition-colors text-left"
                       style={{
