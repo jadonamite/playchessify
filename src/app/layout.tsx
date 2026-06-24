@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     url: "/",
     title: "Chessify — Learn, Play & Stake Chess On-Chain",
     description:
-      'Train with grandmaster AI coaches, wager CHESS tokens on real games, and keep every coin you win.',
+      "Train with grandmaster AI coaches, wager CHESS tokens on real games, and keep every coin you win.",
     images: [{ url: "/chessify.png", width: 1522, height: 294, alt: "Chessify" }],
   },
   twitter: {
