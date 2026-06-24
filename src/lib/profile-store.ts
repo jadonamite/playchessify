@@ -3,13 +3,11 @@ import type { ChessProfile } from '@/types/profile'
 
 let _redis: Redis | null = null
 
-function getRedis(): Redis {
-  if (_redis) return _redis
-  const url = process.env.UPSTASH_REDIS_REST_URL
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN
-  if (!url || !token) throw new Error('[profile-store] Missing Upstash env vars')
-  _redis = new Redis({ url, token })
-  return _redis
+export async function getProfileByAddress(address: string): Promise<ChessProfile | null> {
+  const redis = getRedis()
+  const raw = await redis.get(K.addr(address))
+  if (!raw) return null
+  return (typeof raw === 'string' ? JSON.parse(raw) : raw) as ChessProfile
 }
 
 // ── Key builders ─────────────────────────────────────────────────────────────
@@ -34,18 +32,9 @@ const RESERVED = new Set([
 
 const USERNAME_RE = /^[a-z0-9][a-z0-9-]{1,18}[a-z0-9]$/
 
-export function validateUsername(raw: string): { ok: boolean; reason?: string } {
-  const name = raw.toLowerCase().trim()
-  if (name.length < 3 || name.length > 20)
-    return { ok: false, reason: 'Username must be 3–20 characters' }
-  if (!USERNAME_RE.test(name))
-    return { ok: false, reason: 'Only lowercase letters, numbers, and hyphens. No leading/trailing hyphens.' }
-  if (name.includes('--'))
-    return { ok: false, reason: 'No consecutive hyphens' }
-  if (RESERVED.has(name))
-    return { ok: false, reason: 'That name is reserved' }
-  return { ok: true }
-}
+export async function claimProfile(profile: ChessProfile): Promise<{ ok: boolean; reason?: string }> {
+  const redis = getRedis()
+  const name = profile.username.toLowerCase()
 
 // ── Rate limiting (simple Redis counter) ─────────────────────────────────────
 
@@ -64,18 +53,31 @@ export async function checkRateLimit(
 
 // ── Profile CRUD ──────────────────────────────────────────────────────────────
 
-export async function getProfileByAddress(address: string): Promise<ChessProfile | null> {
+export async function getRecentProfiles(limit = 10): Promise<ChessProfile[]> {
   const redis = getRedis()
-  const raw = await redis.get(K.addr(address))
-  if (!raw) return null
-  return (typeof raw === 'string' ? JSON.parse(raw) : raw) as ChessProfile
+  const addresses = await redis.lrange(K.recent(), 0, limit - 1)
+  if (!addresses.length) return []
+  const batch = await getBatchProfiles(addresses as string[])
+  return (addresses as string[]).map((a) => batch[a.toLowerCase()]).filter(Boolean) as ChessProfile[]
 }
 
-export async function getProfileByUsername(username: string): Promise<ChessProfile | null> {
+
+export async function updateProfile(
+  address: string,
+  updates: Partial<Pick<ChessProfile, 'username' | 'displayName' | 'bio'>>,
+): Promise<{ ok: boolean; reason?: string }> {
   const redis = getRedis()
-  const address = await redis.get(K.name(username.toLowerCase()))
-  if (!address) return null
-  return getProfileByAddress(address as string)
+  const addr = address.toLowerCase()
+  const existing = await getProfileByAddress(addr)
+  if (!existing) return { ok: false, reason: 'Profile not found' }
+
+function getRedis(): Redis {
+  if (_redis) return _redis
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) throw new Error('[profile-store] Missing Upstash env vars')
+  _redis = new Redis({ url, token })
+  return _redis
 }
 
 export async function isUsernameAvailable(username: string): Promise<boolean> {
@@ -83,10 +85,6 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
   const existing = await redis.get(K.name(username.toLowerCase()))
   return !existing
 }
-
-export async function claimProfile(profile: ChessProfile): Promise<{ ok: boolean; reason?: string }> {
-  const redis = getRedis()
-  const name = profile.username.toLowerCase()
 
   // Atomic name reservation — SETNX: only succeeds if key doesn't exist
   const reserved = await redis.setnx(K.name(name), profile.address.toLowerCase())
@@ -105,14 +103,21 @@ export async function claimProfile(profile: ChessProfile): Promise<{ ok: boolean
   return { ok: true }
 }
 
-export async function updateProfile(
-  address: string,
-  updates: Partial<Pick<ChessProfile, 'username' | 'displayName' | 'bio'>>,
-): Promise<{ ok: boolean; reason?: string }> {
+export async function getBatchProfiles(
+  addresses: string[],
+): Promise<Record<string, ChessProfile | null>> {
+  if (addresses.length === 0) return {}
   const redis = getRedis()
-  const addr = address.toLowerCase()
-  const existing = await getProfileByAddress(addr)
-  if (!existing) return { ok: false, reason: 'Profile not found' }
+  const keys = addresses.map((a) => K.addr(a.toLowerCase()))
+  const results = await redis.mget<(ChessProfile | string | null)[]>(...keys)
+  const out: Record<string, ChessProfile | null> = {}
+  addresses.forEach((addr, i) => {
+    const raw = results[i]
+    if (!raw) { out[addr.toLowerCase()] = null; return }
+    out[addr.toLowerCase()] = typeof raw === 'string' ? JSON.parse(raw) : raw
+  })
+  return out
+}
 
   const now = Date.now()
   const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000
@@ -149,26 +154,22 @@ export async function updateProfile(
   return { ok: true }
 }
 
-export async function getBatchProfiles(
-  addresses: string[],
-): Promise<Record<string, ChessProfile | null>> {
-  if (addresses.length === 0) return {}
+export async function getProfileByUsername(username: string): Promise<ChessProfile | null> {
   const redis = getRedis()
-  const keys = addresses.map((a) => K.addr(a.toLowerCase()))
-  const results = await redis.mget<(ChessProfile | string | null)[]>(...keys)
-  const out: Record<string, ChessProfile | null> = {}
-  addresses.forEach((addr, i) => {
-    const raw = results[i]
-    if (!raw) { out[addr.toLowerCase()] = null; return }
-    out[addr.toLowerCase()] = typeof raw === 'string' ? JSON.parse(raw) : raw
-  })
-  return out
+  const address = await redis.get(K.name(username.toLowerCase()))
+  if (!address) return null
+  return getProfileByAddress(address as string)
 }
 
-export async function getRecentProfiles(limit = 10): Promise<ChessProfile[]> {
-  const redis = getRedis()
-  const addresses = await redis.lrange(K.recent(), 0, limit - 1)
-  if (!addresses.length) return []
-  const batch = await getBatchProfiles(addresses as string[])
-  return (addresses as string[]).map((a) => batch[a.toLowerCase()]).filter(Boolean) as ChessProfile[]
+export function validateUsername(raw: string): { ok: boolean; reason?: string } {
+  const name = raw.toLowerCase().trim()
+  if (name.length < 3 || name.length > 20)
+    return { ok: false, reason: 'Username must be 3–20 characters' }
+  if (!USERNAME_RE.test(name))
+    return { ok: false, reason: 'Only lowercase letters, numbers, and hyphens. No leading/trailing hyphens.' }
+  if (name.includes('--'))
+    return { ok: false, reason: 'No consecutive hyphens' }
+  if (RESERVED.has(name))
+    return { ok: false, reason: 'That name is reserved' }
+  return { ok: true }
 }
