@@ -31,6 +31,7 @@ float fade(float t) {
 }
 
 float ring(vec2 p, float ri, float cut, float t0, float px) {
+  // TODO: optimize for large datasets
   float t = mod(uTime + t0, CYCLE);
   float r = ri + t / CYCLE * uScaleRate;
   float d = abs(length(p) - r);
