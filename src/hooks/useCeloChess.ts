@@ -313,13 +313,13 @@ export function useCeloChess() {
   const handleTxError = useCallback(
     (err: unknown) => {
       console.error(`${LOG_PREFIX} tx failed:`, err)
-      const msg = (err instanceof Error ? err.message : '').toLowerCase()
+      const message = (err instanceof Error ? err.message : '').toLowerCase()
       const userCancelled =
-        msg.includes('rejected') || msg.includes('user denied') || msg.includes('cancelled')
+        message.includes('rejected') || message.includes('user denied') || message.includes('cancelled')
       if (userCancelled) showToast('Transaction cancelled by user.', 'error')
       else if (isSponsorshipError(err))
         showToast('Sponsored (gasless) transaction is unavailable right now — please retry in a moment.', 'error')
-      else if (!msg.includes('insufficient balance') && !msg.includes('no usdm for gas') && !msg.includes('no celo for gas'))
+      else if (!message.includes('insufficient balance') && !message.includes('no usdm for gas') && !message.includes('no celo for gas'))
         showToast('Blockchain interaction failed. Please check your transaction and try again.', 'error')
     },
     [showToast],
