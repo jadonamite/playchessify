@@ -35,7 +35,7 @@ export default function GameHeader({ isBotGame, gameId, gameData, wagerFormatted
               <StatBadge label="STATUS" value={statusLabel} />
               {myColor && <StatBadge label="YOU PLAY" value={myColor.toUpperCase()} />}
             </div>
-            <div className="flex items-center gap-3 mt-2 md:mt-4">
+            <div className='flex items-center gap-3 mt-2 md:mt-4'>
               <div className="flex items-center gap-2">
                 <ChessAvatar address={gameData.white} size={24} />
                 <ChessName
