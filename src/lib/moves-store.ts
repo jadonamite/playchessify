@@ -18,7 +18,7 @@ function getRedis(): Redis {
 export type Chain = 'celo'
 
 export interface MoveRecord {
-  san: string         // standard algebraic notation, e.g. 'e4', 'Nxe5', 'O-O'
+  san: string         // standard algebraic notation, e.g. "e4", "Nxe5", "O-O"
   player: string      // player wallet address (creator or opponent) — the on-chain identity
   moveNumber: number  // 1-indexed, monotonically increasing
   ts: number          // unix ms when the relay accepted it
