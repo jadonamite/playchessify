@@ -3,7 +3,7 @@ import { useReadContract } from 'wagmi'
 import { CHESS_GAME_ABI } from '@/config/abis'
 import { CELO_CONTRACTS, CELO_CHAIN_ID, TOKEN_DECIMALS } from '@/config/contracts'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
-import { type GameData, ZERO, STATUS_LABELS, norm } from '@/components/game/types'
+import { type GameData, ZERO, STATUS_LABELS, norm, resultForColor } from '@/components/game/types'
 
 interface UseGameDataArgs {
   gameId: number
@@ -34,12 +34,13 @@ export function useGameData({ gameId, isBotGame, celoAddress, isConnected }: Use
 
   useEffect(() => {
     if (!celoGameData) return
-    const gd = celoGameData as { white: string; black: string; wager: bigint; status: number; drawProposer: string }
+    const gd = celoGameData as { white: string; black: string; wager: bigint; status: number; result: number; drawProposer: string }
     setGameData({
       white:  gd.white,
       black:  gd.black,
       wager:  gd.wager.toString(),
       status: gd.status.toString(),
+      result: gd.result.toString(),
       drawProposer: gd.drawProposer,
     })
   }, [celoGameData])
