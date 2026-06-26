@@ -1,6 +1,9 @@
 # ♟️ Playchessify
 
-A **free-to-play, on-chain chess protocol on Celo**. Players wager free-to-mint CHESS
+[![Live on Celo Mainnet](https://img.shields.io/badge/Celo%20Mainnet-live-35D07F)](https://celo.playchessify.xyz)
+
+A **free-to-play, on-chain chess protocol on Celo** — **live on Celo mainnet** (`42220`) at
+[celo.playchessify.xyz](https://celo.playchessify.xyz). Players wager free-to-mint CHESS
 tokens on real chess matches, with a premium cyber-industrial UI.
 
 Chess rules are validated **off-chain** (chess.js over a Redis move relay) and the result
@@ -23,8 +26,9 @@ Off-chain services:
 - **Move relay** — Upstash Redis. Moves are turn-bound and (for capable wallets) signed.
 - **Settlement** — a server oracle replays the move list and calls `settleGame`; a
   **Vercel Cron** (`/api/cron/settle`, every minute) guarantees finished games settle.
-- **Gas sponsorship** — MiniPay wallets get a cUSD gas drip + CHESS provision; social/email
-  wallets use an ERC-4337 Pimlico paymaster; everything degrades gracefully to self-pay.
+- **Gas sponsorship** — MiniPay wallets get a USDm gas drip + CHESS provision; social/email
+  wallets use an ERC-4337 Pimlico paymaster; external EOAs get an interim native-CELO drip;
+  everything degrades gracefully to self-pay.
 
 See **handover.md** for the full system reference and **DEPLOY.md** for the release runbook.
 
@@ -32,7 +36,7 @@ See **handover.md** for the full system reference and **DEPLOY.md** for the rele
 
 ## 🔥 Economic model
 
-CELO/cUSD pay gas only. Wagers use **CHESS**, which is free:
+CELO/USDm pay gas only. Wagers use **CHESS**, which is free:
 
 - **Faucet** — 1,000 CHESS per wallet per ~24 h (17,280 Celo blocks).
 - **Wagers** — selected before match creation; balance checked on-chain; escrowed in the contract.
@@ -83,14 +87,18 @@ Zero financial risk — CHESS has no monetary value.
 
 ## 📖 Deployed contracts
 
-> The new oracle contracts are **not deployed yet**; `config/contracts.ts` still defaults to the
-> old pre-oracle addresses below. Run **DEPLOY.md**, then point `NEXT_PUBLIC_CELO_TOKEN` /
-> `NEXT_PUBLIC_CELO_GAME` at the new addresses.
+**Live on Celo mainnet (`42220`).** The app reads these from `NEXT_PUBLIC_CELO_TOKEN` /
+`NEXT_PUBLIC_CELO_GAME` in env; `config/contracts.ts` still *defaults* to the old pre-oracle
+addresses for safety, so the live values come from env, not the default.
 
-| Contract | Address (old / pre-oracle) |
+| Contract | Address |
 | :--- | :--- |
-| ChessToken | `0xE370aad742dF8DC8Ae9c0F0b9f265334D39e2197` |
-| ChessGame | `0xf85f00D39A84b5180390548Ea9f76B0458607E78` |
+| ChessToken | [`0x3f7efdfc8a76f76f22512fcd2bddc5fca36e55a3`](https://celoscan.io/address/0x3f7efdfc8a76f76f22512fcd2bddc5fca36e55a3) |
+| ChessGame | [`0xb37877a9ebd6c3169b2eaaa3e16852839785ae85`](https://celoscan.io/address/0xb37877a9ebd6c3169b2eaaa3e16852839785ae85) |
+
+Operators (dedicated single-purpose keys): oracle `0x4d68…C6c9` · minter `0x4548…5AB9` ·
+gas-sponsor `0xc26f…D0f2`. Owner/deployer `0xF679…7638`. See **handover.md** for the full
+account and **DEPLOY.md** for the redeploy runbook.
 
 ---
 

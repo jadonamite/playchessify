@@ -1,9 +1,15 @@
 # Playchessify — Deploy & Release Runbook
 
-The blocking work before launch. The frontend is built for the oracle contracts in
-`celo-contracts/`, but those are **not deployed**, and `src/config/contracts.ts` still
-defaults to the old pre-oracle addresses. This runbook deploys the new contracts, wires the
-server keys, and rehearses on Alfajores before flipping to mainnet.
+> **Status: LIVE on Celo mainnet (`42220`) since 2026-06-14.**
+> ChessToken `0x3f7e…55a3`, ChessGame `0xb378…aE85`; oracle/minter/gas-sponsor wired and
+> funded. This runbook is no longer the pre-launch blocker — keep it as the procedure for a
+> **redeploy** (e.g. the July 2026 ERC-2771 forwarder, which needs new addresses + escrow
+> migration) or an Alfajores rehearsal. The current live addresses are in **handover.md**.
+
+The frontend reads contract addresses from `NEXT_PUBLIC_CELO_TOKEN` / `NEXT_PUBLIC_CELO_GAME`;
+`src/config/contracts.ts` still *defaults* to the old pre-oracle addresses for safety, so the
+live values come from env. A redeploy means: deploy the new contracts, wire the server keys,
+rehearse on Alfajores, then repoint env at the new addresses.
 
 > Source of truth: `celo-contracts/script/Deploy.s.sol`, `celo-contracts/foundry.toml`,
 > `src/lib/celo-server.ts`, `vercel.json`. Keep this file in sync with those.
@@ -19,11 +25,14 @@ Four roles. Each is a plain EOA holding **CELO** so its own txs pay gas natively
 | Deployer / owner | `DEPLOYER_PRIVATE_KEY` | deploys + owns both contracts; sets oracle + minter |
 | Oracle | `ORACLE_PRIVATE_KEY` (server) + `ORACLE_ADDRESS` (deploy) | calls `settleGame` |
 | Minter | `MINTER_PRIVATE_KEY` (server) + `MINTER_ADDRESS` (deploy) | calls `token.mintTo` |
-| Gas sponsor | `GAS_SPONSOR_PRIVATE_KEY` (server) | drips cUSD to 0-balance MiniPay EOAs |
+| Gas sponsor | `GAS_SPONSOR_PRIVATE_KEY` (server) | drips USDm to 0-balance MiniPay EOAs + native CELO to Tier C EOAs |
 
-They may share one key initially, but separate keys are preferred for rotation. The oracle is a
-low-value hot key — rotatable any time via `ChessGame.setOracle(newOracle)` from the owner.
-**Fund:** oracle + minter + deployer with CELO; gas-sponsor with **cUSD *and* CELO**.
+In production these are **three dedicated single-purpose wallets** (not the shared `Scripts`
+pool) so the hot oracle/minter keys are isolated and rotatable: oracle `0x4d68…C6c9`, minter
+`0x4548…5AB9`, gas-sponsor `0xc26f…D0f2`. Owner/deployer = `0xF679…7638` (= `EVM_MASTER` in
+`Scripts/.env`). The oracle is a low-value hot key — rotatable any time via
+`ChessGame.setOracle(newOracle)` from the owner. **Fund:** oracle + minter + deployer with
+CELO; gas-sponsor with **USDm *and* CELO** (CELO covers both its own gas and the Tier C drip).
 
 ---
 
@@ -67,7 +76,7 @@ NEXT_PUBLIC_CELO_TOKEN=<new ChessToken>
 NEXT_PUBLIC_CELO_GAME=<new ChessGame>
 NEXT_PUBLIC_CELO_NETWORK=alfajores      # 'alfajores' for rehearsal; unset / other = mainnet
 NEXT_PUBLIC_PRIVY_APP_ID=<...>
-NEXT_PUBLIC_FEE_CURRENCY=<optional cUSD override>
+NEXT_PUBLIC_FEE_CURRENCY=<optional USDm fee-currency override>
 ```
 
 **Server** (gitignored):
@@ -97,9 +106,10 @@ so exercise the full path, not just the contracts.
 
 - **Tier A (social/email):** create → play → checkmate → confirm Pimlico-sponsored userOps and
   oracle settlement; confirm signed moves verify (EIP-1271).
-- **Tier B (MiniPay):** 0-balance wallet → `/api/gas/sponsor` drips cUSD + mints CHESS → create/join;
-  then exhaust the sponsor wallet and confirm graceful degradation to self-pay (clear cUSD message).
-- **Tier C (external EOA):** self-pay path.
+- **Tier B (MiniPay):** 0-balance wallet → `/api/gas/sponsor` drips USDm + mints CHESS → create/join;
+  then exhaust the sponsor wallet and confirm graceful degradation to self-pay (clear USDm message).
+- **Tier C (external EOA):** interim native-CELO auto-drip (`tier: 'eoa'`, same sybil guards) →
+  create/join; then degradation to self-pay when the sponsor can't cover.
 - **Endings:** checkmate (white/black), stalemate/insufficient-material/3-fold draw, **5-min timeout**
   forfeit, resign, accepted draw — each settles correctly and pays/refunds.
 - **Backstop:** let a game pass `EXPIRY_BLOCKS` with the oracle off; confirm `reclaimExpired`
@@ -112,14 +122,18 @@ so exercise the full path, not just the contracts.
 
 ---
 
-## 4. Mainnet flip
+## 4. Mainnet flip — DONE (2026-06-14), kept as the redeploy checklist
+
+The initial mainnet flip is complete (live addresses above). Re-run this list for any future
+redeploy:
 
 1. Deploy contracts to mainnet (step 1, `--rpc-url celo`).
-2. Update Vercel env to the mainnet addresses; unset `NEXT_PUBLIC_CELO_NETWORK` (or set to
-   anything other than `alfajores`).
-3. Fund oracle/minter (CELO) and gas-sponsor (cUSD + CELO) on mainnet.
+2. Update Vercel env to the new mainnet addresses; unset `NEXT_PUBLIC_CELO_NETWORK` (or set to
+   anything other than `alfajores`). Sync `.env.local` / `.env.production` / `.env.tacked`.
+3. Fund oracle/minter (CELO) and gas-sponsor (USDm + CELO) on mainnet.
 4. Configure the Pimlico mainnet paymaster policy in Privy.
 5. Smoke-test one wagered game end-to-end, then announce.
 
-> **Migration note:** old free-faucet balances on the pre-oracle contracts are abandoned. The app
-> is pre-launch — everyone starts fresh on the new deployment.
+> **Migration note:** a redeploy abandons balances/escrow on the previous contracts. The first
+> launch started everyone fresh; a future redeploy (e.g. the ERC-2771 forwarder) needs an
+> explicit escrow-migration plan, not just an env repoint — there may be live games in flight.
