@@ -13,7 +13,7 @@ import GlowButton from '@/components/ui/GlowButton'
 import LoadingState from '@/components/ui/LoadingState'
 import SceneBoundary from '@/components/ui/SceneBoundary'
 import FaucetResultModal, { type FaucetResultType } from '@/components/ui/FaucetResultModal'
-import { King, Pawn, Bishop, Knight, PieceView } from '@/components/ui/ChessModels'
+import { King, Pawn, Bishop, Knight, PieceIcon } from '@/components/ui/ChessModels'
 import { CHESS_TOKEN_ABI } from '@/config/abis'
 import { CELO_CONTRACTS, TOKEN_DECIMALS, FAUCET_AMOUNT, CELO_CHAIN_ID, USDM_ADDRESS, FAUCET_COOLDOWN, BLOCK_TIME_SECS } from '@/config/contracts'
 import { formatUnits, encodeFunctionData } from 'viem'
@@ -386,7 +386,7 @@ export default function FaucetContent() {
                 className="rounded-2xl border border-white/5 bg-slate-900/40 backdrop-blur-sm p-5 flex flex-col gap-3"
               >
                 <div className="h-12 flex items-center -ml-2">
-                  <PieceView type={card.piece} color={card.color} className="w-12 h-12" />
+                  <PieceIcon type={card.piece} className="w-12 h-12" />
                 </div>
                 <span className="text-[10px] font-black tracking-[0.25em] text-[var(--c)] uppercase" style={{ fontFamily: 'var(--fd)' }}>
                   {card.title}
