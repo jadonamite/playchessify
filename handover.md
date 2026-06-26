@@ -1,6 +1,6 @@
 # Playchessify — Handover Document
 
-**Last updated:** 2026-06-17 | **Live on:** Celo Mainnet (`42220`)
+**Last updated:** 2026-06-26 | **Live on:** Celo Mainnet (`42220`)
 **Repo:** `github.com/jadonamite/playchessify`
 
 Celo-only Next.js frontend + Foundry contracts for an on-chain, free-to-play chess
@@ -19,59 +19,73 @@ oracle** — the contract itself never validates chess.
 
 ---
 
-## ⏳ ACTIVE SESSION HANDOVER — Mobile UI makeover (2026-06-17, in progress)
+## 📌 SESSION LOG — Landing v2 + code-quality pass (2026-06-24 → 06-26)
 
-**Status:** pushed to `main` (deployed to prod, `celo.playchessify.xyz`) but **NOT
-visually verified by Jadon yet** — `tsc`/`build` clean only. Iterating on look &
-feel. Full plan: `~/.claude/plans/goofy-tumbling-eclipse.md`.
+**Status:** on `main`, pushed to `origin/main` (working tree clean, ~0 unpushed),
+deployed to prod `celo.playchessify.xyz`. `tsc`/`build` not re-verified this entry —
+**clean-build before trusting** (`rm -rf .next && npm run build`).
 
-### Goal
-Turn the "shrunk-to-fit" desktop UI into a **mobile-first, playful** app
-(Duolingo-style feel). Jadon reacts strongly to half-baked visuals — get it right
-structurally AND have him eyeball it on device (automated screenshots are blocked,
-see below).
+### What changed
+- **Landing replaced** — `src/app/page.tsx` now renders
+  `components/landing/v2/ChessifyLanding` directly (was `Hero + Features + CTAFooter`).
+  The old `/landing-v2` staging route is deprecated to a one-line note; the v2 landing
+  lives at `/`. `MagicRings` (`.tsx`/`.css`) is the animated ring backdrop.
+- **404 page** — `src/app/not-found.tsx` rebuilt with a 3D chess-knight model
+  (`@react-three/fiber`) + animation.
+- **Providers** — `getPrivyConfig()` factored out in `app/providers.tsx`; wagmi config
+  got `createTransports()` (`config/wagmi.ts`).
+- **Broad code-quality / cleanup pass** — large batch of refactors across `ui/`,
+  `game/`, `lib/`, hooks, and `api/profile/*` (import hygiene, error handling on the
+  profile/total routes, `settle-game` `getRedis()` extraction, `moves-store` record
+  parser, `useSettingsStore` setter cleanup, minimax tidy in `chess-engine`). No
+  architectural change — the move-relay + oracle-settlement model is unchanged.
+- **`lib/index.ts`** — the dead commented-out ThemeToggle block is **gone**; file is now
+  just `VERSION = "0.1.0"` + `initProtocol()` (package.json is `0.1.2`).
 
-### What shipped this session
-- **Icons** → real **Solar bold-duotone** set, transcribed into
-  `src/components/ui/icons/index.tsx` (`PlayIcon` gamepad, `RankIcon` cup,
-  `HistoryIcon` clock, `FaucetIcon` drop, `ProfileIcon` user, `CrownIcon` hero,
-  `HintBulbIcon` glowing). Earlier hand-drawn/pqoqubbw line icons were rejected.
-- **Bottom nav** `src/components/ui/BottomNav.tsx` — mobile-only fixed tab bar
-  (Play/Ranks/History/Faucet/You), 26px icons, candy-accent active **trapezoid**
-  chip via `layoutId`. Hidden on `/app/game/*`. Mounted once via new **client**
-  layout `src/app/app/layout.tsx` (drops bottom padding on game route).
-- **Board (mobile)** `src/components/game/BoardPanel.tsx` — now **full-bleed
-  100vw, square, height-aware**: `.pc-board-card` (globals.css) breaks out of
-  gutters; wrapper `width: min(100%, calc(100svh - var(--board-reserve)))`. Fixed
-  the real bug: `ClayCard` default `padding="md"` was overriding → now
-  `padding="none"`. `GameClient` main got `overflow-x-clip` + smaller gutters/top.
-- **Game action bar** `src/components/game/GameActionBar.tsx` — **80% trapezoid
-  CTA + 20% bulb**. Active play → "Hold to Quit/Resign" with **left→right battery
-  fill** (hold-to-confirm, release cancels). Game over → tappable cyan "New Game".
-  20% = glowing hint bulb. Wired in `GameClient` with `gameOver / quitForfeits /
-  hintDisabled / onHint / onNewGame / onQuit`.
-- **Tokens** (`globals.css`) — candy accents (`--candy-grape/lime/amber/rose`),
-  `--bottom-nav-h`, `--board-reserve` (mobile 150px), `.pc-bottom-nav` /
-  `.pc-app-scroll` / `.pc-board-card` / `.pc-bulb-glow`.
-- **Lobby** `src/components/lobby/LobbyContent.tsx` — mobile-first hero (glossy
-  orb w/ `CrownIcon`), candy stat chips, tactile cards. **Logo** bumped in `Navbar.tsx`.
+### Open / next up
+1. Roll the **duotone/candy mobile language** across the remaining screens —
+   **leaderboard, history, faucet, settings, profile** (lobby + game done).
+2. **Discuss the UI direction next** (this is where the current session is headed).
+3. Optional: deeper `GameClient` hook extraction (`useChessEngine` / bot-move) —
+   deferred as behaviour-sensitive on a live component.
 
-### Open / next up (start here in the new chat)
-1. **Jadon to review on device first** — board edge-to-edge & square? battery-fill
-   feel? icon choices? nav spacing? Iterate on whatever he flags.
-2. Roll the duotone/candy language across remaining screens: **leaderboard,
-   history, faucet, settings, profile** (only lobby done so far).
-3. Consider hiding/condensing more chrome if board still feels small on short phones.
+### Worktree in flight
+- `worktree-coach-labels-frame` (under `.claude/worktrees/coach-labels-frame`) — coach
+  portrait/label/frame work, separate from `main`. Remote branches:
+  `feat/coach-portraits-webp`, `worktree-coach-labels-frame`.
 
-### Gotchas
+---
+
+## ⏳ PRIOR SESSION — Mobile UI makeover (2026-06-17)
+
+Turned the "shrunk-to-fit" desktop UI into a **mobile-first, playful** (Duolingo-style)
+app. Full plan: `~/.claude/plans/goofy-tumbling-eclipse.md`.
+
+- **Icons** → **Solar bold-duotone** set in `src/components/ui/icons/index.tsx`
+  (`PlayIcon`, `RankIcon`, `HistoryIcon`, `FaucetIcon`, `ProfileIcon`, `CrownIcon`,
+  `HintBulbIcon`). Earlier line icons were rejected.
+- **Bottom nav** `src/components/ui/BottomNav.tsx` — mobile-only fixed tab bar, 26px
+  icons, candy-accent active **trapezoid** chip via `layoutId`. Hidden on `/app/game/*`,
+  mounted once in client layout `src/app/app/layout.tsx`.
+- **Board (mobile)** `BoardPanel.tsx` — **full-bleed 100vw, square, height-aware** via
+  `.pc-board-card` (globals.css); fixed `ClayCard` `padding="md"` override → `"none"`.
+- **Game action bar** `GameActionBar.tsx` — **80% trapezoid CTA + 20% bulb**; active play
+  → "Hold to Quit/Resign" with left→right battery fill; game over → "New Game".
+- **Tokens** (`globals.css`) — `--candy-grape/lime/amber/rose`, `--bottom-nav-h`,
+  `--board-reserve`, `.pc-bottom-nav` / `.pc-app-scroll` / `.pc-board-card` / `.pc-bulb-glow`.
+- **Lobby** `LobbyContent.tsx` — mobile-first hero (glossy orb + `CrownIcon`), candy stat
+  chips, tactile cards. **Logo** bumped in `Navbar.tsx`.
+
+### Gotchas (still current)
 - **Headless screenshots render blank** — `/app/*` is Privy-wallet-gated; can't
   auto-verify authed UI. Verify via device or mock the wallet.
 - **Clean build before trusting** — `rm -rf .next && npm run build` (stale cache
   has hidden Turbopack errors before).
 - **Auto-commit worker:** gitignored `.committer.sh` commits every 10s as
-  `chore(wip): auto-checkpoint #N`. **It is currently RUNNING** — stop with
-  `pkill -f .committer.sh`. History on `main` now has these wip commits (Jadon
-  chose to push as-is).
+  `chore(wip): auto-checkpoint #N`; the upgraded `~/Projects/Scripts/Elite.cjs` (NVIDIA-NIM
+  conventional-commit messages) drives commits across the repos. **Currently NOT running**
+  — start/stop as needed; `pkill -f .committer.sh` to stop. `main` history carries these
+  wip/bot commits (kept as-is per decision — no rebase/squash).
 
 ---
 
@@ -127,9 +141,9 @@ Constants: `TOKEN_DECIMALS = 6` · faucet = 1,000 CHESS · `FAUCET_COOLDOWN = 17
 blocks (~1 day at Celo's 5 s blocks) · `EXPIRY_BLOCKS = 17,280` · `STARTING_ELO = 1200`
 · `K_FACTOR = 32` · `MIN_RATING = 100`.
 
-> Note: `config/contracts.ts` still carries `FAUCET_COOLDOWN = 144` / `BLOCK_TIME_SECS = 600`
-> from an old 10-min-block assumption. These are display-only and wrong for Celo (5 s blocks);
-> the authoritative cooldown is the contract's 17,280 blocks.
+> `config/contracts.ts` now carries the correct Celo values (`FAUCET_COOLDOWN = 17_280`,
+> `BLOCK_TIME_SECS = 5`) — the old 10-min-block constants (144 / 600) were fixed. The
+> authoritative cooldown remains the contract's 17,280 blocks.
 
 ---
 
@@ -258,7 +272,7 @@ the embedded EOA (that would change the on-chain player mid-game).
 
 | Route | Component | Notes |
 |---|---|---|
-| `/` | `Hero` + `Features` + `CTAFooter` | landing; redirects to lobby if connected |
+| `/` | `ChessifyLanding` (v2) | landing; redirects to lobby if connected. (`Hero`/`Features`/`CTAFooter` are the retired v1 landing, still in `components/landing/`.) |
 | `/app` | guard | redirect to lobby if connected |
 | `/app/lobby` | `LobbyContent` | open games (last 10 scan), create/join, `.chess` onboarding banner |
 | `/app/game/[id]` | `GameClient` | `id` numeric or `'bot'` (local minimax) |
@@ -346,7 +360,8 @@ src/
 │   │                                   GameHeader, GameResultOverlay, MoveLog, CapturedTray
 │   ├── lobby/{LobbyContent,HistoryContent,LeaderboardContent}.tsx
 │   ├── ui/{ChessName,ChessAvatar,ClaimModal,Navbar,ChainSelectModal,GameStatusModal,...}.tsx
-│   ├── landing/Hero.tsx              ← landing; re-exports Navbar
+│   ├── landing/v2/ChessifyLanding.tsx ← current landing (+ MagicRings.tsx/.css)
+│   ├── landing/Hero.tsx              ← retired v1 landing; re-exports Navbar
 │   └── wallet-provider.tsx           ← tier detection, MiniPay auto-connect, playerAddress
 ├── hooks/
 │   ├── useCeloChess.ts               ← createGame/joinGame/resign/proposeDraw/acceptDraw + gas tiers
@@ -365,7 +380,7 @@ src/
 │   ├── profile-store.ts              ← Redis profile CRUD + username rules
 │   ├── chess-engine.ts               ← minimax bot (PSTs, MVV-LVA) + hint + capture summary
 │   ├── audio.ts · avatar.ts · chessPieces.tsx
-│   └── index.ts                      ← placeholder SDK (has dead commented ThemeToggle block)
+│   └── index.ts                      ← placeholder SDK (VERSION + initProtocol; dead block removed)
 ├── config/{contracts.ts, abis.ts, wagmi.ts}
 └── types/profile.ts
 celo-contracts/                       ← Foundry: src/ (ChessToken, ChessGame), script/Deploy.s.sol, test/

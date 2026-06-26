@@ -1,28 +1,36 @@
 # Playchessify — TODO & Handover
 
-**Updated:** 2026-06-15 · Canonical references: **`handover.md`** (system reference + session
+**Updated:** 2026-06-26 · Canonical references: **`handover.md`** (system reference + session
 log) and **`DEPLOY.md`** (release runbook). This file is the running checklist + the prompt to
 spin up a fresh session.
 
 ---
 
-## ▶ Next up (after 2026-06-15)
+## ▶ Next up (after 2026-06-26)
 
 Priority order for the next session:
 
-1. **Push to origin** — `main` is ~20 commits ahead of `origin/main` (includes the refactor,
-   scaling, Tier C drip, draw UI; history has intentional `chore(wip)` auto-checkpoints). Not
-   yet pushed. Push when ready (no rebase/squash — keeping wip commits as-is per decision).
-2. ~~**Verify the new indexed routes in prod**~~ ✅ (2026-06-15) — `/api/leaderboard` (200,
-   Elo-ranked) and `/api/history?address=` (200, full per-player list) both verified live on
-   `celo.playchessify.xyz`. Redis index warmed; subsequent calls are delta-only.
+1. **UI direction (active)** — currently discussing the next UI moves. The mobile makeover
+   landed on **lobby + game**; roll the duotone/candy language across the remaining screens:
+   **leaderboard, history, faucet, settings, profile**. Verify on device (authed `/app/*`
+   screenshots render blank headless).
+2. **Coach portraits/labels** — in flight on the `worktree-coach-labels-frame` worktree
+   (remote branches `feat/coach-portraits-webp`, `worktree-coach-labels-frame`). Land or close.
 3. **GameClient refactor — finish the hooks** (optional): extract `useChessEngine` /
-   bot-move logic / board-interaction handlers per `game_refactor_plan.md` (deferred this round
-   as behaviour-sensitive on a live component).
-4. **Tier C meta-tx forwarder** — **deferred to July 2026, not this month.** Only when ready
-   for a contract redeploy + escrow migration; the interim CELO-drip covers Tier C in the meantime.
+   bot-move logic / board-interaction handlers per `game_refactor_plan.md` (deferred as
+   behaviour-sensitive on a live component).
+4. **Tier C meta-tx forwarder** — **deferred to July 2026.** Only when ready for a contract
+   redeploy + escrow migration; the interim CELO-drip covers Tier C in the meantime.
 5. **New features** — replay viewer, global player search, recent-profiles feed,
    opponent-join notifications (see Backlog).
+
+### ✅ Cleared since 2026-06-15
+- **Push to origin** — done; `main` == `origin/main`, working tree clean (wip/bot commits kept
+  as-is, no rebase/squash per decision).
+- **Indexed routes in prod** — `/api/leaderboard` + `/api/history?address=` verified live;
+  Redis index warmed, subsequent calls delta-only.
+- **Landing v2** — `/` now renders `ChessifyLanding`; `/landing-v2` staging route retired.
+- **`lib/index.ts` dead ThemeToggle block** — removed.
 
 ---
 
@@ -120,9 +128,13 @@ Priority order for the next session:
   full redeploy, not a patch.
 
 ### Code cleanups (non-blocking)
-- [ ] `lib/index.ts`: remove dead commented-out "temporal anomaly" ThemeToggle block.
+- [x] `lib/index.ts`: removed the dead commented-out "temporal anomaly" ThemeToggle block
+  (now just `VERSION` + `initProtocol`).
 - [x] Wire the **draw-offer UI** — `proposeDraw`/`acceptDraw` now exposed in GameClient
   (offer/accept card, sidebar, active games only).
+- [x] (2026-06-24) **Code-quality pass** — import hygiene + error handling across `ui/`,
+  `game/`, `lib/`, hooks, `api/profile/*`; `getRedis()` / `createTransports()` /
+  `getPrivyConfig()` extractions. Behaviour unchanged.
 
 ### Backlog
 - [x] Leaderboard/history scaling — Redis-indexed (`src/lib/game-index.ts`): cursor + player set +
@@ -152,7 +164,9 @@ Priority order for the next session:
 > MiniPay unsigned) and **settled on-chain by a trusted oracle** (`ChessGame.settleGame`,
 > `onlyOracle`) — there is **no** on-chain `submitMove`/`reportWin`. `.chess` names are off-chain
 > Upstash (no contract — do not build one without an explicit design session). Gas is tiered
-> (Pimlico paymaster / USDm drip / self-pay).
+> (Pimlico paymaster / USDm drip / Tier C native-CELO drip / self-pay). Landing is `ChessifyLanding`
+> (v2) at `/`. We're mid-discussion on the **next UI direction** — the mobile makeover covered
+> lobby + game; leaderboard/history/faucet/settings/profile still need it.
 >
 > **⚠️ Open item:** Tier C (external EOA wallets like MetaMask) get **no gas sponsorship** — if
 > they connect with 0 CELO they're stuck. Interim fix (CELO auto-drip, same pattern as the Tier B
