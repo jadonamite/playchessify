@@ -12,6 +12,7 @@ import GlowButton from '@/components/ui/GlowButton'
 import ClayCard from '@/components/ui/ClayCard'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import ClaimModal from '@/components/ui/ClaimModal'
+import PageBackground from '@/components/ui/PageBackground'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -98,6 +99,7 @@ export default function SettingsPage() {
 
   return (
     <main className="min-h-screen w-full bg-[var(--bg)] text-[var(--t1)] relative overflow-x-hidden">
+      <PageBackground hero="king" />
       {/* Ambient */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-[8%] right-[10%] w-[28%] h-[28%] bg-[var(--c)] blur-[150px] rounded-full opacity-[0.045]" />

@@ -10,6 +10,7 @@ import { useLeaderboard, type LeaderboardEntry } from '@/hooks/useLeaderboard'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
+import PageBackground from '@/components/ui/PageBackground'
 
 // ── constants ───────────────────────────────────────────────────────────────
 
@@ -327,6 +328,8 @@ export default function LeaderboardContent() {
 
   return (
     <main className="min-h-screen w-full bg-[var(--bg)] text-[var(--t1)] relative overflow-x-hidden flex flex-col">
+
+      <PageBackground hero="queen" />
 
       {/* Ambient blobs */}
       <div className="fixed inset-0 pointer-events-none z-0">
