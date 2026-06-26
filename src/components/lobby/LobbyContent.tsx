@@ -45,7 +45,7 @@ export default function LobbyContent() {
   const router = useRouter()
 
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
-  const MAINTENANCE_MODE = false
+  const MAINTENANCE_MODE: boolean = false
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isPending, setIsPending] = useState(false)
