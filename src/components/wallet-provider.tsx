@@ -18,6 +18,9 @@ interface WalletContextType {
   playerAddress: string | null
   isConnected: boolean
   isReady: boolean
+  // True once the user's real on-chain identity is resolved (the smart account for
+  // embedded users). Gate create/join/claim on this to avoid the EOA-split bug.
+  identityReady: boolean
   isMiniPay: boolean
   walletTier: WalletTier
   connectWallet: () => void
@@ -34,6 +37,7 @@ const WalletContext = createContext<WalletContextType>({
   playerAddress: null,
   isConnected: false,
   isReady: false,
+  identityReady: false,
   isMiniPay: false,
   walletTier: 'eoa',
   connectWallet: () => {},
@@ -67,22 +71,56 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   // Authenticated via Privy, OR auto-connected MiniPay (injected wallet, no Privy session)
   const isConnected = (ready && authenticated) || (isMiniPay && !!evmAddress)
-  // Fully ready = connected + has wallet address
-  const isReady = isConnected && !!address
 
-  // Capability tier — MiniPay first (most constrained), then a Privy smart wallet
-  // if one is active, otherwise a plain external EOA.
+  // A user with an embedded Privy wallet WILL get a smart account — so their true
+  // on-chain identity is the smart account, not the embedded EOA. We must not let
+  // them act under the EOA in the window before the smart client resolves, or a
+  // profile/game gets recorded under the wrong address (the dual-identity split).
+  const hasEmbeddedWallet = wallets.some(
+    (w) => w.connectorType === 'embedded' || w.walletClientType === 'privy',
+  )
+  const expectsSmartAccount = !isMiniPay && hasEmbeddedWallet
+  const smartAccount = smartWalletClient?.account?.address ?? null
+
+  // Safety valve: if the smart account never resolves, don't brick the user —
+  // after a grace period fall back to the EOA (the alias self-heal covers the
+  // rare split that creates).
+  const [smartTimedOut, setSmartTimedOut] = useState(false)
+  useEffect(() => {
+    if (!expectsSmartAccount || smartAccount) {
+      if (smartTimedOut) setSmartTimedOut(false)
+      return
+    }
+    const t = setTimeout(() => setSmartTimedOut(true), 8_000)
+    return () => clearTimeout(t)
+  }, [expectsSmartAccount, smartAccount, smartTimedOut])
+
+  // Capability tier — MiniPay first; an embedded user is 'smart' (even while the
+  // account is still resolving) unless we've given up waiting; else external EOA.
   const walletTier: WalletTier = isMiniPay
     ? 'minipay'
-    : smartWalletClient?.account
+    : expectsSmartAccount && (smartAccount || !smartTimedOut)
       ? 'smart'
       : 'eoa'
 
-  // On-chain identity = smart-account address for Tier A, else the connected EOA.
-  const playerAddress =
-    walletTier === 'smart' && smartWalletClient?.account
-      ? smartWalletClient.account.address
+  // Pinned on-chain identity:
+  //   • MiniPay / external EOA → the connected EOA
+  //   • embedded (smart) user  → the smart account ONLY. Intentionally null until
+  //     it resolves, so create/join/claim (which all bail on a null identity) wait
+  //     instead of acting under the EOA. Degrades to the EOA only after the timeout.
+  const playerAddress = isMiniPay
+    ? address
+    : expectsSmartAccount
+      ? smartAccount ?? (smartTimedOut ? address : null)
       : address
+
+  // Fully ready = connected AND the real identity is resolved (or we gave up waiting).
+  const identityReady = isMiniPay
+    ? !!address
+    : expectsSmartAccount
+      ? !!smartAccount || smartTimedOut
+      : !!address
+  const isReady = isConnected && !!playerAddress && identityReady
 
   // MiniPay runs the dApp in an in-app browser with an injected wallet.
   // Detect it and auto-connect the injected connector — MiniPay grants without
@@ -140,6 +178,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         playerAddress,
         isConnected,
         isReady,
+        identityReady,
         isMiniPay,
         walletTier,
         connectWallet,
