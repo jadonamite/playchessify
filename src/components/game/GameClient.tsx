@@ -83,7 +83,7 @@ export default function GameClient() {
   const {
     gameData, isCreator, isParticipant, myColor,
     iProposedDraw, opponentProposedDraw,
-    gameIsWaiting, contractActive, contractDone, contractDraw, payoutSettled, canJoinFromPage,
+    gameIsWaiting, contractActive, payoutSettled, chainResult, canJoinFromPage,
     wagerFormatted, statusLabel, gameProfileMap,
   } = useGameData({ gameId, isBotGame, celoAddress: playerAddress, isConnected })
 
@@ -130,34 +130,6 @@ export default function GameClient() {
   const oppCaptured = iAmWhite ? captureSummary.blackCaptured : captureSummary.whiteCaptured
   const myAdvantage = iAmWhite ? captureSummary.advantage : -captureSummary.advantage
 
-  // ── game result derivation ──────────────────────────────────────────────────
-
-  // Who is in checkmate? chess.js leaves it on the LOSER's turn.
-  const loserSide = game.isCheckmate() ? turn : null  // 'w' or 'b'
-  const iWonByCheckmate  = !!loserSide && ((loserSide === 'w' && myColor === 'black') || (loserSide === 'b' && myColor === 'white'))
-  const iLostByCheckmate = !!loserSide && ((loserSide === 'w' && myColor === 'white') || (loserSide === 'b' && myColor === 'black'))
-
-  let gameResult: GameResult = null
-  if (isBotGame) {
-    // Bot result handled separately in sidebar; no overlay needed.
-  } else if (isParticipant) {
-    if (iWonByCheckmate)  gameResult = 'won'
-    else if (iLostByCheckmate) gameResult = 'lost'
-    else if (didResign)   gameResult = 'lost'
-    else if (game.isDraw() || game.isStalemate() || contractDraw) gameResult = 'draw'
-    else if (opponentTimedOut) gameResult = 'won'
-    // Contract FINISHED but board not over → opponent resigned / was timed out
-    else if (contractDone && !didResign) gameResult = 'won'
-  }
-
-  const resultMessage = gameResult === 'won'
-    ? (opponentTimedOut ? 'Opponent exceeded the 5-minute turn limit.'
-      : iWonByCheckmate ? 'Checkmate — the King has fallen.'
-      : 'Opponent forfeited the match.')
-    : gameResult === 'lost'
-    ? (iLostByCheckmate ? 'Your King has fallen.' : 'You resigned from the match.')
-    : 'Tactical deadlock — neither side can proceed.'
-
   // ── relay ───────────────────────────────────────────────────────────────────
 
   const {
@@ -169,6 +141,47 @@ export default function GameClient() {
     gameId,
     enabled: !isBotGame && gameId > 0,
   })
+
+  // ── game result derivation ──────────────────────────────────────────────────
+
+  // Who is in checkmate? chess.js leaves it on the LOSER's turn.
+  const loserSide = game.isCheckmate() ? turn : null  // 'w' or 'b'
+  const iWonByCheckmate  = !!loserSide && ((loserSide === 'w' && myColor === 'black') || (loserSide === 'b' && myColor === 'white'))
+  const iLostByCheckmate = !!loserSide && ((loserSide === 'w' && myColor === 'white') || (loserSide === 'b' && myColor === 'black'))
+
+  // Move-clock forfeit derivable from the relay alone — covers a player who
+  // RE-ENTERS a timed-out game (no live countdown was running for them). The side
+  // to move when the clock expired is the loser.
+  const lastMoveTs = relayMoves.length > 0 ? relayMoves[relayMoves.length - 1].ts : 0
+  const movesTimedOut = !isBotGame && contractActive && lastMoveTs > 0 &&
+    Date.now() - lastMoveTs > TURN_TIMEOUT_SECS * 1000
+
+  let gameResult: GameResult = null
+  if (isBotGame) {
+    // Bot result handled separately in sidebar; no overlay needed.
+  } else if (isParticipant) {
+    if (payoutSettled) {
+      // Settled on-chain → trust the authoritative result (correct on re-entry,
+      // fixes the returning-loser-sees-"won" bug).
+      gameResult = chainResult
+    } else if (iWonByCheckmate)  gameResult = 'won'
+    else if (iLostByCheckmate)   gameResult = 'lost'
+    else if (didResign)          gameResult = 'lost'
+    else if (game.isDraw() || game.isStalemate()) gameResult = 'draw'
+    else if (opponentTimedOut)   gameResult = 'won'
+    else if (movesTimedOut)      gameResult = ((turn === 'w' ? 'white' : 'black') === myColor) ? 'lost' : 'won'
+  }
+
+  const resultMessage = gameResult === 'won'
+    ? (opponentTimedOut || movesTimedOut ? 'Opponent ran out of time.'
+      : iWonByCheckmate ? 'Checkmate — the King has fallen.'
+      : 'You won the match.')
+    : gameResult === 'lost'
+    ? (iLostByCheckmate ? 'Your King has fallen.'
+      : didResign ? 'You resigned from the match.'
+      : movesTimedOut ? 'You ran out of time.'
+      : 'You lost the match.')
+    : 'The match ended in a draw.'
 
   // Rebuild board from relay. Uses moveHistoryRef (not moveHistory) to avoid
   // the dependency causing an infinite rebuild → setState → rebuild cycle.
