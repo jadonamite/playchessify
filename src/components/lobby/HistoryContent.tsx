@@ -11,6 +11,7 @@ import { useHistory } from '@/hooks/useHistory'
 import { Queen, PieceView } from '@/components/ui/ChessModels'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
 import ChessName from '@/components/ui/ChessName'
+import SceneBoundary from '@/components/ui/SceneBoundary'
 
 function Scene() {
   return (
@@ -65,11 +66,13 @@ export function HistoryContent() {
     <main className="relative min-h-screen w-full bg-[#06060f] text-[#eeeeff] overflow-x-hidden flex flex-col font-body">
       {/* ── BACKGROUND ── */}
       <div className="fixed inset-0 z-0 h-screen w-full pointer-events-none">
-        <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
-          <Suspense fallback={null}>
-            <Scene />
-          </Suspense>
-        </Canvas>
+        <SceneBoundary>
+          <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
+            <Suspense fallback={null}>
+              <Scene />
+            </Suspense>
+          </Canvas>
+        </SceneBoundary>
       </div>
 
       {/* ── GRID OVERLAY ── */}

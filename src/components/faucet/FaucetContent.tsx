@@ -4,13 +4,14 @@ import { useState, Suspense } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { Canvas } from '@react-three/fiber'
-import { Float, Environment, Text } from '@react-three/drei'
+import { Environment } from '@react-three/drei'
 import { useRouter } from 'next/navigation'
 import { useWallet } from '@/components/wallet-provider'
 import { useWriteContract, useReadContract, usePublicClient } from 'wagmi'
 import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
 import GlowButton from '@/components/ui/GlowButton'
 import LoadingState from '@/components/ui/LoadingState'
+import SceneBoundary from '@/components/ui/SceneBoundary'
 import FaucetResultModal, { type FaucetResultType } from '@/components/ui/FaucetResultModal'
 import { King, Pawn, Bishop, Knight, PieceView } from '@/components/ui/ChessModels'
 import { CHESS_TOKEN_ABI } from '@/config/abis'
@@ -45,30 +46,6 @@ function FaucetScene() {
       <Pawn position={[-4, 2, -3]} color="#1e293b" emissive="#00ccff" emissiveIntensity={0.1} floatSpeed={1.5} floatIntensity={1} rotationIntensity={0.5} />
       <Bishop position={[4, -2, -2]} color="#1e293b" emissive="#6a0dad" emissiveIntensity={0.1} floatSpeed={2} floatIntensity={0.8} rotationIntensity={0.4} />
       <Knight position={[3.5, 2.5, -4]} color="#1e293b" emissive="#00ccff" emissiveIntensity={0.08} floatSpeed={1} floatIntensity={0.6} rotationIntensity={0.3} />
-
-      {/* Floating labels */}
-      <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.5}>
-        <Text
-          position={[-4, 3, -3]}
-          fontSize={0.6}
-          color="#00ccff"
-          material-transparent={true}
-          material-opacity={0.08}
-        >
-          FAUCET
-        </Text>
-      </Float>
-      <Float speed={2} rotationIntensity={0.15} floatIntensity={0.8}>
-        <Text
-          position={[4, -3, -2]}
-          fontSize={0.45}
-          color="#6a0dad"
-          material-transparent={true}
-          material-opacity={0.06}
-        >
-          CHESS
-        </Text>
-      </Float>
     </>
   )
 }
@@ -256,11 +233,13 @@ export default function FaucetContent() {
 
       {/* ── 3D BACKGROUND ── */}
       <div className="fixed inset-0 z-0 h-screen w-full pointer-events-none">
-        <Canvas camera={{ position: [0, 0, 8], fov: 45 }}>
-          <Suspense fallback={null}>
-            <FaucetScene />
-          </Suspense>
-        </Canvas>
+        <SceneBoundary>
+          <Canvas camera={{ position: [0, 0, 8], fov: 45 }}>
+            <Suspense fallback={null}>
+              <FaucetScene />
+            </Suspense>
+          </Canvas>
+        </SceneBoundary>
       </div>
 
       {/* ── GRID OVERLAY ── */}
