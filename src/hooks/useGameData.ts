@@ -63,12 +63,17 @@ export function useGameData({ gameId, isBotGame, celoAddress, isConnected }: Use
   const opponentProposedDraw = drawPending && !iProposedDraw
 
   // ── status flags ──
-  const gameIsWaiting   = gameData?.status === '0'
-  const contractActive  = gameData?.status === '1'
-  const contractDone    = gameData?.status === '2'
-  const contractDraw    = gameData?.status === '4'
-  const payoutSettled   = contractDone || contractDraw
-  const canJoinFromPage = gameIsWaiting && !isParticipant && !isBotGame && isConnected
+  const gameIsWaiting     = gameData?.status === '0'
+  const contractActive    = gameData?.status === '1'
+  const contractDone      = gameData?.status === '2'
+  const contractCancelled = gameData?.status === '3'
+  const contractDraw      = gameData?.status === '4'
+  const payoutSettled     = contractDone || contractDraw
+  // The game is over on-chain (finished/draw/cancelled) — nothing left to play.
+  const gameEnded         = payoutSettled || contractCancelled
+  // Authoritative outcome from the viewer's perspective once settled.
+  const chainResult       = resultForColor(gameData?.result, myColor)
+  const canJoinFromPage   = gameIsWaiting && !isParticipant && !isBotGame && isConnected
 
   const wagerFormatted = gameData
     ? (Number(gameData.wager) / Math.pow(10, TOKEN_DECIMALS)).toFixed(0)
@@ -85,7 +90,8 @@ export function useGameData({ gameId, isBotGame, celoAddress, isConnected }: Use
     gameData,
     me, isCreator, isOpponent, isParticipant, myColor,
     drawPending, iProposedDraw, opponentProposedDraw,
-    gameIsWaiting, contractActive, contractDone, contractDraw, payoutSettled, canJoinFromPage,
+    gameIsWaiting, contractActive, contractDone, contractCancelled, contractDraw,
+    payoutSettled, gameEnded, chainResult, canJoinFromPage,
     wagerFormatted, statusLabel, gameProfileMap,
   }
 }
