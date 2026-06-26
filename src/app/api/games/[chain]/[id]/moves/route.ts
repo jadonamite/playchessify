@@ -13,7 +13,7 @@ import {
   GameStatus,
   type Address,
 } from '@/lib/celo-server'
-import { canonicalMoveMessage } from '@/lib/settlement'
+import { canonicalMoveMessage, MOVE_TIMEOUT_MS } from '@/lib/settlement'
 
 export const runtime = 'nodejs'
 
@@ -102,6 +102,18 @@ export async function POST(
     const game = await getOnchainGameCached(gameId)
     if (game.status !== GameStatus.Active) {
       return NextResponse.json({ error: 'game not active' }, { status: 409 })
+    }
+
+    // Move-clock enforcement: once the side to move has exceeded the timeout, the
+    // game is decided (the other player wins on time) and settlement is pending.
+    // Refuse the late move so a returning opponent can't sneak back in and undo the
+    // result during the window before on-chain settlement lands. Measured against
+    // the last recorded move's server timestamp, so both sides see one clock.
+    if (existing.length > 0) {
+      const last = existing[existing.length - 1]
+      if (Date.now() - last.ts > MOVE_TIMEOUT_MS) {
+        return NextResponse.json({ error: 'move window expired — game is being settled' }, { status: 409 })
+      }
     }
 
     // Replay known moves to derive the legal board + whose turn it is.
