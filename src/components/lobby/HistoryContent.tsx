@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import GlowButton from '@/components/ui/GlowButton'
 import LoadingState from '@/components/ui/LoadingState'
 import { useHistory } from '@/hooks/useHistory'
-import { Queen, PieceView } from '@/components/ui/ChessModels'
+import { Queen, PieceIcon } from '@/components/ui/ChessModels'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
 import ChessName from '@/components/ui/ChessName'
 import SceneBoundary from '@/components/ui/SceneBoundary'
@@ -121,10 +121,9 @@ export function HistoryContent() {
                           className="p-6 md:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 hover:bg-white/[0.02] transition-colors"
                         >
                           <div className="flex items-center gap-6 w-full sm:w-auto">
-                            <div className="w-16 h-16 shrink-0 rounded-2xl flex items-center justify-center border border-white/10 bg-black/40 overflow-hidden relative group">
-                              <PieceView
+                            <div className="w-16 h-16 shrink-0 rounded-2xl flex items-center justify-center border border-white/10 bg-black/40 overflow-hidden relative group p-2.5">
+                              <PieceIcon
                                 type={item.role.toLowerCase() === 'creator' ? 'king' : 'rook'}
-                                color={item.chain === 'celo' ? '#35ee66' : '#ff9900'}
                                 className="w-full h-full"
                               />
                             </div>

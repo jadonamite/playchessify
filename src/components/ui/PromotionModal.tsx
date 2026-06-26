@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { PieceView } from './ChessModels'
+import { PieceIcon } from './ChessModels'
 
 export type PromotionPiece = 'q' | 'r' | 'b' | 'n'
 
@@ -47,7 +47,6 @@ export default function PromotionModal({ open, color, onSelect, onCancel }: Prom
 
   if (!mounted) return null
 
-  const pieceTint = color === 'white' ? '#ffffff' : '#111111'
 
   return (
     <AnimatePresence>
@@ -98,7 +97,7 @@ export default function PromotionModal({ open, color, onSelect, onCancel }: Prom
                   />
 
                   <div className="w-20 h-20 transform group-hover:scale-110 transition-transform duration-200">
-                    <PieceView type={view} color={pieceTint} className="w-full h-full" />
+                    <PieceIcon type={view} color={color} className="w-full h-full" />
                   </div>
 
                   <div className="flex flex-col items-center gap-0.5">
