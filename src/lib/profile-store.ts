@@ -18,9 +18,19 @@ const K = {
   addr:      (a: string) => `chess:profile:addr:${a.toLowerCase()}`,
   name:      (n: string) => `chess:profile:name:${n.toLowerCase()}`,
   namelock:  (a: string) => `chess:profile:namelock:${a.toLowerCase()}`,
+  // alias:{addr} → the canonical address whose profile this address resolves to.
+  // Used to map a Privy user's embedded EOA ↔ smart-account so one name shows for
+  // both (see /api/profile/link). Purely a read-side fallback — never overwrites a
+  // direct profile.
+  alias:     (a: string) => `chess:profile:alias:${a.toLowerCase()}`,
   total:     ()          => `chess:profile:total`,
   recent:    ()          => `chess:profile:recent`,
   rl:        (a: string, action: string) => `chess:profile:rl:${action}:${a.toLowerCase()}`,
+}
+
+function parseProfile(raw: unknown): ChessProfile | null {
+  if (!raw) return null
+  return (typeof raw === 'string' ? JSON.parse(raw) : raw) as ChessProfile
 }
 
 // ── Reserved / blocked names ──────────────────────────────────────────────────
@@ -64,11 +74,25 @@ export async function checkRateLimit(
 
 // ── Profile CRUD ──────────────────────────────────────────────────────────────
 
+/** Fetch the profile stored under exactly this address — no alias fallback.
+ *  Use for mutations (claim/update) that must operate on the literal key. */
+export async function getProfileDirect(address: string): Promise<ChessProfile | null> {
+  return parseProfile(await getRedis().get(K.addr(address)))
+}
+
+/** Fetch a profile, falling back through the alias link (one hop) so a Privy
+ *  user's EOA and smart account both resolve to the same name. */
 export async function getProfileByAddress(address: string): Promise<ChessProfile | null> {
-  const redis = getRedis()
-  const raw = await redis.get(K.addr(address))
-  if (!raw) return null
-  return (typeof raw === 'string' ? JSON.parse(raw) : raw) as ChessProfile
+  const direct = await getProfileDirect(address)
+  if (direct) return direct
+  const alias = await getRedis().get(K.alias(address))
+  if (!alias) return null
+  return getProfileDirect(alias as string)
+}
+
+/** Link `from` → `to` so lookups of `from` resolve to `to`'s profile. */
+export async function linkProfileAlias(from: string, to: string): Promise<void> {
+  await getRedis().set(K.alias(from), to.toLowerCase())
 }
 
 export async function getProfileByUsername(username: string): Promise<ChessProfile | null> {
@@ -111,7 +135,7 @@ export async function updateProfile(
 ): Promise<{ ok: boolean; reason?: string }> {
   const redis = getRedis()
   const addr = address.toLowerCase()
-  const existing = await getProfileByAddress(addr)
+  const existing = await getProfileDirect(addr)
   if (!existing) return { ok: false, reason: 'Profile not found' }
 
   const now = Date.now()
@@ -154,14 +178,32 @@ export async function getBatchProfiles(
 ): Promise<Record<string, ChessProfile | null>> {
   if (addresses.length === 0) return {}
   const redis = getRedis()
-  const keys = addresses.map((a) => K.addr(a.toLowerCase()))
-  const results = await redis.mget<(ChessProfile | string | null)[]>(...keys)
+  const lower = addresses.map((a) => a.toLowerCase())
+  const direct = await redis.mget<(ChessProfile | string | null)[]>(...lower.map(K.addr))
+
   const out: Record<string, ChessProfile | null> = {}
-  addresses.forEach((addr, i) => {
-    const raw = results[i]
-    if (!raw) { out[addr.toLowerCase()] = null; return }
-    out[addr.toLowerCase()] = typeof raw === 'string' ? JSON.parse(raw) : raw
+  const misses: string[] = []
+  lower.forEach((addr, i) => {
+    const profile = parseProfile(direct[i])
+    out[addr] = profile
+    if (!profile) misses.push(addr)
   })
+
+  // Resolve misses through the alias link (one hop) so an EOA that played games
+  // still shows the name claimed under the user's smart account (and vice versa).
+  if (misses.length) {
+    const aliasTargets = await redis.mget<(string | null)[]>(...misses.map(K.alias))
+    const links = misses
+      .map((from, i) => ({ from, to: aliasTargets[i] ? String(aliasTargets[i]).toLowerCase() : null }))
+      .filter((l): l is { from: string; to: string } => l.to !== null)
+    if (links.length) {
+      const targetRaw = await redis.mget<(ChessProfile | string | null)[]>(...links.map((l) => K.addr(l.to)))
+      links.forEach((l, i) => {
+        const profile = parseProfile(targetRaw[i])
+        if (profile) out[l.from] = profile
+      })
+    }
+  }
   return out
 }
 
