@@ -363,3 +363,81 @@ body {
 .btn-brand-para-mobile {
   padding: 18px 56px;
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   NEON DESIGN FOUNDATION (#8) — shared primitives so the inner screens speak the
+   same cyber-neon language as the v2 landing. Built on the EXISTING tokens
+   (--c cyan, --bg navy, --fd Unbounded) — the inner app's display font
+   (Unbounded) is intentionally kept; only the candy/clay skin is being retired.
+   These classes are inert until a screen opts in, so adding them breaks nothing.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Glass panel — the landing's frosted card. Replaces ClayCard on re-skinned screens. */
+.neon-panel {
+  position: relative;
+  background: linear-gradient(180deg, rgba(19, 19, 42, .92), rgba(9, 9, 26, .92));
+  border: 1px solid var(--b2);
+  border-radius: 16px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .05) inset, 0 18px 50px rgba(0, 0, 0, .45);
+}
+.neon-panel-hover {
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+}
+.neon-panel-hover:hover {
+  border-color: var(--c);
+  box-shadow: 0 0 0 1px var(--b2) inset, 0 22px 60px rgba(0, 0, 0, .5), 0 0 32px rgba(0, 204, 255, .18);
+  transform: translateY(-2px);
+}
+
+/* Trapezoid panel — the landing's tapered nav/CTA shape. */
+.neon-trapezoid {
+  clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 100%, 18px 100%);
+}
+
+/* Section heading — Unbounded, uppercase, cyan glow (KEEPS the inner-app font). */
+.neon-heading {
+  font-family: var(--fd);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--t1);
+  text-shadow: 0 0 26px rgba(0, 204, 255, .35), 0 4px 16px rgba(0, 0, 0, .6);
+}
+.neon-heading-accent { color: var(--c); }
+
+/* Text glow utilities. */
+.neon-glow { text-shadow: 0 0 18px rgba(0, 204, 255, .55); }
+.neon-text-cyan { color: var(--c); }
+
+/* Faint animated grid backdrop — mount behind a screen's content. */
+.neon-grid-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .35;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(circle at 50% 0%, #000, transparent 78%);
+  mask-image: radial-gradient(circle at 50% 0%, #000, transparent 78%);
+}
+
+/* Hairline divider in the brand cyan. */
+.neon-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--b2), transparent);
+  border: 0;
+}
+
+/* Small uppercase label/eyebrow (Unbounded). */
+.neon-eyebrow {
+  font-family: var(--fd);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--c);
+}
