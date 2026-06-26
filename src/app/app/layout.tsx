@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import BottomNav from '@/components/ui/BottomNav'
 import SideNav from '@/components/ui/SideNav'
 import { Navbar } from '@/components/landing/Hero'
+import { useProfileLink } from '@/hooks/useProfileLink'
 
 // Shared chrome for every /app/* route.
 //  • Desktop (≥769px): the fixed SideNav rail replaces the top nav; content is
@@ -14,6 +15,9 @@ import { Navbar } from '@/components/landing/Hero'
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isGame = pathname.startsWith('/app/game')
+
+  // Self-heal the EOA ↔ smart-account name split for Privy users (one-time, silent).
+  useProfileLink()
 
   return (
     <div className="pc-app-shell">
