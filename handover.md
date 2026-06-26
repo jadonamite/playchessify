@@ -103,7 +103,7 @@ app. Full plan: `~/.claude/plans/goofy-tumbling-eclipse.md`.
 | Server state | `@tanstack/react-query` |
 | Client state | Zustand (`useSettingsStore`, `useToastStore`) |
 | Move relay + profiles | Upstash Redis (off-chain) |
-| Settlement worker | Vercel Cron → `/api/cron/settle` (every minute) |
+| Settlement worker | Vercel Cron → `/api/cron/settle` (daily, `0 0 * * *` — Hobby-plan limit; relay freeze makes latency non-blocking) |
 | Audio | Two looped MP3 tracks + Web Audio API move SFX |
 | Chess logic | `chess.js` (client board + server settlement) |
 | Board UI | `react-chessboard` (dynamic import, SSR off) |
@@ -208,18 +208,27 @@ chess:moves:celo:{gameId}   → LIST of MoveRecord JSON (30-day TTL, reset on ea
 chess:active:celo           → SET of live gameIds (the settlement worker's sweep list)
 ```
 
-**MoveRecord:** `{ san, player, moveNumber, ts, sig?, signer? }`. `sig`/`signer` present
-for Tier A/C (signed); absent for MiniPay (turn-bound only).
+**MoveRecord:** `{ san, player, moveNumber, ts, sig?, signer? }`.
+
+> **Per-move signing is currently OFF (since `297f5c4`, 2026-06-18).** The client submits
+> every move **unsigned, for all tiers** — `GameClient` calls `relaySubmitMove` with no signer,
+> and `useMoveSigner` is dead code (not wired to any component). Moves are authenticated purely
+> by the relay's turn/legality/participant binding (the "trusted middleman" model). The signing
+> infrastructure is dormant, not deleted: the relay still verifies a `sig` *if present*, and
+> `MoveRecord.sig`/`signer` remain in the type — so it can be re-enabled for a future signed
+> high-stakes mode. (Task: keep dormant vs delete.)
 
 **POST move authentication** (`moves/route.ts`): rejects duplicate `moveNumber` (race guard,
-409); reads `getGame` (must be Active); replays history to derive side-to-move and rejects
-if `player` isn't that side (403); rejects illegal moves (422); if a `sig` is present, verifies
-it against the canonical message via `verifyWalletSignature` (EIP-1271-aware, 401 on fail);
-appends and registers the game as active.
+409); reads `getGame` (must be Active); **rejects a move once the move clock is exceeded**
+(last move older than `MOVE_TIMEOUT_MS` → 409 "move window expired", so a returning opponent
+can't undo a timeout during the settling window); replays history to derive side-to-move and
+rejects if `player` isn't that side (403); rejects illegal moves (422); if a `sig` is present,
+verifies it against the canonical message via `verifyWalletSignature` (EIP-1271-aware, 401 on
+fail — dormant path today); appends and registers the game as active.
 
-**Signing** (`useMoveSigner` + `settlement.canonicalMoveMessage`): the signed string binds
-chain + gameId + ply + SAN + resulting FEN, so a signature can't be replayed onto another move.
-`useGameMoves.moveMessage` must stay byte-identical to the server's `canonicalMoveMessage`.
+**Signing (dormant)** (`useMoveSigner` + `settlement.canonicalMoveMessage`): when re-enabled, the
+signed string binds chain + gameId + ply + SAN + resulting FEN, so a signature can't be replayed
+onto another move. `useGameMoves.moveMessage` must stay byte-identical to `canonicalMoveMessage`.
 
 ---
 
@@ -241,9 +250,12 @@ chain + gameId + ply + SAN + resulting FEN, so a signature can't be replayed ont
 - **Client fast path** — `useCeloChess.requestSettle` → `POST /api/games/celo/[id]/settle`,
   fired by `GameClient` once the board is terminal or the opponent's 5-min clock expires
   (guarded by a `useRef`; a failed request clears the guard to retry).
-- **Guaranteed fallback** — `GET /api/cron/settle` sweeps `chess:active:celo` every minute
-  (`vercel.json`, protected by `CRON_SECRET`), so a finished game settles even if both
-  players close their tabs.
+- **Guaranteed fallback** — `GET /api/cron/settle` sweeps `chess:active:celo` **once a day**
+  (`vercel.json` `0 0 * * *` — the Vercel Hobby plan only allows daily crons), protected by
+  `CRON_SECRET`, so a finished game still settles even if both players close their tabs. The
+  daily cadence is **not a correctness risk**: the relay freezes the game at the move-clock
+  deadline (rejects late moves), so the outcome is locked off-chain the moment it's decided —
+  only the on-chain payout waits for the sweep, and nobody can change who won in the meantime.
 
 `GameResult` enum is mirrored in three places that must agree: `ChessGame.sol`,
 `celo-server.ts`, and `settlement.RESULT` (`WhiteWins 1 · BlackWins 2 · Draw 3`).
@@ -396,7 +408,7 @@ src/
 ├── config/{contracts.ts, abis.ts, wagmi.ts}
 └── types/profile.ts
 celo-contracts/                       ← Foundry: src/ (ChessToken, ChessGame), script/Deploy.s.sol, test/
-vercel.json                          ← cron: /api/cron/settle every minute
+vercel.json                          ← cron: /api/cron/settle daily (0 0 * * *, Hobby-plan limit)
 ```
 
 ---

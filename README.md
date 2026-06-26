@@ -23,9 +23,12 @@ Two Foundry contracts on Celo (`celo-contracts/`):
 
 Off-chain services:
 
-- **Move relay** — Upstash Redis. Moves are turn-bound and (for capable wallets) signed.
+- **Move relay** — Upstash Redis. Moves are turn-bound (authenticated by turn/legality/
+  participant; per-move signing is currently off). The relay also rejects a move once the
+  5-minute move clock is exceeded, so a timeout can't be undone by a returning opponent.
 - **Settlement** — a server oracle replays the move list and calls `settleGame`; a
-  **Vercel Cron** (`/api/cron/settle`, every minute) guarantees finished games settle.
+  **Vercel Cron** (`/api/cron/settle`, daily) is the guaranteed-settlement backstop. Latency
+  is non-blocking — the relay freezes the game the moment it's decided.
 - **Gas sponsorship** — MiniPay wallets get a USDm gas drip + CHESS provision; social/email
   wallets use an ERC-4337 Pimlico paymaster; external EOAs get an interim native-CELO drip;
   everything degrades gracefully to self-pay.
