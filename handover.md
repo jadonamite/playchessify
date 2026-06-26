@@ -81,11 +81,13 @@ app. Full plan: `~/.claude/plans/goofy-tumbling-eclipse.md`.
   auto-verify authed UI. Verify via device or mock the wallet.
 - **Clean build before trusting** — `rm -rf .next && npm run build` (stale cache
   has hidden Turbopack errors before).
-- **Auto-commit worker:** gitignored `.committer.sh` commits every 10s as
-  `chore(wip): auto-checkpoint #N`; the upgraded `~/Projects/Scripts/Elite.cjs` (NVIDIA-NIM
-  conventional-commit messages) drives commits across the repos. **Currently NOT running**
-  — start/stop as needed; `pkill -f .committer.sh` to stop. `main` history carries these
-  wip/bot commits (kept as-is per decision — no rebase/squash).
+- **Auto-commit worker is ACTIVE** — `~/Projects/Scripts/Elite.cjs` (NVIDIA-NIM
+  conventional-commit messages, deterministic fallback) commits this repo every ~1–7 min;
+  the older gitignored `.committer.sh` does plain `chore(wip): auto-checkpoint #N` checkpoints.
+  Expect your edits to be auto-committed under bot messages mid-session (e.g. this doc pass
+  landed as `docs: update DEPLOY, README, TODO …`). Stop with `pkill -f Elite.cjs` /
+  `pkill -f .committer.sh`. `main` history carries these wip/bot commits (kept as-is per
+  decision — no rebase/squash).
 
 ---
 
@@ -116,7 +118,7 @@ The on-chain "player" identity and the gas mechanism both depend on the tier
 
 | Tier | Detected as | Player identity | Gas / sponsorship |
 |---|---|---|---|
-| `minipay` | `window.ethereum.isMiniPay` | connected EOA | Server drips cUSD gas + mints CHESS (`/api/gas/sponsor`); legacy tx with `feeCurrency = cUSD`. Can't sign messages. |
+| `minipay` | `window.ethereum.isMiniPay` | connected EOA | Server drips USDm gas + mints CHESS (`/api/gas/sponsor`); legacy tx with `feeCurrency = USDm`. Can't sign messages. |
 | `smart` | Privy smart-wallet client active | smart-account address | ERC-4337 userOp sponsored by Pimlico paymaster (configured in the Privy dashboard) |
 | `eoa` | external injected wallet | connected EOA | User pays own gas |
 
@@ -248,23 +250,33 @@ chain + gameId + ply + SAN + resulting FEN, so a signature can't be replayed ont
 
 ---
 
-## Gas sponsorship (Tier B / MiniPay)
+## Gas sponsorship (Tier B / MiniPay + Tier C / external EOA)
 
-`POST /api/gas/sponsor` (`celo-server.ts` wallets):
-- Fast path: wallet already has ≥ `MIN_GAS_CUSD` (0.01 cUSD) → skip (still top up CHESS if < 100).
-- Drip: provisions 1,000 CHESS via `mintTo` (if low) + drips `GAS_DRIP_CUSD` (0.03 cUSD) via the
+> All amounts are in **USDm** (Mento Dollar — the cUSD rebrand: same contract, same 18 decimals).
+
+`POST /api/gas/sponsor` (`celo-server.ts` wallets) — `tier: 'minipay'` (USDm) or `'eoa'` (CELO):
+
+**Tier B / MiniPay (USDm):**
+- Fast path: wallet already has ≥ `MIN_GAS_USDM` (0.01 USDm) → skip (still top up CHESS if < 100).
+- Drip: provisions 1,000 CHESS via `mintTo` (if low) + drips `GAS_DRIP_USDM` (0.03 USDm) via the
   gas-sponsor wallet.
 - **Graceful degradation:** if the sponsor wallet can't cover the drip (`gasSponsorCanCover`),
   returns `{ degraded: true }` (a signal, not a 500) and the client falls back to self-pay.
-- **Sybil guards:** per-address cooldown (1 h), per-address in-flight lock (60 s), global daily
-  cap (1,000).
 
-Client side (`useCeloChess`): `ensureGasSponsored` polls the wallet's real cUSD balance
-(`pollUntilGas`, 12×1 s) before estimating gas — no blind sleep — and returns a typed
-`GasStatus` (`sponsored | has-gas | self-pay`). `assertCanSelfPay` stops with a clear message
-if the user genuinely has no cUSD. Tier A retries a sponsored userOp once on a transient
-paymaster/bundler error (`isSponsorshipError`); it deliberately does **not** identity-switch to
-the embedded EOA (that would change the on-chain player mid-game).
+**Tier C / external EOA (native CELO):**
+- Fast path: wallet already has ≥ `MIN_GAS_CELO` (0.01 CELO) → skip.
+- Drip: `CELO_DRIP_AMOUNT` (0.005 CELO) via `sponsorCelo` (guarded by `gasSponsorCanCoverCelo`),
+  separate `chess:gas-celo:*` Redis keys.
+
+- **Sybil guards (both tiers):** per-address cooldown (1 h), per-address in-flight lock (60 s),
+  global daily cap (1,000).
+
+Client side (`useCeloChess`): `ensureGasSponsored` polls the wallet's real USDm/CELO balance
+(`pollUntilGas` / `pollUntilCeloGas`, 12×1 s) before estimating gas — no blind sleep — and
+returns a typed `GasStatus` (`sponsored | has-gas | self-pay`). `assertCanSelfPay` stops with a
+clear message if the user genuinely has no USDm/CELO. Tier A retries a sponsored userOp once on a
+transient paymaster/bundler error (`isSponsorshipError`); it deliberately does **not**
+identity-switch to the embedded EOA (that would change the on-chain player mid-game).
 
 ---
 
@@ -397,14 +409,14 @@ NEXT_PUBLIC_PRIVY_APP_ID
 NEXT_PUBLIC_CELO_TOKEN          # set to freshly deployed token after DEPLOY.md
 NEXT_PUBLIC_CELO_GAME           # set to freshly deployed game after DEPLOY.md
 NEXT_PUBLIC_CELO_NETWORK        # 'alfajores' for rehearsal; anything else = mainnet
-NEXT_PUBLIC_FEE_CURRENCY        # optional cUSD override (defaults per network)
+NEXT_PUBLIC_FEE_CURRENCY        # optional USDm fee-currency override (defaults per network)
 
 # Server (gitignored)
 UPSTASH_REDIS_REST_URL
 UPSTASH_REDIS_REST_TOKEN
 ORACLE_PRIVATE_KEY              # calls settleGame
 MINTER_PRIVATE_KEY             # calls token.mintTo
-GAS_SPONSOR_PRIVATE_KEY        # drips cUSD gas
+GAS_SPONSOR_PRIVATE_KEY        # drips USDm gas (Tier B) + native CELO (Tier C)
 CRON_SECRET                    # Bearer guard for /api/cron/settle
 
 # Foundry deploy (see DEPLOY.md): DEPLOYER_PRIVATE_KEY, ORACLE_ADDRESS, MINTER_ADDRESS, CELOSCAN_API_KEY
