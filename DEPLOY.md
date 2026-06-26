@@ -94,8 +94,10 @@ CRON_SECRET            # Vercel Cron sends this as Bearer to /api/cron/settle
 Pimlico bundler/paymaster URLs + `PIMLICO_API_KEY`. Sponsorship is then automatic via
 `SmartWalletsProvider`.
 
-**Cron:** `vercel.json` already registers `/api/cron/settle` at `* * * * *` (every minute). No
-action beyond deploying to Vercel with `CRON_SECRET` set.
+**Cron:** `vercel.json` registers `/api/cron/settle` at `0 0 * * *` (daily — the Vercel Hobby
+plan only allows daily crons). This is the guaranteed-settlement backstop; the relay's move-clock
+freeze makes the latency non-blocking. No action beyond deploying with `CRON_SECRET` set. (On a
+Pro plan, tighten to a few minutes if you want faster on-chain payout.)
 
 ---
 
@@ -105,7 +107,8 @@ Run before flipping env to mainnet. Settlement + gas both depend on the relay an
 so exercise the full path, not just the contracts.
 
 - **Tier A (social/email):** create → play → checkmate → confirm Pimlico-sponsored userOps and
-  oracle settlement; confirm signed moves verify (EIP-1271).
+  oracle settlement. (Per-move signing is currently off — moves are turn-bound only; if you
+  re-enable signing, also confirm EIP-1271 verification here.)
 - **Tier B (MiniPay):** 0-balance wallet → `/api/gas/sponsor` drips USDm + mints CHESS → create/join;
   then exhaust the sponsor wallet and confirm graceful degradation to self-pay (clear USDm message).
 - **Tier C (external EOA):** interim native-CELO auto-drip (`tier: 'eoa'`, same sybil guards) →
