@@ -14,6 +14,7 @@ import { useBatchProfiles } from '@/hooks/useBatchProfiles'
 import { useProfile } from '@/hooks/useProfile'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
+import PageBackground from '@/components/ui/PageBackground'
 import ClaimModal from '@/components/ui/ClaimModal'
 import LoadingState from '@/components/ui/LoadingState'
 import { CrownIcon, RankIcon } from '@/components/ui/icons'
@@ -170,6 +171,8 @@ export default function LobbyContent() {
       <div className="absolute inset-0 pointer-events-none z-0 opacity-50 bg-[var(--bg)]" />
 
       <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px)', backgroundSize: '52px 52px', pointerEvents: 'none', zIndex: 0, opacity: 0.4 }} />
+
+      <PageBackground hero="king" grid={false} />
 
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-full box-border px-4 md:px-8 py-6 md:py-10">
 

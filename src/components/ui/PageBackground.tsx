@@ -33,7 +33,14 @@ function Scene({ hero }: { hero: 'king' | 'queen' }) {
   )
 }
 
-export default function PageBackground({ hero = 'king' }: { hero?: 'king' | 'queen' }) {
+export default function PageBackground({
+  hero = 'king',
+  grid = true,
+}: {
+  hero?: 'king' | 'queen'
+  /** Render the neon grid overlay. Disable on pages that already draw their own. */
+  grid?: boolean
+}) {
   return (
     <>
       <div className="fixed inset-0 z-0 h-screen w-full pointer-events-none">
@@ -51,15 +58,17 @@ export default function PageBackground({ hero = 'king' }: { hero?: 'king' | 'que
       </div>
 
       {/* Neon grid overlay */}
-      <div
-        className="fixed inset-0 z-0 pointer-events-none"
-        style={{
-          backgroundImage:
-            'linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px)',
-          backgroundSize: '52px 52px',
-          opacity: 0.4,
-        }}
-      />
+      {grid && (
+        <div
+          className="fixed inset-0 z-0 pointer-events-none"
+          style={{
+            backgroundImage:
+              'linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px)',
+            backgroundSize: '52px 52px',
+            opacity: 0.4,
+          }}
+        />
+      )}
     </>
   )
 }
