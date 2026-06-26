@@ -57,8 +57,9 @@ Priority order for the next session:
   onboarding banner; integrated across lobby/leaderboard/history/game/navbar.
 
 ### Gameplay
-- [x] **Off-chain move relay** (Redis) — turn-bound + per-move wallet signatures (Tier A/C);
-  MiniPay unsigned. Result overlay, resign signaling, 5-min turn clock.
+- [x] **Off-chain move relay** (Redis) — turn-bound for all tiers. (Per-move signing was built
+  but **disabled 2026-06-18**, `297f5c4`, to kill the per-move popup; `useMoveSigner` is dormant.
+  Relay also rejects late moves past the 5-min move clock.) Result overlay, resign signaling.
 - [x] Stronger bot (full piece-square tables, MVV-LVA ordering), pawn-promotion UI with
   under-promotion, relay stale-poll race fix, captured-piece trays.
 - [x] Settings: board themes, **piece sets**, **AI difficulty**, **move hints**.
@@ -73,8 +74,9 @@ Priority order for the next session:
   Redis-locked.
 - [x] **`reclaimExpired`** backstop — either player split-refunds escrow after `EXPIRY_BLOCKS`
   (~1 day) if the oracle is down. `setOracle` for rotation.
-- [x] **Cron settlement worker** `/api/cron/settle` (Vercel cron, every minute) guarantees
-  finished games settle even if both clients disappear.
+- [x] **Cron settlement worker** `/api/cron/settle` (Vercel cron, **daily** `0 0 * * *` — Hobby-plan
+  limit) guarantees finished games settle even if both clients disappear. Non-blocking: the relay
+  freezes the game at the move-clock deadline, so the outcome is locked before the sweep runs.
 
 ### Gas sponsorship
 - [x] Tier A (Pimlico paymaster), Tier B (cUSD drip + `mintTo` CHESS provision, sybil-guarded),
@@ -160,8 +162,9 @@ Priority order for the next session:
 >
 > **Current state:** **Live on Celo mainnet.** ChessToken `0x3F7e…55A3`, ChessGame `0xb378…aE85`,
 > oracle/minter/gas-sponsor wired and funded, Pimlico paymaster configured for Tier A. The
-> architecture is: **moves are off-chain** (Redis relay, turn-bound + per-move wallet signatures;
-> MiniPay unsigned) and **settled on-chain by a trusted oracle** (`ChessGame.settleGame`,
+> architecture is: **moves are off-chain** (Redis relay, turn-bound for all tiers — per-move
+> signing is built but currently disabled; relay rejects late moves past the 5-min clock) and
+> **settled on-chain by a trusted oracle** (`ChessGame.settleGame`,
 > `onlyOracle`) — there is **no** on-chain `submitMove`/`reportWin`. `.chess` names are off-chain
 > Upstash (no contract — do not build one without an explicit design session). Gas is tiered
 > (Pimlico paymaster / USDm drip / Tier C native-CELO drip / self-pay). Landing is `ChessifyLanding`
