@@ -54,20 +54,17 @@ interface WriteRequest {
 }
 
 export function useCeloChess() {
-  const { address } = useAccount()
   const { writeContractAsync } = useWriteContract()
   const publicClient = usePublicClient({ chainId: CELO_CHAIN_ID })
-  const { walletTier } = useWallet()
+  const { walletTier, playerAddress: pinnedAddress } = useWallet()
   const { client: smartClient } = useSmartWallets()
   const [isPending, setIsPending] = useState(false)
   const showToast = useToastStore((state) => state.showToast)
 
-  // The on-chain "player" identity. For Tier A this is the smart-account address
-  // (not the embedded EOA); for B/C it's the connected EOA.
-  const playerAddress: Address | undefined =
-    walletTier === 'smart' && smartClient?.account
-      ? (smartClient.account.address as Address)
-      : (address as Address | undefined)
+  // Single source of truth: the pinned identity from wallet-provider (smart account
+  // for embedded users, EOA otherwise — and null until resolved, so writes wait
+  // rather than recording under the wrong address). Don't re-derive it here.
+  const playerAddress = (pinnedAddress ?? undefined) as Address | undefined
 
   // ── tier-aware write dispatch ────────────────────────────────────────────────
   // One helper isolates the per-tier sponsorship mechanism so createGame/joinGame/
