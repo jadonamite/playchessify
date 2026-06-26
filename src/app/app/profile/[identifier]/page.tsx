@@ -14,6 +14,7 @@ import ChessAvatar from '@/components/ui/ChessAvatar'
 import LoadingState from '@/components/ui/LoadingState'
 import ClaimModal from '@/components/ui/ClaimModal'
 import ChessName from '@/components/ui/ChessName'
+import PageBackground from '@/components/ui/PageBackground'
 import { CHESS_GAME_ABI } from '@/config/abis'
 import { CELO_CONTRACTS } from '@/config/contracts'
 import type { ChessProfile } from '@/types/profile'
@@ -193,6 +194,7 @@ export default function ProfilePage() {
 
   return (
     <main className="min-h-screen w-full bg-[var(--bg)] text-[var(--t1)] relative overflow-x-hidden">
+      <PageBackground hero="king" />
       {/* Ambient */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-[10%] right-[10%] w-[30%] h-[30%] bg-[var(--c)] blur-[150px] rounded-full opacity-[0.05]" />
