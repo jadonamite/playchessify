@@ -1,6 +1,6 @@
 'use client'
 
-import { useWriteContract, useAccount, usePublicClient } from 'wagmi'
+import { useWriteContract, usePublicClient } from 'wagmi'
 import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
 import { decodeEventLog, encodeFunctionData, type Abi, type Address } from 'viem'
 import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
