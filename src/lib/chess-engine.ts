@@ -138,14 +138,6 @@ const TABLES: Record<string, number[][]> = {
   k: KING_TABLE,
 }
 
-/**
- * squareValue
- * @param {*} type: string
- * @param {*} color: 'w' | 'b'
- * @param {*} row: number
- * @param {*} col: number
- * @returns {*}
- */
 function squareValue(type: string, color: 'w' | 'b', row: number, col: number): number {
   const table = TABLES[type]
   if (!table) return 0
