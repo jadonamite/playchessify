@@ -87,6 +87,9 @@ export default function HoldButton({
         opacity: inactive ? 0.55 : 1,
         touchAction: 'none',
         WebkitTapHighlightColor: 'transparent',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitTouchCallout: 'none',
       }}
     >
       {/* battery fill */}

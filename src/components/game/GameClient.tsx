@@ -642,6 +642,7 @@ export default function GameClient() {
         resultMessage={resultMessage}
         gameData={gameData}
         wagerFormatted={wagerFormatted}
+        potFormatted={potFormatted}
         payoutSettled={payoutSettled}
         onBackToLobby={() => router.push('/app/lobby')}
       />

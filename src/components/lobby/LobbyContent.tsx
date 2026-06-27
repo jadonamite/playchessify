@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useWallet } from '@/components/wallet-provider'
 import GlowButton from '@/components/ui/GlowButton'
 import ClayCard from '@/components/ui/ClayCard'
+import PlayCard from '@/components/ui/PlayCard'
 import ComingSoonOverlay from '@/components/ui/ComingSoonOverlay'
 import { useRouter } from 'next/navigation'
 import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID } from '@/config/contracts'
@@ -219,7 +220,7 @@ export default function LobbyContent() {
             */}
 
             {/* ── CARD 1: Game Lobby Header ── */}
-            <div className="rounded-[32px] border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+            <PlayCard size="hero">
               {/* candy glow wash behind the hero */}
               <div
                 className="absolute -top-1/3 -right-1/4 w-2/3 aspect-square rounded-full pointer-events-none z-0"
@@ -232,8 +233,9 @@ export default function LobbyContent() {
                   <motion.div
                     initial={{ opacity: 0, scale: 0.6, rotate: -12 }}
                     animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    whileHover={{ rotate: -7, scale: 1.06 }}
                     transition={{ type: 'spring', stiffness: 200, damping: 16 }}
-                    className="relative shrink-0"
+                    className="relative shrink-0 cursor-pointer"
                     aria-hidden
                   >
                     {/* Glossy claymorphic orb */}
@@ -310,10 +312,10 @@ export default function LobbyContent() {
                   </GlowButton>
                 </motion.div>
               </div>
-            </div>
+            </PlayCard>
 
             {/* ── CARD 2: Open Challenges ── */}
-            <div className="rounded-[32px] border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+            <PlayCard size="hero">
               <BgIcon>
                 <svg viewBox="0 0 24 24" fill="none" width="100%" height="100%">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
@@ -479,7 +481,7 @@ export default function LobbyContent() {
                   )}
                 </div>
               </div>
-            </div>
+            </PlayCard>
 
           </div>
 
@@ -487,7 +489,7 @@ export default function LobbyContent() {
           <div className="hidden lg:flex lg:col-span-4 flex-col gap-5 md:gap-6 h-auto w-full min-w-0 box-border">
 
             {/* ── CARD: CHESS balance ── */}
-            <div className="rounded-[28px] border border-white/10 bg-slate-900/60 backdrop-blur-md shadow-2xl relative overflow-hidden">
+            <PlayCard size="rail" tone="candy" accent="var(--candy-lime)">
               <div className="p-6 md:p-7 flex flex-col gap-4 relative z-10">
                 <div className="flex items-center justify-between">
                   <h3 className="text-[11px] font-bold tracking-[0.2em] uppercase" style={{ fontFamily: 'var(--fd)', color: 'var(--candy-lime)' }}>
@@ -509,10 +511,10 @@ export default function LobbyContent() {
                   <span className="text-xs font-bold tracking-widest" style={{ color: 'var(--candy-lime)' }}>CHESS</span>
                 </div>
               </div>
-            </div>
+            </PlayCard>
 
             {/* ── CARD: Rating + rank (league-style) ── */}
-            <div className="rounded-[28px] border border-white/10 bg-slate-900/60 backdrop-blur-md shadow-2xl relative overflow-hidden">
+            <PlayCard size="rail" tone="candy" accent="var(--candy-amber)">
               <div className="absolute -top-1/4 -right-1/4 w-2/3 aspect-square rounded-full pointer-events-none z-0" style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--candy-amber) 18%, transparent) 0%, transparent 70%)' }} />
               <div className="p-6 md:p-7 flex flex-col gap-4 relative z-10">
                 <div className="flex items-center justify-between">
@@ -533,10 +535,10 @@ export default function LobbyContent() {
                   </div>
                 </div>
               </div>
-            </div>
+            </PlayCard>
 
             {/* ── CARD: Record (W / D / L) ── */}
-            <div className="rounded-[28px] border border-white/10 bg-slate-900/60 backdrop-blur-md shadow-2xl relative overflow-hidden">
+            <PlayCard size="rail" tone="candy" accent="var(--candy-grape)">
               <div className="p-6 md:p-7 flex flex-col gap-4 relative z-10">
                 <div className="flex items-center justify-between">
                   <h3 className="text-[11px] font-bold tracking-[0.2em] uppercase" style={{ fontFamily: 'var(--fd)', color: 'var(--candy-grape)' }}>
@@ -559,10 +561,10 @@ export default function LobbyContent() {
                   ))}
                 </div>
               </div>
-            </div>
+            </PlayCard>
 
             {/* ── CARD: Need CHESS? (promo) ── */}
-            <div className="rounded-[28px] border border-[var(--c)]/20 bg-slate-900/60 backdrop-blur-md shadow-2xl relative overflow-hidden">
+            <PlayCard size="rail" tone="candy" accent="var(--c)">
               <BgIcon>
                 <svg viewBox="0 0 24 24" fill="none" width="100%" height="100%">
                   <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
@@ -581,7 +583,7 @@ export default function LobbyContent() {
                   </GlowButton>
                 </div>
               </div>
-            </div>
+            </PlayCard>
 
           </div>
         </div>
@@ -673,9 +675,10 @@ export default function LobbyContent() {
                                   key={amt}
                                   onClick={() => !isInsufficient && setWager(amt)}
                                   disabled={isInsufficient}
-                                  className={`py-3.5 rounded-2xl border font-black text-xs transition-all ${
+                                  style={wager === amt ? { background: 'var(--btn-face)', color: 'var(--btn-text)', boxShadow: 'var(--btn-shadow)' } : undefined}
+                                  className={`py-3.5 rounded-2xl border font-black text-xs transition-all active:scale-95 ${
                                     wager === amt
-                                      ? 'bg-cyan-400 text-black border-cyan-400 shadow-[0_0_25px_rgba(34,211,238,0.45)]'
+                                      ? 'border-transparent'
                                       : isInsufficient
                                       ? 'bg-black/20 text-gray-600 border-white/5 cursor-not-allowed opacity-40'
                                       : 'bg-black/40 text-gray-300 border-white/5 hover:border-white/10 hover:bg-black/60'
