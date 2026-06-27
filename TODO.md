@@ -10,8 +10,9 @@ spin up a fresh session.
 
 Priority order for the next session:
 
-1. **UI direction (active)** — currently discussing the next UI moves. The mobile makeover
-   landed on **lobby + game**; roll the duotone/candy language across the remaining screens:
+1. **UI direction (active)** — lobby is now a codified **neon + candy + clay hybrid** (2026-06-27):
+   `PlayCard` shell, candy stat semantics, clay tactile touches; GlowButton CTAs kept trapezoid.
+   Keep the playfulness — do not flatten to mono-neon. Remaining: roll light cohesion across
    **leaderboard, history, faucet, settings, profile**. Verify on device (authed `/app/*`
    screenshots render blank headless).
 2. **Coach portraits/labels** — in flight on the `worktree-coach-labels-frame` worktree

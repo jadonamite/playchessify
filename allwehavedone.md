@@ -253,7 +253,7 @@ Do these on a real device before considering anything shipped:
 | # | Task | State |
 |---|---|---|
 | 9 | Re-skin **leaderboard + history** to neon | Light cohesion only — they're already neon. Low priority. |
-| 10 | Re-skin **lobby** to neon (keep mobile ergonomics + Unbounded) | **The real re-skin** (739 lines, candy/clay). Needs device review — Jadon reacts strongly to half-baked visuals. |
+| 10 | Lobby = intentional **neon + candy + clay hybrid** | ✅ Codified (2026-06-27): `PlayCard` shell (`tone` neon/candy/clay), candy stat semantics (lime=balance, amber=rating, grape=record), clay touches (crown orb tilt-on-hover, selected wager chip). **Keep the playfulness — do NOT flatten to mono-neon.** Needs device review. |
 | 11 | Re-skin **faucet + settings + profile** | Mostly already neon; light pass. |
 | 12 | Sign profile claim/update with smart wallet (EIP-1271) | Deferred refinement; alias makes it non-urgent. |
 
@@ -275,7 +275,8 @@ July 2026 ERC-2771 forwarder redeploy); Tier-C forwarder itself (July 2026).
 - **Keep WebGL contexts low** — use `PageBackground` for decorative 3D and `PieceIcon` (2D) for
   list/card icons. Don't add new per-element `<Canvas>` instances. `SceneBoundary` is the seatbelt.
 - **"Unbounded" is the inner-app font** — protect it in any re-skin.
-- **The lobby is the one screen that's off-language** (candy/clay) — that's where the re-skin value
-  is. Do it with Jadon reviewing on device.
+- **The lobby is a deliberate neon+candy+clay hybrid** — the candy/clay isn't off-language, it's
+  intentional playfulness Jadon wants kept. Neon = frame/actions, candy = personal stats, clay =
+  tactile/pressable moments. Use `PlayCard` for any new lobby surface; never flatten to mono-neon.
 - **Auto-commit bot (`Elite.cjs`) is active** — expect this session's work to land under bot commit
   messages automatically.

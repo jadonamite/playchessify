@@ -7,11 +7,12 @@ interface GameResultOverlayProps {
   resultMessage: string
   gameData: GameData | null
   wagerFormatted: string
+  potFormatted: string
   payoutSettled: boolean
   onBackToLobby: () => void
 }
 
-export default function GameResultOverlay({ gameResult, resultMessage, gameData, wagerFormatted, payoutSettled, onBackToLobby }: GameResultOverlayProps) {
+export default function GameResultOverlay({ gameResult, resultMessage, gameData, wagerFormatted, potFormatted, payoutSettled, onBackToLobby }: GameResultOverlayProps) {
   return (
     <AnimatePresence>
       {gameResult && (
@@ -75,15 +76,17 @@ export default function GameResultOverlay({ gameResult, resultMessage, gameData,
                 <p className="text-sm text-[var(--t3)] mt-3 leading-relaxed">{resultMessage}</p>
               </div>
 
-              {/* Wager chip */}
+              {/* Wager / prize chip — a win pays out the full pot (2× wager) */}
               {gameData && (
                 <div className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10">
-                  <p className="text-[9px] text-[var(--t3)] uppercase tracking-widest mb-1">Wager</p>
+                  <p className="text-[9px] text-[var(--t3)] uppercase tracking-widest mb-1">
+                    {gameResult === 'won' ? 'Prize' : 'Wager'}
+                  </p>
                   <p
                     className="text-2xl font-black"
                     style={{ fontFamily: 'var(--fd)', color: 'var(--c)' }}
                   >
-                    {wagerFormatted} <span className="text-base">CHESS</span>
+                    {gameResult === 'won' ? potFormatted : wagerFormatted} <span className="text-base">CHESS</span>
                   </p>
                 </div>
               )}

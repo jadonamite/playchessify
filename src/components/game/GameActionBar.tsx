@@ -120,6 +120,9 @@ export default function GameActionBar({
               color: danger,
               touchAction: 'none',
               WebkitTapHighlightColor: 'transparent',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none',
             }}
           >
             {/* battery fill — grows left→right while holding */}
