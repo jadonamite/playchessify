@@ -81,11 +81,6 @@ export interface OnchainGame {
   drawProposer: Address
 }
 
-/**
- * getOnchainGame
- * @param {*} gameId: number
- * @returns {*}
- */
 export async function getOnchainGame(gameId: number): Promise<OnchainGame> {
   const g = (await getPublicClient().readContract({
     address: GAME_ADDRESS,
