@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useCallback } from 'react'
 import { useWallet } from '@/components/wallet-provider'
 
@@ -11,6 +10,12 @@ export interface LeaderboardEntry {
   rating: number
   gamesPlayed: number
   rank: number
+}
+
+const findMyRank = (entries: LeaderboardEntry[], myAddress: string | undefined): number | null => {
+  if (!myAddress) return null
+  const myEntry = entries.find((e) => e.address === myAddress.toLowerCase())
+  return myEntry?.rank ?? null
 }
 
 export function useLeaderboard() {
@@ -37,9 +42,12 @@ export function useLeaderboard() {
     fetchLeaderboard()
   }, [fetchLeaderboard])
 
-  const myRank = myAddress
-    ? (entries.find((e) => e.address === myAddress.toLowerCase())?.rank ?? null)
-    : null
+  const myRank = findMyRank(entries, myAddress)
 
-  return { entries, isLoading, myRank, refresh: fetchLeaderboard }
+  return {
+    entries,
+    isLoading,
+    myRank,
+    refresh: fetchLeaderboard
+  }
 }
