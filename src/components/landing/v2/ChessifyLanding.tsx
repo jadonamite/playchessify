@@ -268,6 +268,13 @@ export default function ChessifyLanding() {
     connectWallet() // straight to Privy — no intermediary modal
   }, [isConnected, router, connectWallet])
 
+  // "TRAIN WITH {coach}" — into the teacher flow, carrying the chosen coach so
+  // the training hub can adopt it. Gated like start: connect first if needed.
+  const trainWith = useCallback((coachId: string) => {
+    if (isConnected) { router.push(`/app/train?coach=${coachId}`); return }
+    connectWallet()
+  }, [isConnected, router, connectWallet])
+
   const toggleSound = useCallback(() => {
     setSound((on) => {
       const next = !on
@@ -638,7 +645,7 @@ export default function ChessifyLanding() {
                       <span key={ti} style={css('padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);font-size:12px;color:#cdd9e8;')}>{tag}</span>
                     ))}
                   </div>
-                  <button className="ccv-train" onClick={start} style={css(`margin-top:auto;border:none;text-align:center;padding:16px 24px;cursor:pointer;font-family:var(--fd);font-weight:800;letter-spacing:.06em;font-size:13px;color:#04121a;clip-path:polygon(16px 0%,100% 0%,calc(100% - 16px) 100%,0% 100%);background:linear-gradient(135deg,${f.accent},${hexToRgba(f.accent, 0.7)});box-shadow:0 0 28px ${hexToRgba(f.accent, 0.4)};transition:transform .15s;`)}>TRAIN WITH {f.name.toUpperCase()} ▸</button>
+                  <button className="ccv-train" onClick={() => trainWith(f.id)} style={css(`margin-top:auto;border:none;text-align:center;padding:16px 24px;cursor:pointer;font-family:var(--fd);font-weight:800;letter-spacing:.06em;font-size:13px;color:#04121a;clip-path:polygon(16px 0%,100% 0%,calc(100% - 16px) 100%,0% 100%);background:linear-gradient(135deg,${f.accent},${hexToRgba(f.accent, 0.7)});box-shadow:0 0 28px ${hexToRgba(f.accent, 0.4)};transition:transform .15s;`)}>TRAIN WITH {f.name.toUpperCase()} ▸</button>
                 </div>
               </div>
 

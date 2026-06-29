@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLearner } from '@/hooks/useLearner'
 import { COACHES, getCoach } from '@/config/coaches'
@@ -11,8 +11,19 @@ export default function TrainHubPage() {
   const router = useRouter()
   const { learner, loading, update } = useLearner()
   const [switching, setSwitching] = useState(false)
+  const adoptedQuery = useRef(false)
 
   const coach = getCoach(learner?.coachId)
+
+  // Adopt the coach chosen on the landing page (?coach=…), once, if it differs.
+  useEffect(() => {
+    if (adoptedQuery.current || !learner) return
+    const q = new URLSearchParams(window.location.search).get('coach')
+    if (q && COACHES.some((c) => c.id === q) && q !== learner.coachId) {
+      adoptedQuery.current = true
+      void update({ coachId: q }).catch(() => {})
+    }
+  }, [learner, update])
 
   const pickCoach = async (id: string) => {
     if (id === learner?.coachId) return
