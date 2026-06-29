@@ -6,6 +6,9 @@ import { motion } from 'framer-motion'
 import { useSignMessage } from 'wagmi'
 import { useWallet } from '@/components/wallet-provider'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
+import { useLearner } from '@/hooks/useLearner'
+import { useCoachStore } from '@/hooks/useCoachStore'
+import { COACHES } from '@/config/coaches'
 import { useSettingsStore, BOARD_THEMES, AI_DIFFICULTY_LABELS, PIECE_SETS, type BoardTheme, type AiDifficulty } from '@/hooks/useSettingsStore'
 import { piecePath } from '@/lib/chessPieces'
 import GlowButton from '@/components/ui/GlowButton'
@@ -61,6 +64,14 @@ export default function SettingsPage() {
   const { data: profile } = useProfile(playerAddress ?? null)
   const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
   const { signMessageAsync } = useSignMessage()
+  const { learner, update: updateLearner } = useLearner()
+  const coachId = useCoachStore((s) => s.coachId) ?? learner?.coachId ?? null
+  const setCoachId = useCoachStore((s) => s.setCoachId)
+
+  const chooseCoach = (id: string) => {
+    setCoachId(id) // instant UI everywhere (no signature — training is low-stakes)
+    void updateLearner({ coachId: id }).catch(() => {})
+  }
 
   const [claimOpen, setClaimOpen] = useState(false)
   const [editDisplayName, setEditDisplayName] = useState('')
@@ -126,6 +137,31 @@ export default function SettingsPage() {
         </div>
 
         <div className="flex flex-col gap-10">
+
+          {/* ── COACH ── the one place to change your locked-in coach ── */}
+          <Section title="Your Coach">
+            <ClayCard className="p-4">
+              <p className="mb-3 text-sm text-[var(--t3)]">Your coach is locked in for training. Switch here anytime.</p>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                {COACHES.map((c) => {
+                  const active = c.id === coachId
+                  return (
+                    <button key={c.id} onClick={() => chooseCoach(c.id)}
+                      className="flex flex-col items-center gap-1.5 rounded-xl p-2 transition"
+                      style={{ background: active ? `${c.accent}1a` : 'transparent', opacity: active ? 1 : 0.7 }}>
+                      <span className="h-14 w-14 overflow-hidden rounded-full border-2"
+                            style={{ borderColor: active ? c.accent : 'rgba(255,255,255,0.15)' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={encodeURI(c.img)} alt={c.name} className="h-full w-full object-cover object-top" />
+                      </span>
+                      <span className="text-[11px] font-semibold uppercase tracking-wide"
+                            style={{ color: active ? '#eaf6ff' : '#7f94ad' }}>{c.short}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </ClayCard>
+          </Section>
 
           {/* ── SOUND ── */}
           <Section title="Sound">

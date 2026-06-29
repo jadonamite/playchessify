@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLearner } from '@/hooks/useLearner'
 import { COACHES, getCoach } from '@/config/coaches'
@@ -12,7 +12,6 @@ import { useCoachStore } from '@/hooks/useCoachStore'
 export default function TrainHubPage() {
   const router = useRouter()
   const { learner, loading, update } = useLearner()
-  const [switching, setSwitching] = useState(false)
   const adoptedQuery = useRef(false)
   const setCoachId = useCoachStore((s) => s.setCoachId)
 
@@ -33,13 +32,6 @@ export default function TrainHubPage() {
     }
   }, [learner, update])
 
-  const pickCoach = async (id: string) => {
-    if (id === learner?.coachId) return
-    setCoachId(id) // instant nav/lobby face update
-    setSwitching(true)
-    try { await update({ coachId: id }) } catch { /* declined */ } finally { setSwitching(false) }
-  }
-
   if (loading && !learner) {
     return <div className="mx-auto max-w-2xl px-4 py-10 text-center text-slate-400">Loading your training…</div>
   }
@@ -49,36 +41,28 @@ export default function TrainHubPage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6">
-      <div className="mb-6">
+      <div className="mb-5">
         <div className="text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">Train</div>
         <h1 className="font-bold text-2xl text-white">Your coach, game after game</h1>
       </div>
 
-      {/* Coach picker */}
-      <div className="mb-6">
-        <div className="mb-2 text-sm text-slate-400">Your coach</div>
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {COACHES.map((c) => {
-            const active = c.id === coach.id
-            return (
-              <button key={c.id} onClick={() => pickCoach(c.id)} disabled={switching}
-                className="flex shrink-0 flex-col items-center gap-1.5"
-                style={{ opacity: active ? 1 : 0.55 }}>
-                <span className="h-16 w-16 overflow-hidden rounded-full border-2"
-                      style={{ borderColor: active ? c.accent : 'rgba(255,255,255,0.15)' }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={encodeURI(c.img)} alt={c.name} className="h-full w-full object-cover object-top" />
-                </span>
-                <span className="text-[11px] font-semibold uppercase tracking-wide"
-                      style={{ color: active ? '#eaf6ff' : '#7f94ad' }}>{c.short}</span>
-              </button>
-            )
-          })}
+      {/* Locked-in coach — change only from Settings */}
+      <div className="mb-6 flex items-center gap-3 rounded-2xl border p-3"
+           style={{ borderColor: coach.accent + '40', background: `linear-gradient(160deg, ${coach.accent}10, rgba(9,15,30,0.5))` }}>
+        <span className="h-14 w-14 shrink-0 overflow-hidden rounded-full border-2" style={{ borderColor: coach.accent }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={encodeURI(coach.img)} alt={coach.name} className="h-full w-full object-cover object-top" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="font-bold text-white">{coach.name}</div>
+          <div className="text-xs" style={{ color: coach.accent }}>{coach.title}</div>
         </div>
-        <button onClick={() => router.push(`/app/train/coach/${coach.id}`)}
-                className="mt-1 text-xs underline-offset-2 hover:underline" style={{ color: coach.accent }}>
-          Meet {coach.name} ›
-        </button>
+        <div className="flex flex-col items-end gap-1">
+          <button onClick={() => router.push(`/app/train/coach/${coach.id}`)}
+                  className="text-xs underline-offset-2 hover:underline" style={{ color: coach.accent }}>Meet ›</button>
+          <button onClick={() => router.push('/app/settings')}
+                  className="text-[11px] text-slate-400 underline-offset-2 hover:underline">Change in Settings</button>
+        </div>
       </div>
 
       {/* Not placed yet → placement CTA */}
@@ -120,21 +104,32 @@ export default function TrainHubPage() {
             )}
           </div>
 
-          {/* Next lesson */}
+          {/* Next lesson — now clearly a pressable card with a Start pill */}
           {nextLesson && (
             <button onClick={() => router.push(`/app/train/lesson/${nextLesson.id}`)}
-                    className="mb-3 block w-full rounded-2xl border p-5 text-left transition hover:bg-white/5"
-                    style={{ borderColor: coach.accent + '44' }}>
-              <div className="text-xs uppercase tracking-widest" style={{ color: coach.accent }}>Next lesson</div>
-              <div className="mt-1 font-bold text-lg text-white">{nextLesson.title}</div>
-              <div className="mt-1 text-sm text-slate-400">{CONCEPT_LABEL[nextLesson.concept]} · {nextLesson.steps.length} positions</div>
+                    className="mb-5 flex w-full items-center gap-4 rounded-2xl border p-5 text-left transition hover:bg-white/5"
+                    style={{ borderColor: coach.accent + '55', background: `linear-gradient(160deg, ${coach.accent}0d, transparent)` }}>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs uppercase tracking-widest" style={{ color: coach.accent }}>Next lesson</div>
+                <div className="mt-1 font-bold text-lg text-white">{nextLesson.title}</div>
+                <div className="mt-1 text-sm text-slate-400">{CONCEPT_LABEL[nextLesson.concept]} · {nextLesson.steps.length} positions</div>
+              </div>
+              <span className="shrink-0 rounded-full px-4 py-2 text-sm font-bold text-[#04121a]" style={{ background: coach.accent }}>
+                Start ▸
+              </span>
             </button>
           )}
 
-          {/* Guided game */}
-          <TrapButton accent={coach.accent} onClick={() => router.push('/app/train/game')}>
-            Play a guided game with {coach.name} ▸
-          </TrapButton>
+          {/* Two ways to play */}
+          <div className="mb-2 text-sm text-slate-400">Play with {coach.name}</div>
+          <div className="flex flex-col gap-3">
+            <TrapButton accent={coach.accent} onClick={() => router.push('/app/train/game?mode=guided')}>
+              Play a guided game ▸
+            </TrapButton>
+            <TrapButton accent="#fb7185" onClick={() => router.push('/app/train/game?mode=match')}>
+              Challenge {coach.name} to a full match ▸
+            </TrapButton>
+          </div>
         </>
       )}
     </div>

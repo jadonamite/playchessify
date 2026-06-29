@@ -85,7 +85,7 @@ export default function TrainingGame() {
   const endGame = useCallback((g: Chess) => {
     liveRef.current = false
     setPhase('over')
-    setNote(resultText(g, mode, coach.id))
+    setNote(resultText(g, mode))
     if (persistedRef.current || !learner || mode !== 'guided') return
     persistedRef.current = true
     const concepts: Partial<Record<Concept, number>> = {}
@@ -302,7 +302,7 @@ function uciToSan(fen: string, uci: string | null): string | null {
   } catch { return null }
 }
 
-function resultText(g: Chess, mode: Mode, coachId: string): string {
+function resultText(g: Chess, mode: Mode): string {
   if (g.isCheckmate()) {
     const loser = g.turn() === 'w' ? 'white' : 'black'
     if (loser === 'white') {
