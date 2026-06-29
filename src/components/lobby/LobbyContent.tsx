@@ -13,7 +13,7 @@ import { useCeloChess } from '@/hooks/useCeloChess'
 import { useLobby } from '@/hooks/useLobby'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
 import { useProfile } from '@/hooks/useProfile'
-import { useStreak, dispatchStreak } from '@/hooks/useStreak'
+import { useStreak, dispatchStreak, STREAK_NUDGE_KEY, streakDay } from '@/hooks/useStreak'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import PageBackground from '@/components/ui/PageBackground'
@@ -110,13 +110,16 @@ export default function LobbyContent() {
   const { streak, isLoading: streakLoading } = useStreak(playerAddress)
 
   // Daily nudge — a 0-streak player who lands on the lobby gets the motivational
-  // streak prompt (the overlay itself guards to once per UTC day). Fires once per
-  // mount; keeps appearing day after day until they earn their first streak.
+  // streak prompt. Strictly once per UTC day: we skip the dispatch outright if
+  // it's already been shown today, so navigating away and back won't re-fire it.
   const nudgeFired = useRef(false)
   useEffect(() => {
     if (nudgeFired.current) return
     if (!playerAddress || streakLoading || streak.current > 0) return
     nudgeFired.current = true
+    try {
+      if (localStorage.getItem(STREAK_NUDGE_KEY) === streakDay()) return
+    } catch { /* storage blocked — fall through and let the overlay guard */ }
     dispatchStreak({ mode: 'nudge', current: 0, longest: streak.longest })
   }, [playerAddress, streakLoading, streak.current, streak.longest])
   const [claimModalOpen, setClaimModalOpen] = useState(false)

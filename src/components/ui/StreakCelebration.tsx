@@ -41,8 +41,8 @@ export default function StreakCelebration() {
     function onStreak(e: Event) {
       const detail = (e as CustomEvent<StreakEventDetail>).detail
       if (!detail) return
-      const today = utcToday()
-      const key = detail.mode === 'nudge' ? NUDGE_KEY : CELEBRATED_KEY
+      const today = streakDay()
+      const key = detail.mode === 'nudge' ? STREAK_NUDGE_KEY : STREAK_CELEBRATED_KEY
 
       if (detail.mode === 'nudge') {
         if (detail.current > 0) return // they already have a streak — nothing to nudge
