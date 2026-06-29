@@ -8,7 +8,7 @@ import { useLearner } from '@/hooks/useLearner'
 import { fetchCoachVoice } from '@/lib/coach/client'
 import { getCoach, type CoachEngine } from '@/config/coaches'
 import { getCoachMove } from '@/lib/chess-engine'
-import type { LearnerLevel } from '@/types/training'
+import type { Concept, LearnerLevel } from '@/types/training'
 
 type Phase = 'learner' | 'analyzing' | 'intercept' | 'coach' | 'over'
 
@@ -25,7 +25,7 @@ function coachEngineForLevel(base: CoachEngine, level: LearnerLevel): CoachEngin
 
 export default function TrainingGame() {
   const { analyze, ready } = useAnalysis()
-  const { learner } = useLearner()
+  const { learner, update } = useLearner()
   const coach = getCoach(learner?.coachId)
   const level = learner?.level ?? 'basics'
 
@@ -34,26 +34,49 @@ export default function TrainingGame() {
   const [note, setNote] = useState<string>('Make your move — I\'ll guide you.')
   const preFenRef = useRef<string>(new Chess().fen())
   const pendingRef = useRef<{ fen: string } | null>(null)
+  // Diagnostic signal accumulated from THIS game's real moves; persisted once at
+  // game end (one signature, not one per move) — "training on where they stop".
+  const conceptDeltaRef = useRef<Partial<Record<Concept, number>>>({})
+  const persistedRef = useRef(false)
+
+  const addConcept = useCallback((c: Concept, d: number) => {
+    conceptDeltaRef.current[c] = (conceptDeltaRef.current[c] ?? 0) + d
+  }, [])
+
+  // Fold this game's signal into the learner model once, at game over.
+  const endGame = useCallback((g: Chess) => {
+    setPhase('over')
+    setNote(resultText(g, 'white'))
+    if (persistedRef.current || !learner) return
+    persistedRef.current = true
+    const deltas = conceptDeltaRef.current
+    const concepts: Partial<Record<Concept, number>> = {}
+    for (const [c, d] of Object.entries(deltas)) {
+      const cur = learner.concepts[c as Concept] ?? 0
+      concepts[c as Concept] = Math.max(0, Math.min(1, cur + (d as number)))
+    }
+    if (Object.keys(concepts).length > 0) void update({ concepts }).catch(() => {})
+  }, [learner, update])
 
   const coachReply = useCallback(async (afterFen: string) => {
     const g = new Chess(afterFen)
-    if (g.isGameOver()) { setPhase('over'); setNote(resultText(g, 'white')); return }
+    if (g.isGameOver()) { endGame(g); return }
     setPhase('coach')
     // Homegrown style-biased move (synchronous); brief delay so it feels human.
     await new Promise((r) => setTimeout(r, 350))
     const move = getCoachMove(g, coachEngineForLevel(coach.engine, level))
-    if (!move) { setPhase('over'); setNote(resultText(g, 'white')); return }
+    if (!move) { endGame(g); return }
     g.move(move)
     setGame(g)
     preFenRef.current = g.fen()
-    if (g.isGameOver()) { setPhase('over'); setNote(resultText(g, 'white')); return }
+    if (g.isGameOver()) { endGame(g); return }
     const v = await fetchCoachVoice({
       coachName: coach.name, coachVoice: coach.teaching.voice, learnerLevel: level,
       kind: 'coach-move', playerMoveSan: move.san, fen: afterFen,
     })
     setNote(v.text)
     setPhase('learner')
-  }, [coach, level])
+  }, [coach, level, endGame])
 
   const onMove = useCallback((from: string, to: string): boolean => {
     if (phase !== 'learner') return false
@@ -75,6 +98,8 @@ export default function TrainingGame() {
       const alreadyLost = pre.whiteCp < -300
 
       if (lossCp >= BLUNDER_CP && !alreadyLost) {
+        // A big one-move drop is usually a hung piece; a smaller one, calculation.
+        addConcept(lossCp >= 400 ? 'hanging-piece' : 'calculation', -0.05)
         const bestSan = uciToSan(preFen, pre.bestMove)
         const v = await fetchCoachVoice({
           coachName: coach.name, coachVoice: coach.teaching.voice, learnerLevel: level,
@@ -86,11 +111,11 @@ export default function TrainingGame() {
         return
       }
       // Decent move — light reinforcement, then the coach replies.
-      if (lossCp <= 30) setNote('Good — that holds up.')
+      if (lossCp <= 30) { setNote('Good — that holds up.'); addConcept('calculation', 0.02) }
       void coachReply(probe.fen())
     })()
     return true
-  }, [phase, game, analyze, coach, level, coachReply])
+  }, [phase, game, analyze, coach, level, coachReply, addConcept])
 
   const takeBack = useCallback(() => {
     setGame(new Chess(preFenRef.current))
