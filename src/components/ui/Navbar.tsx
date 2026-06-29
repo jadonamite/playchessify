@@ -8,7 +8,9 @@ import { useWallet } from '@/components/wallet-provider'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import GlowButton from '@/components/ui/GlowButton'
+import { FlameIcon } from '@/components/ui/icons'
 import { useSettingsStore } from '@/hooks/useSettingsStore'
+import { useStreak } from '@/hooks/useStreak'
 import { stopAmbient } from '@/lib/audio'
 
 const NAV_LINKS = [
@@ -54,6 +56,7 @@ export default function Navbar() {
 
   const showWallet = mounted && isReady && !!address
   const profileAddr = playerAddress ?? address
+  const { streak } = useStreak(profileAddr)
 
   return (
     <>
@@ -268,6 +271,35 @@ export default function Navbar() {
                 <div style={{ width: 110, height: 38 }} />
               )}
             </div>
+
+            {/* Streak chip — mobile, beside the hamburger */}
+            {showWallet && streak.current > 0 && (
+              <Link
+                href={`/app/profile/${profileAddr}`}
+                aria-label={`${streak.current} day streak`}
+                className="nav-mobile"
+                style={{
+                  alignItems: 'center',
+                  gap: 4,
+                  height: 36,
+                  padding: '0 10px',
+                  borderRadius: 10,
+                  border: '1px solid #ff8a3d',
+                  background: 'rgba(255,138,61,0.08)',
+                  color: '#ff8a3d',
+                  textDecoration: 'none',
+                  fontFamily: 'var(--fd)',
+                  fontWeight: 900,
+                  fontSize: 13,
+                  lineHeight: 1,
+                  flexShrink: 0,
+                  boxShadow: '0 0 12px rgba(255,138,61,0.25)',
+                }}
+              >
+                <FlameIcon size={16} />
+                {streak.current}
+              </Link>
+            )}
 
             {/* Mobile hamburger — no inline display so .nav-mobile CSS controls it */}
             <button

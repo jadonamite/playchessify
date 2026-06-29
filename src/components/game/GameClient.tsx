@@ -18,7 +18,7 @@ import { useToastStore } from '@/hooks/useToastStore'
 import { useSettingsStore, AI_DEPTH } from '@/hooks/useSettingsStore'
 import { buildPieces } from '@/lib/chessPieces'
 import { useGameData } from '@/hooks/useGameData'
-import { useRecordStreak } from '@/hooks/useStreak'
+import { useRecordStreak, STREAK_EVENT, type RecordResult } from '@/hooks/useStreak'
 import AmbientBackground from './AmbientBackground'
 import GameHeader from './GameHeader'
 import BoardPanel from './BoardPanel'
@@ -118,19 +118,13 @@ export default function GameClient() {
   const gameOver  = game.isGameOver()
   const turn      = game.turn()
 
-  // ── streaks ───────────────────────────────────────────────────────────────────
-  // A completed bot game counts toward the daily streak (signed, once/day).
-  // Multiplayer is credited server-side at settlement; puzzles will hook in later.
+  // Streaks — a completed game (bot or PvP) earns a daily streak day. The record
+  // happens on game-over; the full-page celebration is dispatched later, when the
+  // player leaves the result screen for the lobby (see leaveToLobby).
   const recordStreak = useRecordStreak()
-  const botStreakFired = useRef(false)
-  useEffect(() => {
-    if (!isBotGame) return
-    if (gameOver && !botStreakFired.current) {
-      botStreakFired.current = true
-      void recordStreak('bot')
-    }
-    if (!gameOver) botStreakFired.current = false // reset for a fresh match
-  }, [isBotGame, gameOver, recordStreak])
+  const pendingStreakRef = useRef<RecordResult | null>(null)
+  const streakFiredRef = useRef(false)
+
   const isMyTurn  = isBotGame
     ? turn === 'w'
     : (turn === 'w' && myColor === 'white') || (turn === 'b' && myColor === 'black')
@@ -197,6 +191,35 @@ export default function GameClient() {
       : movesTimedOut ? 'You ran out of time.'
       : 'You lost the match.')
     : 'The match ended in a draw.'
+
+  // Record the daily streak once a game finishes — bots on game-over, PvP once a
+  // result is known. Bots have no result overlay, so they celebrate immediately;
+  // PvP defers the celebration to leaveToLobby (after the won/lost screen).
+  useEffect(() => {
+    const finished = isBotGame ? gameOver : !!gameResult
+    if (!finished) { streakFiredRef.current = false; return }
+    if (streakFiredRef.current) return
+    if (!isConnected || !playerAddress) return
+    if (!isBotGame && !isParticipant) return
+    streakFiredRef.current = true
+    void recordStreak(isBotGame ? 'bot' : 'multiplayer').then((res) => {
+      if (!res) return
+      if (isBotGame) {
+        window.dispatchEvent(new CustomEvent(STREAK_EVENT, { detail: res }))
+      } else {
+        pendingStreakRef.current = res
+      }
+    })
+  }, [isBotGame, gameOver, gameResult, isConnected, playerAddress, isParticipant, recordStreak])
+
+  // Leave a finished game for the lobby, then pop the streak celebration there
+  // (so it lands after the result screen, not on top of it).
+  const leaveToLobby = useCallback(() => {
+    const s = pendingStreakRef.current
+    pendingStreakRef.current = null
+    router.push('/app/lobby')
+    if (s) setTimeout(() => window.dispatchEvent(new CustomEvent(STREAK_EVENT, { detail: s })), 80)
+  }, [router])
 
   // Rebuild board from relay. Uses moveHistoryRef (not moveHistory) to avoid
   // the dependency causing an infinite rebuild → setState → rebuild cycle.
@@ -609,7 +632,7 @@ export default function GameClient() {
             hintDisabled={gameOver || (isBotGame ? turn !== 'w' : !(contractActive && isMyTurn))}
             isHintLoading={isHintLoading}
             onHint={handleHint}
-            onNewGame={() => { if (isBotGame) resetBotGame(); else router.push('/app/lobby') }}
+            onNewGame={() => { if (isBotGame) resetBotGame(); else leaveToLobby() }}
             onQuit={() => {
               if (!isBotGame && contractActive && !gameOver) handleResign()
               router.push('/app/lobby')
@@ -659,7 +682,7 @@ export default function GameClient() {
         wagerFormatted={wagerFormatted}
         potFormatted={potFormatted}
         payoutSettled={payoutSettled}
-        onBackToLobby={() => router.push('/app/lobby')}
+        onBackToLobby={leaveToLobby}
       />
 
       <PromotionModal
