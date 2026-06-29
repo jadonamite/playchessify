@@ -107,7 +107,7 @@ function NavRow({ item, active, href, streakLabel }: { item: ItemDef; active: bo
       >
         {item.label}
       </span>
-      {streak > 0 && (
+      {streakLabel !== undefined && (
         <span
           className="relative z-[1] ml-auto flex items-center gap-1 rounded-full px-2 py-0.5"
           style={{
@@ -122,7 +122,7 @@ function NavRow({ item, active, href, streakLabel }: { item: ItemDef; active: bo
           }}
         >
           <FlameIcon size={12} />
-          {streak}
+          {streakLabel}
         </span>
       )}
     </Link>
@@ -172,7 +172,7 @@ export default function SideNav() {
         {ITEMS.map((item) => {
           const active = item.match.some((m) => pathname.startsWith(m))
           const href = item.key === 'profile' ? (address ? `/app/profile/${address}` : '/app/lobby') : item.href
-          return <NavRow key={item.key} item={item} active={active} href={href} streak={item.key === 'profile' ? streak.current : 0} />
+          return <NavRow key={item.key} item={item} active={active} href={href} streakLabel={item.key === 'profile' ? (streak.current > 0 ? String(streak.current) : '—') : undefined} />
         })}
       </nav>
 
