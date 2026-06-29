@@ -34,10 +34,10 @@ export default function LessonPage() {
   const step: DrillStep | undefined = lesson?.steps[stepIdx]
 
   const judge = useCallback(async (fen: string, uci: string, postFen: string): Promise<boolean> => {
-    const pre = await analyze(fen, { depth: 12 })
+    const pre = await analyze(fen, { movetime: 300 })
     if (!pre) return uci === step?.expectedUci
     if (pre.bestMove === uci) return true
-    const post = await analyze(postFen, { depth: 12 })
+    const post = await analyze(postFen, { movetime: 300 })
     if (!post) return uci === step?.expectedUci
     return pre.whiteCp - post.whiteCp <= 60
   }, [analyze, step])
