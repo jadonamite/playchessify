@@ -70,7 +70,7 @@ const ITEMS: ItemDef[] = [
   { key: 'settings', label: 'Settings', href: '/app/settings', match: ['/app/settings'], Icon: GearIcon, accent: 'var(--t1)' },
 ]
 
-function NavRow({ item, active, href, streak = 0 }: { item: ItemDef; active: boolean; href: string; streak?: number }) {
+function NavRow({ item, active, href, streakLabel }: { item: ItemDef; active: boolean; href: string; streakLabel?: string }) {
   const { Icon } = item
   return (
     <Link
