@@ -18,7 +18,7 @@ import { useToastStore } from '@/hooks/useToastStore'
 import { useSettingsStore, AI_DEPTH } from '@/hooks/useSettingsStore'
 import { buildPieces } from '@/lib/chessPieces'
 import { useGameData } from '@/hooks/useGameData'
-import { useRecordStreak, STREAK_EVENT, type RecordResult } from '@/hooks/useStreak'
+import { useRecordStreak, dispatchStreak, type RecordResult } from '@/hooks/useStreak'
 import AmbientBackground from './AmbientBackground'
 import GameHeader from './GameHeader'
 import BoardPanel from './BoardPanel'
@@ -205,7 +205,7 @@ export default function GameClient() {
     void recordStreak(isBotGame ? 'bot' : 'multiplayer').then((res) => {
       if (!res) return
       if (isBotGame) {
-        window.dispatchEvent(new CustomEvent(STREAK_EVENT, { detail: res }))
+        dispatchStreak({ mode: 'earned', current: res.current, longest: res.longest })
       } else {
         pendingStreakRef.current = res
       }
@@ -218,7 +218,7 @@ export default function GameClient() {
     const s = pendingStreakRef.current
     pendingStreakRef.current = null
     router.push('/app/lobby')
-    if (s) setTimeout(() => window.dispatchEvent(new CustomEvent(STREAK_EVENT, { detail: s })), 80)
+    if (s) setTimeout(() => dispatchStreak({ mode: 'earned', current: s.current, longest: s.longest }), 80)
   }, [router])
 
   // Rebuild board from relay. Uses moveHistoryRef (not moveHistory) to avoid
