@@ -104,9 +104,12 @@ function PodiumCard({
             className="absolute rounded-full pointer-events-none"
             style={{ width: avatar + 30, height: avatar + 30, background: `radial-gradient(circle, ${m.color}55, transparent 70%)` }}
           />
-          <div
+          <motion.div
+            aria-hidden
+            animate={{ rotate: 360 }}
+            transition={{ duration: isFirst ? 16 : 24, ease: 'linear', repeat: Infinity }}
             className="absolute rounded-full pointer-events-none"
-            style={{ width: avatar + 18, height: avatar + 18, border: `2px dashed ${m.color}`, opacity: 0.45, animation: `spin ${isFirst ? 16 : 24}s linear infinite` }}
+            style={{ width: avatar + 18, height: avatar + 18, border: `2px dashed ${m.color}`, opacity: 0.45 }}
           />
           <div
             className="relative rounded-full overflow-hidden flex items-center justify-center"
