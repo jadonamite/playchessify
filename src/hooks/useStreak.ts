@@ -28,6 +28,16 @@ export interface StreakEventDetail {
   longest: number
 }
 
+/** Per-UTC-day localStorage guards — one show per day for each overlay mode.
+ *  Shared so the dispatcher (lobby) and the overlay agree on the same key. */
+export const STREAK_CELEBRATED_KEY = 'chess:streak:celebrated'
+export const STREAK_NUDGE_KEY = 'chess:streak:nudge'
+
+/** UTC calendar day as YYYY-MM-DD (matches the server's day boundary). */
+export function streakDay(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
 export function dispatchStreak(detail: StreakEventDetail) {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(STREAK_EVENT, { detail }))
