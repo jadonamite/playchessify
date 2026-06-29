@@ -30,7 +30,7 @@ export default function StreakCelebration() {
   useEffect(() => {
     function onStreak(e: Event) {
       const detail = (e as CustomEvent<RecordResult>).detail
-      if (!detail?.incremented) return
+      if (!detail || detail.current < 1) return
       const today = utcToday()
       try {
         if (localStorage.getItem(CELEBRATED_KEY) === today) return
