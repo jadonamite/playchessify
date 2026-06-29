@@ -1,4 +1,5 @@
 import { Chess, Move } from 'chess.js'
+import type { CoachEngine, StyleWeights } from '@/config/coaches'
 
 // Standard human-facing piece values for material tracking (pawn = 1).
 const MATERIAL_VALUES: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9 }
