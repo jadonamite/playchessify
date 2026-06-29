@@ -284,19 +284,17 @@ export default function LobbyContent() {
                         <span className="text-[9px] tracking-[0.18em] uppercase font-bold" style={{ fontFamily: 'var(--fd)', color: 'var(--candy-amber)' }}>Rating</span>
                         <span className="text-xl leading-none font-black text-white" style={{ fontFamily: 'var(--fd)' }}>{rating}<span className="text-[10px] ml-1" style={{ color: 'var(--candy-amber)' }}>ELO</span></span>
                       </div>
-                      {streak.current > 0 && (
-                        <div
-                          className="col-span-2 flex items-center justify-between px-4 py-3 rounded-2xl border"
-                          style={{ background: 'rgba(255,138,61,0.1)', borderColor: '#ff8a3d55' }}
-                        >
-                          <span className="flex items-center gap-2 text-[9px] tracking-[0.18em] uppercase font-bold" style={{ fontFamily: 'var(--fd)', color: '#ff8a3d' }}>
-                            <FlameIcon size={14} /> Daily Streak
-                          </span>
-                          <span className="text-xl leading-none font-black" style={{ fontFamily: 'var(--fd)', color: '#ff8a3d' }}>
-                            {streak.current}<span className="text-[10px] ml-1">DAYS</span>
-                          </span>
-                        </div>
-                      )}
+                      <div
+                        className="col-span-2 flex items-center justify-between px-4 py-3 rounded-2xl border"
+                        style={{ background: 'rgba(255,138,61,0.1)', borderColor: '#ff8a3d55' }}
+                      >
+                        <span className="flex items-center gap-2 text-[9px] tracking-[0.18em] uppercase font-bold" style={{ fontFamily: 'var(--fd)', color: '#ff8a3d' }}>
+                          <FlameIcon size={14} /> Daily Streak
+                        </span>
+                        <span className="text-xl leading-none font-black" style={{ fontFamily: 'var(--fd)', color: '#ff8a3d' }}>
+                          {streak.current > 0 ? streak.current : '—'}<span className="text-[10px] ml-1">DAYS</span>
+                        </span>
+                      </div>
                     </div>
                   </motion.div>
                 </div>
@@ -552,23 +550,21 @@ export default function LobbyContent() {
               </div>
             </PlayCard>
 
-            {/* ── CARD: Daily streak ── */}
-            {streak.current > 0 && (
-              <PlayCard size="rail" tone="candy" accent="#ff8a3d">
-                <div className="p-6 md:p-7 flex items-center justify-between gap-4 relative z-10">
-                  <div className="flex flex-col gap-1">
-                    <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.2em] uppercase" style={{ fontFamily: 'var(--fd)', color: '#ff8a3d' }}>
-                      <FlameIcon size={15} /> Daily Streak
-                    </h3>
-                    <span className="text-[10px] text-[var(--t3)]">Longest: {streak.longest}d</span>
-                  </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-[44px] font-black leading-none" style={{ fontFamily: 'var(--fd)', color: '#ff8a3d', textShadow: '0 0 30px #ff8a3d66' }}>{streak.current}</span>
-                    <span className="text-xs font-bold tracking-widest" style={{ color: '#ff8a3d' }}>DAYS</span>
-                  </div>
+            {/* ── CARD: Daily streak ('—' until the first day is earned) ── */}
+            <PlayCard size="rail" tone="candy" accent="#ff8a3d">
+              <div className="p-6 md:p-7 flex items-center justify-between gap-4 relative z-10">
+                <div className="flex flex-col gap-1">
+                  <h3 className="flex items-center gap-2 text-[11px] font-bold tracking-[0.2em] uppercase" style={{ fontFamily: 'var(--fd)', color: '#ff8a3d' }}>
+                    <FlameIcon size={15} /> Daily Streak
+                  </h3>
+                  <span className="text-[10px] text-[var(--t3)]">Longest: {streak.longest > 0 ? `${streak.longest}d` : '—'}</span>
                 </div>
-              </PlayCard>
-            )}
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[44px] font-black leading-none" style={{ fontFamily: 'var(--fd)', color: '#ff8a3d', textShadow: '0 0 30px #ff8a3d66' }}>{streak.current > 0 ? streak.current : '—'}</span>
+                  <span className="text-xs font-bold tracking-widest" style={{ color: '#ff8a3d' }}>DAYS</span>
+                </div>
+              </div>
+            </PlayCard>
 
             {/* ── CARD: Record (W / D / L) ── */}
             <PlayCard size="rail" tone="candy" accent="var(--candy-grape)">
