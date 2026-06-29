@@ -1,4 +1,5 @@
 import { Redis } from '@upstash/redis'
+import { Chess } from 'chess.js'
 
 // Shared Redis client. Reads env vars at module load — if they're missing the
 // client will throw on first use, which is the correct fail-loud behaviour.
@@ -55,14 +56,42 @@ export async function getActiveGameIds(chain: Chain): Promise<number[]> {
   return raw.map((v) => Number(v)).filter((n) => Number.isInteger(n))
 }
 
-/** Append a move to a game's history. Returns the new move count. */
-export async function appendMove(chain: Chain, gameId: number, move: MoveRecord): Promise<number> {
-  const redis = getRedis()
-  const k = key(chain, gameId)
-  const newLen = await redis.rpush(k, JSON.stringify(move))
-  // Reset TTL on every write so an active game never expires mid-play
-  await redis.expire(k, TTL_SECONDS)
-  return newLen
+// Atomically append only if the history is exactly `expectedLen` long — i.e.
+// this move lands at slot `expectedLen`. Without this, the relay's
+// check-then-RPUSH had a TOCTOU race: two of the side-to-move's POSTs could both
+// read length N, both validate as legal from that position, and both push,
+// leaving move N+2 illegal in sequence and corrupting the game history. The
+// LLEN check + RPUSH run in one Redis round-trip, so exactly one writer wins.
+//
+// KEYS[1]=list · ARGV[1]=JSON move · ARGV[2]=expectedLen · ARGV[3]=ttl
+// Returns the new length, or -1 if another writer already filled the slot.
+const APPEND_LUA = `
+local len = redis.call('LLEN', KEYS[1])
+if len ~= tonumber(ARGV[2]) then
+  return -1
+end
+redis.call('RPUSH', KEYS[1], ARGV[1])
+redis.call('EXPIRE', KEYS[1], tonumber(ARGV[3]))
+return len + 1
+`
+
+/**
+ * Append a move at slot `expectedLen` (the history length the caller validated
+ * against). Returns the new move count, or `null` if another move already
+ * landed in that slot — the caller should treat that as a conflict and resync.
+ */
+export async function appendMove(
+  chain: Chain,
+  gameId: number,
+  move: MoveRecord,
+  expectedLen: number,
+): Promise<number | null> {
+  const res = (await getRedis().eval(
+    APPEND_LUA,
+    [key(chain, gameId)],
+    [JSON.stringify(move), String(expectedLen), String(TTL_SECONDS)],
+  )) as number
+  return res < 0 ? null : res
 }
 
 /** Fetch all moves for a game in submission order. */
@@ -74,4 +103,41 @@ export async function getMoves(chain: Chain, gameId: number): Promise<MoveRecord
     if (typeof entry === 'string') return JSON.parse(entry) as MoveRecord
     return entry as MoveRecord
   })
+}
+
+/** Length of the longest prefix of `moves` that replays legally. A healthy
+ *  history returns `moves.length`; a corrupt one returns the index of the first
+ *  move that doesn't fit the position (chess.js v1 throws on an illegal move). */
+function longestLegalPrefix(moves: MoveRecord[]): number {
+  const board = new Chess()
+  for (let i = 0; i < moves.length; i++) {
+    try {
+      board.move(moves[i].san)
+    } catch {
+      return i
+    }
+  }
+  return moves.length
+}
+
+/**
+ * Repair a history corrupted by the old append race: trim it to the longest
+ * legal prefix, dropping any out-of-turn move(s) left by a double-write. The
+ * kept prefix includes the move that actually landed first, so the surviving
+ * game state is exactly what both clients agreed on up to the corruption.
+ */
+export async function repairGameHistory(
+  chain: Chain,
+  gameId: number,
+): Promise<{ before: number; after: number; trimmed: number }> {
+  const moves = await getMoves(chain, gameId)
+  const keep = longestLegalPrefix(moves)
+  if (keep < moves.length) {
+    if (keep === 0) {
+      await getRedis().del(key(chain, gameId))
+    } else {
+      await getRedis().ltrim(key(chain, gameId), 0, keep - 1)
+    }
+  }
+  return { before: moves.length, after: keep, trimmed: moves.length - keep }
 }

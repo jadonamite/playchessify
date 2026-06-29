@@ -152,7 +152,17 @@ export async function POST(
     }
 
     const record: MoveRecord = { san, player, moveNumber, ts: Date.now(), ...(sig ? { sig, signer } : {}) }
-    const newLen = await appendMove(chain, gameId, record)
+    // Atomic, conditional on the history still being `existing.length` long.
+    // If we lost a race to another writer for this slot, the move we validated is
+    // no longer legal at the new tip — reject and let the client resync rather
+    // than corrupting the history with an out-of-turn move.
+    const newLen = await appendMove(chain, gameId, record, existing.length)
+    if (newLen === null) {
+      return NextResponse.json(
+        { error: 'move conflict — resync', moves: await getMoves(chain, gameId) },
+        { status: 409 }
+      )
+    }
     // Register so the settlement worker will finalize this game even if both
     // clients disappear at the terminal position.
     await registerActiveGame(chain, gameId)
