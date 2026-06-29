@@ -172,7 +172,7 @@ export default function SideNav() {
         {ITEMS.map((item) => {
           const active = item.match.some((m) => pathname.startsWith(m))
           const href = item.key === 'profile' ? (address ? `/app/profile/${address}` : '/app/lobby') : item.href
-          return <NavRow key={item.key} item={item} active={active} href={href} streakLabel={item.key === 'profile' ? (streak.current > 0 ? String(streak.current) : '—') : undefined} />
+          return <NavRow key={item.key} item={item} active={active} href={href} streakLabel={item.key === 'profile' && streak.current > 0 ? String(streak.current) : undefined} />
         })}
       </nav>
 
