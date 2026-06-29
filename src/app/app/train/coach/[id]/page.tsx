@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { getCoach } from '@/config/coaches'
 import type { Specialty } from '@/config/coaches'
+import TrapButton from '@/components/train/TrapButton'
 
 /** Specialty → the promise the coach makes in their introduction. */
 const PROMISE: Record<Specialty, string> = {
@@ -66,12 +67,12 @@ export default function CoachIntroPage() {
         ))}
       </div>
 
-      <div className="relative mt-7 flex flex-col gap-3 sm:flex-row">
-        <button onClick={() => router.push(`/app/train?coach=${coach.id}`)}
-                className="flex-1 rounded-xl py-4 font-bold text-[#04121a] transition hover:brightness-110"
-                style={{ backgroundColor: coach.accent }}>
-          Begin with {coach.short} ▸
-        </button>
+      <div className="relative mt-7 flex flex-col items-stretch gap-3 sm:flex-row">
+        <div className="flex-1">
+          <TrapButton accent={coach.accent} onClick={() => router.push(`/app/train?coach=${coach.id}`)}>
+            Begin with {coach.short} ▸
+          </TrapButton>
+        </div>
         <button onClick={() => router.push('/app/train')}
                 className="rounded-xl border border-white/15 px-5 py-4 text-slate-300 transition hover:bg-white/5">
           Choose another coach

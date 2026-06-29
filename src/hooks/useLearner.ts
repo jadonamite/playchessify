@@ -1,18 +1,17 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useSignMessage } from 'wagmi'
 import { useWallet } from '@/components/wallet-provider'
 import type { Concept, LearnerLevel, LearnerModel } from '@/types/training'
 
 /**
- * Client access to the learner model. GET is open; updates are signed with the
- * player's wallet (same anti-replay pattern as profile updates). All chess
- * truth still comes from the engine — this only persists progress.
+ * Client access to the learner model. Training progress is low-stakes, so
+ * updates are NOT wallet-signed — switching coaches or saving a drill is
+ * instant, no popup. All chess truth still comes from the engine; this only
+ * persists progress keyed by address.
  */
 export function useLearner() {
   const { playerAddress } = useWallet()
-  const { signMessageAsync } = useSignMessage()
   const [learner, setLearner] = useState<LearnerModel | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -38,20 +37,17 @@ export function useLearner() {
       completedLesson?: string
     }): Promise<LearnerModel | null> => {
       if (!playerAddress) return null
-      const timestamp = new Date().toISOString()
-      const message = `Chessify Training Update\n\nAddress: ${playerAddress.toLowerCase()}\nTimestamp: ${timestamp}`
-      const signature = await signMessageAsync({ message })
       const res = await fetch(`/api/train/${playerAddress}`, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...patch, signature, timestamp }),
+        body: JSON.stringify(patch),
       })
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'update failed')
       const next = (await res.json()).learner as LearnerModel
       setLearner(next)
       return next
     },
-    [playerAddress, signMessageAsync],
+    [playerAddress],
   )
 
   return { learner, loading, refresh, update }
