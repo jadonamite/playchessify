@@ -229,8 +229,14 @@ export default function GameClient() {
     const replayed = new Chess()
     const sanHistory: string[] = []
     for (const m of relayMoves) {
-      const result = replayed.move(m.san)
-      if (!result) {
+      // chess.js v1 THROWS on an illegal move (it doesn't return null), so a
+      // transient relay desync must be caught here — otherwise it escapes render
+      // and crashes the whole board ("This page couldn't load"). Abort the
+      // replay and keep the last good state; the next relay poll will resync.
+      let result
+      try {
+        result = replayed.move(m.san)
+      } catch {
         console.error('[GameClient] relay move rejected — aborting replay', m)
         return
       }
