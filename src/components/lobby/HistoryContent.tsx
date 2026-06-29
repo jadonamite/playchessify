@@ -6,6 +6,7 @@ import { Float, Environment, Text } from '@react-three/drei'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import GlowButton from '@/components/ui/GlowButton'
+import PlayCard from '@/components/ui/PlayCard'
 import LoadingState from '@/components/ui/LoadingState'
 import { useHistory } from '@/hooks/useHistory'
 import { Queen, PieceIcon } from '@/components/ui/ChessModels'
@@ -98,7 +99,7 @@ export function HistoryContent() {
           </div>
 
           {/* History List */}
-          <div className="rounded-[32px] border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-2xl overflow-hidden">
+          <PlayCard size="hero">
             <div className="p-1 md:p-2">
               <div className="flex flex-col">
                 {isLoading ? (
@@ -190,7 +191,7 @@ export function HistoryContent() {
                 )}
               </div>
             </div>
-          </div>
+          </PlayCard>
         </div>
       </div>
     </main>
