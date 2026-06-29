@@ -7,6 +7,7 @@ import TrainingBoard from '@/components/train/TrainingBoard'
 import { useAnalysis } from '@/hooks/useAnalysis'
 import { useLearner } from '@/hooks/useLearner'
 import { PLACEMENT, scorePlacement, type PlacementItem } from '@/config/placement'
+import TrapButton from '@/components/train/TrapButton'
 
 type Phase = 'solving' | 'judging' | 'feedback' | 'done'
 
@@ -120,12 +121,11 @@ export default function PlacementPage() {
       </div>
 
       {phase === 'feedback' && (
-        <button
-          onClick={next}
-          className="mt-4 w-full rounded-xl bg-cyan-400 py-3 font-bold text-[#04121a] transition hover:brightness-110"
-        >
-          {idx + 1 < PLACEMENT.length ? 'Next position ▸' : 'See my level ▸'}
-        </button>
+        <div className="mt-4">
+          <TrapButton onClick={next}>
+            {idx + 1 < PLACEMENT.length ? 'Next position ▸' : 'See my level ▸'}
+          </TrapButton>
+        </div>
       )}
     </div>
   )

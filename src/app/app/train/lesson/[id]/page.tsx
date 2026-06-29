@@ -10,6 +10,7 @@ import { fetchCoachVoice } from '@/lib/coach/client'
 import { getCoach } from '@/config/coaches'
 import { lessonById, type DrillStep } from '@/config/curriculum'
 import { CONCEPT_LABEL } from '@/types/training'
+import TrapButton from '@/components/train/TrapButton'
 
 type Phase = 'solving' | 'checking' | 'wrong' | 'right' | 'complete'
 
@@ -137,10 +138,11 @@ export default function LessonPage() {
       </div>
 
       {phase === 'right' && (
-        <button onClick={advance} className="mt-4 w-full rounded-xl py-3 font-bold text-[#04121a] transition hover:brightness-110"
-                style={{ backgroundColor: coach.accent }}>
-          {stepIdx + 1 < lesson.steps.length ? 'Next ▸' : 'Finish lesson ▸'}
-        </button>
+        <div className="mt-4">
+          <TrapButton accent={coach.accent} onClick={advance}>
+            {stepIdx + 1 < lesson.steps.length ? 'Next ▸' : 'Finish lesson ▸'}
+          </TrapButton>
+        </div>
       )}
     </div>
   )
