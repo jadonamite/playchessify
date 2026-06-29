@@ -10,6 +10,7 @@ import { useWallet } from '@/components/wallet-provider'
 import GlowButton from '@/components/ui/GlowButton'
 import { startAmbient, stopAmbient, setMuted } from '@/lib/audio'
 import { COACHES, type Coach } from '@/config/coaches'
+import { useCoachStore } from '@/hooks/useCoachStore'
 
 /* ───────────────────────── helpers ───────────────────────── */
 
@@ -205,6 +206,7 @@ const STYLE = `
 export default function ChessifyLanding() {
   const router = useRouter()
   const { isConnected, connectWallet } = useWallet()
+  const setCoachId = useCoachStore((s) => s.setCoachId)
 
   const [coach, setCoach] = useState(0)
   const [board, setBoard] = useState<Board>(() => makeBoard())
@@ -271,9 +273,10 @@ export default function ChessifyLanding() {
   // "TRAIN WITH {coach}" — into the teacher flow, carrying the chosen coach so
   // the training hub can adopt it. Gated like start: connect first if needed.
   const trainWith = useCallback((coachId: string) => {
+    setCoachId(coachId) // populate nav/lobby coach face instantly
     if (isConnected) { router.push(`/app/train/coach/${coachId}`); return }
     connectWallet()
-  }, [isConnected, router, connectWallet])
+  }, [isConnected, router, connectWallet, setCoachId])
 
   const toggleSound = useCallback(() => {
     setSound((on) => {

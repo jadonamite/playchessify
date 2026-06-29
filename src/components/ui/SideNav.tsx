@@ -11,6 +11,7 @@ import { stopAmbient } from '@/lib/audio'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import GlowButton from '@/components/ui/GlowButton'
+import CoachNavIcon from '@/components/ui/CoachNavIcon'
 import {
   PlayIcon,
   RankIcon,
@@ -65,6 +66,7 @@ const ITEMS: ItemDef[] = [
   { key: 'play', label: 'Play', href: '/app/lobby', match: ['/app/lobby'], Icon: PlayIcon, accent: 'var(--c)' },
   { key: 'ranks', label: 'Ranks', href: '/app/leaderboard', match: ['/app/leaderboard'], Icon: RankIcon, accent: 'var(--candy-amber)' },
   { key: 'history', label: 'History', href: '/app/history', match: ['/app/history'], Icon: HistoryIcon, accent: 'var(--candy-grape)' },
+  { key: 'coach', label: 'Coach', href: '/app/train', match: ['/app/train'], Icon: CoachNavIcon, accent: '#34d399' },
   { key: 'faucet', label: 'Faucet', href: '/app/faucet', match: ['/app/faucet'], Icon: FaucetIcon, accent: 'var(--candy-lime)' },
   { key: 'profile', label: 'You', href: '/app/profile', match: ['/app/profile'], Icon: ProfileIcon, accent: 'var(--candy-rose)' },
   { key: 'settings', label: 'Settings', href: '/app/settings', match: ['/app/settings'], Icon: GearIcon, accent: 'var(--t1)' },

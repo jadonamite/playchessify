@@ -7,14 +7,21 @@ import { COACHES, getCoach } from '@/config/coaches'
 import { suggestLesson } from '@/config/curriculum'
 import { CONCEPT_LABEL, weakestConcepts } from '@/types/training'
 import TrapButton from '@/components/train/TrapButton'
+import { useCoachStore } from '@/hooks/useCoachStore'
 
 export default function TrainHubPage() {
   const router = useRouter()
   const { learner, loading, update } = useLearner()
   const [switching, setSwitching] = useState(false)
   const adoptedQuery = useRef(false)
+  const setCoachId = useCoachStore((s) => s.setCoachId)
 
   const coach = getCoach(learner?.coachId)
+
+  // Keep the nav/lobby coach face in sync with the server learner model.
+  useEffect(() => {
+    if (learner?.coachId) setCoachId(learner.coachId)
+  }, [learner?.coachId, setCoachId])
 
   // Adopt the coach chosen on the landing page (?coach=…), once, if it differs.
   useEffect(() => {
@@ -28,6 +35,7 @@ export default function TrainHubPage() {
 
   const pickCoach = async (id: string) => {
     if (id === learner?.coachId) return
+    setCoachId(id) // instant nav/lobby face update
     setSwitching(true)
     try { await update({ coachId: id }) } catch { /* declined */ } finally { setSwitching(false) }
   }
