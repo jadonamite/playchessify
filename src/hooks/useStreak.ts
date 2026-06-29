@@ -2,7 +2,6 @@
 
 import { useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useSignMessage } from 'wagmi'
 import { useWallet } from '@/components/wallet-provider'
 
 export interface StreakData {
@@ -16,15 +15,11 @@ export interface RecordResult extends StreakData {
   incremented: boolean
 }
 
-type ClientSource = 'bot' | 'puzzle'
+type ClientSource = 'bot' | 'puzzle' | 'multiplayer'
 
-/** Event fired when a play advances/resets the streak — the full-page
- *  celebration overlay (mounted in the app layout) listens for this. */
+/** Event the caller dispatches (with a RecordResult detail) to pop the full-page
+ *  celebration overlay, which is mounted in the app layout and listens for it. */
 export const STREAK_EVENT = 'chessify:streak'
-
-function utcToday(): string {
-  return new Date().toISOString().slice(0, 10)
-}
 
 // ── read ──────────────────────────────────────────────────────────────────────
 
@@ -50,53 +45,29 @@ export function useStreak(address?: string | null) {
 // ── record (client-attested: bot / puzzle) ─────────────────────────────────────
 
 /**
- * Returns a `record(source)` callback that signs a domain-bound message and
- * posts it to record a streak day. No-ops if disconnected or already recorded
- * for this source today (so a signature is requested at most once per day).
+ * Returns a `record(source)` callback that records a completed play day. No
+ * signature, no popup — a streak is a vanity counter (no payout). Returns the
+ * resulting streak so the caller can decide when to celebrate; no-ops (returns
+ * null) if disconnected.
  */
 export function useRecordStreak() {
   const { playerAddress, isConnected } = useWallet()
-  const { signMessageAsync } = useSignMessage()
 
   return useCallback(
     async (source: ClientSource): Promise<RecordResult | null> => {
       if (!isConnected || !playerAddress) return null
-
-      const localKey = `chess:streak:recorded:${source}`
-      const today = utcToday()
-      try {
-        if (localStorage.getItem(localKey) === today) return null
-      } catch { /* storage blocked — fall through and just record */ }
-
-      const timestamp = new Date().toISOString()
-      const message = `Chessify Streak\n\nSource: ${source}\nAddress: ${playerAddress}\nTimestamp: ${timestamp}`
-
-      let signature: string
-      try {
-        signature = await signMessageAsync({ message })
-      } catch {
-        return null // user dismissed the signature — try again next completion
-      }
-
       try {
         const res = await fetch('/api/profile/streak', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address: playerAddress, source, signature, timestamp }),
+          body: JSON.stringify({ address: playerAddress, source }),
         })
         if (!res.ok) return null
-        const result = (await res.json()) as RecordResult
-
-        try { localStorage.setItem(localKey, today) } catch { /* ignore */ }
-
-        if (result.incremented && typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent(STREAK_EVENT, { detail: result }))
-        }
-        return result
+        return (await res.json()) as RecordResult
       } catch {
         return null
       }
     },
-    [isConnected, playerAddress, signMessageAsync],
+    [isConnected, playerAddress],
   )
 }
