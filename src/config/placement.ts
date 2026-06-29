@@ -32,9 +32,9 @@ export const PLACEMENT: PlacementItem[] = [
   },
   {
     id: 'p3', concept: 'fork', level: 'basics',
-    fen: 'r3k3/8/8/1N6/8/8/8/4K3 w - - 0 1',
-    prompt: 'Find the knight move that wins the rook.',
-    expectedUci: 'b5c7',
+    fen: '8/2q5/5k2/8/1N6/8/8/4K3 w - - 0 1',
+    prompt: 'One knight move attacks the king and the queen at once.',
+    expectedUci: 'b4d5',
   },
   {
     id: 'p4', concept: 'basic-checkmate', level: 'intermediate',
@@ -44,9 +44,9 @@ export const PLACEMENT: PlacementItem[] = [
   },
   {
     id: 'p5', concept: 'fork', level: 'intermediate',
-    fen: 'r3k3/8/4N3/8/8/8/8/4K3 w - - 0 1',
-    prompt: 'Route the knight to fork king and rook.',
-    expectedUci: 'e6c7',
+    fen: '8/8/2q3k1/8/8/3N4/8/4K3 w - - 0 1',
+    prompt: 'Find the knight leap that forks the king and queen.',
+    expectedUci: 'd3e5',
   },
 ]
 
