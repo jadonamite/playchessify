@@ -32,7 +32,7 @@ const TABS: TabDef[] = [
   { key: 'profile', label: 'You', href: '/app/profile', match: ['/app/profile'], Icon: ProfileIcon, accent: 'var(--candy-rose)' },
 ]
 
-function Tab({ tab, active, href, streak = 0 }: { tab: TabDef; active: boolean; href: string; streak?: number }) {
+function Tab({ tab, active, href, streakLabel }: { tab: TabDef; active: boolean; href: string; streakLabel?: string }) {
   const { Icon } = tab
   return (
     <Link
@@ -54,8 +54,8 @@ function Tab({ tab, active, href, streak = 0 }: { tab: TabDef; active: boolean; 
           transition: 'color .2s ease',
         }}
       >
-        {/* daily streak badge */}
-        {streak > 0 && (
+        {/* daily streak badge — always shown on the profile tab ('—' when none) */}
+        {streakLabel !== undefined && (
           <span
             className="absolute -top-1 -right-0.5 z-[2] flex items-center gap-0.5 rounded-full px-1.5 py-0.5"
             style={{
@@ -70,7 +70,7 @@ function Tab({ tab, active, href, streak = 0 }: { tab: TabDef; active: boolean; 
             }}
           >
             <FlameIcon size={9} />
-            {streak}
+            {streakLabel}
           </span>
         )}
         {active && (
@@ -140,7 +140,7 @@ export default function BottomNav() {
       {TABS.map((tab) => {
         const active = tab.match.some((m) => pathname.startsWith(m))
         const href = tab.key === 'profile' ? (playerAddress ? `/app/profile/${playerAddress}` : '/app/lobby') : tab.href
-        return <Tab key={tab.key} tab={tab} active={active} href={href} streak={tab.key === 'profile' ? streak.current : 0} />
+        return <Tab key={tab.key} tab={tab} active={active} href={href} streakLabel={tab.key === 'profile' ? (streak.current > 0 ? String(streak.current) : '—') : undefined} />
       })}
     </nav>
   )
