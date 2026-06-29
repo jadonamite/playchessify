@@ -6,38 +6,33 @@ import TrainingBoard from '@/components/train/TrainingBoard'
 import TrapButton from '@/components/train/TrapButton'
 import { useAnalysis } from '@/hooks/useAnalysis'
 import { useLearner } from '@/hooks/useLearner'
+import { useSettingsStore } from '@/hooks/useSettingsStore'
+import { playMoveChime } from '@/lib/audio'
 import { fetchCoachVoice } from '@/lib/coach/client'
+import { coachingComment, taunt, banter } from '@/lib/coach/lines'
 import { getCoach, type CoachEngine } from '@/config/coaches'
 import { getCoachMove } from '@/lib/chess-engine'
 import { recognizeOpening } from '@/config/openings'
 import type { Concept, LearnerLevel } from '@/types/training'
 
-type Phase = 'learner' | 'analyzing' | 'intercept' | 'coach' | 'over'
-type Mode = 'guided' | 'play'
+type Phase = 'learner' | 'thinking' | 'intercept' | 'over'
+type Mode = 'guided' | 'match'
 
-// Light remarks the coach drops in Just-Play when nothing notable is happening.
-const LIGHT_REMARKS = [
-  'Keep developing — get your pieces into the game.',
-  'Mind your king\'s safety; think about castling.',
-  'Control the centre — it pays off later.',
-  'Don\'t move the same piece twice for no reason.',
-  'Look for your opponent\'s threats before your own plans.',
-]
-
-// A move that drops at least this many centipawns (vs the best move) is flagged
-// for interception — unless the learner was already clearly lost.
 const BLUNDER_CP = 150
+const THINK_MS = 450 // coach "thinking" beat — masks the blunder analysis
 
-/** Soften the coach to the learner's level + a notch (zone of proximal dev). */
 function coachEngineForLevel(base: CoachEngine, level: LearnerLevel): CoachEngine {
   if (level === 'basics') return { ...base, depth: 1, topK: 4, temperature: 0.6 }
   if (level === 'intermediate') return { ...base, depth: 2, topK: 3, temperature: 0.4 }
   return base
 }
 
+const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
 export default function TrainingGame() {
-  const { analyze, ready } = useAnalysis()
+  const { analyze } = useAnalysis()
   const { learner, update } = useLearner()
+  const soundEnabled = useSettingsStore((s) => s.soundEnabled)
   const coach = getCoach(learner?.coachId)
   const level = learner?.level ?? 'basics'
 
@@ -45,94 +40,84 @@ export default function TrainingGame() {
   const [game, setGame] = useState(() => new Chess())
   const [phase, setPhase] = useState<Phase>('learner')
   const [note, setNote] = useState<string>('Make your move — I\'ll guide you.')
+
   const preFenRef = useRef<string>(new Chess().fen())
-  const pendingRef = useRef<{ fen: string } | null>(null)
+  const pendingRef = useRef<string | null>(null) // learner's move fen, awaiting play-anyway
   const announcedOpeningRef = useRef<string | null>(null)
-  const playMoveCountRef = useRef(0)
-  // Diagnostic signal accumulated from THIS game's real moves; persisted once at
-  // game end (one signature, not one per move) — "training on where they stop".
+  const evalBeforeRef = useRef<number>(20)
+  const liveRef = useRef(true)
   const conceptDeltaRef = useRef<Partial<Record<Concept, number>>>({})
   const persistedRef = useRef(false)
-  // Cached eval (white cp) of the position the learner is about to move from, so
-  // the blunder check needs only ONE shallow search per move instead of two.
-  const evalBeforeRef = useRef<number>(20)
-  const liveRef = useRef(true) // false once the game is over — gates late async work
+  const audioRef = useRef<AudioContext | null>(null)
 
-  const addConcept = useCallback((c: Concept, d: number) => {
-    conceptDeltaRef.current[c] = (conceptDeltaRef.current[c] ?? 0) + d
+  // ── sound ──────────────────────────────────────────────────────────────────
+  const playChime = useCallback((opponent: boolean) => {
+    if (!soundEnabled) return
+    try {
+      if (!audioRef.current) {
+        const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+        audioRef.current = new AC()
+      }
+      if (audioRef.current.state === 'suspended') void audioRef.current.resume()
+      playMoveChime(audioRef.current, opponent)
+    } catch { /* audio unavailable */ }
+  }, [soundEnabled])
+
+  // Read the mode chosen on the hub (?mode=guided|match) once on mount.
+  useEffect(() => {
+    const m = new URLSearchParams(window.location.search).get('mode')
+    if (m === 'match' || m === 'guided') {
+      setMode(m)
+      setNote(m === 'match' ? taunt(coach.id) : 'Make your move — I\'ll guide you.')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Refresh the cached "before" eval in the background (non-blocking). Runs when
-  // it becomes the learner's turn, so it's ready by the time they move.
   const refreshBeforeEval = useCallback(async (fen: string) => {
     const r = await analyze(fen, { movetime: 200 })
     if (r) evalBeforeRef.current = r.whiteCp
   }, [analyze])
 
-  // Warm the engine + seed the opening eval once.
   useEffect(() => { void refreshBeforeEval(new Chess().fen()) }, [refreshBeforeEval])
 
-  // Fold this game's signal into the learner model once, at game over.
+  const moveNumber = (g: Chess) => Math.ceil(g.history().length / 2)
+
   const endGame = useCallback((g: Chess) => {
     liveRef.current = false
     setPhase('over')
-    setNote(resultText(g, 'white'))
-    if (persistedRef.current || !learner) return
+    setNote(resultText(g, mode, coach.id))
+    if (persistedRef.current || !learner || mode !== 'guided') return
     persistedRef.current = true
-    const deltas = conceptDeltaRef.current
     const concepts: Partial<Record<Concept, number>> = {}
-    for (const [c, d] of Object.entries(deltas)) {
+    for (const [c, d] of Object.entries(conceptDeltaRef.current)) {
       const cur = learner.concepts[c as Concept] ?? 0
       concepts[c as Concept] = Math.max(0, Math.min(1, cur + (d as number)))
     }
     if (Object.keys(concepts).length > 0) void update({ concepts }).catch(() => {})
-  }, [learner, update])
+  }, [learner, update, mode, coach.id])
 
-  // Coach reply — INSTANT. The move is local (homegrown minimax); we yield one
-  // frame so the learner's move paints first, then play. No network, no deep
-  // search on this path — that's what made it slow.
-  const coachReply = useCallback((afterFen: string) => {
-    const g = new Chess(afterFen)
-    if (g.isGameOver()) { endGame(g); return }
-    setPhase('coach')
-    setTimeout(() => {
-      const move = getCoachMove(g, coachEngineForLevel(coach.engine, level))
-      if (!move) { endGame(g); return }
-      g.move(move)
-      setGame(g)
-      if (g.isGameOver()) { endGame(g); return }
-      setNote('Your move.')
-      setPhase('learner')
-      void refreshBeforeEval(g.fen()) // background — ready for the next blunder check
-    }, 50)
-  }, [coach, level, endGame, refreshBeforeEval])
-
-  // Just-Play reply: the coach is a spectator. It moves, names the opening when
-  // one is reached, and otherwise drops the occasional principle — no analysis,
-  // no interception, no take-back, no diagnostic.
-  const coachReplyPlay = useCallback(async (afterFen: string) => {
-    const g = new Chess(afterFen)
-    if (g.isGameOver()) { endGame(g); return }
-    setPhase('coach')
-    await new Promise((r) => setTimeout(r, 60))
-    const move = getCoachMove(g, coachEngineForLevel(coach.engine, level))
+  // Coach plays its own move (local, fast). Shared by both modes.
+  const coachMove = useCallback((fromFen: string, after: () => void) => {
+    const g = new Chess(fromFen)
+    const engine = mode === 'match' ? coach.engine : coachEngineForLevel(coach.engine, level)
+    const move = getCoachMove(g, engine)
     if (!move) { endGame(g); return }
     g.move(move)
     setGame(g)
+    playChime(true)
+    preFenRef.current = g.fen()
     if (g.isGameOver()) { endGame(g); return }
+    after()
+    void refreshBeforeEval(g.fen())
+  }, [mode, coach.engine, level, endGame, playChime, refreshBeforeEval])
 
-    const opening = recognizeOpening(g.history())
-    playMoveCountRef.current += 1
-    if (opening && opening.name !== announcedOpeningRef.current) {
-      announcedOpeningRef.current = opening.name
-      setNote(opening.note)
-    } else if (playMoveCountRef.current % 5 === 0) {
-      setNote(LIGHT_REMARKS[Math.floor(Math.random() * LIGHT_REMARKS.length)])
-    } else {
-      setNote('Your move.')
-    }
-    setPhase('learner')
-  }, [coach, level, endGame])
+  // ── guided: coach reply after the think beat ─────────────────────────────────
+  const guidedReply = useCallback((movedFen: string) => {
+    coachMove(movedFen, () => {
+      setNote('Your move — I\'m watching.')
+      setPhase('learner')
+    })
+  }, [coachMove])
 
   const onMove = useCallback((from: string, to: string): boolean => {
     if (phase !== 'learner') return false
@@ -140,35 +125,47 @@ export default function TrainingGame() {
     const probe = new Chess(preFen)
     const move = probe.move({ from, to, promotion: 'q' })
     if (!move) return false
-    preFenRef.current = preFen // take-back target (before this move)
+    preFenRef.current = preFen
     liveRef.current = true
     setGame(probe)
+    playChime(false)
+    const movedFen = probe.fen()
 
-    // Just-Play: skip all analysis/interception — coach just responds.
-    if (mode === 'play') {
-      setPhase('coach')
-      void coachReplyPlay(probe.fen())
+    if (probe.isGameOver()) { endGame(probe); return true }
+
+    if (mode === 'match') {
+      // Full match — no coaching, just a worthy opponent + occasional banter.
+      setPhase('thinking')
+      void (async () => {
+        await delay(THINK_MS + 150)
+        if (!liveRef.current) return
+        coachMove(movedFen, () => {
+          const op = recognizeOpening(new Chess(preFenRef.current).history())
+          if (op && op.name !== announcedOpeningRef.current) { announcedOpeningRef.current = op.name; setNote(op.note) }
+          else if (moveNumber(probe) % 4 === 0) setNote(banter(moveNumber(probe)))
+          else setNote('Your move.')
+          setPhase('learner')
+        })
+      })()
       return true
     }
 
-    // GUIDED: coach replies immediately; the blunder check runs in the
-    // background (one shallow search vs the cached "before" eval) and can offer
-    // a take-back retroactively. Nothing blocks the coach's move.
-    const movedFen = probe.fen()
-    void coachReply(movedFen)
-
+    // GUIDED — react to YOUR move instantly, then think (masking the analysis).
+    setNote(coachingComment(move, probe, moveNumber(probe), coach.teaching.specialty))
+    setPhase('thinking')
     void (async () => {
-      const post = await analyze(movedFen, { movetime: 200 })
-      if (!post || !liveRef.current) return
-      const lossCp = evalBeforeRef.current - post.whiteCp // white; + = lost ground
+      const [post] = await Promise.all([analyze(movedFen, { movetime: 200 }), delay(THINK_MS)])
+      if (!liveRef.current) return
+      const lossCp = post ? evalBeforeRef.current - post.whiteCp : 0
       const alreadyLost = evalBeforeRef.current < -300
 
-      if (lossCp >= BLUNDER_CP && !alreadyLost) {
-        addConcept(lossCp >= 400 ? 'hanging-piece' : 'calculation', -0.05)
-        pendingRef.current = { fen: movedFen }
+      if (post && lossCp >= BLUNDER_CP && !alreadyLost) {
+        conceptDeltaRef.current[lossCp >= 400 ? 'hanging-piece' : 'calculation'] =
+          (conceptDeltaRef.current[lossCp >= 400 ? 'hanging-piece' : 'calculation'] ?? 0) - 0.05
+        pendingRef.current = movedFen
         setNote('Hold on — that gives something away. Want it back?')
         setPhase('intercept')
-        // Enrich asynchronously: name the better move + coach voice, then upgrade.
+        // Enrich asynchronously with a named better move + coach voice.
         void (async () => {
           const pre = await analyze(preFen, { movetime: 250 })
           const v = await fetchCoachVoice({
@@ -176,17 +173,16 @@ export default function TrainingGame() {
             kind: 'blunder', playerMoveSan: move.san, bestMoveSan: uciToSan(preFen, pre?.bestMove ?? null) ?? undefined,
             evalDeltaCp: lossCp, detail: 'that move gives ground', fen: preFen,
           })
-          if (liveRef.current) setNote(v.text)
+          if (liveRef.current && pendingRef.current === movedFen) setNote(v.text)
         })()
-      } else if (lossCp <= 30) {
-        addConcept('calculation', 0.02)
+        return
       }
+      if (post && lossCp <= 30) conceptDeltaRef.current.calculation = (conceptDeltaRef.current.calculation ?? 0) + 0.02
+      guidedReply(movedFen)
     })()
     return true
-  }, [phase, game, analyze, coach, level, coachReply, coachReplyPlay, mode, addConcept])
+  }, [phase, game, mode, analyze, coach, level, coachMove, guidedReply, endGame, playChime])
 
-  // Revert to the position before the learner's move (undoes their move AND the
-  // coach's reply), let them try again. The cached "before" eval still holds.
   const takeBack = useCallback(() => {
     setGame(new Chess(preFenRef.current))
     pendingRef.current = null
@@ -195,12 +191,13 @@ export default function TrainingGame() {
     setNote('Good call — let\'s find a better one.')
   }, [])
 
-  // Keep the move: the coach has already replied, so just dismiss the warning.
   const playAnyway = useCallback(() => {
+    const fen = pendingRef.current
     pendingRef.current = null
-    setPhase('learner')
-    setNote('Alright — we play on.')
-  }, [])
+    if (!fen) { setPhase('learner'); return }
+    setPhase('thinking')
+    guidedReply(fen)
+  }, [guidedReply])
 
   const reset = useCallback((toMode?: Mode) => {
     const g = new Chess()
@@ -209,70 +206,71 @@ export default function TrainingGame() {
     preFenRef.current = g.fen()
     pendingRef.current = null
     announcedOpeningRef.current = null
-    playMoveCountRef.current = 0
+    evalBeforeRef.current = 20
+    liveRef.current = true
     persistedRef.current = false
     conceptDeltaRef.current = {}
-    liveRef.current = true
-    evalBeforeRef.current = 20
     void refreshBeforeEval(g.fen())
     setPhase('learner')
-    setNote(m === 'play' ? 'Just play — I\'ll watch and chime in.' : 'Make your move — I\'ll guide you.')
-  }, [mode, refreshBeforeEval])
+    setNote(m === 'match' ? taunt(coach.id) : 'Make your move — I\'ll guide you.')
+  }, [mode, refreshBeforeEval, coach.id])
 
   const switchMode = useCallback((m: Mode) => {
     if (m === mode) return
     setMode(m)
-    reset(m) // fresh board so guided/play state never mixes
+    reset(m)
   }, [mode, reset])
 
   const board = useMemo(() => (
-    <TrainingBoard game={game} orientation="white"
-      interactive={phase === 'learner'} onMove={onMove} />
+    <TrainingBoard game={game} orientation="white" interactive={phase === 'learner'} onMove={onMove} />
   ), [game, phase, onMove])
 
+  const thinking = phase === 'thinking'
+
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-6">
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <div className="text-[11px] uppercase tracking-[0.2em]" style={{ color: coach.accent }}>
-            Training · {coach.name}
+    <div className="flex w-full flex-col items-center pb-8">
+      {/* ── Coach, ON TOP (the opponent across the table) ── */}
+      <div className="w-full max-w-[600px] px-4 pt-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="inline-flex rounded-xl border border-white/10 bg-white/5 p-1 text-sm">
+            {(['guided', 'match'] as const).map((m) => (
+              <button key={m} onClick={() => switchMode(m)}
+                className="rounded-lg px-3.5 py-1.5 font-semibold transition"
+                style={mode === m ? { background: coach.accent, color: '#04121a' } : { color: '#9fb2c8' }}>
+                {m === 'guided' ? 'Coach me' : 'Challenge'}
+              </button>
+            ))}
           </div>
-          <h1 className="font-bold text-xl text-white">{mode === 'play' ? 'Just play' : 'Guided game'}</h1>
-        </div>
-        <button onClick={() => reset()} className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5">
-          New game
-        </button>
-      </div>
-
-      {/* Mode toggle — Guided (coach intercepts) vs Just Play (coach watches). */}
-      <div className="mb-4 inline-flex rounded-xl border border-white/10 bg-white/5 p-1 text-sm">
-        {(['guided', 'play'] as const).map((m) => (
-          <button key={m} onClick={() => switchMode(m)}
-            className="rounded-lg px-4 py-1.5 font-semibold transition"
-            style={mode === m
-              ? { background: coach.accent, color: '#04121a' }
-              : { color: '#9fb2c8' }}>
-            {m === 'guided' ? 'Guided' : 'Just play'}
+          <button onClick={() => reset()} className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5">
+            New game
           </button>
-        ))}
-      </div>
+        </div>
 
-      <div className="rounded-2xl border border-white/10 bg-[#0a1220]/80 p-3">{board}</div>
-
-      <div className="mt-4 min-h-[92px] rounded-xl border p-4"
-           style={{ borderColor: phase === 'intercept' ? '#fb718566' : coach.accent + '33' }}>
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full border" style={{ borderColor: coach.accent }}>
+        <div className="flex items-start gap-3 rounded-2xl border p-3"
+             style={{ borderColor: phase === 'intercept' ? '#fb718566' : coach.accent + '40', background: `linear-gradient(160deg, ${coach.accent}10, rgba(9,15,30,0.5))` }}>
+          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border-2" style={{ borderColor: coach.accent }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={encodeURI(coach.img)} alt={coach.name} className="h-full w-full object-cover object-top" />
           </div>
-          <p className="text-[15px] leading-relaxed text-slate-200">
-            {note}{!ready && phase === 'learner' && <span className="ml-2 text-xs text-slate-500">(engine warming…)</span>}
-          </p>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-white">{coach.name}</span>
+              <span className="text-[11px] uppercase tracking-wide" style={{ color: coach.accent }}>{mode === 'match' ? 'opponent' : 'coach'}</span>
+            </div>
+            <p className="mt-0.5 text-[15px] leading-snug text-slate-200">
+              {thinking ? <span className="text-slate-400">{coach.name} is thinking…</span> : note}
+            </p>
+          </div>
         </div>
+      </div>
 
+      {/* ── Board, full-width (matches the real game board) ── */}
+      <div className="pc-board-wrap mt-3">{board}</div>
+
+      {/* ── Your controls, below ── */}
+      <div className="w-full max-w-[600px] px-4">
         {phase === 'intercept' && (
-          <div className="mt-3 flex items-stretch gap-2">
+          <div className="mt-4 flex items-stretch gap-2">
             <div className="flex-1">
               <TrapButton accent={coach.accent} onClick={takeBack} style={{ fontSize: 13, padding: '12px 20px' }}>
                 Take it back
@@ -283,9 +281,8 @@ export default function TrainingGame() {
             </button>
           </div>
         )}
-
         {phase === 'over' && (
-          <div className="mt-3">
+          <div className="mt-4">
             <TrapButton accent={coach.accent} onClick={() => reset()} style={{ fontSize: 13, padding: '12px 20px' }}>
               Play again
             </TrapButton>
@@ -305,11 +302,16 @@ function uciToSan(fen: string, uci: string | null): string | null {
   } catch { return null }
 }
 
-function resultText(g: Chess, learnerColor: 'white' | 'black'): string {
+function resultText(g: Chess, mode: Mode, coachId: string): string {
   if (g.isCheckmate()) {
     const loser = g.turn() === 'w' ? 'white' : 'black'
-    return loser === learnerColor ? 'Checkmate — they got you this time. Let\'s go again.' : 'Checkmate — beautifully done!'
+    if (loser === 'white') {
+      return mode === 'match'
+        ? 'Checkmate. Told you. Run it back?'
+        : 'Checkmate — they got you this time. Let\'s go again.'
+    }
+    return mode === 'match' ? `You beat me? Not bad at all. Again?` : 'Checkmate — beautifully done!'
   }
-  if (g.isDraw() || g.isStalemate()) return 'A draw. Solid defending — play again?'
+  if (g.isDraw() || g.isStalemate()) return 'A draw. Solid play — go again?'
   return 'Game over.'
 }
