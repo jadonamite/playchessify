@@ -9,9 +9,20 @@ import { useLearner } from '@/hooks/useLearner'
 import { fetchCoachVoice } from '@/lib/coach/client'
 import { getCoach, type CoachEngine } from '@/config/coaches'
 import { getCoachMove } from '@/lib/chess-engine'
+import { recognizeOpening } from '@/config/openings'
 import type { Concept, LearnerLevel } from '@/types/training'
 
 type Phase = 'learner' | 'analyzing' | 'intercept' | 'coach' | 'over'
+type Mode = 'guided' | 'play'
+
+// Light remarks the coach drops in Just-Play when nothing notable is happening.
+const LIGHT_REMARKS = [
+  'Keep developing — get your pieces into the game.',
+  'Mind your king\'s safety; think about castling.',
+  'Control the centre — it pays off later.',
+  'Don\'t move the same piece twice for no reason.',
+  'Look for your opponent\'s threats before your own plans.',
+]
 
 // A move that drops at least this many centipawns (vs the best move) is flagged
 // for interception — unless the learner was already clearly lost.
@@ -30,11 +41,14 @@ export default function TrainingGame() {
   const coach = getCoach(learner?.coachId)
   const level = learner?.level ?? 'basics'
 
+  const [mode, setMode] = useState<Mode>('guided')
   const [game, setGame] = useState(() => new Chess())
   const [phase, setPhase] = useState<Phase>('learner')
   const [note, setNote] = useState<string>('Make your move — I\'ll guide you.')
   const preFenRef = useRef<string>(new Chess().fen())
   const pendingRef = useRef<{ fen: string } | null>(null)
+  const announcedOpeningRef = useRef<string | null>(null)
+  const playMoveCountRef = useRef(0)
   // Diagnostic signal accumulated from THIS game's real moves; persisted once at
   // game end (one signature, not one per move) — "training on where they stop".
   const conceptDeltaRef = useRef<Partial<Record<Concept, number>>>({})
@@ -79,6 +93,34 @@ export default function TrainingGame() {
     setPhase('learner')
   }, [coach, level, endGame])
 
+  // Just-Play reply: the coach is a spectator. It moves, names the opening when
+  // one is reached, and otherwise drops the occasional principle — no analysis,
+  // no interception, no take-back, no diagnostic.
+  const coachReplyPlay = useCallback(async (afterFen: string) => {
+    const g = new Chess(afterFen)
+    if (g.isGameOver()) { endGame(g); return }
+    setPhase('coach')
+    await new Promise((r) => setTimeout(r, 300))
+    const move = getCoachMove(g, coachEngineForLevel(coach.engine, level))
+    if (!move) { endGame(g); return }
+    g.move(move)
+    setGame(g)
+    preFenRef.current = g.fen()
+    if (g.isGameOver()) { endGame(g); return }
+
+    const opening = recognizeOpening(g.history())
+    playMoveCountRef.current += 1
+    if (opening && opening.name !== announcedOpeningRef.current) {
+      announcedOpeningRef.current = opening.name
+      setNote(opening.note)
+    } else if (playMoveCountRef.current % 5 === 0) {
+      setNote(LIGHT_REMARKS[Math.floor(Math.random() * LIGHT_REMARKS.length)])
+    } else {
+      setNote('Your move.')
+    }
+    setPhase('learner')
+  }, [coach, level, endGame])
+
   const onMove = useCallback((from: string, to: string): boolean => {
     if (phase !== 'learner') return false
     const preFen = game.fen()
@@ -86,8 +128,16 @@ export default function TrainingGame() {
     const move = probe.move({ from, to, promotion: 'q' })
     if (!move) return false
     preFenRef.current = preFen
-    pendingRef.current = { fen: probe.fen() }
     setGame(probe)
+
+    // Just-Play: skip all analysis/interception — coach just responds.
+    if (mode === 'play') {
+      setPhase('coach')
+      void coachReplyPlay(probe.fen())
+      return true
+    }
+
+    pendingRef.current = { fen: probe.fen() }
     setPhase('analyzing')
     setNote('Let me look at that…')
 
@@ -116,7 +166,7 @@ export default function TrainingGame() {
       void coachReply(probe.fen())
     })()
     return true
-  }, [phase, game, analyze, coach, level, coachReply, addConcept])
+  }, [phase, game, analyze, coach, level, coachReply, coachReplyPlay, mode, addConcept])
 
   const takeBack = useCallback(() => {
     setGame(new Chess(preFenRef.current))
@@ -131,14 +181,25 @@ export default function TrainingGame() {
     void coachReply(fen)
   }, [coachReply])
 
-  const reset = useCallback(() => {
+  const reset = useCallback((toMode?: Mode) => {
     const g = new Chess()
+    const m = toMode ?? mode
     setGame(g)
     preFenRef.current = g.fen()
     pendingRef.current = null
+    announcedOpeningRef.current = null
+    playMoveCountRef.current = 0
+    persistedRef.current = false
+    conceptDeltaRef.current = {}
     setPhase('learner')
-    setNote('New game — make your move.')
-  }, [])
+    setNote(m === 'play' ? 'Just play — I\'ll watch and chime in.' : 'Make your move — I\'ll guide you.')
+  }, [mode])
+
+  const switchMode = useCallback((m: Mode) => {
+    if (m === mode) return
+    setMode(m)
+    reset(m) // fresh board so guided/play state never mixes
+  }, [mode, reset])
 
   const board = useMemo(() => (
     <TrainingBoard game={game} orientation="white"
@@ -147,16 +208,29 @@ export default function TrainingGame() {
 
   return (
     <div className="mx-auto w-full max-w-xl px-4 py-6">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between">
         <div>
           <div className="text-[11px] uppercase tracking-[0.2em]" style={{ color: coach.accent }}>
             Training · {coach.name}
           </div>
-          <h1 className="font-bold text-xl text-white">Guided game</h1>
+          <h1 className="font-bold text-xl text-white">{mode === 'play' ? 'Just play' : 'Guided game'}</h1>
         </div>
-        <button onClick={reset} className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5">
+        <button onClick={() => reset()} className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5">
           New game
         </button>
+      </div>
+
+      {/* Mode toggle — Guided (coach intercepts) vs Just Play (coach watches). */}
+      <div className="mb-4 inline-flex rounded-xl border border-white/10 bg-white/5 p-1 text-sm">
+        {(['guided', 'play'] as const).map((m) => (
+          <button key={m} onClick={() => switchMode(m)}
+            className="rounded-lg px-4 py-1.5 font-semibold transition"
+            style={mode === m
+              ? { background: coach.accent, color: '#04121a' }
+              : { color: '#9fb2c8' }}>
+            {m === 'guided' ? 'Guided' : 'Just play'}
+          </button>
+        ))}
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-[#0a1220]/80 p-3">{board}</div>
