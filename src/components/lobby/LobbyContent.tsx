@@ -4,6 +4,9 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useWallet } from '@/components/wallet-provider'
 import GlowButton from '@/components/ui/GlowButton'
+import TrapButton from '@/components/train/TrapButton'
+import { useCoachStore } from '@/hooks/useCoachStore'
+import { getCoach } from '@/config/coaches'
 import ClayCard from '@/components/ui/ClayCard'
 import PlayCard from '@/components/ui/PlayCard'
 import ComingSoonOverlay from '@/components/ui/ComingSoonOverlay'
@@ -46,6 +49,7 @@ export default function LobbyContent() {
   const { isConnected, isReady, playerAddress } = useWallet()
   const { createGame: createCeloGame } = useCeloChess()
   const router = useRouter()
+  const coachId = useCoachStore((s) => s.coachId)
 
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
   const MAINTENANCE_MODE = false
@@ -330,15 +334,34 @@ export default function LobbyContent() {
                   >
                     CREATE NEW MATCH
                   </GlowButton>
-                  <GlowButton
-                    parallelogram
-                    variant="ghost"
-                    size="lg"
-                    onClick={() => router.push('/app/game/bot')}
-                    className="w-full"
-                  >
-                    QUICK PLAY (VS AI)
-                  </GlowButton>
+                  {/* Coach-aware practice CTA — replaces the faceless bot. Shows
+                      the active coach's face; routes to their hub, or to the
+                      coach picker / intro when none is chosen yet. */}
+                  {(() => {
+                    const coach = coachId ? getCoach(coachId) : null
+                    return (
+                      <TrapButton
+                        accent={coach?.accent ?? '#34d399'}
+                        onClick={() => handleAction(() => router.push(coach ? '/app/train' : '/app/train'))}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+                      >
+                        <span
+                          className="block overflow-hidden rounded-full"
+                          style={{ width: 26, height: 26, border: `2px solid #04121a55`, flex: 'none' }}
+                        >
+                          {coach ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={encodeURI(coach.img)} alt={coach.name} className="h-full w-full object-cover object-top" />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center bg-black/20">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="#04121a"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.4 0-8 2.7-8 6v2h16v-2c0-3.3-3.6-6-8-6Z" /></svg>
+                            </span>
+                          )}
+                        </span>
+                        {coach ? `TRAIN WITH ${coach.short.toUpperCase()}` : 'MEET YOUR COACH'}
+                      </TrapButton>
+                    )
+                  })()}
                 </motion.div>
               </div>
             </PlayCard>
