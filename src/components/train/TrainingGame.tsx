@@ -262,7 +262,7 @@ export default function TrainingGame() {
 
         {phase === 'over' && (
           <div className="mt-3">
-            <TrapButton accent={coach.accent} onClick={reset} style={{ fontSize: 13, padding: '12px 20px' }}>
+            <TrapButton accent={coach.accent} onClick={() => reset()} style={{ fontSize: 13, padding: '12px 20px' }}>
               Play again
             </TrapButton>
           </div>
