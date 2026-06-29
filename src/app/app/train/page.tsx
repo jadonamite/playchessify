@@ -66,6 +66,10 @@ export default function TrainHubPage() {
             )
           })}
         </div>
+        <button onClick={() => router.push(`/app/train/coach/${coach.id}`)}
+                className="mt-1 text-xs underline-offset-2 hover:underline" style={{ color: coach.accent }}>
+          Meet {coach.name} ›
+        </button>
       </div>
 
       {/* Not placed yet → placement CTA */}
