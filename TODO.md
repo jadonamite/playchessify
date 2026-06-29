@@ -152,6 +152,26 @@ Priority order for the next session:
 
 ---
 
+## 🔥 Streaks & relay — follow-ups (2026-06-29)
+
+- [ ] **Run the repair on game 1487** (locked wager): set `RELAY_ADMIN_SECRET` env + redeploy, then
+  `POST /api/admin/relay/repair {"gameId":1487}` (GET first for a dry-run). Sweep-all repair was
+  offered but deferred.
+- [ ] **Streak rewards (Phase 3, deferred)** — hybrid faucet bonus via `mintTo`. **Prereq:** make
+  bot/puzzle streak sources **server-validated** (currently self-attested / unauthenticated) before
+  any payout, else streaks are a withdrawal vector.
+- [ ] **Puzzles** — when built, record the streak inside the server-side puzzle-validation step
+  (don't trust the client); the `/api/profile/streak` endpoint already accepts `source: 'puzzle'`.
+- [ ] **Audit the dead `if (!board.move())` guards** — chess.js v1 *throws* on illegal moves, so
+  these never hit the `false` branch. Safe today only because `settlement.ts` + the moves route's
+  history replay wrap them in try/catch; fix the pattern if you touch them.
+- [x] **Relay TOCTOU append race** — closed via atomic Lua `appendMove` (LLEN check + RPUSH).
+- [x] **Daily streak system** — spine (atomic store, multiplayer/bot sources, UTC) + earned
+  celebration (bot on game-over, PvP on Back-to-Lobby) + once/day 0-streak lobby nudge + 🔥 chips.
+- [x] **Leaderboard podium** — rebuilt as a flex stage (no mobile stacking), landing aesthetic.
+
+---
+
 ## 📋 Handover prompt — paste into a new chat
 
 > I'm continuing work on **playchessify** at `~/Projects/playchessify` — a Celo-only, free-to-play

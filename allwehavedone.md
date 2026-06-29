@@ -280,3 +280,48 @@ July 2026 ERC-2771 forwarder redeploy); Tier-C forwarder itself (July 2026).
   tactile/pressable moments. Use `PlayCard` for any new lobby surface; never flatten to mono-neon.
 - **Auto-commit bot (`Elite.cjs`) is active** — expect this session's work to land under bot commit
   messages automatically.
+
+---
+
+## 13. Session 2026-06-29 — leaderboard rebuild, daily streaks, relay race fix
+
+**Cohesion pass (cont.)** — extended the lobby's `PlayCard` hybrid to **faucet, history, leaderboard**
+(candy stat semantics carried over; GlowButton CTAs left trapezoid). Settings keeps its `ClayCard`
+system (that *is* the clay side — don't flatten it).
+
+**Leaderboard podium rebuilt** — mobile no longer stacks the top 3; it's now a true **flex stage**
+(2nd · 1st · 3rd, leader centred + elevated via stair-stepped base heights) in the landing aesthetic:
+avatar radial bloom + spinning dashed ring (Framer Motion, not a CSS keyframe), rarity-style title
+pills, accent-bordered frames, gradient bases. Ranks 4+ list unchanged.
+
+**Daily streak system (spine + UI; rewards DEFERRED).**
+- Store: `src/lib/streak-store.ts` — own key `chess:streak:{addr}` as a Redis **hash**, updated by a
+  single atomic Lua `EVAL` (no `cjson`); UTC day boundaries; reads derive effective current (0 if
+  broken) + longest. Decoupled from profiles so unclaimed wallets still track streaks.
+- Sources: **multiplayer** credited server-side in `settle-game.ts` (both players, unspoofable);
+  **bot/puzzle** via `POST /api/profile/streak` (puzzles hook in when built). Endpoint is
+  **unauthenticated by design — no signature popup** (a streak is a vanity counter with no payout).
+- Celebration: `StreakCelebration.tsx` (mounted in app layout) — `earned` mode (lit flame, count-up,
+  7-day strip, confetti burst) fires for **bots on game-over** and **PvP on Back to Lobby** (after the
+  won/lost screen); `nudge` mode (unlit ember, "start your streak" copy, Play-now CTA) fires on
+  **lobby entry, strictly once/UTC-day**, for connected 0-streak players until they earn day one.
+- Confetti extracted to shared `ui/Confetti.tsx` (`fall` + `burst`, flame palette); faucet modal now
+  uses it too. `FlameIcon` (Solar bold-duotone) added.
+- Surfaces (hidden when 0): `🔥 N` in mobile top nav, side-nav "You" row, lobby (mobile hero chip +
+  desktop rail card); Current/Longest boxes on the profile page.
+- **Deferred (Phase 3):** the incentive/reward layer (hybrid faucet bonus via `mintTo`). Prereq
+  before any payout: bot/puzzle sources must become **server-validated** (today they're self-attested).
+
+**Game-crash + relay desync fixed.**
+- `chess.js v1 THROWS on an illegal move` (it doesn't return null) — the relay-replay in
+  `GameClient.tsx` had a dead `if (!result)` guard, so a desync escaped render and showed
+  "This page couldn't load." Wrapped in try/catch → abort to last good state, resync on next poll.
+- **Root cause = TOCTOU append race**: the moves route validated legality against the read history
+  then did an **unconditional RPUSH**, so two of the side-to-move's POSTs could both append → move
+  N+2 illegal in sequence → corrupt history. Fixed: `appendMove` is now an atomic Lua `EVAL`
+  (`LLEN` check + `RPUSH`); a lost race 409s "move conflict — resync". **The same dead
+  `if (!board.move())` pattern still exists in `settlement.ts` + the moves route's history replay —
+  those are inside try/catch so they're safe, but audit if touched.**
+- **Stuck-game repair:** `repairGameHistory()` trims a corrupted history to its longest legal prefix;
+  exposed via secret-guarded `POST /api/admin/relay/repair` (needs `RELAY_ADMIN_SECRET` env; GET =
+  dry-run). **Game 1487 is corrupted and needs this run** to unstick its locked wager.
