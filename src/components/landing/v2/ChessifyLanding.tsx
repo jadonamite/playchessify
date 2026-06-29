@@ -9,6 +9,7 @@ import MagicRings from './MagicRings'
 import { useWallet } from '@/components/wallet-provider'
 import GlowButton from '@/components/ui/GlowButton'
 import { startAmbient, stopAmbient, setMuted } from '@/lib/audio'
+import { COACHES, type Coach } from '@/config/coaches'
 
 /* ───────────────────────── helpers ───────────────────────── */
 
@@ -34,30 +35,9 @@ function hexToRgba(hex: string, a: number): string {
 
 const PIECE_SET = '/pieces/maestro'
 
-/* ───────────────────────── data ───────────────────────── */
-
-type Coach = {
-  id: string
-  name: string
-  short: string // one-word label for the bubble map
-  title: string
-  elo: number
-  accent: string
-  rarity: string
-  tags: string
-  img: string // portrait art in /public/Coaches
-  about: string
-}
-
-const COACHES: Coach[] = [
-  { id: 'kasparov', name: 'Garry Kasparov', short: 'Kasparov', title: 'The Attacker', elo: 2851, accent: '#fb7185', rarity: 'LEGENDARY', tags: 'Aggressive · Analytical · Dominant', img: '/Coaches/Garry Kasparov.webp', about: 'Kasparov plays like a storm — relentless attacks, razor-sharp preparation, and total mental dominance. Train with him to seize the initiative from move one, calculate forcing lines deep, and crush hesitation wherever you find it.' },
-  { id: 'fischer', name: 'Bobby Fischer', short: 'Fischer', title: 'The Genius', elo: 2785, accent: '#60a5fa', rarity: 'MYTHIC', tags: 'Uncompromising · Precise · Relentless', img: '/Coaches/Fischer.webp', about: 'Fischer demands pure, logical chess and nothing less. Learn clean principled play, surgical endgame technique, and the iron will to keep fighting for the win when others would take the draw.' },
-  { id: 'carlsen', name: 'Magnus Carlsen', short: 'Magnus', title: 'The Endgame', elo: 2882, accent: '#34d399', rarity: 'MYTHIC', tags: 'Pragmatic · Intuitive · Unshakeable', img: '/Coaches/Magnus.webp', about: 'Carlsen turns the smallest edge into a full point. Master the art of grinding — practical intuition, flawless endgames, and the calm endurance to outlast anyone across a long, patient battle.' },
-  { id: 'karpov', name: 'Anatoly Karpov', short: 'Karpov', title: 'The Maverick', elo: 2780, accent: '#a78bfa', rarity: 'LEGENDARY', tags: 'Patient · Positional · Subtle', img: '/Coaches/Anatoly Karpov.webp', about: 'Karpov squeezes the life from a position before a single piece falls. Learn prophylaxis — quietly killing your opponent’s every idea — and the patience to coil tighter and tighter until they have nowhere left to move.' },
-  { id: 'polgar', name: 'Judit Polgar', short: 'Polgar', title: 'The Tactician', elo: 2735, accent: '#f472b6', rarity: 'LEGENDARY', tags: 'Fearless · Creative · Sharp', img: '/Coaches/Judit Polgar.webp', about: 'Polgar attacks with fearless imagination and dazzling tactics. Sharpen your tactical vision, find the brilliant sacrifice no one else sees, and keep the pressure roaring until the enemy king has nowhere to hide.' },
-  { id: 'houyifan', name: 'Hou Yifan', short: 'Yifan', title: 'The Scholar', elo: 2686, accent: '#22d3ee', rarity: 'EPIC', tags: 'Versatile · Structured · Composed', img: '/Coaches/Hou Yifan.webp', about: 'Hou Yifan plays a calm, universal game built on rock-solid foundations. Train well-rounded positional understanding, clean structure, and the ice-cool composure to calculate clearly under any pressure.' },
-  { id: 'harmon', name: 'Beth Harmon', short: 'Beth', title: 'The Prodigy', elo: 2650, accent: '#fbbf24', rarity: 'EPIC', tags: 'Visionary · Daring · Instinctive', img: '/Coaches/Beth Harmon.webp', about: 'Harmon sees the whole board light up before she touches a piece. Train bold intuitive leaps, fearless attacking lines, and the rare nerve to find brilliance — and to recover when a blunder threatens to bring it all down.' },
-]
+/* ───────────────────────── data ─────────────────────────
+ * Coaches now live in src/config/coaches.ts (single source of truth — the
+ * training system reads the same records). Imported above as COACHES / Coach. */
 
 type Mode = { accent: string; tag: string; title: string; desc: string; piece: string }
 const MODES: Mode[] = [
