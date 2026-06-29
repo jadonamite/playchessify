@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import BottomNav from '@/components/ui/BottomNav'
 import SideNav from '@/components/ui/SideNav'
 import { Navbar } from '@/components/landing/Hero'
+import StreakCelebration from '@/components/ui/StreakCelebration'
 import { useProfileLink } from '@/hooks/useProfileLink'
 
 // Shared chrome for every /app/* route.
@@ -29,6 +30,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )}
       <div className={isGame ? undefined : 'pc-app-scroll'}>{children}</div>
       {!isGame && <BottomNav />}
+      <StreakCelebration />
     </div>
   )
 }

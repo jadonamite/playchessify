@@ -4,12 +4,14 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useWallet } from '@/components/wallet-provider'
+import { useStreak } from '@/hooks/useStreak'
 import {
   PlayIcon,
   RankIcon,
   HistoryIcon,
   FaucetIcon,
   ProfileIcon,
+  FlameIcon,
   type IconProps,
 } from '@/components/ui/icons'
 
