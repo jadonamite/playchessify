@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { getCoach } from '@/config/coaches'
 import type { Specialty } from '@/config/coaches'
 import TrapButton from '@/components/train/TrapButton'
+import { useCoachStore } from '@/hooks/useCoachStore'
 
 /** Specialty → the promise the coach makes in their introduction. */
 const PROMISE: Record<Specialty, string> = {
@@ -19,6 +20,9 @@ export default function CoachIntroPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const coach = getCoach(params.id)
+  const setCoachId = useCoachStore((s) => s.setCoachId)
+
+  const begin = () => { setCoachId(coach.id); router.push(`/app/train?coach=${coach.id}`) }
 
   // First-person introduction composed from the coach's own data — always works,
   // no LLM needed, so it's reliable on production.
@@ -69,7 +73,7 @@ export default function CoachIntroPage() {
 
       <div className="relative mt-7 flex flex-col items-stretch gap-3 sm:flex-row">
         <div className="flex-1">
-          <TrapButton accent={coach.accent} onClick={() => router.push(`/app/train?coach=${coach.id}`)}>
+          <TrapButton accent={coach.accent} onClick={begin}>
             Begin with {coach.short} ▸
           </TrapButton>
         </div>
