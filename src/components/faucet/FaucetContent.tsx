@@ -10,6 +10,7 @@ import { useWallet } from '@/components/wallet-provider'
 import { useWriteContract, useReadContract, usePublicClient } from 'wagmi'
 import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
 import GlowButton from '@/components/ui/GlowButton'
+import PlayCard from '@/components/ui/PlayCard'
 import LoadingState from '@/components/ui/LoadingState'
 import SceneBoundary from '@/components/ui/SceneBoundary'
 import FaucetResultModal, { type FaucetResultType } from '@/components/ui/FaucetResultModal'
@@ -53,12 +54,7 @@ function FaucetScene() {
 /* ── TOKEN DISPLAY ── */
 function TokenDisplay({ balance }: { balance: string }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="rounded-2xl border border-white/10 bg-black/30 backdrop-blur-sm p-5 flex items-center justify-between"
-    >
+    <PlayCard size="rail" tone="candy" accent="var(--candy-lime)" className="p-5 flex items-center justify-between">
       <div className="flex flex-col gap-1">
         <span className="text-[9px] font-bold tracking-[0.3em] text-white/40 uppercase" style={{ fontFamily: 'var(--fd)' }}>
           Current Balance
@@ -78,7 +74,7 @@ function TokenDisplay({ balance }: { balance: string }) {
           </span>
         </div>
       </div>
-    </motion.div>
+    </PlayCard>
   )
 }
 
@@ -276,12 +272,7 @@ export default function FaucetContent() {
           </div>
 
           {/* ── MAIN CARD ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="rounded-[32px] border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-2xl overflow-hidden"
-          >
+          <PlayCard size="hero">
             <div className="p-6 md:p-10 flex flex-col gap-8">
 
               {/* Balance Display */}
@@ -369,29 +360,30 @@ export default function FaucetContent() {
                 </div>
               )}
             </div>
-          </motion.div>
+          </PlayCard>
 
           {/* ── INFO CARDS ── */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { piece: 'knight' as const, color: '#00ccff', title: 'INSTANT', desc: 'Tokens arrive in your wallet within seconds of confirmation.' },
-              { piece: 'pawn' as const, color: '#a064ff', title: 'DAILY RESET', desc: 'The cooldown resets every ~24 hours. Come back daily.' },
-              { piece: 'king' as const, color: '#ffb400', title: 'PLAY READY', desc: 'Use claimed tokens to create matches and wager in games.' },
+              { piece: 'knight' as const, color: 'var(--c)', title: 'INSTANT', desc: 'Tokens arrive in your wallet within seconds of confirmation.' },
+              { piece: 'pawn' as const, color: 'var(--candy-grape)', title: 'DAILY RESET', desc: 'The cooldown resets every ~24 hours. Come back daily.' },
+              { piece: 'king' as const, color: 'var(--candy-amber)', title: 'PLAY READY', desc: 'Use claimed tokens to create matches and wager in games.' },
             ].map((card, i) => (
               <motion.div
                 key={card.title}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + i * 0.1 }}
-                className="rounded-2xl border border-white/5 bg-slate-900/40 backdrop-blur-sm p-5 flex flex-col gap-3"
               >
-                <div className="h-12 flex items-center -ml-2">
-                  <PieceIcon type={card.piece} className="w-12 h-12" />
-                </div>
-                <span className="text-[10px] font-black tracking-[0.25em] text-[var(--c)] uppercase" style={{ fontFamily: 'var(--fd)' }}>
-                  {card.title}
-                </span>
-                <p className="text-[11px] text-white/40 leading-relaxed">{card.desc}</p>
+                <PlayCard size="rail" tone="candy" accent={card.color} className="p-5 flex flex-col gap-3 h-full">
+                  <div className="h-12 flex items-center -ml-2">
+                    <PieceIcon type={card.piece} className="w-12 h-12" />
+                  </div>
+                  <span className="text-[10px] font-black tracking-[0.25em] uppercase" style={{ fontFamily: 'var(--fd)', color: card.color }}>
+                    {card.title}
+                  </span>
+                  <p className="text-[11px] text-white/40 leading-relaxed">{card.desc}</p>
+                </PlayCard>
               </motion.div>
             ))}
           </div>

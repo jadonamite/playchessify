@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWallet } from '@/components/wallet-provider'
 import GlowButton from '@/components/ui/GlowButton'
+import PlayCard from '@/components/ui/PlayCard'
 import LoadingState from '@/components/ui/LoadingState'
 import { useLeaderboard, type LeaderboardEntry } from '@/hooks/useLeaderboard'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
@@ -519,8 +520,8 @@ export default function LeaderboardContent() {
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.32, ease: [0.16, 1, 0.3, 1] }}
-                  className="rounded-[32px] border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-2xl overflow-hidden"
                 >
+                 <PlayCard size="hero">
                   {/* Table header */}
                   <div className="px-6 md:px-8 py-4 border-b border-white/5 flex items-center justify-between">
                     <span
@@ -578,6 +579,7 @@ export default function LeaderboardContent() {
                       </GlowButton>
                     </div>
                   )}
+                 </PlayCard>
                 </motion.div>
               )}
 
