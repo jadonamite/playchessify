@@ -32,7 +32,7 @@ const TABS: TabDef[] = [
   { key: 'profile', label: 'You', href: '/app/profile', match: ['/app/profile'], Icon: ProfileIcon, accent: 'var(--candy-rose)' },
 ]
 
-function Tab({ tab, active, href }: { tab: TabDef; active: boolean; href: string }) {
+function Tab({ tab, active, href, streak = 0 }: { tab: TabDef; active: boolean; href: string; streak?: number }) {
   const { Icon } = tab
   return (
     <Link
@@ -54,6 +54,25 @@ function Tab({ tab, active, href }: { tab: TabDef; active: boolean; href: string
           transition: 'color .2s ease',
         }}
       >
+        {/* daily streak badge */}
+        {streak > 0 && (
+          <span
+            className="absolute -top-1 -right-0.5 z-[2] flex items-center gap-0.5 rounded-full px-1.5 py-0.5"
+            style={{
+              background: 'rgba(8,6,3,0.9)',
+              border: '1px solid #ff8a3d',
+              color: '#ff8a3d',
+              fontFamily: 'var(--fd)',
+              fontSize: 9,
+              fontWeight: 900,
+              lineHeight: 1,
+              boxShadow: '0 0 10px rgba(255,138,61,0.4)',
+            }}
+          >
+            <FlameIcon size={9} />
+            {streak}
+          </span>
+        )}
         {active && (
           <motion.span
             layoutId="pc-nav-chip"
@@ -92,6 +111,7 @@ function Tab({ tab, active, href }: { tab: TabDef; active: boolean; href: string
 export default function BottomNav() {
   const pathname = usePathname()
   const { playerAddress } = useWallet()
+  const { streak } = useStreak(playerAddress)
 
   // Hidden during active gameplay — the game screen mounts its own action bar.
   if (pathname.startsWith('/app/game')) return null
@@ -120,7 +140,7 @@ export default function BottomNav() {
       {TABS.map((tab) => {
         const active = tab.match.some((m) => pathname.startsWith(m))
         const href = tab.key === 'profile' ? (playerAddress ? `/app/profile/${playerAddress}` : '/app/lobby') : tab.href
-        return <Tab key={tab.key} tab={tab} active={active} href={href} />
+        return <Tab key={tab.key} tab={tab} active={active} href={href} streak={tab.key === 'profile' ? streak.current : 0} />
       })}
     </nav>
   )

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useWallet } from '@/components/wallet-provider'
 import { useSettingsStore } from '@/hooks/useSettingsStore'
+import { useStreak } from '@/hooks/useStreak'
 import { stopAmbient } from '@/lib/audio'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
@@ -16,6 +17,7 @@ import {
   HistoryIcon,
   FaucetIcon,
   ProfileIcon,
+  FlameIcon,
   type IconProps,
 } from '@/components/ui/icons'
 
@@ -68,7 +70,7 @@ const ITEMS: ItemDef[] = [
   { key: 'settings', label: 'Settings', href: '/app/settings', match: ['/app/settings'], Icon: GearIcon, accent: 'var(--t1)' },
 ]
 
-function NavRow({ item, active, href }: { item: ItemDef; active: boolean; href: string }) {
+function NavRow({ item, active, href, streak = 0 }: { item: ItemDef; active: boolean; href: string; streak?: number }) {
   const { Icon } = item
   return (
     <Link
@@ -105,6 +107,24 @@ function NavRow({ item, active, href }: { item: ItemDef; active: boolean; href: 
       >
         {item.label}
       </span>
+      {streak > 0 && (
+        <span
+          className="relative z-[1] ml-auto flex items-center gap-1 rounded-full px-2 py-0.5"
+          style={{
+            background: 'rgba(8,6,3,0.6)',
+            border: '1px solid #ff8a3d',
+            color: '#ff8a3d',
+            fontFamily: 'var(--fd)',
+            fontSize: 11,
+            fontWeight: 900,
+            lineHeight: 1,
+            boxShadow: '0 0 10px rgba(255,138,61,0.35)',
+          }}
+        >
+          <FlameIcon size={12} />
+          {streak}
+        </span>
+      )}
     </Link>
   )
 }
@@ -113,6 +133,7 @@ export default function SideNav() {
   const pathname = usePathname()
   const { isReady, address, connect, disconnectAll } = useWallet()
   const { soundEnabled, setSoundEnabled } = useSettingsStore()
+  const { streak } = useStreak(address)
 
   const showWallet = isReady && !!address
 
@@ -151,7 +172,7 @@ export default function SideNav() {
         {ITEMS.map((item) => {
           const active = item.match.some((m) => pathname.startsWith(m))
           const href = item.key === 'profile' ? (address ? `/app/profile/${address}` : '/app/lobby') : item.href
-          return <NavRow key={item.key} item={item} active={active} href={href} />
+          return <NavRow key={item.key} item={item} active={active} href={href} streak={item.key === 'profile' ? streak.current : 0} />
         })}
       </nav>
 
