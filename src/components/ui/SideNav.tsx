@@ -66,7 +66,6 @@ const ITEMS: ItemDef[] = [
   { key: 'play', label: 'Play', href: '/app/lobby', match: ['/app/lobby'], Icon: PlayIcon, accent: 'var(--c)' },
   { key: 'ranks', label: 'Ranks', href: '/app/leaderboard', match: ['/app/leaderboard'], Icon: RankIcon, accent: 'var(--candy-amber)' },
   { key: 'history', label: 'History', href: '/app/history', match: ['/app/history'], Icon: HistoryIcon, accent: 'var(--candy-grape)' },
-  { key: 'coach', label: 'Coach', href: '/app/train', match: ['/app/train'], Icon: CoachNavIcon, accent: '#34d399' },
   { key: 'faucet', label: 'Faucet', href: '/app/faucet', match: ['/app/faucet'], Icon: FaucetIcon, accent: 'var(--candy-lime)' },
   { key: 'profile', label: 'You', href: '/app/profile', match: ['/app/profile'], Icon: ProfileIcon, accent: 'var(--candy-rose)' },
   { key: 'settings', label: 'Settings', href: '/app/settings', match: ['/app/settings'], Icon: GearIcon, accent: 'var(--t1)' },
@@ -167,6 +166,20 @@ export default function SideNav() {
           priority
           style={{ width: 150, height: 'auto', objectFit: 'contain' }}
         />
+      </Link>
+
+      {/* Coach — sits at the top of the rail (its own thing, not a tab). Shows
+          the active coach's face, or the wiggling "pick a coach" placeholder. */}
+      <Link
+        href="/app/train"
+        aria-current={pathname.startsWith('/app/train') ? 'page' : undefined}
+        className="group mb-1.5 flex items-center gap-3 rounded-2xl px-2.5 py-2 transition-colors hover:bg-white/[0.055]"
+        style={{ textDecoration: 'none', color: pathname.startsWith('/app/train') ? '#34d399' : 'var(--t2)' }}
+      >
+        <span className="shrink-0 transition-transform group-hover:scale-105"><CoachNavIcon size={34} /></span>
+        <span style={{ fontFamily: 'var(--fd)', fontSize: 12, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+          {coachId ? 'Your Coach' : 'Pick a Coach'}
+        </span>
       </Link>
 
       {/* Nav items */}
