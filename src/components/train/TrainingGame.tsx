@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Chess } from 'chess.js'
 import TrainingBoard from '@/components/train/TrainingBoard'
+import TrapButton from '@/components/train/TrapButton'
 import { useAnalysis } from '@/hooks/useAnalysis'
 import { useLearner } from '@/hooks/useLearner'
 import { fetchCoachVoice } from '@/lib/coach/client'
@@ -173,10 +174,12 @@ export default function TrainingGame() {
         </div>
 
         {phase === 'intercept' && (
-          <div className="mt-3 flex gap-2">
-            <button onClick={takeBack} className="flex-1 rounded-lg py-2 font-bold text-[#04121a]" style={{ backgroundColor: coach.accent }}>
-              Take it back
-            </button>
+          <div className="mt-3 flex items-stretch gap-2">
+            <div className="flex-1">
+              <TrapButton accent={coach.accent} onClick={takeBack} style={{ fontSize: 13, padding: '12px 20px' }}>
+                Take it back
+              </TrapButton>
+            </div>
             <button onClick={playAnyway} className="flex-1 rounded-lg border border-white/15 py-2 text-slate-300 hover:bg-white/5">
               Play it anyway
             </button>
@@ -184,9 +187,11 @@ export default function TrainingGame() {
         )}
 
         {phase === 'over' && (
-          <button onClick={reset} className="mt-3 w-full rounded-lg py-2 font-bold text-[#04121a]" style={{ backgroundColor: coach.accent }}>
-            Play again
-          </button>
+          <div className="mt-3">
+            <TrapButton accent={coach.accent} onClick={reset} style={{ fontSize: 13, padding: '12px 20px' }}>
+              Play again
+            </TrapButton>
+          </div>
         )}
       </div>
     </div>

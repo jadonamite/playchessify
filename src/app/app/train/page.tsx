@@ -124,11 +124,9 @@ export default function TrainHubPage() {
           )}
 
           {/* Guided game */}
-          <button onClick={() => router.push('/app/train/game')}
-                  className="block w-full rounded-2xl py-4 font-bold text-[#04121a] transition hover:brightness-110"
-                  style={{ backgroundColor: coach.accent }}>
+          <TrapButton accent={coach.accent} onClick={() => router.push('/app/train/game')}>
             Play a guided game with {coach.name} ▸
-          </button>
+          </TrapButton>
         </>
       )}
     </div>
