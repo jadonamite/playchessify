@@ -10,6 +10,7 @@ import {
   GameResult,
   type Address,
 } from '@/lib/celo-server'
+import { recordPlayDay } from '@/lib/streak-store'
 
 const LOG_PREFIX = '[settle-game]'
 
@@ -82,6 +83,16 @@ export async function settleGameById(chain: Chain, gameId: number): Promise<Sett
   try {
     const txHash = await settleOnChain(gameId, derived.result as GameResult)
     await unregisterActiveGame(chain, gameId)
+    // Credit both players' daily streaks — server-authoritative, so this source
+    // can never be spoofed. Never let a streak hiccup undo a settled game.
+    try {
+      await Promise.allSettled([
+        recordPlayDay(game.white),
+        recordPlayDay(game.black),
+      ])
+    } catch (streakErr) {
+      console.error(`${LOG_PREFIX} streak update failed (non-fatal)`, streakErr)
+    }
     return { ok: true, txHash, result: derived.result as GameResult }
   } catch (err) {
     await getRedis().del(lockKey)
