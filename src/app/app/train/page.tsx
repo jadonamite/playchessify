@@ -6,6 +6,7 @@ import { useLearner } from '@/hooks/useLearner'
 import { COACHES, getCoach } from '@/config/coaches'
 import { suggestLesson } from '@/config/curriculum'
 import { CONCEPT_LABEL, weakestConcepts } from '@/types/training'
+import TrapButton from '@/components/train/TrapButton'
 
 export default function TrainHubPage() {
   const router = useRouter()
@@ -79,10 +80,11 @@ export default function TrainHubPage() {
           <p className="mt-1 text-sm text-slate-300">
             A quick five-position check so {coach.name} starts you at the right level — not back at square one.
           </p>
-          <button onClick={() => router.push('/app/train/placement')}
-                  className="mt-4 rounded-xl bg-cyan-400 px-5 py-3 font-bold text-[#04121a] hover:brightness-110">
-            Take the placement ▸
-          </button>
+          <div className="mt-4 sm:max-w-xs">
+            <TrapButton onClick={() => router.push('/app/train/placement')}>
+              Take the placement ▸
+            </TrapButton>
+          </div>
         </div>
       ) : (
         <>
