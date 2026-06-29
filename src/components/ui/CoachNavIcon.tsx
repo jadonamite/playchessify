@@ -6,23 +6,28 @@ import { getCoach } from '@/config/coaches'
 interface Props { size?: number }
 
 /**
- * Nav avatar for the active coach: a photoreal portrait in an accent ring. When
- * no coach is chosen yet it shows a greyed silhouette ("pick a coach"). The
- * photographic portrait reads distinctly from the user's abstract SVG identicon,
- * so it never reads as the profile tab.
+ * Avatar for the active coach: a photoreal portrait in an accent ring. When no
+ * coach is chosen yet it shows the "Unknown" portrait with a "?" in front and a
+ * periodic wiggle (pc-coach-wiggle) to nudge the player to pick one. The photo
+ * reads distinctly from the user's abstract SVG identicon.
  */
 export default function CoachNavIcon({ size = 26 }: Props) {
   const coachId = useCoachStore((s) => s.coachId)
+  const dim = size + 4
 
   if (!coachId) {
     return (
       <span
-        className="flex items-center justify-center rounded-full"
-        style={{ width: size + 4, height: size + 4, border: '2px dashed var(--t3)', color: 'var(--t3)' }}
+        className="pc-coach-wiggle relative block overflow-hidden rounded-full"
+        style={{ width: dim, height: dim, border: '2px dashed var(--t3)' }}
       >
-        <svg width={size * 0.7} height={size * 0.7} viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.4 0-8 2.7-8 6v2h16v-2c0-3.3-3.6-6-8-6Z" />
-        </svg>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/Coaches/Unknown.webp" alt="Pick a coach"
+             className="h-full w-full object-cover object-top" style={{ filter: 'grayscale(0.7) brightness(0.8)' }} />
+        <span className="absolute inset-0 flex items-center justify-center"
+              style={{ background: 'rgba(4,7,16,0.35)' }}>
+          <span style={{ fontFamily: 'var(--fd)', fontWeight: 900, fontSize: size * 0.62, color: '#fff', lineHeight: 1, textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>?</span>
+        </span>
       </span>
     )
   }
@@ -32,8 +37,8 @@ export default function CoachNavIcon({ size = 26 }: Props) {
     <span
       className="block overflow-hidden rounded-full"
       style={{
-        width: size + 4,
-        height: size + 4,
+        width: dim,
+        height: dim,
         border: `2px solid ${coach.accent}`,
         boxShadow: `0 0 10px ${coach.accent}66`,
       }}

@@ -8,12 +8,12 @@ import { useStreak } from '@/hooks/useStreak'
 import {
   PlayIcon,
   RankIcon,
+  HistoryIcon,
   FaucetIcon,
   ProfileIcon,
   FlameIcon,
   type IconProps,
 } from '@/components/ui/icons'
-import CoachNavIcon from '@/components/ui/CoachNavIcon'
 
 type TabDef = {
   key: string
@@ -27,7 +27,7 @@ type TabDef = {
 const TABS: TabDef[] = [
   { key: 'play', label: 'Play', href: '/app/lobby', match: ['/app/lobby'], Icon: PlayIcon, accent: 'var(--c)' },
   { key: 'ranks', label: 'Ranks', href: '/app/leaderboard', match: ['/app/leaderboard'], Icon: RankIcon, accent: 'var(--candy-amber)' },
-  { key: 'coach', label: 'Coach', href: '/app/train', match: ['/app/train'], Icon: CoachNavIcon, accent: '#34d399' },
+  { key: 'history', label: 'History', href: '/app/history', match: ['/app/history'], Icon: HistoryIcon, accent: 'var(--candy-grape)' },
   { key: 'faucet', label: 'Faucet', href: '/app/faucet', match: ['/app/faucet'], Icon: FaucetIcon, accent: 'var(--candy-lime)' },
   { key: 'profile', label: 'You', href: '/app/profile', match: ['/app/profile'], Icon: ProfileIcon, accent: 'var(--candy-rose)' },
 ]

@@ -8,6 +8,7 @@ import { useWallet } from '@/components/wallet-provider'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import GlowButton from '@/components/ui/GlowButton'
+import CoachNavIcon from '@/components/ui/CoachNavIcon'
 import { FlameIcon } from '@/components/ui/icons'
 import { useSettingsStore } from '@/hooks/useSettingsStore'
 import { useStreak } from '@/hooks/useStreak'
@@ -271,6 +272,15 @@ export default function Navbar() {
                 <div style={{ width: 110, height: 38 }} />
               )}
             </div>
+
+            {/* Coach avatar — mobile, beside the streak. Always shown when signed
+                in; routes to training. Shows the "pick a coach" wiggle when none. */}
+            {showWallet && (
+              <Link href="/app/train" aria-label="Your coach" className="nav-mobile"
+                    style={{ alignItems: 'center', flexShrink: 0, textDecoration: 'none' }}>
+                <CoachNavIcon size={30} />
+              </Link>
+            )}
 
             {/* Streak chip — mobile, beside the hamburger (only with a live streak) */}
             {showWallet && streak.current > 0 && (
