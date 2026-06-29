@@ -18,6 +18,7 @@ import { useToastStore } from '@/hooks/useToastStore'
 import { useSettingsStore, AI_DEPTH } from '@/hooks/useSettingsStore'
 import { buildPieces } from '@/lib/chessPieces'
 import { useGameData } from '@/hooks/useGameData'
+import { useRecordStreak } from '@/hooks/useStreak'
 import AmbientBackground from './AmbientBackground'
 import GameHeader from './GameHeader'
 import BoardPanel from './BoardPanel'
@@ -116,6 +117,20 @@ export default function GameClient() {
 
   const gameOver  = game.isGameOver()
   const turn      = game.turn()
+
+  // ── streaks ───────────────────────────────────────────────────────────────────
+  // A completed bot game counts toward the daily streak (signed, once/day).
+  // Multiplayer is credited server-side at settlement; puzzles will hook in later.
+  const recordStreak = useRecordStreak()
+  const botStreakFired = useRef(false)
+  useEffect(() => {
+    if (!isBotGame) return
+    if (gameOver && !botStreakFired.current) {
+      botStreakFired.current = true
+      void recordStreak('bot')
+    }
+    if (!gameOver) botStreakFired.current = false // reset for a fresh match
+  }, [isBotGame, gameOver, recordStreak])
   const isMyTurn  = isBotGame
     ? turn === 'w'
     : (turn === 'w' && myColor === 'white') || (turn === 'b' && myColor === 'black')
