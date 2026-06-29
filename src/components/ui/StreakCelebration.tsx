@@ -5,7 +5,13 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import Confetti from './Confetti'
 import { FlameIcon } from './icons'
-import { STREAK_EVENT, type StreakEventDetail } from '@/hooks/useStreak'
+import {
+  STREAK_EVENT,
+  STREAK_CELEBRATED_KEY,
+  STREAK_NUDGE_KEY,
+  streakDay,
+  type StreakEventDetail,
+} from '@/hooks/useStreak'
 
 /**
  * Full-page streak overlay. Mounted once in the app shell; listens for
@@ -21,12 +27,6 @@ import { STREAK_EVENT, type StreakEventDetail } from '@/hooks/useStreak'
 
 const FLAME = '#ff8a3d'
 const EMBER = '#7a6147'
-const CELEBRATED_KEY = 'chess:streak:celebrated'
-const NUDGE_KEY = 'chess:streak:nudge'
-
-function utcToday(): string {
-  return new Date().toISOString().slice(0, 10)
-}
 
 export default function StreakCelebration() {
   const router = useRouter()
