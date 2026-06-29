@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useWallet } from '@/components/wallet-provider'
 import GlowButton from '@/components/ui/GlowButton'
@@ -13,7 +13,7 @@ import { useCeloChess } from '@/hooks/useCeloChess'
 import { useLobby } from '@/hooks/useLobby'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
 import { useProfile } from '@/hooks/useProfile'
-import { useStreak } from '@/hooks/useStreak'
+import { useStreak, dispatchStreak } from '@/hooks/useStreak'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import PageBackground from '@/components/ui/PageBackground'
@@ -107,7 +107,18 @@ export default function LobbyContent() {
   const { data: lobbyProfileMap = {} } = useBatchProfiles(openGames.map((g) => g.creator))
 
   const { data: myProfile } = useProfile(playerAddress ?? null)
-  const { streak } = useStreak(playerAddress)
+  const { streak, isLoading: streakLoading } = useStreak(playerAddress)
+
+  // Daily nudge — a 0-streak player who lands on the lobby gets the motivational
+  // streak prompt (the overlay itself guards to once per UTC day). Fires once per
+  // mount; keeps appearing day after day until they earn their first streak.
+  const nudgeFired = useRef(false)
+  useEffect(() => {
+    if (nudgeFired.current) return
+    if (!playerAddress || streakLoading || streak.current > 0) return
+    nudgeFired.current = true
+    dispatchStreak({ mode: 'nudge', current: 0, longest: streak.longest })
+  }, [playerAddress, streakLoading, streak.current, streak.longest])
   const [claimModalOpen, setClaimModalOpen] = useState(false)
   const showClaimBanner = isConnected && !!playerAddress && myProfile === null
 
