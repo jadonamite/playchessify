@@ -140,7 +140,7 @@ export default function BottomNav() {
       {TABS.map((tab) => {
         const active = tab.match.some((m) => pathname.startsWith(m))
         const href = tab.key === 'profile' ? (playerAddress ? `/app/profile/${playerAddress}` : '/app/lobby') : tab.href
-        return <Tab key={tab.key} tab={tab} active={active} href={href} streakLabel={tab.key === 'profile' ? (streak.current > 0 ? String(streak.current) : '—') : undefined} />
+        return <Tab key={tab.key} tab={tab} active={active} href={href} streakLabel={tab.key === 'profile' && streak.current > 0 ? String(streak.current) : undefined} />
       })}
     </nav>
   )

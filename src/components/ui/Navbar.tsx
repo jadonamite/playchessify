@@ -272,8 +272,8 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Streak chip — mobile, beside the hamburger ('—' when no streak yet) */}
-            {showWallet && (
+            {/* Streak chip — mobile, beside the hamburger (only with a live streak) */}
+            {showWallet && streak.current > 0 && (
               <Link
                 href={`/app/profile/${profileAddr}`}
                 aria-label={`${streak.current} day streak`}
@@ -297,7 +297,7 @@ export default function Navbar() {
                 }}
               >
                 <FlameIcon size={16} />
-                {streak.current > 0 ? streak.current : '—'}
+                {streak.current}
               </Link>
             )}
 

@@ -17,9 +17,22 @@ export interface RecordResult extends StreakData {
 
 type ClientSource = 'bot' | 'puzzle' | 'multiplayer'
 
-/** Event the caller dispatches (with a RecordResult detail) to pop the full-page
- *  celebration overlay, which is mounted in the app layout and listens for it. */
+/** Event the caller dispatches to pop the full-page streak overlay (mounted in
+ *  the app layout). `earned` = a real celebration after a completed game;
+ *  `nudge` = a daily motivational prompt for users sitting on a 0 streak. */
 export const STREAK_EVENT = 'chessify:streak'
+
+export interface StreakEventDetail {
+  mode: 'earned' | 'nudge'
+  current: number
+  longest: number
+}
+
+export function dispatchStreak(detail: StreakEventDetail) {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(STREAK_EVENT, { detail }))
+  }
+}
 
 // ── read ──────────────────────────────────────────────────────────────────────
 
