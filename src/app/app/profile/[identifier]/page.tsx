@@ -7,8 +7,10 @@ import { useQuery } from '@tanstack/react-query'
 import { useReadContract } from 'wagmi'
 import { useWallet } from '@/components/wallet-provider'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
+import { useStreak } from '@/hooks/useStreak'
 import { useSignMessage } from 'wagmi'
 import GlowButton from '@/components/ui/GlowButton'
+import { FlameIcon } from '@/components/ui/icons'
 import ClayCard from '@/components/ui/ClayCard'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import LoadingState from '@/components/ui/LoadingState'
@@ -20,13 +22,13 @@ import { CELO_CONTRACTS } from '@/config/contracts'
 import type { ChessProfile } from '@/types/profile'
 import { usePlayerHistory, type PlayerHistoryItem } from '@/hooks/usePlayerHistory'
 
-function StatBox({ label, value, accent }: { label: string; value: string | number; accent?: boolean }) {
+function StatBox({ label, value, accent, color }: { label: string; value: string | number; accent?: boolean; color?: string }) {
   return (
     <div className="flex flex-col items-center gap-1 px-4 py-3 rounded-2xl bg-black/30 border border-white/5 min-w-[80px]">
       <span className="text-[8px] font-black tracking-[0.25em] uppercase text-[var(--t3)]">{label}</span>
       <span
         className="text-xl font-black leading-none"
-        style={{ fontFamily: 'var(--fd)', color: accent ? 'var(--c)' : 'var(--t1)' }}
+        style={{ fontFamily: 'var(--fd)', color: color ?? (accent ? 'var(--c)' : 'var(--t1)') }}
       >{value}</span>
     </div>
   )
@@ -153,6 +155,8 @@ export default function ProfilePage() {
   const rating = s ? Number(s[3]) : 0
   const gamesPlayed = s ? Number(s[4]) : 0
   const winRate = gamesPlayed > 0 ? `${Math.round((wins / gamesPlayed) * 100)}%` : '—'
+
+  const { streak } = useStreak(profileAddress)
 
   const { data: recentGames = [], isLoading: historyLoading } = usePlayerHistory(profileAddress)
 
@@ -365,6 +369,26 @@ export default function ProfilePage() {
                 <StatBox label="LOSSES" value={losses} />
                 <StatBox label="DRAWS" value={draws} />
                 <StatBox label="PLAYED" value={gamesPlayed} />
+              </div>
+            </ClayCard>
+
+            {/* Daily streak */}
+            <ClayCard className="p-6">
+              <p className="text-[10px] font-black tracking-[0.25em] uppercase text-[var(--t3)] mb-4 flex items-center gap-2">
+                <span style={{ color: '#ff8a3d' }}><FlameIcon size={14} /></span>
+                Daily Streak
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <StatBox
+                  label="Current"
+                  value={streak.current > 0 ? `${streak.current}d` : '—'}
+                  color={streak.current > 0 ? '#ff8a3d' : undefined}
+                />
+                <StatBox
+                  label="Longest"
+                  value={streak.longest > 0 ? `${streak.longest}d` : '—'}
+                  color={streak.longest > 0 ? '#ff8a3d' : undefined}
+                />
               </div>
             </ClayCard>
 

@@ -45,7 +45,7 @@ export interface RecordResult extends StreakData {
   incremented: boolean
 }
 
-/** Stored shape (raw current is the literal counter; reads derive the effective value). */
+/** Stored hash shape (raw current is the literal counter; reads derive the effective value). */
 interface StoredStreak {
   current: number
   longest: number
@@ -65,17 +65,13 @@ function utcYesterdayStr(d: Date = new Date()): string {
 
 // ── atomic update ─────────────────────────────────────────────────────────────
 
-// KEYS[1] = streak key · ARGV[1] = today · ARGV[2] = yesterday
+// KEYS[1] = streak hash key · ARGV[1] = today · ARGV[2] = yesterday
+// Stored as a hash (fields: current, longest, last) so no cjson is needed.
 // Returns { current, longest, incremented } as a 3-element array.
 const RECORD_LUA = `
-local raw = redis.call('GET', KEYS[1])
-local current, longest, last = 0, 0, ''
-if raw then
-  local d = cjson.decode(raw)
-  current = d.current or 0
-  longest = d.longest or 0
-  last = d.lastPlayedDate or ''
-end
+local current = tonumber(redis.call('HGET', KEYS[1], 'current')) or 0
+local longest = tonumber(redis.call('HGET', KEYS[1], 'longest')) or 0
+local last = redis.call('HGET', KEYS[1], 'last') or ''
 local incremented = 0
 if last == ARGV[1] then
   -- already counted today: no-op
@@ -87,7 +83,7 @@ else
   incremented = 1
 end
 if current > longest then longest = current end
-redis.call('SET', KEYS[1], cjson.encode({current = current, longest = longest, lastPlayedDate = ARGV[1]}))
+redis.call('HSET', KEYS[1], 'current', current, 'longest', longest, 'last', ARGV[1])
 return {current, longest, incremented}
 `
 
@@ -134,8 +130,14 @@ function deriveStreak(stored: StoredStreak | null, now: Date = new Date()): Stre
 }
 
 export async function getStreak(address: string): Promise<StreakData> {
-  const raw = await getRedis().get<StoredStreak | string | null>(K.streak(address))
-  const stored = raw ? ((typeof raw === 'string' ? JSON.parse(raw) : raw) as StoredStreak) : null
+  const h = await getRedis().hgetall<Record<string, string | number>>(K.streak(address))
+  const stored: StoredStreak | null = h
+    ? {
+        current: Number(h.current) || 0,
+        longest: Number(h.longest) || 0,
+        lastPlayedDate: typeof h.last === 'string' ? h.last : String(h.last ?? ''),
+      }
+    : null
   return deriveStreak(stored)
 }
 
