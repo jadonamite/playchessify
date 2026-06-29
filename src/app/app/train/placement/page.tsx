@@ -27,13 +27,13 @@ export default function PlacementPage() {
 
   /** Judge a move with Stockfish: exact best, or within ~0.6 pawns of best. */
   const judge = useCallback(async (uci: string): Promise<boolean> => {
-    const pre = await analyze(item.fen, { depth: 12 })
+    const pre = await analyze(item.fen, { movetime: 300 })
     if (!pre) return uci === item.expectedUci // engine down → fall back to key
     if (pre.bestMove === uci) return true
     const g = new Chess(item.fen)
     const move = g.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: 'q' })
     if (!move) return false
-    const post = await analyze(g.fen(), { depth: 12 })
+    const post = await analyze(g.fen(), { movetime: 300 })
     if (!post) return uci === item.expectedUci
     return pre.whiteCp - post.whiteCp <= 60
   }, [analyze, item])

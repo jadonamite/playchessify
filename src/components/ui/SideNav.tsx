@@ -12,6 +12,7 @@ import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import GlowButton from '@/components/ui/GlowButton'
 import CoachNavIcon from '@/components/ui/CoachNavIcon'
+import { useCoachStore } from '@/hooks/useCoachStore'
 import {
   PlayIcon,
   RankIcon,
@@ -135,6 +136,7 @@ export default function SideNav() {
   const { isReady, address, connect, disconnectAll } = useWallet()
   const { soundEnabled, setSoundEnabled } = useSettingsStore()
   const { streak } = useStreak(address)
+  const coachId = useCoachStore((s) => s.coachId)
 
   const showWallet = isReady && !!address
 

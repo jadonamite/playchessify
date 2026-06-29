@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Chess } from 'chess.js'
 import TrainingBoard from '@/components/train/TrainingBoard'
 import TrapButton from '@/components/train/TrapButton'
@@ -53,13 +53,28 @@ export default function TrainingGame() {
   // game end (one signature, not one per move) — "training on where they stop".
   const conceptDeltaRef = useRef<Partial<Record<Concept, number>>>({})
   const persistedRef = useRef(false)
+  // Cached eval (white cp) of the position the learner is about to move from, so
+  // the blunder check needs only ONE shallow search per move instead of two.
+  const evalBeforeRef = useRef<number>(20)
+  const liveRef = useRef(true) // false once the game is over — gates late async work
 
   const addConcept = useCallback((c: Concept, d: number) => {
     conceptDeltaRef.current[c] = (conceptDeltaRef.current[c] ?? 0) + d
   }, [])
 
+  // Refresh the cached "before" eval in the background (non-blocking). Runs when
+  // it becomes the learner's turn, so it's ready by the time they move.
+  const refreshBeforeEval = useCallback(async (fen: string) => {
+    const r = await analyze(fen, { movetime: 200 })
+    if (r) evalBeforeRef.current = r.whiteCp
+  }, [analyze])
+
+  // Warm the engine + seed the opening eval once.
+  useEffect(() => { void refreshBeforeEval(new Chess().fen()) }, [refreshBeforeEval])
+
   // Fold this game's signal into the learner model once, at game over.
   const endGame = useCallback((g: Chess) => {
+    liveRef.current = false
     setPhase('over')
     setNote(resultText(g, 'white'))
     if (persistedRef.current || !learner) return
@@ -73,25 +88,24 @@ export default function TrainingGame() {
     if (Object.keys(concepts).length > 0) void update({ concepts }).catch(() => {})
   }, [learner, update])
 
-  const coachReply = useCallback(async (afterFen: string) => {
+  // Coach reply — INSTANT. The move is local (homegrown minimax); we yield one
+  // frame so the learner's move paints first, then play. No network, no deep
+  // search on this path — that's what made it slow.
+  const coachReply = useCallback((afterFen: string) => {
     const g = new Chess(afterFen)
     if (g.isGameOver()) { endGame(g); return }
     setPhase('coach')
-    // Homegrown style-biased move (synchronous); brief delay so it feels human.
-    await new Promise((r) => setTimeout(r, 350))
-    const move = getCoachMove(g, coachEngineForLevel(coach.engine, level))
-    if (!move) { endGame(g); return }
-    g.move(move)
-    setGame(g)
-    preFenRef.current = g.fen()
-    if (g.isGameOver()) { endGame(g); return }
-    const v = await fetchCoachVoice({
-      coachName: coach.name, coachVoice: coach.teaching.voice, learnerLevel: level,
-      kind: 'coach-move', playerMoveSan: move.san, fen: afterFen,
-    })
-    setNote(v.text)
-    setPhase('learner')
-  }, [coach, level, endGame])
+    setTimeout(() => {
+      const move = getCoachMove(g, coachEngineForLevel(coach.engine, level))
+      if (!move) { endGame(g); return }
+      g.move(move)
+      setGame(g)
+      if (g.isGameOver()) { endGame(g); return }
+      setNote('Your move.')
+      setPhase('learner')
+      void refreshBeforeEval(g.fen()) // background — ready for the next blunder check
+    }, 50)
+  }, [coach, level, endGame, refreshBeforeEval])
 
   // Just-Play reply: the coach is a spectator. It moves, names the opening when
   // one is reached, and otherwise drops the occasional principle — no analysis,
@@ -100,12 +114,11 @@ export default function TrainingGame() {
     const g = new Chess(afterFen)
     if (g.isGameOver()) { endGame(g); return }
     setPhase('coach')
-    await new Promise((r) => setTimeout(r, 300))
+    await new Promise((r) => setTimeout(r, 60))
     const move = getCoachMove(g, coachEngineForLevel(coach.engine, level))
     if (!move) { endGame(g); return }
     g.move(move)
     setGame(g)
-    preFenRef.current = g.fen()
     if (g.isGameOver()) { endGame(g); return }
 
     const opening = recognizeOpening(g.history())
@@ -127,7 +140,8 @@ export default function TrainingGame() {
     const probe = new Chess(preFen)
     const move = probe.move({ from, to, promotion: 'q' })
     if (!move) return false
-    preFenRef.current = preFen
+    preFenRef.current = preFen // take-back target (before this move)
+    liveRef.current = true
     setGame(probe)
 
     // Just-Play: skip all analysis/interception — coach just responds.
@@ -137,49 +151,56 @@ export default function TrainingGame() {
       return true
     }
 
-    pendingRef.current = { fen: probe.fen() }
-    setPhase('analyzing')
-    setNote('Let me look at that…')
+    // GUIDED: coach replies immediately; the blunder check runs in the
+    // background (one shallow search vs the cached "before" eval) and can offer
+    // a take-back retroactively. Nothing blocks the coach's move.
+    const movedFen = probe.fen()
+    void coachReply(movedFen)
 
     void (async () => {
-      const pre = await analyze(preFen, { depth: 12 })
-      const post = await analyze(probe.fen(), { depth: 12 })
-      if (!pre || !post) { void coachReply(probe.fen()); return } // engine down → just continue
-      const lossCp = pre.whiteCp - post.whiteCp // learner is White; positive = lost ground
-      const alreadyLost = pre.whiteCp < -300
+      const post = await analyze(movedFen, { movetime: 200 })
+      if (!post || !liveRef.current) return
+      const lossCp = evalBeforeRef.current - post.whiteCp // white; + = lost ground
+      const alreadyLost = evalBeforeRef.current < -300
 
       if (lossCp >= BLUNDER_CP && !alreadyLost) {
-        // A big one-move drop is usually a hung piece; a smaller one, calculation.
         addConcept(lossCp >= 400 ? 'hanging-piece' : 'calculation', -0.05)
-        const bestSan = uciToSan(preFen, pre.bestMove)
-        const v = await fetchCoachVoice({
-          coachName: coach.name, coachVoice: coach.teaching.voice, learnerLevel: level,
-          kind: 'blunder', playerMoveSan: move.san, bestMoveSan: bestSan ?? undefined,
-          evalDeltaCp: lossCp, detail: 'that move gives ground', fen: preFen,
-        })
-        setNote(v.text)
+        pendingRef.current = { fen: movedFen }
+        setNote('Hold on — that gives something away. Want it back?')
         setPhase('intercept')
-        return
+        // Enrich asynchronously: name the better move + coach voice, then upgrade.
+        void (async () => {
+          const pre = await analyze(preFen, { movetime: 250 })
+          const v = await fetchCoachVoice({
+            coachName: coach.name, coachVoice: coach.teaching.voice, learnerLevel: level,
+            kind: 'blunder', playerMoveSan: move.san, bestMoveSan: uciToSan(preFen, pre?.bestMove ?? null) ?? undefined,
+            evalDeltaCp: lossCp, detail: 'that move gives ground', fen: preFen,
+          })
+          if (liveRef.current) setNote(v.text)
+        })()
+      } else if (lossCp <= 30) {
+        addConcept('calculation', 0.02)
       }
-      // Decent move — light reinforcement, then the coach replies.
-      if (lossCp <= 30) { setNote('Good — that holds up.'); addConcept('calculation', 0.02) }
-      void coachReply(probe.fen())
     })()
     return true
   }, [phase, game, analyze, coach, level, coachReply, coachReplyPlay, mode, addConcept])
 
+  // Revert to the position before the learner's move (undoes their move AND the
+  // coach's reply), let them try again. The cached "before" eval still holds.
   const takeBack = useCallback(() => {
     setGame(new Chess(preFenRef.current))
     pendingRef.current = null
+    liveRef.current = true
     setPhase('learner')
     setNote('Good call — let\'s find a better one.')
   }, [])
 
+  // Keep the move: the coach has already replied, so just dismiss the warning.
   const playAnyway = useCallback(() => {
-    const fen = pendingRef.current?.fen
-    if (!fen) return
-    void coachReply(fen)
-  }, [coachReply])
+    pendingRef.current = null
+    setPhase('learner')
+    setNote('Alright — we play on.')
+  }, [])
 
   const reset = useCallback((toMode?: Mode) => {
     const g = new Chess()
@@ -191,9 +212,12 @@ export default function TrainingGame() {
     playMoveCountRef.current = 0
     persistedRef.current = false
     conceptDeltaRef.current = {}
+    liveRef.current = true
+    evalBeforeRef.current = 20
+    void refreshBeforeEval(g.fen())
     setPhase('learner')
     setNote(m === 'play' ? 'Just play — I\'ll watch and chime in.' : 'Make your move — I\'ll guide you.')
-  }, [mode])
+  }, [mode, refreshBeforeEval])
 
   const switchMode = useCallback((m: Mode) => {
     if (m === mode) return
