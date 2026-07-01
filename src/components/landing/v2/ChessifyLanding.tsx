@@ -214,9 +214,13 @@ export default function ChessifyLanding() {
   const [sound, setSound] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  // Pause the hero R3F loop (floating King + HDR env) when the hero is scrolled
+  // out of view or the tab is backgrounded — no visible change, big GPU/battery win.
+  const [hero3DActive, setHero3DActive] = useState(true)
 
   const particlesRef = useRef<HTMLDivElement | null>(null)
   const touchX = useRef<number | null>(null)
+  const heroStageRef = useRef<HTMLDivElement | null>(null)
 
   /* track mobile breakpoint so the coach carousel can keep its 3-card stage
      (center + two angled sides) at a smaller scale instead of hiding the sides */
@@ -258,6 +262,18 @@ export default function ChessifyLanding() {
 
   /* redirect once connected */
   useEffect(() => { if (isConnected) router.replace('/app/lobby') }, [isConnected, router])
+
+  /* pause the hero 3D render loop when it's off-screen or the tab is hidden */
+  useEffect(() => {
+    const el = heroStageRef.current
+    if (!el) return
+    let inView = true
+    const sync = () => setHero3DActive(inView && !document.hidden)
+    const io = new IntersectionObserver(([e]) => { inView = e.isIntersecting; sync() }, { threshold: 0.01 })
+    io.observe(el)
+    document.addEventListener('visibilitychange', sync)
+    return () => { io.disconnect(); document.removeEventListener('visibilitychange', sync) }
+  }, [])
 
   /* handlers */
   const scrollTo = useCallback((id: string) => {
