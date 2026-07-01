@@ -212,10 +212,11 @@ export default function MagicRings({
     mount.addEventListener('click', onClick)
 
     let frameId = 0
+    let running = false
+    let inView = true
     const animate = (t: number) => {
-      frameId = requestAnimationFrame(animate)
       const p = propsRef.current
-      if (!p) return
+      if (!p) { if (running) frameId = requestAnimationFrame(animate); return }
 
       smoothMouseRef.current[0] += (mouseRef.current[0] - smoothMouseRef.current[0]) * 0.08
       smoothMouseRef.current[1] += (mouseRef.current[1] - smoothMouseRef.current[1]) * 0.08
@@ -246,11 +247,34 @@ export default function MagicRings({
       uniforms.uBurst.value = p.clickBurst ? burstRef.current : 0
 
       renderer.render(scene, camera)
+      if (running) frameId = requestAnimationFrame(animate)
     }
-    frameId = requestAnimationFrame(animate)
+
+    // Only run the (expensive, full-screen) shader loop while the effect is on
+    // screen and the tab is visible. Off-screen/backgrounded → stop entirely.
+    const startLoop = () => {
+      if (running || !inView || document.hidden) return
+      running = true
+      frameId = requestAnimationFrame(animate)
+    }
+    const stopLoop = () => {
+      running = false
+      cancelAnimationFrame(frameId)
+    }
+    const io = new IntersectionObserver(([e]) => {
+      inView = e.isIntersecting
+      inView ? startLoop() : stopLoop()
+    }, { threshold: 0.01 })
+    io.observe(mount)
+    const onVisibility = () => { document.hidden ? stopLoop() : startLoop() }
+    document.addEventListener('visibilitychange', onVisibility)
+
+    startLoop()
 
     return () => {
-      cancelAnimationFrame(frameId)
+      stopLoop()
+      io.disconnect()
+      document.removeEventListener('visibilitychange', onVisibility)
       window.removeEventListener('resize', resize)
       ro.disconnect()
       mount.removeEventListener('mousemove', onMouseMove)
