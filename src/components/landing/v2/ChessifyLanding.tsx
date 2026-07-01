@@ -508,8 +508,8 @@ export default function ChessifyLanding() {
                     {/* our own 3D king model — physical (reflective) material so the
                         surface texture reads, with a subtle emissive rim to glow.
                         Raised + framed so the whole piece (crown to base) stays visible. */}
-                    <div id="ccv-king" onClick={charge} style={{ width: '100%', height: '100%', cursor: 'pointer', filter: 'drop-shadow(0 26px 60px rgba(56,232,255,.55))' }}>
-                      <Canvas camera={{ position: [0, 0, 6.8], fov: 44 }} gl={{ alpha: true }}>
+                    <div id="ccv-king" ref={heroStageRef} onClick={charge} style={{ width: '100%', height: '100%', cursor: 'pointer', filter: 'drop-shadow(0 26px 60px rgba(56,232,255,.55))' }}>
+                      <Canvas dpr={[1, 2]} frameloop={hero3DActive ? 'always' : 'never'} camera={{ position: [0, 0, 6.8], fov: 44 }} gl={{ alpha: true }}>
                         <ambientLight intensity={1.2} />
                         <pointLight position={[6, 6, 6]} intensity={2.8} color="#bdf2ff" />
                         <pointLight position={[-6, -4, -4]} intensity={1.4} color="#7c5cff" />
