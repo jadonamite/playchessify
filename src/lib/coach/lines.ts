@@ -23,9 +23,15 @@ const TAUNTS: Record<string, string> = {
   harmon: 'Make it interesting. I dare you to keep up.',
 }
 
-export function taunt(coachId: string): string {
-  return TAUNTS[coachId] ?? 'Let\'s play. Show me what you can do.'
+/** A brief banter line the coach drops in a full match (occasional). */
+const BANTER = [
+  'Is that all?', 'Interesting. Let\'s see where this goes.', 'I\'m still in control.',
+  'Careful now.', 'You\'re fighting — I\'ll give you that.',
+]
+export function banter(moveNumber: number): string {
+  return BANTER[moveNumber % BANTER.length]
 }
+
 
 // Praise lines flavoured a little by the coach's specialty.
 const PRAISE: Record<Specialty, string[]> = {
@@ -43,6 +49,10 @@ const TIPS = [
   'Mind your king\'s safety.',
   'Fight for the centre.',
 ]
+
+export function taunt(coachId: string): string {
+  return TAUNTS[coachId] ?? 'Let\'s play. Show me what you can do.'
+}
 
 /**
  * A short coaching note about the move YOU just made. Derived purely from the
@@ -66,13 +76,4 @@ export function coachingComment(move: Move, after: Chess, moveNumber: number, sp
   // Otherwise a rotating tip / light praise.
   if (moveNumber % 3 === 0) return PRAISE[specialty][moveNumber % PRAISE[specialty].length]
   return TIPS[moveNumber % TIPS.length]
-}
-
-/** A brief banter line the coach drops in a full match (occasional). */
-const BANTER = [
-  'Is that all?', 'Interesting. Let\'s see where this goes.', 'I\'m still in control.',
-  'Careful now.', 'You\'re fighting — I\'ll give you that.',
-]
-export function banter(moveNumber: number): string {
-  return BANTER[moveNumber % BANTER.length]
 }

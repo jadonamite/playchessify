@@ -47,44 +47,42 @@ export async function GET(req: NextRequest) {
       allowFailure: true,
     })
 
-    const items: HistoryItem[] = results
-      .filter((r) => r.status === 'success')
-      .map((r) => processGameResult(me, r.result))
-      .filter((item) => item !== null)
+    const items: HistoryItem[] = []
+    for (let i = 0; i < results.length; i++) {
+      const r = results[i]
+      if (r.status !== 'success') continue
+      const g = r.result as { white: string; black: string; wager: bigint; status: number | bigint; result: number | bigint; createdAt: number | bigint }
+      const white = (g.white as string).toLowerCase()
+      const black = (g.black as string).toLowerCase()
+      if (white !== me && black !== me) continue
+
+      const role: 'white' | 'black' = white === me ? 'white' : 'black'
+      const opponent = role === 'white' ? g.black : g.white
+      const statusIdx = Number(g.status)
+      const resultIdx = Number(g.result)
+      let result: HistoryItem['result'] = 'active'
+      if (statusIdx === 0) result = 'waiting'
+      else if (statusIdx === 4 || resultIdx === 3) result = 'draw'
+      else if (statusIdx === 2) {
+        if (resultIdx === 1) result = role === 'white' ? 'win' : 'loss'
+        else if (resultIdx === 2) result = role === 'black' ? 'win' : 'loss'
+      }
+      items.push({
+        id: String(ids[i]),
+        chain: 'celo',
+        role,
+        opponent: opponent.toLowerCase() === ZERO ? 'Waiting...' : opponent,
+        wager: formatUnits(g.wager as bigint, TOKEN_DECIMALS),
+        status: STATUS_LABELS[statusIdx] ?? 'Unknown',
+        result,
+        timestamp: Number(g.createdAt),
+      })
+    }
 
     items.sort((a, b) => b.timestamp - a.timestamp)
     return NextResponse.json({ history: items })
   } catch (err) {
     console.error('[api/history] failed:', (err as Error)?.message)
     return NextResponse.json({ error: 'history unavailable' }, { status: 503 })
-  }
-}
-
-function processGameResult(me: string, game: { white: string; black: string; wager: bigint; status: number | bigint; result: number | bigint; createdAt: number | bigint }): HistoryItem | null {
-  const white = (game.white as string).toLowerCase()
-  const black = (game.black as string).toLowerCase()
-  if (white !== me && black !== me) return null
-
-  const role: 'white' | 'black' = white === me ? 'white' : 'black'
-  const opponent = role === 'white' ? game.black : game.white
-  const statusIdx = Number(game.status)
-  const resultIdx = Number(game.result)
-  let result: HistoryItem['result'] = 'active'
-  if (statusIdx === 0) result = 'waiting'
-  else if (statusIdx === 4 || resultIdx === 3) result = 'draw'
-  else if (statusIdx === 2) {
-    if (resultIdx === 1) result = role === 'white' ? 'win' : 'loss'
-    else if (resultIdx === 2) result = role === 'black' ? 'win' : 'loss'
-  }
-
-  return {
-    id: '',
-    chain: 'celo',
-    role,
-    opponent: opponent.toLowerCase() === ZERO ? 'Waiting...' : opponent,
-    wager: formatUnits(game.wager as bigint, TOKEN_DECIMALS),
-    status: STATUS_LABELS[statusIdx] ?? 'Unknown',
-    result,
-    timestamp: Number(game.createdAt),
   }
 }
