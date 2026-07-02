@@ -1,12 +1,12 @@
-import type { ChessProfile } from '@/types/profile'
-import {
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyMessage } from 'viem'
+import {
   getProfileByAddress,
   validateUsername,
   claimProfile,
   checkRateLimit,
 } from '@/lib/profile-store'
-import { verifyMessage } from 'viem'
+import type { ChessProfile } from '@/types/profile'
 
 export async function POST(req: NextRequest) {
   let body: { address?: string; username?: string; displayName?: string; bio?: string; signature?: string; timestamp?: string }

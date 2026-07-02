@@ -28,10 +28,6 @@ function KnightModel() {
   )
 }
 
-/**
- * Scene
- * @returns {*}
- */
 function Scene() {
   return (
     <>
