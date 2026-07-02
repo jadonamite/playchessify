@@ -1,11 +1,21 @@
-'use client'
-
 import { ButtonHTMLAttributes } from 'react'
 
 interface TrapButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** Face/glow colour. Defaults to the brand cyan. */
   accent?: string
   fullWidth?: boolean
+}
+
+const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>, disabled: boolean) => {
+  if (!disabled) {
+    e.currentTarget.style.transform = 'translateY(-2px)'
+    e.currentTarget.style.filter = 'brightness(1.06)'
+  }
+}
+
+const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
+  e.currentTarget.style.transform = ''
+  e.currentTarget.style.filter = ''
 }
 
 /**
@@ -38,8 +48,8 @@ export default function TrapButton({
         transition: 'transform .15s ease, filter .15s ease',
         ...style,
       }}
-      onMouseEnter={(e) => { if (!disabled) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.filter = 'brightness(1.06)' } }}
-      onMouseLeave={(e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.filter = '' }}
+      onMouseEnter={(e) => handleMouseEnter(e, disabled)}
+      onMouseLeave={handleMouseLeave}
     >
       {children}
     </button>
