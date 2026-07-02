@@ -48,9 +48,9 @@ export function useProfileLink() {
         } else {
           tried.current.delete(key) // allow a retry on a later mount
         }
-      } catch (err) {
+      } catch (error) {
         // user dismissed the sign, or a transient failure — retry on a later mount
-        console.warn(`${LOG_PREFIX} link skipped`, err)
+        console.warn(`${LOG_PREFIX} link skipped`, error)
         tried.current.delete(key)
       }
     })()
