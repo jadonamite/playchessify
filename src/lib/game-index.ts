@@ -61,7 +61,7 @@ export async function syncGameIndex(): Promise<number> {
         address: GAME,
         abi: CHESS_GAME_ABI as Abi,
         functionName: 'getGame',
-        params: [id],
+        args: [id],
       })),
       allowFailure: true,
     })

@@ -52,7 +52,7 @@ export async function GET(
 
 // POST /api/games/:chain/:id/moves — append a move
 export async function POST(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ chain: string; id: string }> }
 ) {
   const { chain: chainRaw, id: idRaw } = await params
@@ -64,7 +64,7 @@ export async function POST(
 
   let body: Record<string, unknown>
   try {
-    body = await request.json()
+    body = await req.json()
   } catch {
     return NextResponse.json({ error: 'invalid json body' }, { status: 400 })
   }
