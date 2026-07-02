@@ -19,12 +19,15 @@ export function useHistory() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  // Server-side, Redis-indexed: only this player's gameIds are read on-chain.
   const fetchHistory = useCallback(async (): Promise<HistoryItem[]> => {
     if (!playerAddress) return []
     try {
       const res = await fetch(`/api/history?address=${playerAddress}`)
-      const body = (await res.json().catch(() => ({}))) as { history?: HistoryItem[] }
+      if (!res.ok) {
+        console.error('[useHistory] fetch failed with status:', res.status)
+        return []
+      }
+      const body = await res.json()
       return Array.isArray(body.history) ? body.history : []
     } catch (err) {
       console.error('[useHistory] fetch failed:', err)
@@ -40,7 +43,6 @@ export function useHistory() {
   }, [fetchHistory])
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch history on mount
     refreshHistory()
   }, [refreshHistory])
 
