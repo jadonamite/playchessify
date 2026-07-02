@@ -6,7 +6,7 @@ type Ctx = { params: Promise<{ address: string }> }
 
 export async function GET(_req: NextRequest, { params }: Ctx) {
   const { address } = await params
-  if (!address?.startsWith('0x')) {
+  if (!address || !address.startsWith('0x')) {
     return NextResponse.json({ error: 'invalid address' }, { status: 400 })
   }
   const learner = await getOrCreateLearner(address)
@@ -22,7 +22,7 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
  */
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   const { address } = await params
-  if (!address?.startsWith('0x')) {
+  if (!address || !address.startsWith('0x')) {
     return NextResponse.json({ error: 'invalid address' }, { status: 400 })
   }
 
@@ -33,14 +33,17 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     concepts?: Partial<Record<Concept, number>>
     completedLesson?: string
   }
-  try { body = await req.json() } catch {
+  try {
+    body = await req.json()
+  } catch {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 })
   }
 
   // Rate limit: 120 training writes per address per hour (covers rapid drills +
   // per-game diagnostics) without ever prompting the user.
-  const allowed = await checkRateLimit(address, 'update', 120, 3600)
-  if (!allowed) return NextResponse.json({ error: 'rate limit exceeded' }, { status: 429 })
+  if (!(await checkRateLimit(address, 'update', 120, 3600))) {
+    return NextResponse.json({ error: 'rate limit exceeded' }, { status: 429 })
+  }
 
   const learner = await updateLearner(address, {
     coachId: body.coachId,
