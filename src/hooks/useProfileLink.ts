@@ -49,7 +49,6 @@ export function useProfileLink() {
           tried.current.delete(key) // allow a retry on a later mount
         }
       } catch (err) {
-        // NOTE: revisit this logic after API migration
         // user dismissed the sign, or a transient failure — retry on a later mount
         console.warn(`${LOG_PREFIX} link skipped`, err)
         tried.current.delete(key)
