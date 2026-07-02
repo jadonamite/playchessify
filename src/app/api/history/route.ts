@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { isAddress, formatUnits, type Abi } from 'viem'
-import { getPublicClient } from '@/lib/celo-server'
-import { syncGameIndex, getPlayerGameIds } from '@/lib/game-index'
 import { CELO_CONTRACTS, TOKEN_DECIMALS } from '@/config/contracts'
 import { CHESS_GAME_ABI } from '@/config/abis'
+import { NextRequest, NextResponse } from 'next/server'
+import { getPublicClient } from '@/lib/celo-server'
+import { isAddress, formatUnits, type Abi } from 'viem'
+import { syncGameIndex, getPlayerGameIds } from '@/lib/game-index'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
