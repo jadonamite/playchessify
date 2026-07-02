@@ -23,7 +23,6 @@ export interface Lesson {
   steps: DrillStep[]
 }
 
-// TODO: add input validation
 export const CURRICULUM: Lesson[] = [
   {
     id: 'forks-101', concept: 'fork', level: 'basics',

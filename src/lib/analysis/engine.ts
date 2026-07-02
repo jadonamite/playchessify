@@ -74,8 +74,7 @@ class StockfishEngine {
       this.worker.onerror = (e) => reject(new Error(`engine worker error: ${e.message}`))
       this.send('uci')
     })
-    const result = this.ready;
-    return result;
+    return this.ready
   }
 
   private send(cmd: string) {
