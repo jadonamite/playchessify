@@ -10,7 +10,6 @@ const CHAIN = 'celo' as const
 
 // GET /api/cron/settle — server-side settlement worker.
 // Sweeps every live game and settles the terminal ones, so a finished game is
-// always settled even if both players closed their tabs (the client-triggered
 // POST is just the fast path). Wire this to a Vercel Cron (see vercel.json).
 //
 // Protected by CRON_SECRET. Vercel Cron sends it automatically as a Bearer token;
