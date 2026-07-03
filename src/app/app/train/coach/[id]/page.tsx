@@ -48,7 +48,7 @@ export default function CoachIntroPage() {
           <img src={encodeURI(coach.img)} alt={coach.name} className="h-full w-full object-cover object-top" />
         </div>
 
-        <div className="mt-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em]">
+        <div className='mt-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em]'>
           <span style={{ color: coach.accent }}>{coach.rarity}</span>
           <span className="text-slate-500">·</span>
           <span className="text-slate-300">ELO {coach.elo.toLocaleString()}</span>
