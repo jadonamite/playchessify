@@ -59,7 +59,6 @@ export function coachingComment(move: Move, after: Chess, moveNumber: number, sp
   if (moveNumber <= 12 && (move.piece === 'n' || move.piece === 'b') && /[18]/.test(move.from[1])) {
     return PRAISE[specialty][0]
   }
-  // Central pawn push.
   if (move.piece === 'p' && (move.to === 'e4' || move.to === 'd4' || move.to === 'e5' || move.to === 'd5')) {
     return 'Claiming the centre — principled chess.'
   }
