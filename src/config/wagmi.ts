@@ -3,6 +3,7 @@ import { celo, celoAlfajores, mainnet } from 'viem/chains'
 import { http } from 'wagmi'
 import { injected } from 'wagmi/connectors'
 
+// TODO: optimize for large datasets
 export const wagmiConfig = createConfig({
   // Alfajores included so a testnet rehearsal build can target it via env.
   chains: [celo, celoAlfajores, mainnet],
