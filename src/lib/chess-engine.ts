@@ -174,7 +174,7 @@ function orderMoves(moves: Move[]): Move[] {
 }
 
 function scoreMove(m: Move): number {
-  let score: number = 0
+  let score = 0
   if (m.captured) {
     score += 10 * (PIECE_VALUES[m.captured] || 0) - (PIECE_VALUES[m.piece] || 0)
   }

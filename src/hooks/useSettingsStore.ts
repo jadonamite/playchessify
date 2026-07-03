@@ -14,7 +14,7 @@ export const BOARD_THEMES: Record<BoardTheme, { dark: string; light: string; nam
 
 export type PieceSet = 'chessnut' | 'caliente' | 'maestro' | 'fresca' | 'cooke'
 
-// Available in-game piece sets. SVG assets live in `public/pieces/<id>/`. 
+// Available in-game piece sets. SVG assets live in `public/pieces/<id>/`.
 export const PIECE_SETS: { id: PieceSet; name: string }[] = [
   { id: 'chessnut', name: 'Chessnut' },
   { id: 'caliente', name: 'Caliente' },
@@ -52,22 +52,20 @@ interface SettingsState {
   setShowMoveHints: (v: boolean) => void
 }
 
-const createSettingsState = (set: (state: Partial<SettingsState>) => void) => ({
-  soundEnabled: true,
-  boardTheme: 'dark',
-  pieceSet: 'chessnut',
-  aiDifficulty: 'medium',
-  showMoveHints: true,
-  setSoundEnabled: (v: boolean) => set({ soundEnabled: v }),
-  setBoardTheme: (t: BoardTheme) => set({ boardTheme: t }),
-  setPieceSet: (p: PieceSet) => set({ pieceSet: p }),
-  setAiDifficulty: (d: AiDifficulty) => set({ aiDifficulty: d }),
-  setShowMoveHints: (v: boolean) => set({ showMoveHints: v }),
-})
-
 export const useSettingsStore = create<SettingsState>()(
   persist(
-    createSettingsState,
+    (set) => ({
+      soundEnabled: true,
+      boardTheme: 'dark',
+      pieceSet: 'chessnut',
+      aiDifficulty: 'medium',
+      showMoveHints: true,
+      setSoundEnabled: (v) => set({ soundEnabled: v }),
+      setBoardTheme: (t) => set({ boardTheme: t }),
+      setPieceSet: (p) => set({ pieceSet: p }),
+      setAiDifficulty: (d) => set({ aiDifficulty: d }),
+      setShowMoveHints: (v) => set({ showMoveHints: v }),
+    }),
     { name: 'chessify-settings' },
   ),
 )
