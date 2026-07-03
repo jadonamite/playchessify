@@ -52,7 +52,7 @@ export default function LobbyContent() {
   const coachId = useCoachStore((s) => s.coachId)
 
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
-  const MAINTENANCE_MODE = false
+  const MAINTENANCE_MODE: boolean = false
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isPending, setIsPending] = useState(false)
