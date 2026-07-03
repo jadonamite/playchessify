@@ -1,6 +1,6 @@
+import type { Concept, LearnerLevel } from '@/types/training'
 import { NextRequest, NextResponse } from 'next/server'
 import { getOrCreateLearner, updateLearner, checkRateLimit } from '@/lib/train-store'
-import type { Concept, LearnerLevel } from '@/types/training'
 
 type Ctx = { params: Promise<{ address: string }> }
 
