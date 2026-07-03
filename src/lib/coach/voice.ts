@@ -25,9 +25,11 @@ interface Provider {
   model: string
 }
 
-/** Build the provider chain from whichever keys are present, in priority order. */
-function buildProviders(): Provider[] {
-  const providers: Provider[] = []
+let cachedProviders: Provider[] | null = null
+function providers(): Provider[] {
+  if (!cachedProviders) cachedProviders = buildProviders()
+  return cachedProviders
+}
 
   if (process.env.NVIDIA_API_KEY) {
     providers.push({
@@ -53,12 +55,6 @@ function buildProviders(): Provider[] {
   return providers
 }
 
-let cachedProviders: Provider[] | null = null
-function providers(): Provider[] {
-  if (!cachedProviders) cachedProviders = buildProviders()
-  return cachedProviders
-}
-
 async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), ms)
@@ -69,15 +65,18 @@ async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   }
 }
 
+/** Build the provider chain from whichever keys are present, in priority order. */
+function buildProviders(): Provider[] {
+  const providers: Provider[] = []
+
 /**
- * Run the provider chain. Each provider gets a 4s timeout + 1 retry; on
- * failure we drop to the next. Throws only if EVERY provider fails — callers
- * (coachExplain) catch that and fall back to the template.
+ * Produce a coach-voiced lesson. Tries the LLM chain; on any failure returns
+ * the deterministic template. The chess content is identical either way —
+ * only the wording degrades.
  */
-async function complete(messages: AIMessage[], opts: { maxTokens?: number; temperature?: number } = {}): Promise<string> {
-  const { maxTokens = 160, temperature = 0.5 } = opts
-  const chain = providers()
-  if (chain.length === 0) throw new Error('no LLM providers configured')
+export async function coachExplain(f: ExplainFacts): Promise<{ text: string; source: 'llm' | 'template' }> {
+  const fallback = renderTemplate(f)
+  if (providers().length === 0) return { text: fallback, source: 'template' }
 
   let lastErr: Error | null = null
   for (const p of chain) {
@@ -118,6 +117,16 @@ export interface ExplainFacts {
   movesPlayed?: number   // for review framing
 }
 
+/**
+ * Run the provider chain. Each provider gets a 4s timeout + 1 retry; on
+ * failure we drop to the next. Throws only if EVERY provider fails — callers
+ * (coachExplain) catch that and fall back to the template.
+ */
+async function complete(messages: AIMessage[], opts: { maxTokens?: number; temperature?: number } = {}): Promise<string> {
+  const { maxTokens = 160, temperature = 0.5 } = opts
+  const chain = providers()
+  if (chain.length === 0) throw new Error('no LLM providers configured')
+
 /** Deterministic floor — correct lesson text from engine facts, no network. */
 export function renderTemplate(f: ExplainFacts): string {
   const lost = f.evalDeltaCp != null ? Math.round(f.evalDeltaCp) / 100 : null
@@ -145,15 +154,6 @@ export function renderTemplate(f: ExplainFacts): string {
     }
   }
 }
-
-/**
- * Produce a coach-voiced lesson. Tries the LLM chain; on any failure returns
- * the deterministic template. The chess content is identical either way —
- * only the wording degrades.
- */
-export async function coachExplain(f: ExplainFacts): Promise<{ text: string; source: 'llm' | 'template' }> {
-  const fallback = renderTemplate(f)
-  if (providers().length === 0) return { text: fallback, source: 'template' }
 
   const facts = [
     `Coach: ${f.coachName}`,
