@@ -54,7 +54,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
               The Celo custom-chain config (forno RPC + Pimlico bundler/paymaster URLs,
               PIMLICO_API_KEY) is set in the Privy dashboard; sponsorship is then automatic. */}
           <SmartWalletsProvider>
-            <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
+            <ThemeProvider attribute="payload-theme" defaultTheme="dark" enableSystem={false}>
               <WalletProvider>
                 <AudioManager />
                 {children}
