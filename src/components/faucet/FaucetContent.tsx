@@ -31,26 +31,6 @@ const KEYFRAMES = `
 }
 `
 
-/* ── 3D Background Scene ── */
-function FaucetScene() {
-  return (
-    <>
-      <ambientLight intensity={1.5} />
-      <directionalLight position={[10, 10, 5]} intensity={2} color="#00ccff" />
-      <directionalLight position={[-10, -10, -5]} intensity={1} color="#6a0dad" />
-      <Environment files="/textures/environment/city.hdr" />
-
-      {/* Large background king */}
-      <King position={[0, -0.5, -2]} color="#0f172a" emissive="#00ccff" emissiveIntensity={0.15} floatSpeed={0.5} floatIntensity={0.3} rotationIntensity={0.1} scale={2.5} />
-
-      {/* Floating accent pieces */}
-      <Pawn position={[-4, 2, -3]} color="#1e293b" emissive="#00ccff" emissiveIntensity={0.1} floatSpeed={1.5} floatIntensity={1} rotationIntensity={0.5} />
-      <Bishop position={[4, -2, -2]} color="#1e293b" emissive="#6a0dad" emissiveIntensity={0.1} floatSpeed={2} floatIntensity={0.8} rotationIntensity={0.4} />
-      <Knight position={[3.5, 2.5, -4]} color="#1e293b" emissive="#00ccff" emissiveIntensity={0.08} floatSpeed={1} floatIntensity={0.6} rotationIntensity={0.3} />
-    </>
-  )
-}
-
 /* ── TOKEN DISPLAY ── */
 function TokenDisplay({ balance }: { balance: string }) {
   return (
@@ -77,6 +57,26 @@ function TokenDisplay({ balance }: { balance: string }) {
     </PlayCard>
   )
 }
+
+      {/* Large background king */}
+      <King position={[0, -0.5, -2]} color="#0f172a" emissive="#00ccff" emissiveIntensity={0.15} floatSpeed={0.5} floatIntensity={0.3} rotationIntensity={0.1} scale={2.5} />
+
+      {/* Floating accent pieces */}
+      <Pawn position={[-4, 2, -3]} color="#1e293b" emissive="#00ccff" emissiveIntensity={0.1} floatSpeed={1.5} floatIntensity={1} rotationIntensity={0.5} />
+      <Bishop position={[4, -2, -2]} color="#1e293b" emissive="#6a0dad" emissiveIntensity={0.1} floatSpeed={2} floatIntensity={0.8} rotationIntensity={0.4} />
+      <Knight position={[3.5, 2.5, -4]} color="#1e293b" emissive="#00ccff" emissiveIntensity={0.08} floatSpeed={1} floatIntensity={0.6} rotationIntensity={0.3} />
+    </>
+  )
+}
+
+/* ── 3D Background Scene ── */
+function FaucetScene() {
+  return (
+    <>
+      <ambientLight intensity={1.5} />
+      <directionalLight position={[10, 10, 5]} intensity={2} color="#00ccff" />
+      <directionalLight position={[-10, -10, -5]} intensity={1} color="#6a0dad" />
+      <Environment files="/textures/environment/city.hdr" />
 
 /* ═══════════════════════════════════════════
    MAIN FAUCET CONTENT
