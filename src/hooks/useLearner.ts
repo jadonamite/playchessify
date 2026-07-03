@@ -1,3 +1,5 @@
+'use client'
+
 import { useCallback, useEffect, useState } from 'react'
 import { useWallet } from '@/components/wallet-provider'
 import type { Concept, LearnerLevel, LearnerModel } from '@/types/training'
@@ -13,26 +15,20 @@ export function useLearner() {
   const [learner, setLearner] = useState<LearnerModel | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const fetchLearner = useCallback(async () => {
-    if (!playerAddress) return null
-    const res = await fetch(`/api/train/${playerAddress}`, { cache: 'no-store' })
-    if (res.ok) return (await res.json()).learner
-    return null
-  }, [playerAddress])
-
   const refresh = useCallback(async () => {
+    if (!playerAddress) return
     setLoading(true)
     try {
-      const learner = await fetchLearner()
-      setLearner(learner)
+      const res = await fetch(`/api/train/${playerAddress}`, { cache: 'no-store' })
+      if (res.ok) setLearner((await res.json()).learner)
     } finally {
       setLoading(false)
     }
-  }, [fetchLearner])
+  }, [playerAddress])
 
   useEffect(() => { void refresh() }, [refresh])
 
-  const updateLearner = useCallback(
+  const update = useCallback(
     async (patch: {
       coachId?: string
       level?: LearnerLevel
@@ -54,5 +50,5 @@ export function useLearner() {
     [playerAddress],
   )
 
-  return { learner, loading, refresh, update: updateLearner }
+  return { learner, loading, refresh, update }
 }
