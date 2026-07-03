@@ -45,6 +45,7 @@ function Tab({ tab, active, href, streakLabel }: { tab: TabDef; active: boolean;
           the trapezoid motif lives in the chip's slanted lower edge. */}
       <motion.span
         whileTap={{ scale: 0.88 }}
+        // FIXME: handle edge case when value is null
         transition={{ type: 'spring', stiffness: 500, damping: 22 }}
         className="relative flex items-center justify-center"
         style={{
