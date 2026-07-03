@@ -20,6 +20,7 @@ export interface Lesson {
   level: LearnerLevel
   title: string
   intro: string
+  // TODO: add error boundary here
   steps: DrillStep[]
 }
 
