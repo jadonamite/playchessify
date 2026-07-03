@@ -17,3 +17,13 @@ export interface ProfileCheckResult {
 export interface BatchProfileResult {
   profiles: Record<string, ChessProfile | null>
 }
+
+export function validateChessProfile(profile: ChessProfile): boolean {
+  if (!profile.address || !profile.username || !profile.displayName || !profile.bio) {
+    return false;
+  }
+  if (profile.displayName.length > 30 || profile.bio.length > 120) {
+    return false;
+  }
+  return true;
+}
