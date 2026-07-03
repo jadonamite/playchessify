@@ -67,7 +67,6 @@ function utcYesterdayStr(d: Date = new Date()): string {
 
 // KEYS[1] = streak hash key · ARGV[1] = today · ARGV[2] = yesterday
 // Stored as a hash (fields: current, longest, last) so no cjson is needed.
-// Returns { current, longest, incremented } as a 3-element array.
 const RECORD_LUA = `
 local current = tonumber(redis.call('HGET', KEYS[1], 'current')) or 0
 local longest = tonumber(redis.call('HGET', KEYS[1], 'longest')) or 0
