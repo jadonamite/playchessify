@@ -218,7 +218,7 @@ export default function ProfilePage() {
         </GlowButton>
 
         {isLoading ? (
-          <LoadingState message="LOADING PROFILE" />
+          <LoadingState message='LOADING PROFILE' />
         ) : !profile && !isAddress ? (
           <div className="text-center py-32">
             <p className="text-2xl font-black uppercase text-[var(--t3)]" style={{ fontFamily: 'var(--fd)' }}>
