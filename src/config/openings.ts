@@ -12,7 +12,6 @@ export interface OpeningEntry {
   note: string
 }
 
-// Ordered roughly shallow→deep; the matcher picks the longest prefix regardless.
 export const OPENINGS: OpeningEntry[] = [
   { name: 'Open Game', moves: ['e4', 'e5'], note: 'The Open Game — classical, principled chess. Fight for the centre.' },
   { name: 'Ruy López', moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5'], note: 'The Ruy López — pressure on the knight that guards e5. A lifelong opening.' },
