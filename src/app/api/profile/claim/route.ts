@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
   const { address, username, displayName = '', bio = '', signature, timestamp } = body
 
-  if (!address?.startsWith('0x')) {
+  if (!address || !address.startsWith('0x')) {
     return NextResponse.json({ error: 'invalid address' }, { status: 400 })
   }
   if (!signature || !timestamp) {
@@ -31,7 +31,9 @@ export async function POST(req: NextRequest) {
 
   // Validate username
   const nameCheck = validateUsername(username ?? '')
-  if (!nameCheck.ok || !username) return NextResponse.json({ error: nameCheck.reason }, { status: 400 })
+  if (!nameCheck.ok || !username) {
+    return NextResponse.json({ error: nameCheck.reason }, { status: 400 })
+  }
 
   if (displayName.length > 30) {
     return NextResponse.json({ error: 'displayName max 30 characters' }, { status: 400 })
@@ -49,14 +51,18 @@ export async function POST(req: NextRequest) {
       message,
       signature: signature as `0x${string}`,
     })
-    if (!valid) return NextResponse.json({ error: 'invalid signature' }, { status: 401 })
+    if (!valid) {
+      return NextResponse.json({ error: 'invalid signature' }, { status: 401 })
+    }
   } catch {
     return NextResponse.json({ error: 'signature verification failed' }, { status: 401 })
   }
 
   // Rate limit: 2 claims per address per 24h
   const allowed = await checkRateLimit(address, 'claim', 2, 86400)
-  if (!allowed) return NextResponse.json({ error: 'rate limit exceeded — max 2 claims per day' }, { status: 429 })
+  if (!allowed) {
+    return NextResponse.json({ error: 'rate limit exceeded — max 2 claims per day' }, { status: 429 })
+  }
 
   // Block if profile already exists
   const existing = await getProfileByAddress(address)
@@ -77,7 +83,9 @@ export async function POST(req: NextRequest) {
   }
 
   const result = await claimProfile(profile)
-  if (!result.ok) return NextResponse.json({ error: result.reason }, { status: 409 })
+  if (!result.ok) {
+    return NextResponse.json({ error: result.reason }, { status: 409 })
+  }
 
   return NextResponse.json({ ok: true, username: `${username.toLowerCase()}.chess` }, { status: 201 })
 }
