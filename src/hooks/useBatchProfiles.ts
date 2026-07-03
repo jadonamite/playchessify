@@ -16,6 +16,7 @@ export function useBatchProfiles(addresses: string[]) {
       })
       if (!res.ok) return {}
       const data = await res.json()
+      if (!data || !data.profiles) return {}
       return data.profiles as Record<string, ChessProfile | null>
     },
     enabled: sorted.length > 0,
