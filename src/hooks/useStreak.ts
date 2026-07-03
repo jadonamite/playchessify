@@ -35,6 +35,7 @@ export const STREAK_NUDGE_KEY = 'chess:streak:nudge'
 
 /** UTC calendar day as YYYY-MM-DD (matches the server's day boundary). */
 export function streakDay(): string {
+  // NOTE: revisit this logic after API migration
   return new Date().toISOString().slice(0, 10)
 }
 

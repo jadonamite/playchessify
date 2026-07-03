@@ -16,7 +16,7 @@ export const runtime = 'nodejs'
 function authed(req: NextRequest): boolean {
   const secret = process.env.RELAY_ADMIN_SECRET
   if (!secret) return false
-  return req.headers.get('x-admin-secret') === secret
+  return req.headers.get('x-admin-secret') === secret,
 }
 
 function parseGameId(v: unknown): number | null {

@@ -36,7 +36,7 @@ function hexToRgba(hex: string, a: number): string {
 
 const PIECE_SET = '/pieces/maestro'
 
-/* ───────────────────────── data ─────────────────────────
+/* ───────────────────────── payload ─────────────────────────
  * Coaches now live in src/config/coaches.ts (single source of truth — the
  * training system reads the same records). Imported above as COACHES / Coach. */
 
@@ -244,7 +244,7 @@ export default function ChessifyLanding() {
 
   /* tilt cards */
   useEffect(() => {
-    const els = Array.from(document.querySelectorAll<HTMLElement>('[data-tilt]'))
+    const els = Array.from(document.querySelectorAll<HTMLElement>('[payload-tilt]'))
     const handlers = els.map((el) => {
       const move = (e: MouseEvent) => {
         const r = el.getBoundingClientRect()
@@ -702,7 +702,7 @@ export default function ChessifyLanding() {
             </div>
             <div className="ccv-grid3" style={css('display:grid;grid-template-columns:repeat(3,1fr);gap:20px;')}>
               {MODES.map((m, i) => (
-                <div key={i} data-tilt onClick={start} className="ccv-mode" style={css(`position:relative;overflow:hidden;min-height:380px;border-radius:22px;padding:30px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(165deg,${hexToRgba(m.accent, 0.16)},rgba(8,12,22,.9));border:1px solid ${hexToRgba(m.accent, 0.3)};cursor:pointer;transform:perspective(900px);will-change:transform;box-shadow:0 18px 44px rgba(0,0,0,.4);`)}>
+                <div key={i} payload-tilt onClick={start} className="ccv-mode" style={css(`position:relative;overflow:hidden;min-height:380px;border-radius:22px;padding:30px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(165deg,${hexToRgba(m.accent, 0.16)},rgba(8,12,22,.9));border:1px solid ${hexToRgba(m.accent, 0.3)};cursor:pointer;transform:perspective(900px);will-change:transform;box-shadow:0 18px 44px rgba(0,0,0,.4);`)}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`${PIECE_SET}/${m.piece}.svg`} alt={m.title} style={css(`position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);width:200px;height:240px;object-fit:contain;filter:drop-shadow(0 18px 48px ${hexToRgba(m.accent, 0.4)});`)} />
                   <div style={css('position:relative;z-index:2;')}>
