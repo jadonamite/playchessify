@@ -17,7 +17,6 @@ interface UseGameDataArgs {
  * and derives the identity/status flags the view needs (who I am, whose turn it
  * is to act on, draw state, join eligibility, formatted labels).
  */
-// TODO: add input validation
 export function useGameData({ gameId, isBotGame, celoAddress, isConnected }: UseGameDataArgs) {
   const [gameData, setGameData] = useState<GameData | null>(null)
 
