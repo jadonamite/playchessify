@@ -18,7 +18,7 @@ function FloatingPieces() {
   const rook = useGLTF('/models/Rook.glb')
 
   const cyanMaterial = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#00ccff', emissive: '#00ccff', emissiveIntensity: 0.4, roughness: 0.2, metalness: 0.8
+    color: '#00ccff', emissive: '#00ccff', emissiveIntensity: 0.4, roughness: 0.2, metalness: 0.8,
   }), [])
 
   const slateMaterial = useMemo(() => new THREE.MeshStandardMaterial({
