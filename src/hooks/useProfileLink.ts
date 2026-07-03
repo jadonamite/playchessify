@@ -24,24 +24,24 @@ export function useProfileLink() {
   const tried = useRef<Set<string>>(new Set())
 
   useEffect(() => {
-    if (!eoa || !smartClient?.account?.address) return
-    if (eoa.toLowerCase() === smartClient.account.address.toLowerCase()) return
+    const smart = smartClient?.account?.address
+    if (!eoa || !smart) return
+    if (eoa.toLowerCase() === smart.toLowerCase()) return
 
-    const key = `${eoa.toLowerCase()}:${smartClient.account.address.toLowerCase()}`
+    const key = `${eoa.toLowerCase()}:${smart.toLowerCase()}`
     if (tried.current.has(key)) return
     try { if (localStorage.getItem(`chess:linked:${key}`)) return } catch { /* private mode */ }
-
     tried.current.add(key)
 
     ;(async () => {
       try {
         const timestamp = new Date().toISOString()
-        const message = `Chessify Identity Link\n\nEOA: ${eoa.toLowerCase()}\nSmart: ${smartClient.account.address.toLowerCase()}\nTimestamp: ${timestamp}`
+        const message = `Chessify Identity Link\n\nEOA: ${eoa.toLowerCase()}\nSmart: ${smart.toLowerCase()}\nTimestamp: ${timestamp}`
         const signature = await signMessageAsync({ message })
         const res = await fetch('/api/profile/link', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ eoa, smart: smartClient.account.address, signature, timestamp }),
+          body: JSON.stringify({ eoa, smart, signature, timestamp }),
         })
         if (res.ok) {
           try { localStorage.setItem(`chess:linked:${key}`, '1') } catch { /* ignore */ }
