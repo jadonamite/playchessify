@@ -1,3 +1,5 @@
+// Shared types + constants for the game view.
+
 export interface GameData {
   white: string
   black: string
@@ -19,17 +21,16 @@ export const STATUS_LABELS: Record<string, string> = {
 
 export const norm = (a: string) => (a ?? '').toLowerCase()
 
-const getResultBasedOnColor = (result: string, myColor: 'white' | 'black'): GameResult => {
-  if (result === '1') return myColor === 'white' ? 'won' : 'lost'
-  if (result === '2') return myColor === 'black' ? 'won' : 'lost'
-  if (result === '3') return 'draw'
-  return null
-}
-
+// Map the authoritative on-chain result to the viewer's perspective. The single
+// source of truth once a game is settled — so a returning player always sees the
+// real outcome instead of a guess derived from the board / local flags.
 export function resultForColor(
   result: string | undefined,
   myColor: 'white' | 'black' | null,
 ): GameResult {
   if (!myColor) return null
-  return getResultBasedOnColor(result ?? '', myColor)
+  if (result === '1') return myColor === 'white' ? 'won' : 'lost' // WhiteWins
+  if (result === '2') return myColor === 'black' ? 'won' : 'lost' // BlackWins
+  if (result === '3') return 'draw'                               // DrawResult
+  return null
 }
