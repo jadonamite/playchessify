@@ -23,13 +23,6 @@ export interface LeaderboardEntry {
   rank: number
 }
 
-function getRedis(): Redis {
-  return new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL!,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-  })
-}
-
 // Helper function to process player stats results and create leaderboard entries
 function createLeaderboardEntries(addresses: string[], statsResults: any[]): LeaderboardEntry[] {
   const entries: LeaderboardEntry[] = []
@@ -82,4 +75,11 @@ export async function GET() {
     console.error('[api/leaderboard] failed:', (err as Error)?.message)
     return NextResponse.json({ error: 'leaderboard unavailable' }, { status: 503 })
   }
+}
+
+function getRedis(): Redis {
+  return new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL!,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  })
 }
