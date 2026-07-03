@@ -1,3 +1,5 @@
+// Shared types + constants for the game view.
+
 export interface GameData {
   white: string
   black: string
@@ -27,8 +29,8 @@ export function resultForColor(
   myColor: 'white' | 'black' | null,
 ): GameResult {
   if (!myColor) return null
-  if (result === '1') return myColor === 'white' ? 'won' : 'lost'
-  if (result === '2') return myColor === 'black' ? 'won' : 'lost'
-  if (result === '3') return 'draw'
+  if (result === '1') return myColor === 'white' ? 'won' : 'lost' // WhiteWins
+  if (result === '2') return myColor === 'black' ? 'won' : 'lost' // BlackWins
+  if (result === '3') return 'draw'                               // DrawResult
   return null
 }

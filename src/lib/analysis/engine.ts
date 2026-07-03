@@ -10,7 +10,7 @@
  * minimax in src/lib/chess-engine.ts.
  */
 
-const ENGINE_URL: string = '/engine/stockfish-18-lite-single.js'
+const ENGINE_URL = '/engine/stockfish-18-lite-single.js'
 
 export interface AnalysisResult {
   /** Best move in UCI long algebraic, e.g. "e2e4", "e7e8q". */

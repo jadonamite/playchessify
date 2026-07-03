@@ -60,7 +60,7 @@ export default function LobbyContent() {
   const [searchError, setSearchError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchId, setSearchId] = useState('')
-  const ITEMS_PER_PAGE: number = 3
+  const ITEMS_PER_PAGE = 3
   const [wager, setWager] = useState(100)
   const [balance, setBalance] = useState<string>('0.00')
   const [rating, setRating] = useState<number>(1200)
