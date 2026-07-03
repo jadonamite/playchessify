@@ -28,11 +28,6 @@ const K = {
   rl: (a: string, action: string) => `chess:train:rl:${action}:${a.toLowerCase()}`,
 }
 
-/**
- * parse
- * @param {*} raw: unknown
- * @returns {*}
- */
 function parse(raw: unknown): LearnerModel | null {
   if (!raw) return null
   return (typeof raw === 'string' ? JSON.parse(raw) : raw) as LearnerModel
