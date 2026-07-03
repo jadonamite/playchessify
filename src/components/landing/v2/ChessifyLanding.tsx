@@ -29,9 +29,14 @@ function css(s: string): React.CSSProperties {
   return o as React.CSSProperties
 }
 
-function hexToRgba(hex: string, a: number): string {
-  const h = hex.replace('#', '')
-  return `rgba(${parseInt(h.substr(0, 2), 16)},${parseInt(h.substr(2, 2), 16)},${parseInt(h.substr(4, 2), 16)},${a})`
+function makeBoard(): Board {
+  const P = (t: string, c: 'w' | 'b'): Piece => ({ t, c })
+  const b: Board = Array.from({ length: 8 }, () => Array(8).fill(null))
+  b[0][0] = P('r', 'b'); b[0][4] = P('k', 'b'); b[1][6] = P('b', 'b')
+  b[2][1] = P('n', 'b'); b[3][3] = P('p', 'b'); b[4][6] = P('p', 'b')
+  b[7][0] = P('r', 'w'); b[7][4] = P('k', 'w'); b[7][2] = P('b', 'w')
+  b[5][5] = P('n', 'w'); b[4][3] = P('q', 'w'); b[6][4] = P('p', 'w')
+  return b
 }
 
 const PIECE_SET = '/pieces/maestro'
@@ -73,45 +78,6 @@ const BENTO: BCell[] = [
 type Piece = { t: string; c: 'w' | 'b' }
 type Board = (Piece | null)[][]
 
-function makeBoard(): Board {
-  const P = (t: string, c: 'w' | 'b'): Piece => ({ t, c })
-  const b: Board = Array.from({ length: 8 }, () => Array(8).fill(null))
-  b[0][0] = P('r', 'b'); b[0][4] = P('k', 'b'); b[1][6] = P('b', 'b')
-  b[2][1] = P('n', 'b'); b[3][3] = P('p', 'b'); b[4][6] = P('p', 'b')
-  b[7][0] = P('r', 'w'); b[7][4] = P('k', 'w'); b[7][2] = P('b', 'w')
-  b[5][5] = P('n', 'w'); b[4][3] = P('q', 'w'); b[6][4] = P('p', 'w')
-  return b
-}
-
-function legalMoves(b: Board, r: number, c: number): [number, number][] {
-  const p = b[r][c]
-  if (!p) return []
-  const me = p.c
-  const moves: [number, number][] = []
-  const inb = (x: number, y: number) => x >= 0 && x < 8 && y >= 0 && y < 8
-  const add = (x: number, y: number) => {
-    if (!inb(x, y)) return false
-    const t = b[x][y]
-    if (!t) { moves.push([x, y]); return true }
-    if (t.c !== me) moves.push([x, y])
-    return false
-  }
-  const ray = (dx: number, dy: number) => { let x = r + dx, y = c + dy; while (inb(x, y)) { if (!add(x, y)) break; x += dx; y += dy } }
-  if (p.t === 'n') ([[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]] as const).forEach(([dx, dy]) => add(r + dx, c + dy))
-  else if (p.t === 'k') { for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) if (dx || dy) add(r + dx, c + dy) }
-  else if (p.t === 'r') { ray(1, 0); ray(-1, 0); ray(0, 1); ray(0, -1) }
-  else if (p.t === 'b') { ray(1, 1); ray(1, -1); ray(-1, 1); ray(-1, -1) }
-  else if (p.t === 'q') { ray(1, 0); ray(-1, 0); ray(0, 1); ray(0, -1); ray(1, 1); ray(1, -1); ray(-1, 1); ray(-1, -1) }
-  else if (p.t === 'p') {
-    const dir = me === 'w' ? -1 : 1, start = me === 'w' ? 6 : 1
-    if (inb(r + dir, c) && !b[r + dir][c]) { moves.push([r + dir, c]); if (r === start && !b[r + 2 * dir][c]) moves.push([r + 2 * dir, c]) }
-    ;([[dir, 1], [dir, -1]] as const).forEach(([dx, dy]) => { const x = r + dx, y = c + dy; if (inb(x, y) && b[x][y] && b[x][y]!.c !== me) moves.push([x, y]) })
-  }
-  return moves
-}
-
-/* ───────────────────────── coach art (real coach portraits) ───────────────────────── */
-
 function CoachArt({ coach, size }: { coach: Coach; size: number }) {
   return (
     <div
@@ -133,6 +99,18 @@ function CoachArt({ coach, size }: { coach: Coach; size: number }) {
       />
     </div>
   )
+}
+
+export default function ChessifyLanding() {
+  const router = useRouter()
+  const { isConnected, connectWallet } = useWallet()
+  const setCoachId = useCoachStore((s) => s.setCoachId)
+
+/* ───────────────────────── coach art (real coach portraits) ───────────────────────── */
+
+function hexToRgba(hex: string, a: number): string {
+  const h = hex.replace('#', '')
+  return `rgba(${parseInt(h.substr(0, 2), 16)},${parseInt(h.substr(2, 2), 16)},${parseInt(h.substr(4, 2), 16)},${a})`
 }
 
 /* ───────────────────────── styles ───────────────────────── */
@@ -203,10 +181,32 @@ const STYLE = `
 
 /* ───────────────────────── component ───────────────────────── */
 
-export default function ChessifyLanding() {
-  const router = useRouter()
-  const { isConnected, connectWallet } = useWallet()
-  const setCoachId = useCoachStore((s) => s.setCoachId)
+function legalMoves(b: Board, r: number, c: number): [number, number][] {
+  const p = b[r][c]
+  if (!p) return []
+  const me = p.c
+  const moves: [number, number][] = []
+  const inb = (x: number, y: number) => x >= 0 && x < 8 && y >= 0 && y < 8
+  const add = (x: number, y: number) => {
+    if (!inb(x, y)) return false
+    const t = b[x][y]
+    if (!t) { moves.push([x, y]); return true }
+    if (t.c !== me) moves.push([x, y])
+    return false
+  }
+  const ray = (dx: number, dy: number) => { let x = r + dx, y = c + dy; while (inb(x, y)) { if (!add(x, y)) break; x += dx; y += dy } }
+  if (p.t === 'n') ([[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]] as const).forEach(([dx, dy]) => add(r + dx, c + dy))
+  else if (p.t === 'k') { for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) if (dx || dy) add(r + dx, c + dy) }
+  else if (p.t === 'r') { ray(1, 0); ray(-1, 0); ray(0, 1); ray(0, -1) }
+  else if (p.t === 'b') { ray(1, 1); ray(1, -1); ray(-1, 1); ray(-1, -1) }
+  else if (p.t === 'q') { ray(1, 0); ray(-1, 0); ray(0, 1); ray(0, -1); ray(1, 1); ray(1, -1); ray(-1, 1); ray(-1, -1) }
+  else if (p.t === 'p') {
+    const dir = me === 'w' ? -1 : 1, start = me === 'w' ? 6 : 1
+    if (inb(r + dir, c) && !b[r + dir][c]) { moves.push([r + dir, c]); if (r === start && !b[r + 2 * dir][c]) moves.push([r + 2 * dir, c]) }
+    ;([[dir, 1], [dir, -1]] as const).forEach(([dx, dy]) => { const x = r + dx, y = c + dy; if (inb(x, y) && b[x][y] && b[x][y]!.c !== me) moves.push([x, y]) })
+  }
+  return moves
+}
 
   const [coach, setCoach] = useState(0)
   const [board, setBoard] = useState<Board>(() => makeBoard())
