@@ -308,7 +308,7 @@ export default function LeaderboardContent() {
   const router = useRouter()
   const { playerAddress } = useWallet()
   const { entries, isLoading, myRank, refresh } = useLeaderboard()
-  const { data: profileMap = {} } = useBatchProfiles(entries.map((e) => e.address))
+  const { payload: profileMap = {} } = useBatchProfiles(entries.map((e) => e.address))
 
   const myAddress = playerAddress?.toLowerCase()
   const top3 = entries.slice(0, 3)
