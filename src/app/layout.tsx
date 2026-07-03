@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     "Base",
     "Stacks",
     "chess coach",
-    "web3 chess",
+    'web3 chess',
   ],
   alternates: { canonical: "/" },
   icons: {

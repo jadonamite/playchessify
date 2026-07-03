@@ -20,5 +20,5 @@ export default function CapturedTray({ pieces, color, advantage, set }: { pieces
         <span className="text-[11px] font-black tabular-nums text-[var(--c)]">+{advantage}</span>
       )}
     </div>
-  )
+  ),
 }
