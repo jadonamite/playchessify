@@ -448,10 +448,10 @@ export default function GameClient() {
 
   // ── tx helpers ───────────────────────────────────────────────────────────────
 
-  const withTx = useCallback(async (fn: () => Promise<unknown>) => {
+  const withTx = useCallback(async (handler: () => Promise<unknown>) => {
     if (txPending) return
     setTxPending(true)
-    try { await fn() } catch (e) { console.error('[GameClient] tx error:', e) } finally { setTxPending(false) }
+    try { await handler() } catch (e) { console.error('[GameClient] tx error:', e) } finally { setTxPending(false) }
   }, [txPending])
 
   const handleResign = () => withTx(async () => {
