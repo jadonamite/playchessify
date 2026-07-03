@@ -94,8 +94,8 @@ export async function settleGameById(chain: Chain, gameId: number): Promise<Sett
       console.error(`${LOG_PREFIX} streak update failed (non-fatal)`, streakErr)
     }
     return { ok: true, txHash, result: derived.result as GameResult }
-  } catch (error) {
+  } catch (err) {
     await getRedis().del(lockKey)
-    throw error
+    throw err
   }
 }
