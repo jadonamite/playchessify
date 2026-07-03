@@ -25,6 +25,14 @@ const OPTIONS: Array<{
   { piece: 'n', label: 'KNIGHT', view: 'knight', hint: 'FORK TACTIC' },
 ]
 
+/**
+ * PromotionModal
+ * @param {*} { open
+ * @param {*} color
+ * @param {*} onSelect
+ * @param {*} onCancel }: PromotionModalProps
+ * @returns {*}
+ */
 export default function PromotionModal({ open, color, onSelect, onCancel }: PromotionModalProps) {
   const [mounted, setMounted] = useState(false)
   // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration mount flag
