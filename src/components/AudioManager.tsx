@@ -20,7 +20,7 @@ export default function AudioManager() {
       if (soundEnabled) startAmbient()
       document.removeEventListener('click', start)
       document.removeEventListener('keydown', start)
-      document.removeEventListener('touchstart', start)
+      document.removeEventListener('touchstart', start),
     }
     document.addEventListener('click', start, { once: true })
     document.addEventListener('keydown', start, { once: true })

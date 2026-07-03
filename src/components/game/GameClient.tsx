@@ -88,7 +88,6 @@ export default function GameClient() {
     wagerFormatted, statusLabel, gameProfileMap,
   } = useGameData({ gameId, isBotGame, celoAddress: playerAddress, isConnected })
 
-  // ── opponent turn timer (5 min) ─────────────────────────────────────────────
   const [turnSecondsLeft, setTurnSecondsLeft] = useState(TURN_TIMEOUT_SECS)
   const { soundEnabled: soundOn, setSoundEnabled: setSoundOn, boardTheme, pieceSet, aiDifficulty, showMoveHints } = useSettingsStore()
   const customPieces = useMemo(() => buildPieces(pieceSet), [pieceSet])
