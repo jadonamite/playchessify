@@ -5,8 +5,8 @@
  * what makes training continuous instead of a one-off game.
  */
 
-import { Redis } from '@upstash/redis'
 import {
+import { Redis } from '@upstash/redis'
   type LearnerModel,
   type Concept,
   type LearnerLevel,
