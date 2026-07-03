@@ -35,7 +35,6 @@ function Scene() {
           material-toneMapped={false}
           material-transparent={true}
           material-opacity={0.15}
-        // TODO: add error boundary here
         >
           MASTERS
         </Text>

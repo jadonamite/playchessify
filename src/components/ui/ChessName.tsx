@@ -15,14 +15,9 @@ interface ChessNameProps {
   asLink?: boolean   // wraps in Link → /app/profile/{address}
 }
 
-  const inner = (() => {
-    if (isLoading) {
-      return (
-        <span className={className} style={{ ...style, opacity: 0.5 }}>
-          {fmtAddr(address)}
-        </span>
-      )
-    }
+function fmtAddr(addr: string) {
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`
+}
 
 export default function ChessName({
   address,
@@ -38,9 +33,14 @@ export default function ChessName({
 
   const profile = skip ? preloaded : fetched
 
-function fmtAddr(addr: string) {
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`
-}
+  const inner = (() => {
+    if (isLoading) {
+      return (
+        <span className={className} style={{ ...style, opacity: 0.5 }}>
+          {fmtAddr(address)}
+        </span>
+      )
+    }
 
     if (!profile) {
       return <span className={className} style={style}>{fmtAddr(address)}</span>
