@@ -31,7 +31,7 @@ const BASE_RATING = 1200
 export function usePlayerStats(address?: string | null): PlayerStats | null {
   const enabled = !!address && address !== ZERO && address.startsWith('0x')
 
-  const { data } = useReadContract({
+  const { payload } = useReadContract({
     address: CELO_CONTRACTS.game as `0x${string}`,
     abi: CHESS_GAME_ABI,
     functionName: 'playerStats',
@@ -40,10 +40,10 @@ export function usePlayerStats(address?: string | null): PlayerStats | null {
     query: { enabled },
   })
 
-  if (!data) return null
+  if (!payload) return null
 
   // outputs: [wins, losses, draws, rating, gamesPlayed]
-  const s = data as readonly bigint[]
+  const s = payload as readonly bigint[]
   const raw = Number(s[3])
   const rating = raw > 0 ? raw : BASE_RATING
 
