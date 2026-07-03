@@ -12,9 +12,9 @@ function useProfileTotal() {
   return useQuery<number | null>({
     queryKey: ['profile-total'],
     queryFn: async () => {
-      const response = await fetch('/api/profile/total')
-      if (!response.ok) return null
-      const data = await response.json() as { total: number }
+      const res = await fetch('/api/profile/total')
+      if (!res.ok) return null
+      const data = await res.json() as { total: number }
       return data.total
     },
     staleTime: 60_000,

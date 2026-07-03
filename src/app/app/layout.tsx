@@ -20,24 +20,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Self-heal the EOA ↔ smart-account name split for Privy users (one-time, silent).
   useProfileLink()
 
-  if (isGame) {
-    return (
-      <div className="pc-app-shell">
-        <SideNav />
-        <div className="pc-app-scroll">{children}</div>
-        <StreakCelebration />
-      </div>
-    )
-  }
-
   return (
     <div className="pc-app-shell">
       <SideNav />
-      <div className="pc-mobile-chrome">
-        <Navbar />
-      </div>
-      <div className="pc-app-scroll">{children}</div>
-      <BottomNav />
+      {!isGame && (
+        <div className="pc-mobile-chrome">
+          <Navbar />
+        </div>
+      )}
+      <div className={isGame ? undefined : 'pc-app-scroll'}>{children}</div>
+      {!isGame && <BottomNav />}
       <StreakCelebration />
     </div>
   )
