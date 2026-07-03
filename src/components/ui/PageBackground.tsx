@@ -1,18 +1,16 @@
-'use client'
-
 import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import SceneBoundary from '@/components/ui/SceneBoundary'
 import { King, Queen, Pawn, Bishop, Knight } from '@/components/ui/ChessModels'
 
-/**
- * Shared decorative background — the floating chess pieces + neon grid used across
- * the app. ONE WebGL context, mounted per page (only the active route's instance is
- * alive, so contexts never accumulate). Deliberately light: no HDR environment
- * (lit by plain lights instead), dpr-capped, low-power — so adding it to a page
- * doesn't cost what the landing king does. Wrapped in SceneBoundary so a lost
- * context degrades to "no background" rather than crashing the page.
- */
+function renderChessPiece(hero: 'king' | 'queen') {
+  return hero === 'queen' ? (
+    <Queen position={[0, -0.5, -2]} color="#0f172a" emissive="#00ccff" emissiveIntensity={0.15} floatSpeed={0.5} floatIntensity={0.3} rotationIntensity={0.1} scale={2.5} />
+  ) : (
+    <King position={[0, -0.5, -2]} color="#0f172a" emissive="#00ccff" emissiveIntensity={0.15} floatSpeed={0.5} floatIntensity={0.3} rotationIntensity={0.1} scale={2.5} />
+  )
+}
+
 function Scene({ hero }: { hero: 'king' | 'queen' }) {
   return (
     <>
@@ -20,11 +18,7 @@ function Scene({ hero }: { hero: 'king' | 'queen' }) {
       <directionalLight position={[10, 10, 5]} intensity={2} color="#00ccff" />
       <directionalLight position={[-10, -10, -5]} intensity={1} color="#6a0dad" />
 
-      {hero === 'queen' ? (
-        <Queen position={[0, -0.5, -2]} color="#0f172a" emissive="#00ccff" emissiveIntensity={0.15} floatSpeed={0.5} floatIntensity={0.3} rotationIntensity={0.1} scale={2.5} />
-      ) : (
-        <King position={[0, -0.5, -2]} color="#0f172a" emissive="#00ccff" emissiveIntensity={0.15} floatSpeed={0.5} floatIntensity={0.3} rotationIntensity={0.1} scale={2.5} />
-      )}
+      {renderChessPiece(hero)}
 
       <Pawn position={[-4, 2, -3]} color="#1e293b" emissive="#00ccff" emissiveIntensity={0.1} floatSpeed={1.5} floatIntensity={1} rotationIntensity={0.5} />
       <Bishop position={[4, -2, -2]} color="#1e293b" emissive="#6a0dad" emissiveIntensity={0.1} floatSpeed={2} floatIntensity={0.8} rotationIntensity={0.4} />
