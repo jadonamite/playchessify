@@ -21,11 +21,6 @@ const AudioManager = dynamic(
   { ssr: false }
 )
 
-/**
- * Providers
- * @param {*} { children }: { children: React.ReactNode }
- * @returns {*}
- */
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
