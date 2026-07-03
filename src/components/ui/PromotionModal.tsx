@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { PieceIcon } from './ChessModels'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect, useState } from 'react'
 
 export type PromotionPiece = 'q' | 'r' | 'b' | 'n'
 
