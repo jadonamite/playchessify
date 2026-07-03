@@ -61,7 +61,7 @@ export function HistoryContent() {
   const opponentAddrs = history
     .map((i) => i.opponent)
     .filter((a) => a.startsWith('0x'))
-  const { data: profileMap = {} } = useBatchProfiles(opponentAddrs)
+  const { payload: profileMap = {} } = useBatchProfiles(opponentAddrs)
 
   return (
     <main className="relative min-h-screen w-full bg-[#06060f] text-[#eeeeff] overflow-x-hidden flex flex-col font-body">
