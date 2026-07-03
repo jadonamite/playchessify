@@ -8,7 +8,7 @@ export interface StreakData {
   current: number
   longest: number
   lastPlayedDate: string
-  playedToday: boolean
+  playedToday: boolean,
 }
 
 export interface RecordResult extends StreakData {
