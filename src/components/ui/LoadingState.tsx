@@ -11,11 +11,6 @@ interface LoadingStateProps {
   progress?: number // 0 to 100
 }
 
-const calculateXPosition = (progress: number | undefined): number => {
-  if (progress === undefined) return 0
-  return (progress / 10) - 5
-}
-
 export default function LoadingState({ message = 'SCANNING BLOCKCHAIN', progress }: LoadingStateProps) {
   // If progress is provided, we calculate the X position (-5 to 5)
   // If not, we use a jumping/looping animation
@@ -32,7 +27,7 @@ export default function LoadingState({ message = 'SCANNING BLOCKCHAIN', progress
             <Environment files="/textures/environment/city.hdr" />
             
             <group
-              position={isInfinite ? [0, 0, 0] : [calculateXPosition(progress), 0, 0]}
+              position={isInfinite ? [0, 0, 0] : [(progress / 10) - 5, 0, 0]}
             >
               <Pawn 
                 color="#00ccff" 
