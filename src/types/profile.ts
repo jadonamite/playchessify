@@ -6,7 +6,7 @@ export interface ChessProfile {
   og: boolean               // first 100 profiles, locked forever
   createdAt: number         // unix ms
   updatedAt: number         // unix ms
-  usernameChangedAt: number // unix ms — 30-day username change lock
+  usernameChangedAt: number // unix ms — 30-day username change lock,
 }
 
 export interface ProfileCheckResult {

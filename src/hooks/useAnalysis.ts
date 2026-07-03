@@ -17,19 +17,25 @@ export function useAnalysis() {
     mounted.current = true
     // Warm the engine so the first real analysis isn't paying boot cost.
     getEngine().analyze('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', { depth: 1 })
-      .then(() => { if (mounted.current) setReady(true) })
+      .then((result) => {
+        if (!mounted.current) return
+        setReady(true)
+      })
       .catch(() => { /* engine unavailable — teaching falls back to non-analysis paths */ })
     return () => { mounted.current = false }
   }, [])
 
   const analyze = useCallback(async (fen: string, opts?: AnalyzeOptions): Promise<AnalysisResult | null> => {
+    if (!mounted.current) return null
     setAnalyzing(true)
     try {
-      return await getEngine().analyze(fen, opts)
+      const result = await getEngine().analyze(fen, opts)
+      return result
     } catch {
       return null
     } finally {
-      if (mounted.current) setAnalyzing(false)
+      if (!mounted.current) return
+      setAnalyzing(false)
     }
   }, [])
 
