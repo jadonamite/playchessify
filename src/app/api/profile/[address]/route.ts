@@ -65,10 +65,10 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     if (!check.ok) return NextResponse.json({ error: check.reason }, { status: 400 })
   }
 
-  if (displayName?.length > 30) {
+  if (displayName && displayName.length > 30) {
     return NextResponse.json({ error: 'displayName max 30 characters' }, { status: 400 })
   }
-  if (bio?.length > 120) {
+  if (bio && bio.length > 120) {
     return NextResponse.json({ error: 'bio max 120 characters' }, { status: 400 })
   }
 

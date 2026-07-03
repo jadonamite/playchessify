@@ -17,16 +17,12 @@ interface CoachStore {
   setCoachId: (id: string | null) => void
 }
 
-const createCoachStore = () => (
-  set: any
-) => ({
-  coachId: null,
-  setCoachId: (id: string | null) => set({ coachId: id }),
-})
-
 export const useCoachStore = create<CoachStore>()(
   persist(
-    createCoachStore(),
+    (set) => ({
+      coachId: null,
+      setCoachId: (id) => set({ coachId: id }),
+    }),
     { name: 'chessify-coach' },
   ),
 )
