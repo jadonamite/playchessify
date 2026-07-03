@@ -14,7 +14,7 @@ export interface PlacementItem {
   concept: Concept
   level: LearnerLevel
   prompt: string
-  expectedUci: string,
+  expectedUci: string
 }
 
 export const PLACEMENT: PlacementItem[] = [

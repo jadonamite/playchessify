@@ -9,12 +9,6 @@ function toHex(r: number, g: number, b: number): string {
   return `#${[r, g, b].map((v) => Math.min(255, v).toString(16).padStart(2, '0')).join('')}`
 }
 
-/**
- * generateAvatarSvg
- * @param {*} address: string
- * @param {*} size
- * @returns {*}
- */
 export function generateAvatarSvg(address: string, size = 100): string {
   const addr = address.toLowerCase()
 
