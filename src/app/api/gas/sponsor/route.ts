@@ -33,25 +33,6 @@ const COOLDOWN_SECONDS = 60 * 60        // one funded drip per address per hour
 const LOCK_SECONDS = 60                 // one in-flight drip per address
 const DAILY_CAP = 1000                  // global drips per day (abuse ceiling)
 
-let _redis: Redis | null = null
-function getRedis(): Redis {
-  if (_redis) return _redis
-  const url = process.env.UPSTASH_REDIS_REST_URL
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN
-  if (!url || !token) throw new Error(`${LOG_PREFIX} Missing Upstash env vars`)
-  _redis = new Redis({ url, token })
-  return _redis
-}
-
-const K = {
-  cooldown: (a: string) => `chess:gas:cooldown:${a.toLowerCase()}`,
-  lock: (a: string) => `chess:gas:lock:${a.toLowerCase()}`,
-  daily: () => `chess:gas:daily:${new Date().toISOString().slice(0, 10)}`,
-  celoCooldown: (a: string) => `chess:gas-celo:cooldown:${a.toLowerCase()}`,
-  celoLock: (a: string) => `chess:gas-celo:lock:${a.toLowerCase()}`,
-  celoDaily: () => `chess:gas-celo:daily:${new Date().toISOString().slice(0, 10)}`,
-}
-
 // POST /api/gas/sponsor — Tier B (MiniPay) and Tier C (external EOA).
 // Tier B: makes a 0-balance MiniPay EOA able to transact (provisions CHESS + drips USDm gas).
 // Tier C: drips a small amount of native CELO so an empty external wallet can pay its own gas.
@@ -62,6 +43,25 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'invalid json body' }, { status: 400 })
   }
+
+const K = {
+  cooldown: (a: string) => `chess:gas:cooldown:${a.toLowerCase()}`,
+  lock: (a: string) => `chess:gas:lock:${a.toLowerCase()}`,
+  daily: () => `chess:gas:daily:${new Date().toISOString().slice(0, 10)}`,
+  celoCooldown: (a: string) => `chess:gas-celo:cooldown:${a.toLowerCase()}`,
+  celoLock: (a: string) => `chess:gas-celo:lock:${a.toLowerCase()}`,
+  celoDaily: () => `chess:gas-celo:daily:${new Date().toISOString().slice(0, 10)}`,
+}
+
+let _redis: Redis | null = null
+function getRedis(): Redis {
+  if (_redis) return _redis
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) throw new Error(`${LOG_PREFIX} Missing Upstash env vars`)
+  _redis = new Redis({ url, token })
+  return _redis
+}
 
   const addressRaw = typeof body?.address === 'string' ? body.address.trim() : ''
   const chain = typeof body?.chain === 'string' ? body.chain : ''
