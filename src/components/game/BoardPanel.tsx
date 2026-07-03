@@ -1,10 +1,10 @@
-import CapturedTray from './CapturedTray'
-import ClayCard from '@/components/ui/ClayCard'
 import React from 'react'
 import dynamic from 'next/dynamic'
-import { BOARD_THEMES, type PieceSet } from '@/hooks/useSettingsStore'
-import { Chess, type Square } from 'chess.js'
 import { motion } from 'framer-motion'
+import { Chess, type Square } from 'chess.js'
+import ClayCard from '@/components/ui/ClayCard'
+import { BOARD_THEMES, type PieceSet } from '@/hooks/useSettingsStore'
+import CapturedTray from './CapturedTray'
 
 const Chessboard = dynamic(() => import('react-chessboard').then(m => m.Chessboard), { ssr: false })
 
