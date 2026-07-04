@@ -23,18 +23,6 @@ interface TrainingBoardProps {
   showLegalDots?: boolean
 }
 
-/**
- * Lean self-contained board for the training flows. Reuses the app's piece sets
- * and board themes but stays decoupled from the live GameClient so teacher-mode
- * work never touches the wagered-game paths.
- */
-export default function TrainingBoard({
-  game, orientation = 'white', interactive, onMove, highlights = {}, showLegalDots = true,
-}: TrainingBoardProps) {
-  const { boardTheme, pieceSet } = useSettingsStore()
-  const customPieces = useMemo(() => buildPieces(pieceSet), [pieceSet])
-  const [moveFrom, setMoveFrom] = useState('')
-
   const legalStyles = (from: string): Record<string, React.CSSProperties> => {
     const styles: Record<string, React.CSSProperties> = {
       [from]: { backgroundColor: 'rgba(0,204,255,0.35)' },
@@ -50,6 +38,18 @@ export default function TrainingBoard({
     }
     return styles
   }
+
+/**
+ * Lean self-contained board for the training flows. Reuses the app's piece sets
+ * and board themes but stays decoupled from the live GameClient so teacher-mode
+ * work never touches the wagered-game paths.
+ */
+export default function TrainingBoard({
+  game, orientation = 'white', interactive, onMove, highlights = {}, showLegalDots = true,
+}: TrainingBoardProps) {
+  const { boardTheme, pieceSet } = useSettingsStore()
+  const customPieces = useMemo(() => buildPieces(pieceSet), [pieceSet])
+  const [moveFrom, setMoveFrom] = useState('')
 
   const tryMove = (from: string, to: string): boolean => {
     const ok = onMove(from, to)
