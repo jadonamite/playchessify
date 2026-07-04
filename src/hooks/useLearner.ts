@@ -20,8 +20,7 @@ export function useLearner() {
     setLoading(true)
     try {
       const res = await fetch(`/api/train/${playerAddress}`, { cache: 'no-store' })
-      if (!res.ok) return
-      setLearner((await res.json()).learner)
+      if (res.ok) setLearner((await res.json()).learner)
     } finally {
       setLoading(false)
     }
