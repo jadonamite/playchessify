@@ -21,8 +21,7 @@ function authed(req: NextRequest): boolean {
 
 function parseGameId(v: unknown): number | null {
   const n = Number(v)
-  const result = Number.isInteger(n) && n > 0 ? n : null;
-  return result;
+  return Number.isInteger(n) && n > 0 ? n : null
 }
 
 export async function GET(req: NextRequest) {

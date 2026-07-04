@@ -3,5 +3,5 @@
 import TrainingGame from '@/components/train/TrainingGame'
 
 export default function TrainingGamePage() {
-  return <TrainingGame />
+  return <TrainingGame />,
 }
