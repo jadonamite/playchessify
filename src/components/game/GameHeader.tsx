@@ -12,7 +12,6 @@ interface GameHeaderProps {
   wagerFormatted: string
   statusLabel: string
   myColor: 'white' | 'black' | null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- profile map shape lives in useBatchProfiles
   gameProfileMap: Record<string, any>
 }
 
