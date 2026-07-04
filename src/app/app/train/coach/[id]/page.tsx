@@ -24,7 +24,7 @@ export default function CoachIntroPage() {
 
   const begin = () => { setCoachId(coach.id); router.push(`/app/train?coach=${coach.id}`) }
 
-  // First-person introduction composed from the coach's own data — always works,
+  // First-person introduction composed from the coach's own payload — always works,
   // no LLM needed, so it's reliable on production.
   const intro = useMemo(() => {
     const traits = coach.tags.split(' · ').join(', ').toLowerCase()
