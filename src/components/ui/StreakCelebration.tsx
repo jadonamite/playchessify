@@ -66,7 +66,7 @@ export default function StreakCelebration() {
     const target = data.current
     const from = Math.max(0, target - 1)
     setCount(from)
-    let raf = 0
+    let raf: number = 0
     const start = performance.now()
     const dur = 700
     const tick = (now: number) => {
