@@ -1,9 +1,9 @@
-import { CELO_CONTRACTS, CELO_CHAIN_ID, TOKEN_DECIMALS } from '@/config/contracts'
-import { CHESS_GAME_ABI } from '@/config/abis'
-import { type GameData, ZERO, STATUS_LABELS, norm, resultForColor } from '@/components/game/types'
-import { useBatchProfiles } from '@/hooks/useBatchProfiles'
 import { useEffect, useState } from 'react'
 import { useReadContract } from 'wagmi'
+import { CHESS_GAME_ABI } from '@/config/abis'
+import { CELO_CONTRACTS, CELO_CHAIN_ID, TOKEN_DECIMALS } from '@/config/contracts'
+import { useBatchProfiles } from '@/hooks/useBatchProfiles'
+import { type GameData, ZERO, STATUS_LABELS, norm, resultForColor } from '@/components/game/types'
 
 interface UseGameDataArgs {
   gameId: number

@@ -36,7 +36,6 @@ function Scene({ hero }: { hero: 'king' | 'queen' }) {
 export default function PageBackground({
   hero = 'king',
   grid = true,
-// TODO: add error boundary here
 }: {
   hero?: 'king' | 'queen'
   /** Render the neon grid overlay. Disable on pages that already draw their own. */

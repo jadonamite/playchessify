@@ -1,7 +1,7 @@
 'use client'
 
-import type { ChessProfile } from '@/types/profile'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import type { ChessProfile } from '@/types/profile'
 
 export function profileKey(address: string) {
   return ['profile', address.toLowerCase()]

@@ -3,7 +3,7 @@
 // Game:          mondamusic-lofi-lofi-girl-lofi-chill-512853.mp3
 
 const LANDING_TRACK = '/music/mondamusic-lofi-lofi-girl-lofi-music-529555.mp3'
-const GAME_TRACK: string = '/music/mondamusic-lofi-lofi-girl-lofi-chill-512853.mp3'
+const GAME_TRACK    = '/music/mondamusic-lofi-lofi-girl-lofi-chill-512853.mp3'
 
 type TrackId = 'landing' | 'game'
 
