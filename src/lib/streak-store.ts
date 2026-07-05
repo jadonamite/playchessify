@@ -11,10 +11,6 @@ import { Redis } from '@upstash/redis'
  */
 
 let _redis: Redis | null = null
-/**
- * getRedis
- * @returns {*}
- */
 function getRedis(): Redis {
   if (_redis) return _redis
   const url = process.env.UPSTASH_REDIS_REST_URL
