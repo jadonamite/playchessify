@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyMessage } from 'viem'
 import { getProfileDirect, linkProfileAlias } from '@/lib/profile-store'
+import { verifyMessage } from 'viem'
 
 // POST /api/profile/link — link a Privy user's embedded EOA ↔ smart account so a
 // single .chess name resolves for both. The EOA owns the smart account, so a
