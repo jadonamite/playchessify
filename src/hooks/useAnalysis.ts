@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
 import { getEngine, type AnalysisResult, type AnalyzeOptions } from '@/lib/analysis/engine'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 /**
  * React wrapper over the shared Stockfish engine. Returns a stable `analyze`

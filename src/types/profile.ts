@@ -1,6 +1,6 @@
 export interface ChessProfile {
   address: string           // 0x... lowercase
-  username: string          // "jadon" — displayed as "jadon.chess"
+  username: string          // 'jadon' — displayed as 'jadon.chess'
   displayName: string       // freeform, max 30 chars
   bio: string               // max 120 chars
   og: boolean               // first 100 profiles, locked forever
