@@ -28,6 +28,23 @@ export function useLearner() {
 
   useEffect(() => { void refresh() }, [refresh])
 
+  const updateLearnerModel = async (patch: {
+    coachId?: string
+    level?: LearnerLevel
+    placed?: boolean
+    concepts?: Partial<Record<Concept, number>>
+    completedLesson?: string
+  }): Promise<LearnerModel | null> => {
+    if (!playerAddress) return null
+    const res = await fetch(`/api/train/${playerAddress}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(patch),
+    })
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'update failed')
+    return (await res.json()).learner as LearnerModel
+  }
+
   const update = useCallback(
     async (patch: {
       coachId?: string
@@ -36,18 +53,11 @@ export function useLearner() {
       concepts?: Partial<Record<Concept, number>>
       completedLesson?: string
     }): Promise<LearnerModel | null> => {
-      if (!playerAddress) return null
-      const res = await fetch(`/api/train/${playerAddress}`, {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(patch),
-      })
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'update failed')
-      const next = (await res.json()).learner as LearnerModel
+      const next = await updateLearnerModel(patch)
       setLearner(next)
       return next
     },
-    [playerAddress],
+    [playerAddress, updateLearnerModel]
   )
 
   return { learner, loading, refresh, update }
