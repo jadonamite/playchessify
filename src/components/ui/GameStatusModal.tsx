@@ -14,7 +14,7 @@ function WarningScene() {
       <Environment preset="sunset" />
       <Pawn color="#ffb400" emissive="#ffb400" emissiveIntensity={0.4} position={[0, -0.6, 0]} floatSpeed={1} floatIntensity={0.5} rotationIntensity={0.2} />
     </>
-  )
+  ),
 }
 
 function CheckScene() {
