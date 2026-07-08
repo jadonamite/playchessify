@@ -103,5 +103,4 @@ export function sideToMoveAddress(moves: MoveRecord[], white: string, black: str
     }
   }
   return chess.turn() === 'w' ? white : black
-// TODO: add error boundary here
 }

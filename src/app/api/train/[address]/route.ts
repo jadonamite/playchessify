@@ -2,19 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getOrCreateLearner, updateLearner, checkRateLimit } from '@/lib/train-store'
 import type { Concept, LearnerLevel } from '@/types/training'
 
-const validateAddress = async (address: string | undefined) => {
-  if (!address?.startsWith('0x')) {
-    return NextResponse.json({ error: 'invalid address' }, { status: 400 })
-  }
-}
-
 type Ctx = { params: Promise<{ address: string }> }
 
 export async function GET(_req: NextRequest, { params }: Ctx) {
   const { address } = await params
-  const response = await validateAddress(address)
-  if (response) return response
-
+  if (!address?.startsWith('0x')) {
+    return NextResponse.json({ error: 'invalid address' }, { status: 400 })
+  }
   const learner = await getOrCreateLearner(address)
   return NextResponse.json({ learner })
 }
@@ -28,8 +22,9 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
  */
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   const { address } = await params
-  const response = await validateAddress(address)
-  if (response) return response
+  if (!address?.startsWith('0x')) {
+    return NextResponse.json({ error: 'invalid address' }, { status: 400 })
+  }
 
   let body: {
     coachId?: string
