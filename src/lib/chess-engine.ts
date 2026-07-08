@@ -185,6 +185,12 @@ function scoreMove(m: Move): number {
   return score
 }
 
+/**
+ * getBestMove
+ * @param {*} game: Chess
+ * @param {*} depth: number
+ * @returns {*}
+ */
 export function getBestMove(game: Chess, depth: number = 3): Move | null {
   const possibleMoves = orderMoves(game.moves({ verbose: true }))
   if (game.isGameOver() || possibleMoves.length === 0) return null
