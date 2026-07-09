@@ -57,6 +57,10 @@ function Toggle({ label, sub, checked, onChange }: { label: string; sub?: string
   )
 }
 
+/**
+ * SettingsPage
+ * @returns {*}
+ */
 export default function SettingsPage() {
   const router = useRouter()
   const { playerAddress, isConnected } = useWallet()

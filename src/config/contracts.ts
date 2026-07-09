@@ -9,6 +9,7 @@ export const CELO_CONTRACTS = {
 const IS_TESTNET = process.env.NEXT_PUBLIC_CELO_NETWORK === 'alfajores'
 export const CELO_CHAIN_ID = IS_TESTNET ? 44787 : 42220 // Alfajores | Celo Mainnet
 
+// USDm (Mento Dollar — the cUSD rebrand: same contract, same 18 decimals) — the
 // only fee currency MiniPay supports for gasless (legacy) txns.
 export const USDM_ADDRESS = (process.env.NEXT_PUBLIC_FEE_CURRENCY ??
   (IS_TESTNET
