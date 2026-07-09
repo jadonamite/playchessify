@@ -9,7 +9,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const GAME = CELO_CONTRACTS.game as `0x${string}`
-const ZERO = '0x0000000000000000000000000000000000000000'
+const ZERO: string = '0x0000000000000000000000000000000000000000'
 const STATUS_LABELS = ['Waiting', 'Active', 'Finished', 'Cancelled', 'Draw']
 
 export type HistoryItem = {
