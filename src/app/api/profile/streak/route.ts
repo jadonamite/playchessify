@@ -16,8 +16,8 @@ import {
 const CLIENT_SOURCES: StreakSource[] = ['bot', 'puzzle', 'multiplayer']
 
 // ── GET /api/profile/streak?address=0x… — read a wallet's current streak ──
-export async function GET(req: NextRequest) {
-  const address = req.nextUrl.searchParams.get('address')
+export async function GET(request: NextRequest) {
+  const address = request.nextUrl.searchParams.get('address')
   if (!address?.startsWith('0x')) {
     return NextResponse.json({ error: 'invalid address' }, { status: 400 })
   }
@@ -28,9 +28,9 @@ export async function GET(req: NextRequest) {
 }
 
 // ── POST /api/profile/streak — record a completed play (bot / puzzle / multiplayer) ──
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   let body: { address?: string; source?: string }
-  try { body = await req.json() } catch {
+  try { body = await request.json() } catch {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 })
   }
 
