@@ -29,9 +29,9 @@ interface BoardPanelProps {
   myAdvantage: number
   soundOn: boolean
   setSoundOn: (v: boolean) => void
-  handleCanDragPiece: (args: { isSparePiece: boolean; piece: unknown; square: string | null }) => boolean
-  handlePieceDrop: (args: { piece: unknown; sourceSquare: string; targetSquare: string | null }) => boolean
-  handleSquareClick: (args: { piece: unknown; square: string }) => void
+  handleCanDragPiece: (params: { isSparePiece: boolean; piece: unknown; square: string | null }) => boolean
+  handlePieceDrop: (params: { piece: unknown; sourceSquare: string; targetSquare: string | null }) => boolean
+  handleSquareClick: (params: { piece: unknown; square: string }) => void
 }
 
 export default function BoardPanel(props: BoardPanelProps) {
