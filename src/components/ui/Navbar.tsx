@@ -144,6 +144,7 @@ export default function Navbar() {
               </span>
             ))}
           </div>
+// TODO: optimize for large datasets
 
           {/* Right — parallelogram wallet/connect + mobile hamburger */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative', zIndex: 2 }}>
