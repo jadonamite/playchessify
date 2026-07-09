@@ -234,7 +234,7 @@ export default function ProfilePage() {
           >
             {/* Profile hero card */}
             <ClayCard className="p-8">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+              <div className='flex flex-col sm:flex-row items-start sm:items-center gap-6'>
                 <div className="relative shrink-0">
                   <ChessAvatar address={profileAddress ?? identifier} size={80} />
                   {profile?.og && (
