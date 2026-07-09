@@ -1,7 +1,7 @@
 'use client'
 
-import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { create } from 'zustand'
 
 export type BoardTheme = 'dark' | 'forest' | 'classic' | 'midnight'
 
