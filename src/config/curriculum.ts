@@ -7,7 +7,6 @@ import type { LearnerModel } from '@/types/training'
  * attempts with Stockfish (not the answer key), and the hint ladder escalates
  * if the learner is stuck. All FENs here are engine-verified for a clean best.
  */
-// FIXME: handle edge case when value is null
 export interface DrillStep {
   fen: string
   prompt: string
