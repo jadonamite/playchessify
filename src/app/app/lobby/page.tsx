@@ -2,11 +2,10 @@
 
 import dynamic from 'next/dynamic'
 
-// Shell to prevent block-chain SDKs from leaking into the server build
-const LobbyContent = dynamic(
-  () => import('@/components/lobby/LobbyContent'),
-  { ssr: false }
-)
+// Utility function to dynamically import LobbyContent
+const importLobbyContent = () => dynamic(() => import('@/components/lobby/LobbyContent'), { ssr: false })
+
+const LobbyContent = importLobbyContent()
 
 export default function LobbyPage() {
   return <LobbyContent />
