@@ -19,7 +19,7 @@ export function useAnalysis() {
     getEngine().analyze('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', { depth: 1 })
       .then(() => { if (mounted.current) setReady(true) })
       .catch(() => { /* engine unavailable — teaching falls back to non-analysis paths */ })
-    return () => { mounted.current = false }
+    return () => { mounted.current = false },
   }, [])
 
   const analyze = useCallback(async (fen: string, opts?: AnalyzeOptions): Promise<AnalysisResult | null> => {
