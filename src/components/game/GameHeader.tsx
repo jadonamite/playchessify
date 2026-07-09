@@ -16,6 +16,38 @@ interface GameHeaderProps {
   gameProfileMap: Record<string, any>
 }
 
+const renderOpponentInfo = (gameData: GameData | null, gameProfileMap: Record<string, any>) => {
+  if (!gameData) return null;
+
+  return (
+    <div className="flex items-center gap-3 mt-2 md:mt-4">
+      <div className="flex items-center gap-2">
+        <ChessAvatar address={gameData.white} size={24} />
+        <ChessName
+          address={gameData.white}
+          profile={gameProfileMap[gameData.white.toLowerCase()]}
+          short
+          className="text-xs font-bold text-white/80"
+        />
+      </div>
+      <span className="text-[var(--t3)] text-xs font-black">vs</span>
+      {gameData.black && gameData.black !== ZERO ? (
+        <div className="flex items-center gap-2">
+          <ChessAvatar address={gameData.black} size={24} />
+          <ChessName
+            address={gameData.black}
+            profile={gameProfileMap[gameData.black.toLowerCase()]}
+            short
+            className="text-xs font-bold text-white/80"
+          />
+        </div>
+      ) : (
+        <span className="text-xs text-[var(--t3)] italic">waiting…</span>
+      )}
+    </div>
+  )
+}
+
 export default function GameHeader({ isBotGame, gameId, gameData, wagerFormatted, statusLabel, myColor, gameProfileMap }: GameHeaderProps) {
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-6 mb-3 md:mb-12">
@@ -35,31 +67,7 @@ export default function GameHeader({ isBotGame, gameId, gameData, wagerFormatted
               <StatBadge label="STATUS" value={statusLabel} />
               {myColor && <StatBadge label="YOU PLAY" value={myColor.toUpperCase()} />}
             </div>
-            <div className="flex items-center gap-3 mt-2 md:mt-4">
-              <div className="flex items-center gap-2">
-                <ChessAvatar address={gameData.white} size={24} />
-                <ChessName
-                  address={gameData.white}
-                  profile={gameProfileMap[gameData.white.toLowerCase()]}
-                  short
-                  className="text-xs font-bold text-white/80"
-                />
-              </div>
-              <span className="text-[var(--t3)] text-xs font-black">vs</span>
-              {gameData.black && gameData.black !== ZERO ? (
-                <div className="flex items-center gap-2">
-                  <ChessAvatar address={gameData.black} size={24} />
-                  <ChessName
-                    address={gameData.black}
-                    profile={gameProfileMap[gameData.black.toLowerCase()]}
-                    short
-                    className="text-xs font-bold text-white/80"
-                  />
-                </div>
-              ) : (
-                <span className="text-xs text-[var(--t3)] italic">waiting…</span>
-              )}
-            </div>
+            {renderOpponentInfo(gameData, gameProfileMap)}
           </>
         )}
       </div>
