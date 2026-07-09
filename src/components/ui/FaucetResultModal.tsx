@@ -12,7 +12,7 @@ import Confetti from './Confetti'
 const KEYFRAMES = `
 @keyframes coin-glow {
   0%, 100% { filter: drop-shadow(0 0 15px rgba(0,204,255,0.6)); }
-  50%      { filter: drop-shadow(0 0 35px rgba(0,204,255,1)); },
+  50%      { filter: drop-shadow(0 0 35px rgba(0,204,255,1)); }
 }
 `
 

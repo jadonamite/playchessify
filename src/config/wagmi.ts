@@ -1,5 +1,5 @@
-import { celo, celoAlfajores, mainnet } from 'viem/chains'
 import { createConfig } from '@privy-io/wagmi'
+import { celo, celoAlfajores, mainnet } from 'viem/chains'
 import { http } from 'wagmi'
 import { injected } from 'wagmi/connectors'
 

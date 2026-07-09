@@ -35,8 +35,7 @@ export default function PlacementPage() {
     if (!move) return false
     const post = await analyze(g.fen(), { movetime: 300 })
     if (!post) return uci === item.expectedUci
-    const result = pre.whiteCp - post.whiteCp <= 60;
-    return result;
+    return pre.whiteCp - post.whiteCp <= 60
   }, [analyze, item])
 
   const onMove = useCallback((from: string, to: string): boolean => {

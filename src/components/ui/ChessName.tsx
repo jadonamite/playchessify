@@ -33,41 +33,47 @@ export default function ChessName({
 
   const profile = skip ? preloaded : fetched
 
-  if (isLoading) {
+  const inner = (() => {
+    if (isLoading) {
+      return (
+        <span className={className} style={{ ...style, opacity: 0.5 }}>
+          {fmtAddr(address)}
+        </span>
+      )
+    }
+
+    if (!profile) {
+      return <span className={className} style={style}>{fmtAddr(address)}</span>
+    }
+
+    const display = short ? profile.username : `${profile.username}.chess`
+
     return (
-      <span className={className} style={{ ...style, opacity: 0.5 }}>
-        {fmtAddr(address)}
+      <span className={className} style={style}>
+        {display}
+        {badge && profile.og && (
+          <span
+            title="OG — first 100 players"
+            style={{ marginLeft: '4px', color: '#fbbf24', fontSize: '0.75em' }}
+          >
+            ✦
+          </span>
+        )}
       </span>
+    )
+  })()
+
+  if (asLink) {
+    return (
+      <Link
+        href={`/app/profile/${address}`}
+        className="hover:opacity-80 transition-opacity"
+        style={{ textDecoration: 'none', color: 'inherit' }}
+      >
+        {inner}
+      </Link>
     )
   }
 
-  if (!profile) {
-    return <span className={className} style={style}>{fmtAddr(address)}</span>
-  }
-
-  const display = short ? profile.username : `${profile.username}.chess`
-
-  const inner = (
-    <span className={className} style={style}>
-      {display}
-      {badge && profile.og && (
-        <span
-          title="OG — first 100 players"
-          style={{ marginLeft: '4px', color: '#fbbf24', fontSize: '0.75em' }}
-        >
-          ✦
-        </span>
-      )}
-    </span>
-  )
-
-  return asLink ? (
-    <Link
-      href={`/app/profile/${address}`}
-      className="hover:opacity-80 transition-opacity"
-      style={{ textDecoration: 'none', color: 'inherit' }}
-    >
-      {inner}
-    </Link>
-  ) : inner
+  return inner
 }
