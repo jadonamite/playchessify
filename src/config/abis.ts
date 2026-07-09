@@ -27,7 +27,6 @@ export const CHESS_GAME_ABI = [
     { "name": "wager", "type": "uint256" },
     { "name": "status", "type": "uint8" },
     { "name": "result", "type": "uint8" },
-    // TODO: add error boundary here
     { "name": "createdAt", "type": "uint256" },
     { "name": "drawProposer", "type": "address" }
   ]}] },

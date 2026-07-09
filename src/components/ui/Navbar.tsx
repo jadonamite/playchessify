@@ -36,10 +36,6 @@ function LogoutIcon() {
   )
 }
 
-/**
- * Navbar
- * @returns {*}
- */
 export default function Navbar() {
   const {
     isReady, address, playerAddress,
