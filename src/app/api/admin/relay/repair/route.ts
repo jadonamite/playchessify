@@ -19,10 +19,11 @@ function authed(req: NextRequest): boolean {
   return req.headers.get('x-admin-secret') === secret
 }
 
-function parseGameId(v: unknown): number | null {
-  const n = Number(v)
-  return Number.isInteger(n) && n > 0 ? n : null
-}
+export async function POST(req: NextRequest) {
+  if (!process.env.RELAY_ADMIN_SECRET) {
+    return NextResponse.json({ error: 'admin disabled' }, { status: 503 })
+  }
+  if (!authed(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
 export async function GET(req: NextRequest) {
   if (!process.env.RELAY_ADMIN_SECRET) {
@@ -37,11 +38,10 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ gameId, length: moves.length, moves })
 }
 
-export async function POST(req: NextRequest) {
-  if (!process.env.RELAY_ADMIN_SECRET) {
-    return NextResponse.json({ error: 'admin disabled' }, { status: 503 })
-  }
-  if (!authed(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+function parseGameId(v: unknown): number | null {
+  const n = Number(v)
+  return Number.isInteger(n) && n > 0 ? n : null
+}
 
   let body: { gameId?: unknown; chain?: unknown }
   try { body = await req.json() } catch {

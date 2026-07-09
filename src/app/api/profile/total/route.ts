@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server'
 import { Redis } from '@upstash/redis'
+import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
