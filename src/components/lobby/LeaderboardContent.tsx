@@ -523,7 +523,7 @@ export default function LeaderboardContent() {
                 >
                  <PlayCard size="hero">
                   {/* Table header */}
-                  <div className='px-6 md:px-8 py-4 border-b border-white/5 flex items-center justify-between'>
+                  <div className="px-6 md:px-8 py-4 border-b border-white/5 flex items-center justify-between">
                     <span
                       className="text-[10px] font-black tracking-[0.25em] text-[var(--t3)] uppercase"
                       style={{ fontFamily: 'var(--fd)' }}

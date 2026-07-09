@@ -38,11 +38,6 @@ export function streakDay(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-/**
- * dispatchStreak
- * @param {*} detail: StreakEventDetail
- * @returns {*}
- */
 export function dispatchStreak(detail: StreakEventDetail) {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(STREAK_EVENT, { detail }))

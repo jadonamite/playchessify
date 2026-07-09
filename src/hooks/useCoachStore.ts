@@ -1,7 +1,7 @@
 'use client'
 
-import { persist } from 'zustand/middleware'
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 /**
  * UI cache of the player's active coach id, persisted to localStorage so the

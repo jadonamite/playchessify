@@ -16,5 +16,5 @@ export default function MoveLog({ moveHistory }: { moveHistory: string[] }) {
         )}
       </div>
     </ClayCard>
-  ),
+  )
 }
