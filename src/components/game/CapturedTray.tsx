@@ -6,6 +6,7 @@ export default function CapturedTray({ pieces, color, advantage, set }: { pieces
     <div className="flex items-center gap-2 min-h-[22px]">
       <div className="flex items-center">
         {pieces.map((p, i) => (
+          // eslint-disable-next-line @next/next/no-img-element -- dynamic SVG piece sprite, next/image unsuitable
           <img
             key={i}
             src={piecePath(set, `${color}${p.toUpperCase()}`)}

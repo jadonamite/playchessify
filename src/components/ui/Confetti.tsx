@@ -1,7 +1,7 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 
 /**
  * Self-contained confetti (no global keyframes). Two variants:
