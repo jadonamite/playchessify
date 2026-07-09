@@ -51,6 +51,21 @@ export const PLACEMENT: PlacementItem[] = [
 ]
 
 /**
+ * Calculate the mastery score for a concept based on whether it was solved or not.
+ */
+function calculateMasteryScore(solved: boolean): number {
+  return solved ? 0.6 : 0.15
+}
+
+/**
+ * Calculate the level based on the number of solved items and intermediate items.
+ */
+function calculateLevel(solvedCount: number, interSolved: number): LearnerLevel {
+  if (solvedCount >= 4 && interSolved >= 1) return 'intermediate'
+  return 'basics'
+}
+
+/**
  * Turn per-item results into a placement outcome: a level and seed mastery
  * scores per concept. Solved → 0.6 mastery, missed → 0.15. Level rises with
  * the share solved (expert is reached through lessons, not placement).
@@ -59,13 +74,14 @@ export function scorePlacement(
   results: { item: PlacementItem; solved: boolean }[],
 ): { level: LearnerLevel; concepts: Partial<Record<Concept, number>> } {
   const concepts: Partial<Record<Concept, number>> = {}
+  let solvedCount = 0
+  let interSolved = 0
   for (const { item, solved } of results) {
-    const prev = concepts[item.concept] ?? 0
-    concepts[item.concept] = Math.max(prev, solved ? 0.6 : 0.15)
+    const masteryScore = calculateMasteryScore(solved)
+    concepts[item.concept] = Math.max(concepts[item.concept] ?? 0, masteryScore)
+    if (solved) solvedCount++
+    if (solved && item.level === 'intermediate') interSolved++
   }
-  const solvedCount = results.filter((r) => r.solved).length
-  const interSolved = results.filter((r) => r.solved && r.item.level === 'intermediate').length
-  let level: LearnerLevel = 'basics'
-  if (solvedCount >= 4 && interSolved >= 1) level = 'intermediate'
+  const level = calculateLevel(solvedCount, interSolved)
   return { level, concepts }
 }
