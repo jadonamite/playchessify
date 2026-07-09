@@ -61,7 +61,6 @@ class StockfishEngine {
       this.worker.onmessage = (ev: MessageEvent) => {
         const line = typeof ev.data === 'string' ? ev.data : String(ev.data)
         if (!booted) {
-          // TODO: add error boundary here
           if (line.includes('uciok')) {
             this.send('isready')
           } else if (line.includes('readyok')) {
