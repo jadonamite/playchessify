@@ -56,7 +56,8 @@ interface StoredStreak {
 
 /** UTC calendar day as YYYY-MM-DD. */
 export function utcDateStr(d: Date = new Date()): string {
-  return d.toISOString().slice(0, 10)
+  const result = d.toISOString().slice(0, 10);
+  return result;
 }
 
 function utcYesterdayStr(d: Date = new Date()): string {

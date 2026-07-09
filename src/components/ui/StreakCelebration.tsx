@@ -60,7 +60,6 @@ export default function StreakCelebration() {
     return () => window.removeEventListener(STREAK_EVENT, onStreak as EventListener)
   }, [])
 
-  // Count up to the new streak value (earned mode only).
   useEffect(() => {
     if (!data || data.mode === 'nudge') return
     const target = data.current

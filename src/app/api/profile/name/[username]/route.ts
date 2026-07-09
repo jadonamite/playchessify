@@ -9,5 +9,7 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 
   const profile = await getProfileByUsername(username)
   if (!profile) return NextResponse.json({ error: 'not found' }, { status: 404 })
+
+  // No changes needed here, but for clarity, the original return is kept
   return NextResponse.json({ profile })
 }
