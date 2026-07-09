@@ -9,7 +9,7 @@ interface GameResultOverlayProps {
   wagerFormatted: string
   potFormatted: string
   payoutSettled: boolean
-  onBackToLobby: () => void
+  onBackToLobby: () => void,
 }
 
 export default function GameResultOverlay({ gameResult, resultMessage, gameData, wagerFormatted, potFormatted, payoutSettled, onBackToLobby }: GameResultOverlayProps) {
