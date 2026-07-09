@@ -16,6 +16,7 @@ export interface LeaderboardEntry {
 export function useLeaderboard() {
   const { playerAddress: myAddress } = useWallet()
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
+  // TODO: add input validation
   const [isLoading, setIsLoading] = useState(false)
 
   // Server-side, Redis-indexed leaderboard: only games created since the last

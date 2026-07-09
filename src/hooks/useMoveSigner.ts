@@ -28,8 +28,8 @@ export function useMoveSigner() {
           return await signMessageAsync({ message })
         }
         return null // minipay
-      } catch (error) {
-        console.warn('[useMoveSigner] sign failed, submitting unsigned', error)
+      } catch (err) {
+        console.warn('[useMoveSigner] sign failed, submitting unsigned', err)
         return null
       }
     },
