@@ -1,5 +1,5 @@
-import type { MoveRecord } from '@/lib/moves-store'
 import { Chess } from 'chess.js'
+import type { MoveRecord } from '@/lib/moves-store'
 
 // Shared, client-safe settlement helpers. Imported by BOTH the browser (to sign
 // moves) and the server (to verify + replay). Keep this file free of any
