@@ -32,28 +32,6 @@ const TABS: TabDef[] = [
   { key: 'profile', label: 'You', href: '/app/profile', match: ['/app/profile'], Icon: ProfileIcon, accent: 'var(--candy-rose)' },
 ]
 
-export default function BottomNav() {
-  const pathname = usePathname()
-  const { playerAddress } = useWallet()
-  const { streak } = useStreak(playerAddress)
-
-      <span
-        style={{
-          fontFamily: 'var(--fd)',
-          fontSize: 9,
-          fontWeight: 800,
-          letterSpacing: '.08em',
-          textTransform: 'uppercase',
-          color: active ? tab.accent : 'var(--t3)',
-          transition: 'color .2s ease',
-        }}
-      >
-        {tab.label}
-      </span>
-    </Link>
-  )
-}
-
 function Tab({ tab, active, href, streakLabel }: { tab: TabDef; active: boolean; href: string; streakLabel?: string }) {
   const { Icon } = tab
   return (
@@ -112,6 +90,28 @@ function Tab({ tab, active, href, streakLabel }: { tab: TabDef; active: boolean;
         )}
         <span className="relative z-[1] flex"><Icon size={26} /></span>
       </motion.span>
+
+      <span
+        style={{
+          fontFamily: 'var(--fd)',
+          fontSize: 9,
+          fontWeight: 800,
+          letterSpacing: '.08em',
+          textTransform: 'uppercase',
+          color: active ? tab.accent : 'var(--t3)',
+          transition: 'color .2s ease',
+        }}
+      >
+        {tab.label}
+      </span>
+    </Link>
+  )
+}
+
+export default function BottomNav() {
+  const pathname = usePathname()
+  const { playerAddress } = useWallet()
+  const { streak } = useStreak(playerAddress)
 
   // Hidden during active gameplay — the game screen mounts its own action bar.
   if (pathname.startsWith('/app/game')) return null

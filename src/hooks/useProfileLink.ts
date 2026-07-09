@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
 import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
 
-const LOG_PREFIX: string = '[useProfileLink]'
+const LOG_PREFIX = '[useProfileLink]'
 
 /**
  * Self-heals the dual-identity split for Privy smart-wallet users. A Privy user

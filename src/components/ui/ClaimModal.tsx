@@ -8,6 +8,26 @@ import { useCheckUsername, useClaimProfile } from '@/hooks/useProfile'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import GlowButton from '@/components/ui/GlowButton'
 
+function useProfileTotal() {
+  return useQuery<number | null>({
+    queryKey: ['profile-total'],
+    queryFn: async () => {
+      const res = await fetch('/api/profile/total')
+      if (!res.ok) return null
+      const data = await res.json() as { total: number }
+      return data.total
+    },
+    staleTime: 60_000,
+  })
+}
+
+interface ClaimModalProps {
+  open: boolean
+  address: string
+  onClose: () => void
+  onSuccess?: () => void
+}
+
 function Field({
   label,
   value,
@@ -40,47 +60,13 @@ function Field({
   )
 }
 
-interface ClaimModalProps {
-  open: boolean
-  address: string
-  onClose: () => void
-  onSuccess?: () => void
-}
-
-function useProfileTotal() {
-  return useQuery<number | null>({
-    queryKey: ['profile-total'],
-    queryFn: async () => {
-      const res = await fetch('/api/profile/total')
-      if (!res.ok) return null
-      const data = await res.json() as { total: number }
-      return data.total
-    },
-    staleTime: 60_000,
-  })
-}
-
-  const handleClaim = async () => {
-    if (!canSubmit) return
-    setError('')
-    try {
-      const timestamp = new Date().toISOString()
-      const message = `Chessify Profile Claim\n\nUsername: ${debouncedUsername}.chess\nAddress: ${address}\nTimestamp: ${timestamp}`
-      const signature = await signMessageAsync({ message })
-      await claimProfile({
-        address,
-        username: debouncedUsername,
-        displayName: displayName.trim(),
-        bio: bio.trim(),
-        signature,
-        timestamp,
-      })
-      setStep('success')
-      onSuccess?.()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong. Try again.')
-    }
-  }
+export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimModalProps) {
+  const [step, setStep] = useState<'form' | 'success'>('form')
+  const [username, setUsername] = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const [bio, setBio] = useState('')
+  const [error, setError] = useState('')
+  const { data: total } = useProfileTotal()
 
   const debouncedUsername = username.trim().toLowerCase()
   const { data: checkResult, isLoading: isChecking } = useCheckUsername(debouncedUsername)
@@ -111,13 +97,27 @@ function useProfileTotal() {
     usernameStatus === 'available' &&
     !isPending
 
-export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimModalProps) {
-  const [step, setStep] = useState<'form' | 'success'>('form')
-  const [username, setUsername] = useState('')
-  const [displayName, setDisplayName] = useState('')
-  const [bio, setBio] = useState('')
-  const [error, setError] = useState('')
-  const { data: total } = useProfileTotal()
+  const handleClaim = async () => {
+    if (!canSubmit) return
+    setError('')
+    try {
+      const timestamp = new Date().toISOString()
+      const message = `Chessify Profile Claim\n\nUsername: ${debouncedUsername}.chess\nAddress: ${address}\nTimestamp: ${timestamp}`
+      const signature = await signMessageAsync({ message })
+      await claimProfile({
+        address,
+        username: debouncedUsername,
+        displayName: displayName.trim(),
+        bio: bio.trim(),
+        signature,
+        timestamp,
+      })
+      setStep('success')
+      onSuccess?.()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong. Try again.')
+    }
+  }
 
   return (
     <AnimatePresence>
