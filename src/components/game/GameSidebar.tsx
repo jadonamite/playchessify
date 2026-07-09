@@ -1,9 +1,9 @@
-import { motion } from 'framer-motion'
 import ClayCard from '@/components/ui/ClayCard'
 import GlowButton from '@/components/ui/GlowButton'
-import { useToastStore } from '@/hooks/useToastStore'
 import { TOKEN_DECIMALS } from '@/config/contracts'
+import { motion } from 'framer-motion'
 import { type GameData } from './types'
+import { useToastStore } from '@/hooks/useToastStore'
 
 interface GameSidebarProps {
   canJoinFromPage: boolean
