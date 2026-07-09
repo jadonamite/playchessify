@@ -53,10 +53,6 @@ interface WriteRequest {
   args: readonly unknown[]
 }
 
-/**
- * useCeloChess
- * @returns {*}
- */
 export function useCeloChess() {
   const { writeContractAsync } = useWriteContract()
   const publicClient = usePublicClient({ chainId: CELO_CHAIN_ID })
