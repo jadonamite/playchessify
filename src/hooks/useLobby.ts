@@ -20,32 +20,33 @@ export function useLobby() {
     if (!publicClient) return []
     try {
       const nonce = await publicClient.readContract({
-        address: CELO_CONTRACTS.game as `0x${string}`, 
+        address: CELO_CONTRACTS.game as `0x${string}`,
         abi: CHESS_GAME_ABI,
         functionName: 'gameNonce',
       }) as bigint
 
+      const result: Game[] = []
       const start = Number(nonce) - 1
       const end = Math.max(0, start - 9)
 
-      const promises = Array.from({ length: start - end + 1 }, (_, i) => start - i)
-        .map(async (i) => {
-          const g = await publicClient.readContract({
-            address: CELO_CONTRACTS.game as `0x${string}`, 
-            abi: CHESS_GAME_ABI,
-            functionName: 'getGame',
-            args: [BigInt(i)]
-          }) as { white: string; wager: bigint; status: number | bigint }
+      for (let i = start; i >= end; i--) {
+        const g = await publicClient.readContract({
+          address: CELO_CONTRACTS.game as `0x${string}`,
+          abi: CHESS_GAME_ABI,
+          functionName: 'getGame',
+          args: [BigInt(i)]
+        }) as { white: string; wager: bigint; status: number | bigint }
 
-          return g && Number(g.status) === 0 && g.white !== '0x0000000000000000000000000000000000000000' ? {
+        if (g && Number(g.status) === 0 && g.white !== '0x0000000000000000000000000000000000000000') {
+          result.push({
             id: i,
             creator: g.white,
             wager: Number(g.wager) / 1e6,
             chain: 'celo',
             elo: 1200,
-          } : null
-        })
-      const result = (await Promise.all(promises)).filter(Boolean) as Game[]
+          })
+        }
+      }
       return result
     } catch (err) {
       console.error('Lobby fetch error:', err)
