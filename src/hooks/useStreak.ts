@@ -46,24 +46,17 @@ export function dispatchStreak(detail: StreakEventDetail) {
 
 // ── read ──────────────────────────────────────────────────────────────────────
 
-const fetchStreakData = async (address?: string | null): Promise<StreakData | null> => {
-  if (!address) return null
-  try {
-    const res = await fetch(`/api/profile/streak?address=${address.toLowerCase()}`, { cache: 'no-store' })
-    if (!res.ok) throw new Error('streak fetch failed')
-    return res.json()
-  } catch {
-    return null
-  }
-}
-
 /** Live streak for an address (nav badge, profile, faucet). */
 export function useStreak(address?: string | null) {
   const query = useQuery<StreakData>({
     queryKey: ['streak', address?.toLowerCase()],
     enabled: !!address,
     staleTime: 30_000,
-    queryFn: fetchStreakData,
+    queryFn: async () => {
+      const res = await fetch(`/api/profile/streak?address=${address}`, { cache: 'no-store' })
+      if (!res.ok) throw new Error('streak fetch failed')
+      return res.json()
+    },
   })
   return {
     streak: query.data ?? { current: 0, longest: 0, lastPlayedDate: '', playedToday: false },
@@ -74,31 +67,29 @@ export function useStreak(address?: string | null) {
 
 // ── record (client-attested: bot / puzzle) ─────────────────────────────────────
 
-const recordStreak = async (playerAddress: string, source: ClientSource): Promise<RecordResult | null> => {
-  try {
-    const res = await fetch('/api/profile/streak', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address: playerAddress, source }),
-    })
-    if (!res.ok) return null
-    return (await res.json()) as RecordResult
-  } catch {
-    return null
-  }
-}
-
-/** Returns a `record(source)` callback that records a completed play day. No
+/**
+ * Returns a `record(source)` callback that records a completed play day. No
  * signature, no popup — a streak is a vanity counter (no payout). Returns the
  * resulting streak so the caller can decide when to celebrate; no-ops (returns
- * null) if disconnected. */
+ * null) if disconnected.
+ */
 export function useRecordStreak() {
   const { playerAddress, isConnected } = useWallet()
 
   return useCallback(
     async (source: ClientSource): Promise<RecordResult | null> => {
       if (!isConnected || !playerAddress) return null
-      return recordStreak(playerAddress, source)
+      try {
+        const res = await fetch('/api/profile/streak', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: playerAddress, source }),
+        })
+        if (!res.ok) return null
+        return (await res.json()) as RecordResult
+      } catch {
+        return null
+      }
     },
     [isConnected, playerAddress],
   )
