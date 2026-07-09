@@ -57,7 +57,7 @@ class StockfishEngine {
       } catch (e) {
         reject(e as Error); return
       }
-      let booted = false
+      let booted: boolean = false
       this.worker.onmessage = (ev: MessageEvent) => {
         const line = typeof ev.data === 'string' ? ev.data : String(ev.data)
         if (!booted) {
