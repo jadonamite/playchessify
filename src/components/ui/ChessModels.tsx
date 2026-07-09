@@ -80,22 +80,6 @@ function BasePiece({ modelPath, color = '#00ccff', emissive, emissiveIntensity, 
   )
 }
 
-export const King = (props: PieceProps) => <BasePiece modelPath="/models/King.glb" scale={1.87} {...props} />
-export const Queen = (props: PieceProps) => <BasePiece modelPath="/models/QueenChess.glb" scale={1.62} {...props} />
-export const Rook = (props: PieceProps) => <BasePiece modelPath="/models/Rook.glb" scale={1.37} {...props} />
-export const Pawn = (props: PieceProps) => <BasePiece modelPath="/models/pawn.glb" scale={1.25} {...props} />
-export const Bishop = (props: PieceProps) => <BasePiece modelPath="/models/Bishop.glb" scale={1.45} {...props} />
-export const Knight = (props: PieceProps) => <BasePiece modelPath="/models/WhiteKnight.glb" scale={1.4} {...props} />
-
-/* ── 2D PIECE ICON FOR LISTS / CARDS / PICKERS ──
-   Replaces the old per-element 3D <Canvas> (PieceView), which minted a WebGL
-   context per icon and blew the browser's context budget on list-heavy screens.
-   A crisp 2D sprite is sharper at icon sizes and costs zero GL contexts. The
-   decorative 3D now lives only in page backgrounds (see PageBackground). */
-const PIECE_LETTER: Record<'king' | 'queen' | 'rook' | 'pawn' | 'bishop' | 'knight', string> = {
-  king: 'K', queen: 'Q', rook: 'R', pawn: 'P', bishop: 'B', knight: 'N',
-}
-
 export function PieceIcon({
   type,
   color = 'white',
@@ -118,3 +102,20 @@ export function PieceIcon({
     />
   )
 }
+
+
+/* ── 2D PIECE ICON FOR LISTS / CARDS / PICKERS ──
+   Replaces the old per-element 3D <Canvas> (PieceView), which minted a WebGL
+   context per icon and blew the browser's context budget on list-heavy screens.
+   A crisp 2D sprite is sharper at icon sizes and costs zero GL contexts. The
+   decorative 3D now lives only in page backgrounds (see PageBackground). */
+const PIECE_LETTER: Record<'king' | 'queen' | 'rook' | 'pawn' | 'bishop' | 'knight', string> = {
+  king: 'K', queen: 'Q', rook: 'R', pawn: 'P', bishop: 'B', knight: 'N',
+}
+
+export const King = (props: PieceProps) => <BasePiece modelPath="/models/King.glb" scale={1.87} {...props} />
+export const Queen = (props: PieceProps) => <BasePiece modelPath="/models/QueenChess.glb" scale={1.62} {...props} />
+export const Rook = (props: PieceProps) => <BasePiece modelPath="/models/Rook.glb" scale={1.37} {...props} />
+export const Pawn = (props: PieceProps) => <BasePiece modelPath="/models/pawn.glb" scale={1.25} {...props} />
+export const Bishop = (props: PieceProps) => <BasePiece modelPath="/models/Bishop.glb" scale={1.45} {...props} />
+export const Knight = (props: PieceProps) => <BasePiece modelPath="/models/WhiteKnight.glb" scale={1.4} {...props} />
