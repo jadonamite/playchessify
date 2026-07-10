@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Float, Environment, Text } from '@react-three/drei'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -9,6 +9,7 @@ import GlowButton from '@/components/ui/GlowButton'
 import PlayCard from '@/components/ui/PlayCard'
 import LoadingState from '@/components/ui/LoadingState'
 import { useHistory } from '@/hooks/useHistory'
+import { useCeloChess } from '@/hooks/useCeloChess'
 import { Queen, PieceIcon } from '@/components/ui/ChessModels'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
 import ChessName from '@/components/ui/ChessName'
@@ -57,11 +58,25 @@ function Scene() {
 
 export function HistoryContent() {
   const router = useRouter()
-  const { history, isLoading } = useHistory()
+  const { history, isLoading, refreshHistory } = useHistory()
+  const { reclaimExpired } = useCeloChess()
+  const [reclaiming, setReclaiming] = useState<string | null>(null)
   const opponentAddrs = history
     .map((i) => i.opponent)
     .filter((a) => a.startsWith('0x'))
   const { data: profileMap = {} } = useBatchProfiles(opponentAddrs)
+
+  const handleReclaim = async (gameId: string) => {
+    setReclaiming(gameId)
+    try {
+      await reclaimExpired(Number(gameId))
+      await refreshHistory()
+    } catch (err) {
+      console.error('[history] reclaim failed:', err)
+    } finally {
+      setReclaiming(null)
+    }
+  }
 
   return (
     <main className="relative min-h-screen w-full bg-[#06060f] text-[#eeeeff] overflow-x-hidden flex flex-col font-body">
@@ -182,6 +197,16 @@ export function HistoryContent() {
                                  item.result === 'draw' ? 'DRAW' :
                                  item.status}
                               </span>
+                              {item.status === 'Active' && item.canReclaim && (
+                                <button
+                                  onClick={() => handleReclaim(item.id)}
+                                  disabled={reclaiming === item.id}
+                                  className="mt-2 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg border transition-colors disabled:opacity-50"
+                                  style={{ borderColor: 'rgba(34,211,238,0.4)', color: '#22d3ee', background: 'rgba(34,211,238,0.06)' }}
+                                >
+                                  {reclaiming === item.id ? 'RECLAIMING…' : '↩ RECLAIM'}
+                                </button>
+                              )}
                             </div>
                           </div>
                         </motion.div>

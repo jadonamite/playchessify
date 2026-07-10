@@ -68,7 +68,7 @@ export const TOURNAMENT: TournamentConfig = {
     oppWeightDivisor: 400,
     oppWeightMin: 0.5,
     oppWeightMax: 2.0,
-    softCapGames: 5,
+    softCapGames: 10,
     diminishingFactor: 0.8,
     minGamesEligible: 3,
   },

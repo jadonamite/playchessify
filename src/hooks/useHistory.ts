@@ -12,6 +12,7 @@ export type HistoryItem = {
   status: string
   result: 'win' | 'loss' | 'draw' | 'active' | 'waiting'
   timestamp: number
+  canReclaim: boolean
 }
 
 export function useHistory() {

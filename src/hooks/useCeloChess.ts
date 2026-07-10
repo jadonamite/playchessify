@@ -446,6 +446,29 @@ export function useCeloChess() {
     [sendWrite, ensureGasSponsored],
   )
 
+  // ── reclaimExpired ───────────────────────────────────────────────────────────
+  // Participant-only backstop: after the expiry window, either player cancels an
+  // abandoned Active game and both wagers are refunded. The oracle cannot do this
+  // (msg.sender must be white or black), so it lives here on the client.
+  const reclaimExpired = useCallback(
+    async (gameId: number) => {
+      console.info(`${LOG_PREFIX} reclaimExpired`, { gameId })
+      await ensureGasSponsored()
+      try {
+        return await sendWrite({
+          address: CELO_CONTRACTS.game as Address,
+          abi: CHESS_GAME_ABI,
+          functionName: 'reclaimExpired',
+          args: [BigInt(gameId)],
+        })
+      } catch (err) {
+        console.error(`${LOG_PREFIX} reclaimExpired failed:`, err)
+        throw err
+      }
+    },
+    [sendWrite, ensureGasSponsored],
+  )
+
   // ── proposeDraw / acceptDraw ─────────────────────────────────────────────────
   const proposeDraw = useCallback(
     async (gameId: number) => {
@@ -499,5 +522,5 @@ export function useCeloChess() {
     }
   }, [])
 
-  return { createGame, joinGame, resign, proposeDraw, acceptDraw, requestSettle, isPending }
+  return { createGame, joinGame, resign, reclaimExpired, proposeDraw, acceptDraw, requestSettle, isPending }
 }

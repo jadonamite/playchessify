@@ -21,6 +21,9 @@ export type HistoryItem = {
   status: string
   result: 'win' | 'loss' | 'draw' | 'active' | 'waiting'
   timestamp: number
+  // true when an Active game has passed the expiry backstop and either
+  // participant may reclaim (cancel + refund). Only meaningful while Active.
+  canReclaim: boolean
 }
 
 // GET /api/history?address=0x… — a player's games, resolved via the Redis index
@@ -80,6 +83,26 @@ export async function GET(req: NextRequest) {
         result,
         // createdAt is a block number; map it to a real unix time (seconds).
         timestamp: blockToTime(Number(g.createdAt)),
+        canReclaim: false,
+      })
+    }
+
+    // For still-Active games, check the on-chain expiry backstop so the client
+    // can offer a "Reclaim" action (the oracle can't reclaim — participants only).
+    const activeItems = items.filter((it) => it.status === 'Active')
+    if (activeItems.length > 0) {
+      const reclaimResults = await getPublicClient().multicall({
+        contracts: activeItems.map((it) => ({
+          address: GAME,
+          abi: CHESS_GAME_ABI as Abi,
+          functionName: 'canReclaim',
+          args: [BigInt(it.id)],
+        })),
+        allowFailure: true,
+      })
+      activeItems.forEach((it, i) => {
+        const r = reclaimResults[i]
+        if (r.status === 'success') it.canReclaim = Boolean(r.result)
       })
     }
 

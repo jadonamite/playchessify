@@ -3,6 +3,8 @@ import {
   createWalletClient,
   http,
   getAddress,
+  formatEther,
+  parseEther,
   type Address,
   type Hash,
 } from 'viem'
@@ -166,6 +168,69 @@ export async function settleOnChain(gameId: number, result: GameResult): Promise
   })
   await getPublicClient().waitForTransactionReceipt({ hash })
   return hash
+}
+
+// ── Oracle gas health (self-healing settlement) ──────────────────────────────
+// The oracle pays native CELO for every settleGame tx. If it runs dry, every
+// settlement silently reverts and finished games rot as "Active" (this bit us:
+// games sat unsettled for ~2 weeks). Preflight the oracle before a sweep and, if
+// low, auto-refill from a funded operator wallet — the same self-healing pattern
+// the gas-sponsor already uses for player wallets. Operator→operator only.
+
+const ORACLE_MIN_CELO = parseEther('0.2') // ~6 settlements of headroom
+const ORACLE_TARGET_CELO = parseEther('1') // top up to here when refilling
+const REFILL_RESERVE_CELO = parseEther('0.3') // never drain the source below this
+const REFILL_SOURCE_ENV = 'MINTER_PRIVATE_KEY' // funded wallet that only mints occasionally
+
+export interface OracleGasStatus {
+  ok: boolean // oracle can afford at least one settlement
+  balanceCelo: string
+  refilled: boolean
+  refillTx?: string
+  note?: string
+}
+
+/** Ensure the oracle has gas to settle; auto-refill from an operator wallet if
+ *  low. Never throws — a refill failure degrades to a reported `ok:false` so the
+ *  caller (cron) can surface it rather than crash the whole sweep. */
+export async function ensureOracleGas(): Promise<OracleGasStatus> {
+  const pub = getPublicClient()
+  try {
+    const { account: oracle } = walletFor('ORACLE_PRIVATE_KEY')
+    const balance = await pub.getBalance({ address: oracle.address })
+    if (balance >= ORACLE_MIN_CELO) {
+      return { ok: true, balanceCelo: formatEther(balance), refilled: false }
+    }
+
+    // Low — try one refill from the source wallet, keeping its reserve intact.
+    const { account: src, client: srcClient } = walletFor(REFILL_SOURCE_ENV)
+    const srcBalance = await pub.getBalance({ address: src.address })
+    const need = ORACLE_TARGET_CELO - balance
+    const spendable = srcBalance > REFILL_RESERVE_CELO ? srcBalance - REFILL_RESERVE_CELO : 0n
+    const amount = need < spendable ? need : spendable
+
+    if (amount <= 0n) {
+      console.error('[celo-server] ORACLE LOW and refill source dry', {
+        oracle: formatEther(balance),
+        source: formatEther(srcBalance),
+      })
+      return {
+        ok: false,
+        balanceCelo: formatEther(balance),
+        refilled: false,
+        note: 'oracle low, refill source below reserve — MANUAL TOP-UP NEEDED',
+      }
+    }
+
+    const hash = await srcClient.sendTransaction({ account: src, chain: CHAIN, to: oracle.address, value: amount })
+    await pub.waitForTransactionReceipt({ hash })
+    const after = await pub.getBalance({ address: oracle.address })
+    console.info('[celo-server] oracle auto-refilled', { added: formatEther(amount), now: formatEther(after), tx: hash })
+    return { ok: after >= ORACLE_MIN_CELO, balanceCelo: formatEther(after), refilled: true, refillTx: hash }
+  } catch (err) {
+    console.error('[celo-server] ensureOracleGas failed', (err as Error)?.message)
+    return { ok: false, balanceCelo: 'unknown', refilled: false, note: (err as Error)?.message }
+  }
 }
 
 /** Minter provisions CHESS to a recipient (e.g. a fresh MiniPay wallet). */
