@@ -20,30 +20,40 @@ const RANKS_PER_PAGE = 10
 const MEDAL = {
   1: {
     color: '#FFD700',
-    glow: 'rgba(255,215,0,0.28)',
-    border: 'rgba(255,215,0,0.35)',
-    bg: 'rgba(255,215,0,0.04)',
+    glow: 'rgba(255,215,0,0.30)',
+    border: 'rgba(255,215,0,0.45)',
+    bg: 'rgba(255,215,0,0.05)',
+    // metallic stops: highlight → body → deep shadow
+    mLight: '#FFF6C2',
+    mMid: '#FFD24A',
+    mDeep: '#9C6B12',
     icon: '♛',
     title: 'GRANDMASTER',
-    baseH: 96,
+    baseH: 104,
   },
   2: {
-    color: '#C0C0C0',
-    glow: 'rgba(192,192,192,0.18)',
-    border: 'rgba(192,192,192,0.28)',
-    bg: 'rgba(255,255,255,0.02)',
+    color: '#DBE2EA',
+    glow: 'rgba(200,210,225,0.22)',
+    border: 'rgba(210,218,230,0.40)',
+    bg: 'rgba(255,255,255,0.03)',
+    mLight: '#FFFFFF',
+    mMid: '#CFD6DE',
+    mDeep: '#6E7885',
     icon: '♜',
     title: 'MASTER',
-    baseH: 66,
+    baseH: 74,
   },
   3: {
-    color: '#CD7F32',
-    glow: 'rgba(205,127,50,0.18)',
-    border: 'rgba(205,127,50,0.28)',
-    bg: 'rgba(205,127,50,0.025)',
+    color: '#E0954E',
+    glow: 'rgba(205,127,50,0.22)',
+    border: 'rgba(205,127,50,0.40)',
+    bg: 'rgba(205,127,50,0.035)',
+    mLight: '#FFD9A0',
+    mMid: '#D08A45',
+    mDeep: '#6E4018',
     icon: '♝',
     title: 'EXPERT',
-    baseH: 48,
+    baseH: 56,
   },
 } as const
 
@@ -69,18 +79,38 @@ function PodiumCard({
   const rank = entry.rank as 1 | 2 | 3
   const m = MEDAL[rank]
   const isFirst = rank === 1
-  const avatar = isFirst ? 60 : 46
+  const avatar = isFirst ? 66 : 48
+  const coin = avatar + 22
+
+  // shared metallic fills
+  const metalV = `linear-gradient(180deg, ${m.mLight} 0%, ${m.mMid} 46%, ${m.mDeep} 100%)`
+  const coinFill = `radial-gradient(circle at 50% 30%, ${m.mLight}, ${m.mMid} 55%, ${m.mDeep} 100%)`
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 44, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay, type: 'spring', damping: 18, stiffness: 180 }}
-      className="flex-1 min-w-0 flex flex-col items-center"
-      style={{ maxWidth: isFirst ? 200 : 168 }}
+      className="flex-1 min-w-0 flex flex-col items-center relative"
+      style={{ maxWidth: isFirst ? 210 : 172 }}
     >
+      {/* champion spotlight — soft god-ray cone from above */}
+      {isFirst && (
+        <div
+          aria-hidden
+          className="absolute left-1/2 -translate-x-1/2 -top-2 pointer-events-none"
+          style={{
+            width: 150,
+            height: 260,
+            background: `linear-gradient(180deg, ${m.color}22, transparent 72%)`,
+            clipPath: 'polygon(38% 0, 62% 0, 100% 100%, 0 100%)',
+            filter: 'blur(6px)',
+          }}
+        />
+      )}
+
       {/* ── floating champion card ── */}
-      <div className="relative flex flex-col items-center gap-1.5 w-full px-1 pb-3">
+      <div className="relative z-10 flex flex-col items-center gap-1.5 w-full px-1 pb-3">
 
         {/* crown — only the leader wears it, and it breathes */}
         {isFirst && (
@@ -101,154 +131,203 @@ function PodiumCard({
           </motion.div>
         )}
 
-        {/* avatar — radial bloom + spinning dashed ring + accent frame */}
+        {/* ── metallic coin medallion holding the avatar ── */}
         <div
           className="relative flex items-center justify-center shrink-0"
-          style={{ width: avatar + 18, height: avatar + 18 }}
+          style={{ width: coin, height: coin }}
         >
+          {/* outer bloom */}
           <div
             className="absolute rounded-full pointer-events-none"
-            style={{ width: avatar + 30, height: avatar + 30, background: `radial-gradient(circle, ${m.color}55, transparent 70%)` }}
+            style={{ width: coin + 16, height: coin + 16, background: `radial-gradient(circle, ${m.color}44, transparent 70%)` }}
           />
-          {/* champion-only: slow metallic conic halo sweeping behind the ring */}
-          {isFirst && (
-            <motion.div
-              aria-hidden
-              animate={{ rotate: -360 }}
-              transition={{ duration: 9, ease: 'linear', repeat: Infinity }}
-              className="absolute rounded-full pointer-events-none"
-              style={{
-                width: avatar + 30,
-                height: avatar + 30,
-                background: `conic-gradient(from 0deg, transparent, ${m.color}88, transparent 45%)`,
-                maskImage: 'radial-gradient(circle, transparent 58%, #000 60%, #000 72%, transparent 74%)',
-                WebkitMaskImage: 'radial-gradient(circle, transparent 58%, #000 60%, #000 72%, transparent 74%)',
-                opacity: 0.9,
-              }}
-            />
-          )}
-          <motion.div
+          {/* minted coin ring */}
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: coin,
+              height: coin,
+              background: coinFill,
+              boxShadow: `0 4px 14px rgba(0,0,0,0.55), 0 0 26px ${m.glow}, inset 0 2px 3px ${m.mLight}, inset 0 -3px 5px rgba(0,0,0,0.45)`,
+            }}
+          />
+          {/* specular highlight on the coin */}
+          <div
             aria-hidden
-            animate={{ rotate: 360 }}
-            transition={{ duration: isFirst ? 16 : 24, ease: 'linear', repeat: Infinity }}
             className="absolute rounded-full pointer-events-none"
-            style={{ width: avatar + 18, height: avatar + 18, border: `2px dashed ${m.color}`, opacity: 0.45 }}
+            style={{
+              width: coin * 0.5,
+              height: coin * 0.32,
+              top: coin * 0.1,
+              left: coin * 0.16,
+              background: 'radial-gradient(circle, rgba(255,255,255,0.75), transparent 70%)',
+              filter: 'blur(2px)',
+            }}
           />
+          {/* inner avatar disc, recessed into the coin */}
           <div
             className="relative rounded-full overflow-hidden flex items-center justify-center"
             style={{
               width: avatar,
               height: avatar,
-              border: `2px solid ${m.color}`,
-              background: `radial-gradient(circle at 50% 38%, ${m.color}30, rgba(8,13,26,0.94))`,
-              boxShadow: `0 0 0 4px ${m.color}1f, 0 0 26px ${m.glow}`,
+              background: 'radial-gradient(circle at 50% 38%, rgba(20,28,44,0.6), rgba(6,10,20,0.96))',
+              boxShadow: `inset 0 0 0 2px rgba(0,0,0,0.5), inset 0 2px 8px rgba(0,0,0,0.7)`,
             }}
           >
-            <ChessAvatar address={entry.address} size={avatar - 8} />
+            <ChessAvatar address={entry.address} size={avatar - 10} />
           </div>
           {isMe && (
             <div
-              className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full animate-pulse"
+              className="absolute top-0 right-1 w-2.5 h-2.5 rounded-full animate-pulse z-10"
               style={{ background: 'var(--c)', boxShadow: '0 0 8px var(--c)' }}
             />
           )}
         </div>
 
-        {/* rarity-style title pill */}
+        {/* ── chrome bracket-corner glass card: title · name · ELO ── */}
         <div
-          className="px-2 py-0.5 rounded-full"
-          style={{ background: 'rgba(4,6,15,0.72)', border: `1px solid ${m.border}` }}
+          className="relative w-full mt-1 rounded-xl px-2.5 pt-2.5 pb-2 flex flex-col items-center gap-1"
+          style={{
+            background: 'linear-gradient(180deg, rgba(10,16,28,0.72), rgba(4,7,14,0.82))',
+            border: `1px solid ${m.border}`,
+            boxShadow: `inset 0 1px 0 ${m.color}33, 0 10px 30px rgba(0,0,0,0.4)`,
+            backdropFilter: 'blur(6px)',
+          }}
         >
+          {/* metallic L-bracket corners */}
+          {([
+            { top: -1, left: -1, borderTop: `2px solid ${m.color}`, borderLeft: `2px solid ${m.color}`, borderTopLeftRadius: 6 },
+            { top: -1, right: -1, borderTop: `2px solid ${m.color}`, borderRight: `2px solid ${m.color}`, borderTopRightRadius: 6 },
+            { bottom: -1, left: -1, borderBottom: `2px solid ${m.color}`, borderLeft: `2px solid ${m.color}`, borderBottomLeftRadius: 6 },
+            { bottom: -1, right: -1, borderBottom: `2px solid ${m.color}`, borderRight: `2px solid ${m.color}`, borderBottomRightRadius: 6 },
+          ] as React.CSSProperties[]).map((corner, i) => (
+            <span
+              key={i}
+              aria-hidden
+              className="absolute w-2.5 h-2.5 pointer-events-none"
+              style={{ ...corner, filter: `drop-shadow(0 0 4px ${m.glow})` }}
+            />
+          ))}
+
+          {/* title */}
           <span
-            className="text-[7px] sm:text-[8px] font-black tracking-[0.12em] whitespace-nowrap"
-            style={{ fontFamily: 'var(--fd)', color: m.color }}
+            className="text-[7px] sm:text-[8px] font-black tracking-[0.16em] whitespace-nowrap"
+            style={{ fontFamily: 'var(--fd)', color: m.color, textShadow: `0 0 10px ${m.glow}` }}
           >
             {m.title}
           </span>
-        </div>
 
-        {/* name */}
-        <ChessName
-          address={entry.address}
-          profile={profileMap[entry.address.toLowerCase()]}
-          badge
-          asLink
-          className="font-bold text-[10px] sm:text-xs tracking-wide truncate max-w-full text-center"
-          style={{ color: isMe ? 'var(--c)' : 'var(--t1)' }}
-        />
-        {isMe && (
-          <span
-            className="text-[7px] font-black tracking-widest uppercase -mt-0.5"
-            style={{ color: 'var(--c)', fontFamily: 'var(--fd)' }}
-          >
-            ⚡ YOU
-          </span>
-        )}
+          {/* name */}
+          <ChessName
+            address={entry.address}
+            profile={profileMap[entry.address.toLowerCase()]}
+            badge
+            asLink
+            className="font-bold text-[10px] sm:text-xs tracking-wide truncate max-w-full text-center"
+            style={{ color: isMe ? 'var(--c)' : 'var(--t1)' }}
+          />
+          {isMe && (
+            <span
+              className="text-[7px] font-black tracking-widest uppercase -mt-0.5"
+              style={{ color: 'var(--c)', fontFamily: 'var(--fd)' }}
+            >
+              ⚡ YOU
+            </span>
+          )}
 
-        {/* ELO — metallic gradient fill for that trophy sheen */}
-        <div className="text-center leading-none mt-0.5">
-          <div
-            className="font-black"
-            style={{
-              fontFamily: 'var(--fd)',
-              fontSize: isFirst ? 30 : 22,
-              backgroundImage: `linear-gradient(180deg, #fff 6%, ${m.color} 52%, ${m.color}bb)`,
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              filter: `drop-shadow(0 0 22px ${m.glow})`,
-            }}
-          >
-            {entry.rating}
+          {/* ELO — metallic gradient fill */}
+          <div className="text-center leading-none mt-0.5">
+            <div
+              className="font-black"
+              style={{
+                fontFamily: 'var(--fd)',
+                fontSize: isFirst ? 30 : 22,
+                backgroundImage: metalV,
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.5)) drop-shadow(0 0 18px ${m.glow})`,
+              }}
+            >
+              {entry.rating}
+            </div>
+            <div className="text-[7px] font-black tracking-[0.2em] uppercase mt-1 text-[var(--t3)]">ELO</div>
           </div>
-          <div className="text-[7px] font-black tracking-[0.2em] uppercase mt-1 text-[var(--t3)]">ELO</div>
-        </div>
 
-        {/* compact W / L / D */}
-        <div className="flex items-center gap-1 text-[9px] font-black mt-0.5" style={{ fontFamily: 'var(--fd)' }}>
-          <span className="text-green-400">{entry.wins}</span>
-          <span className="text-gray-600">/</span>
-          <span className="text-red-400">{entry.losses}</span>
-          <span className="text-gray-600">/</span>
-          <span className="text-gray-400">{entry.draws}</span>
+          {/* compact W / L / D */}
+          <div className="flex items-center gap-1 text-[9px] font-black" style={{ fontFamily: 'var(--fd)' }}>
+            <span className="text-green-400">{entry.wins}</span>
+            <span className="text-gray-600">/</span>
+            <span className="text-red-400">{entry.losses}</span>
+            <span className="text-gray-600">/</span>
+            <span className="text-gray-400">{entry.draws}</span>
+          </div>
         </div>
       </div>
 
-      {/* ── podium base step (stair-stepped by rank) ── */}
+      {/* ── dimensional metal pedestal ── */}
       <motion.div
         initial={{ scaleY: 0 }}
         animate={{ scaleY: 1 }}
         transition={{ delay: delay + 0.1, type: 'spring', damping: 20, stiffness: 160 }}
-        className="w-full rounded-t-2xl relative overflow-hidden flex items-start justify-center origin-bottom"
-        style={{
-          height: m.baseH,
-          background: `linear-gradient(180deg, ${m.color}24, ${m.bg})`,
-          borderTop: `1.5px solid ${m.border}`,
-          borderLeft: `1px solid ${m.border}`,
-          borderRight: `1px solid ${m.border}`,
-          boxShadow: `inset 0 1px 0 ${m.color}40, 0 -10px 34px ${m.glow}`,
-        }}
+        className="w-full relative origin-bottom"
+        style={{ height: m.baseH }}
       >
-        {/* faint vertical sheen */}
+        {/* top face — the lit surface the number rests on */}
         <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: `linear-gradient(90deg, transparent, ${m.color}10 50%, transparent)` }}
+          className="absolute -top-1 left-1/2 -translate-x-1/2 rounded-[50%] z-20"
+          style={{
+            width: '86%',
+            height: 12,
+            background: `linear-gradient(180deg, ${m.mLight}, ${m.mMid})`,
+            boxShadow: `0 0 18px ${m.glow}, inset 0 1px 1px ${m.mLight}`,
+          }}
         />
-        {/* animated light-sweep gliding across the step */}
-        <motion.div
-          aria-hidden
-          initial={{ x: '-120%' }}
-          animate={{ x: '120%' }}
-          transition={{ duration: isFirst ? 3.2 : 4.4, ease: 'easeInOut', repeat: Infinity, repeatDelay: isFirst ? 1.4 : 2.6, delay: delay + 0.6 }}
-          className="absolute inset-y-0 w-1/3 pointer-events-none skew-x-12"
-          style={{ background: `linear-gradient(90deg, transparent, ${m.color}33, transparent)` }}
-        />
-        <span
-          className="font-black leading-none mt-2 select-none relative"
-          style={{ fontFamily: 'var(--fd)', fontSize: isFirst ? 32 : 24, color: m.color, opacity: 0.92, textShadow: `0 0 22px ${m.glow}` }}
+        {/* front face — curved metal riser */}
+        <div
+          className="absolute inset-0 top-1 rounded-t-lg overflow-hidden flex items-start justify-center"
+          style={{
+            background: metalV,
+            borderTop: `1px solid ${m.mLight}`,
+            borderLeft: `1px solid ${m.mDeep}`,
+            borderRight: `1px solid ${m.mDeep}`,
+            boxShadow: `inset 0 2px 2px ${m.mLight}, inset 14px 0 22px -10px rgba(0,0,0,0.6), inset -14px 0 22px -10px rgba(0,0,0,0.6), 0 -8px 30px ${m.glow}`,
+          }}
         >
-          {rank}
-        </span>
+          {/* cylindrical shading — dark edges, bright centre */}
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.42), transparent 32%, transparent 68%, rgba(0,0,0,0.42))' }}
+          />
+          {/* animated specular sweep */}
+          <motion.div
+            aria-hidden
+            initial={{ x: '-140%' }}
+            animate={{ x: '160%' }}
+            transition={{ duration: isFirst ? 3.4 : 4.6, ease: 'easeInOut', repeat: Infinity, repeatDelay: isFirst ? 1.6 : 3, delay: delay + 0.7 }}
+            className="absolute inset-y-0 w-1/4 pointer-events-none -skew-x-12"
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)' }}
+          />
+          {/* embossed rank number */}
+          <span
+            className="font-black leading-none mt-3 select-none relative"
+            style={{
+              fontFamily: 'var(--fd)',
+              fontSize: isFirst ? 38 : 28,
+              color: m.mDeep,
+              textShadow: `0 1px 0 ${m.mLight}, 0 -1px 1px rgba(0,0,0,0.4)`,
+            }}
+          >
+            {rank}
+          </span>
+        </div>
+        {/* mirror reflection puddle */}
+        <div
+          aria-hidden
+          className="absolute -bottom-3 left-1/2 -translate-x-1/2 pointer-events-none"
+          style={{ width: '70%', height: 10, background: `radial-gradient(ellipse, ${m.color}55, transparent 72%)`, filter: 'blur(3px)' }}
+        />
       </motion.div>
     </motion.div>
   )
