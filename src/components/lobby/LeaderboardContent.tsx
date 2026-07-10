@@ -82,16 +82,22 @@ function PodiumCard({
       {/* ── floating champion card ── */}
       <div className="relative flex flex-col items-center gap-1.5 w-full px-1 pb-3">
 
-        {/* crown — only the leader wears it */}
+        {/* crown — only the leader wears it, and it breathes */}
         {isFirst && (
           <motion.div
             initial={{ y: -8, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: delay + 0.22, type: 'spring', damping: 12 }}
-            className="text-2xl sm:text-3xl leading-none -mb-1 select-none"
-            style={{ color: m.color, filter: `drop-shadow(0 0 16px ${m.glow})` }}
+            className="-mb-1 select-none"
           >
-            {m.icon}
+            <motion.div
+              animate={{ y: [0, -4, 0] }}
+              transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+              className="text-2xl sm:text-3xl leading-none"
+              style={{ color: m.color, filter: `drop-shadow(0 0 16px ${m.glow})` }}
+            >
+              {m.icon}
+            </motion.div>
           </motion.div>
         )}
 
@@ -104,6 +110,23 @@ function PodiumCard({
             className="absolute rounded-full pointer-events-none"
             style={{ width: avatar + 30, height: avatar + 30, background: `radial-gradient(circle, ${m.color}55, transparent 70%)` }}
           />
+          {/* champion-only: slow metallic conic halo sweeping behind the ring */}
+          {isFirst && (
+            <motion.div
+              aria-hidden
+              animate={{ rotate: -360 }}
+              transition={{ duration: 9, ease: 'linear', repeat: Infinity }}
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                width: avatar + 30,
+                height: avatar + 30,
+                background: `conic-gradient(from 0deg, transparent, ${m.color}88, transparent 45%)`,
+                maskImage: 'radial-gradient(circle, transparent 58%, #000 60%, #000 72%, transparent 74%)',
+                WebkitMaskImage: 'radial-gradient(circle, transparent 58%, #000 60%, #000 72%, transparent 74%)',
+                opacity: 0.9,
+              }}
+            />
+          )}
           <motion.div
             aria-hidden
             animate={{ rotate: 360 }}
@@ -162,11 +185,19 @@ function PodiumCard({
           </span>
         )}
 
-        {/* ELO */}
+        {/* ELO — metallic gradient fill for that trophy sheen */}
         <div className="text-center leading-none mt-0.5">
           <div
             className="font-black"
-            style={{ fontFamily: 'var(--fd)', color: m.color, fontSize: isFirst ? 30 : 22, textShadow: `0 0 28px ${m.glow}` }}
+            style={{
+              fontFamily: 'var(--fd)',
+              fontSize: isFirst ? 30 : 22,
+              backgroundImage: `linear-gradient(180deg, #fff 6%, ${m.color} 52%, ${m.color}bb)`,
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              filter: `drop-shadow(0 0 22px ${m.glow})`,
+            }}
           >
             {entry.rating}
           </div>
@@ -203,8 +234,17 @@ function PodiumCard({
           className="absolute inset-0 pointer-events-none"
           style={{ background: `linear-gradient(90deg, transparent, ${m.color}10 50%, transparent)` }}
         />
+        {/* animated light-sweep gliding across the step */}
+        <motion.div
+          aria-hidden
+          initial={{ x: '-120%' }}
+          animate={{ x: '120%' }}
+          transition={{ duration: isFirst ? 3.2 : 4.4, ease: 'easeInOut', repeat: Infinity, repeatDelay: isFirst ? 1.4 : 2.6, delay: delay + 0.6 }}
+          className="absolute inset-y-0 w-1/3 pointer-events-none skew-x-12"
+          style={{ background: `linear-gradient(90deg, transparent, ${m.color}33, transparent)` }}
+        />
         <span
-          className="font-black leading-none mt-2 select-none"
+          className="font-black leading-none mt-2 select-none relative"
           style={{ fontFamily: 'var(--fd)', fontSize: isFirst ? 32 : 24, color: m.color, opacity: 0.92, textShadow: `0 0 22px ${m.glow}` }}
         >
           {rank}
@@ -401,15 +441,15 @@ export default function LeaderboardContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ delay: 0.14 }}
-                className="rounded-2xl border border-[var(--b2)] px-6 py-4 flex items-center justify-between backdrop-blur-sm"
+                className="rounded-2xl border border-[var(--b2)] px-6 py-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between backdrop-blur-sm"
                 style={{ background: 'var(--b1)' }}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 min-w-0">
                   <div className="w-1.5 h-1.5 rounded-full bg-[var(--c)] animate-pulse shrink-0" />
                   {myEntry && (
                     <ChessAvatar address={myEntry.address} size={36} />
                   )}
-                  <div>
+                  <div className="min-w-0">
                     <div
                       className="text-[8px] font-black tracking-[0.28em] uppercase mb-0.5"
                       style={{ fontFamily: 'var(--fd)', color: 'var(--t3)' }}
@@ -423,7 +463,7 @@ export default function LeaderboardContent() {
                         short
                         asLink
                         badge
-                        className="font-bold text-sm tracking-wide"
+                        className="font-bold text-sm tracking-wide truncate max-w-full"
                         style={{ color: 'var(--c)' }}
                       />
                     )}
@@ -435,7 +475,7 @@ export default function LeaderboardContent() {
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-6 text-right">
+                <div className="flex w-full justify-between sm:w-auto sm:justify-end gap-4 sm:gap-6 text-right">
                   <div>
                     <div className="text-[8px] text-gray-500 uppercase font-bold tracking-widest mb-0.5">ELO</div>
                     <div
