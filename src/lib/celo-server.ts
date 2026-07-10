@@ -120,6 +120,23 @@ export async function getOnchainGameCached(gameId: number): Promise<OnchainGame>
   return game
 }
 
+// A game's on-chain `createdAt` is the **block number** it was created in, not a
+// timestamp. Build a mapper from a block number to an estimated unix time (secs)
+// by measuring the current block time from two spaced reference blocks. Accurate
+// to seconds over recent history — enough for history dates and season windows.
+export async function getBlockToTimeMapper(): Promise<(block: number) => number> {
+  const pub = getPublicClient()
+  const latest = await pub.getBlock()
+  const L = Number(latest.number)
+  const tL = Number(latest.timestamp)
+  const olderNum = Math.max(0, L - 2_000_000)
+  const older = await pub.getBlock({ blockNumber: BigInt(olderNum) })
+  const O = Number(older.number)
+  const tO = Number(older.timestamp)
+  const blockTime = O < L ? (tL - tO) / (L - O) : 5 // secs/block; Celo fallback
+  return (block: number) => Math.round(tL - (L - block) * blockTime)
+}
+
 /** Verify a wallet signature over an arbitrary message. Handles EOAs and, via
  *  EIP-1271, ERC-4337 smart accounts (Tier A). */
 export async function verifyWalletSignature(

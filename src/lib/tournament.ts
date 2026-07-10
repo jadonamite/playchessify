@@ -1,6 +1,6 @@
 import { Redis } from '@upstash/redis'
 import type { Abi } from 'viem'
-import { getPublicClient } from '@/lib/celo-server'
+import { getPublicClient, getBlockToTimeMapper } from '@/lib/celo-server'
 import { syncGameIndex, getIndexedPlayers } from '@/lib/game-index'
 import { CELO_CONTRACTS } from '@/config/contracts'
 import { CHESS_GAME_ABI } from '@/config/abis'
@@ -128,34 +128,17 @@ interface WindowGame {
 }
 
 /**
- * The chain stores a game's `createdAt` as the **block number** it was created
- * in, not a wall-clock time. We measure the current block time from two spaced
- * reference blocks and linearly map any block number to an estimated timestamp —
- * accurate to seconds over a one-week window, which is all a season needs.
- */
-async function blockToSecMapper() {
-  const pub = getPublicClient()
-  const latest = await pub.getBlock()
-  const L = Number(latest.number)
-  const tL = Number(latest.timestamp)
-  const olderNum = Math.max(0, L - 2_000_000)
-  const older = await pub.getBlock({ blockNumber: BigInt(olderNum) })
-  const O = Number(older.number)
-  const tO = Number(older.timestamp)
-  const blockTime = O < L ? (tL - tO) / (L - O) : 5 // seconds/block; fallback ~Celo
-  return (block: number) => tL - (L - block) * blockTime
-}
-
-/**
- * All settled games played within [startMs, endMs]. Games are created in id
- * order so their block numbers are monotonic — we scan newest-first and stop
- * once a whole chunk predates the window, bounding work to the window size.
+ * All settled games played within [startMs, endMs]. The chain stores a game's
+ * `createdAt` as the **block number** it was created in, so we map block → time
+ * (see getBlockToTimeMapper). Games are created in id order so their block
+ * numbers are monotonic — we scan newest-first and stop once a whole chunk
+ * predates the window, bounding work to the window size.
  */
 async function collectWindowGames(startMs: number, endMs: number): Promise<WindowGame[]> {
   const pub = getPublicClient()
   const [nonceRaw, blockToSec] = await Promise.all([
     pub.readContract({ address: GAME, abi: CHESS_GAME_ABI as Abi, functionName: 'gameNonce' }) as Promise<bigint>,
-    blockToSecMapper(),
+    getBlockToTimeMapper(),
   ])
   const lastId = Number(nonceRaw) - 1
   if (lastId < 0) return []
