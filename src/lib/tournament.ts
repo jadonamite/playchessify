@@ -127,17 +127,43 @@ interface WindowGame {
   playedAt: number // unix seconds (v2 stores createdAt as a timestamp)
 }
 
-/**
- * All settled games played within [startMs, endMs]. v2 stores `createdAt` as a
- * unix timestamp, and games are created in id order so timestamps are monotonic —
- * we scan newest-first and stop once a whole chunk predates the window, bounding
- * work to the window size.
- */
-async function collectWindowGames(startMs: number, endMs: number): Promise<WindowGame[]> {
+// The retired v1 contract. Seasons whose window opened before the v2 cutover
+// have games on both contracts, so those windows scan v1 too. v1 stored
+// `createdAt` as a **block number**, so its scan maps block → time from
+// measured block time — accurate to seconds over recent history.
+const V1_GAME = '0xb37877A9EBD6C3169b2eAAa3E16852839785aE85' as `0x${string}`
+const V2_CUTOVER_MS = Date.UTC(2026, 6, 13, 6, 0, 0)
+
+async function getBlockToTimeMapper(): Promise<(block: number) => number> {
   const pub = getPublicClient()
-  const nonceRaw = (await pub.readContract({ address: GAME, abi: CHESS_GAME_ABI as Abi, functionName: 'gameNonce' })) as bigint
+  const latest = await pub.getBlock()
+  const L = Number(latest.number)
+  const tL = Number(latest.timestamp)
+  const olderNum = Math.max(0, L - 2_000_000)
+  const older = await pub.getBlock({ blockNumber: BigInt(olderNum) })
+  const O = Number(older.number)
+  const tO = Number(older.timestamp)
+  const blockTime = O < L ? (tL - tO) / (L - O) : 1 // secs/block; Celo L2 fallback
+  return (block: number) => Math.round(tL - (L - block) * blockTime)
+}
+
+/**
+ * All settled games on one contract played within [startMs, endMs]. Games are
+ * created in id order so their `createdAt` is monotonic — we scan newest-first
+ * and stop once a whole chunk predates the window, bounding work to the window
+ * size. `toSec` maps raw createdAt to unix seconds (identity on v2, block →
+ * time on v1).
+ */
+async function scanContractWindow(
+  game: `0x${string}`,
+  toSec: (createdAt: number) => number,
+  startMs: number,
+  endMs: number,
+): Promise<WindowGame[]> {
+  const pub = getPublicClient()
+  const nonceRaw = (await pub.readContract({ address: game, abi: CHESS_GAME_ABI as Abi, functionName: 'gameNonce' })) as bigint
   const lastId = Number(nonceRaw) - 1
-  if (lastId < 1) return []
+  if (lastId < 0) return []
 
   const startSec = Math.floor(startMs / 1000)
   const endSec = Math.floor(endMs / 1000)
@@ -147,7 +173,7 @@ async function collectWindowGames(startMs: number, endMs: number): Promise<Windo
     const start = Math.max(0, end - SCAN_CHUNK + 1)
     const ids = Array.from({ length: end - start + 1 }, (_, i) => BigInt(start + i))
     const results = await pub.multicall({
-      contracts: ids.map((id) => ({ address: GAME, abi: CHESS_GAME_ABI as Abi, functionName: 'getGame', args: [id] })),
+      contracts: ids.map((id) => ({ address: game, abi: CHESS_GAME_ABI as Abi, functionName: 'getGame', args: [id] })),
       allowFailure: true,
     })
 
@@ -155,7 +181,7 @@ async function collectWindowGames(startMs: number, endMs: number): Promise<Windo
     results.forEach((r, i) => {
       if (r.status !== 'success') return
       const g = r.result as { white: string; black: string; status: number; result: number; createdAt: bigint }
-      const playedAt = Number(g.createdAt)
+      const playedAt = toSec(Number(g.createdAt))
       if (playedAt > chunkMaxSec) chunkMaxSec = playedAt
       if (playedAt < startSec || playedAt > endSec) return
       games.push({
@@ -171,6 +197,17 @@ async function collectWindowGames(startMs: number, endMs: number): Promise<Windo
     // Whole chunk predates the window — nothing older can qualify.
     if (chunkMaxSec > 0 && chunkMaxSec < startSec) break
   }
+  return games
+}
+
+/** All settled games played within [startMs, endMs] — v2, plus the retired v1
+ *  contract for windows that opened before the cutover. */
+async function collectWindowGames(startMs: number, endMs: number): Promise<WindowGame[]> {
+  const scans = [scanContractWindow(GAME, (t) => t, startMs, endMs)]
+  if (startMs < V2_CUTOVER_MS) {
+    scans.push(getBlockToTimeMapper().then((toSec) => scanContractWindow(V1_GAME, toSec, startMs, endMs)))
+  }
+  const games = (await Promise.all(scans)).flat()
 
   // Chronological order so daily diminishing counts games as they happened.
   games.sort((a, b) => a.playedAt - b.playedAt || a.id - b.id)
