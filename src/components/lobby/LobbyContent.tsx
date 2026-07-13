@@ -66,6 +66,7 @@ export default function LobbyContent() {
   const [searchId, setSearchId] = useState('')
   const ITEMS_PER_PAGE = 3
   const [wager, setWager] = useState(100)
+  const [customWager, setCustomWager] = useState('')
   const [balance, setBalance] = useState<string>('0.00')
   const [rating, setRating] = useState<number>(1200)
   const [wins, setWins] = useState(0)
@@ -699,7 +700,7 @@ export default function LobbyContent() {
       {/* ── CREATE MATCH MODAL ── */}
       <AnimatePresence>
         {isCreateModalOpen && (
-          <div className="m-sheet-wrap fixed inset-0 z-50 flex items-center justify-center p-6 box-border">
+          <div className="m-sheet-wrap fixed inset-0 z-[70] flex items-center justify-center p-6 box-border">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -780,7 +781,7 @@ export default function LobbyContent() {
                               return (
                                 <button
                                   key={amt}
-                                  onClick={() => !isInsufficient && setWager(amt)}
+                                  onClick={() => { if (!isInsufficient) { setWager(amt); setCustomWager(''); setCreateError(null) } }}
                                   disabled={isInsufficient}
                                   style={wager === amt ? { background: 'var(--btn-face)', color: 'var(--btn-text)', boxShadow: 'var(--btn-shadow)' } : undefined}
                                   className={`py-3.5 rounded-2xl border font-black text-xs transition-all active:scale-95 ${
@@ -796,6 +797,35 @@ export default function LobbyContent() {
                               )
                             })}
                           </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
+                            Or Enter Custom Amount
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              placeholder={`MIN ${MIN_CREATE_WAGER}`}
+                              value={customWager}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/[^0-9]/g, '')
+                                setCustomWager(raw)
+                                setCreateError(null)
+                                if (raw) setWager(parseInt(raw, 10))
+                              }}
+                              className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-3.5 pr-16 text-sm tracking-widest font-black text-white placeholder:text-white/25 focus:outline-none focus:border-[var(--c)]/60 focus:bg-black/60 transition-colors"
+                            />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-cyan-700 tracking-widest">
+                              CHESS
+                            </span>
+                          </div>
+                          {customWager !== '' && wager < MIN_CREATE_WAGER && (
+                            <p className="mt-2 text-[9px] text-red-400 font-bold tracking-widest uppercase">
+                              Minimum wager is {MIN_CREATE_WAGER} CHESS
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -825,7 +855,7 @@ export default function LobbyContent() {
                           fullWidth
                           variant="brand"
                           onClick={handleCreateGame}
-                          disabled={isBalanceUpdating || (parseFloat(balance) || 0) < wager}
+                          disabled={isBalanceUpdating || (parseFloat(balance) || 0) < wager || wager < MIN_CREATE_WAGER}
                         >
                           INITIALIZE GAME
                         </GlowButton>

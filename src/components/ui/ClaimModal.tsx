@@ -126,7 +126,7 @@ export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimM
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="m-sheet-wrap fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="m-sheet-wrap fixed inset-0 z-[70] flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
           onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
         >

@@ -55,7 +55,7 @@ export default function PromotionModal({ open, color, onSelect, onCancel }: Prom
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="m-sheet-wrap fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-md"
+          className="m-sheet-wrap fixed inset-0 z-[70] flex items-center justify-center px-4 bg-black/70 backdrop-blur-md"
           onClick={onCancel}
         >
           <motion.div

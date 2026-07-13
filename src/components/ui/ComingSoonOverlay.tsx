@@ -83,7 +83,7 @@ export default function ComingSoonOverlay({ isOpen, onClose }: ComingSoonOverlay
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="m-sheet-wrap fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6  box-border"
+          className="m-sheet-wrap fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6  box-border"
           style={{ background: 'rgba(5, 5, 15, 0.85)', backdropFilter: 'blur(12px)' }}
         >
           {/* Cyber-industrial Grid Background */}
