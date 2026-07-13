@@ -19,14 +19,22 @@ const BOT_APPROVAL = parseUnits('1000000', TOKEN_DECIMALS)
 // Re-approve once the remaining allowance can't cover a max-size wager stack.
 const ALLOWANCE_FLOOR = parseUnits('1000', TOKEN_DECIMALS)
 
+// Forno is load-balanced, so a nonce read right after a confirmed meta-tx can
+// hit a lagging node and come back stale — the forwarder then rejects the
+// signature as ERC2771ForwarderInvalidSigner. Track the next nonce we've used
+// per bot within this instance and never sign below it.
+const nextNonce = new Map<string, bigint>()
+
 async function botMetaTx(bot: BotProfile, to: Address, data: `0x${string}`): Promise<Hash> {
   const account = getBotAccount(bot)
-  const nonce = (await getPublicClient().readContract({
+  const onchain = (await getPublicClient().readContract({
     address: FORWARDER,
     abi: FORWARDER_ABI,
     functionName: 'nonces',
     args: [account.address],
   })) as bigint
+  const tracked = nextNonce.get(bot.address) ?? 0n
+  const nonce = onchain > tracked ? onchain : tracked
 
   const message = buildForwardRequestMessage({ from: account.address, to, data, nonce })
   const signature = await account.signTypedData({
@@ -36,7 +44,7 @@ async function botMetaTx(bot: BotProfile, to: Address, data: `0x${string}`): Pro
     message,
   })
 
-  return executeForwardRequest({
+  const hash = await executeForwardRequest({
     from: message.from,
     to: message.to,
     value: message.value,
@@ -45,6 +53,8 @@ async function botMetaTx(bot: BotProfile, to: Address, data: `0x${string}`): Pro
     data: message.data,
     signature,
   })
+  nextNonce.set(bot.address, nonce + 1n)
+  return hash
 }
 
 /** Claim the daily faucet if the cooldown has elapsed. Returns whether a claim ran. */
