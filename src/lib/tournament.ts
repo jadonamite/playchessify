@@ -134,6 +134,31 @@ interface WindowGame {
 const V1_GAME = '0xb37877A9EBD6C3169b2eAAa3E16852839785aE85' as `0x${string}`
 const V2_CUTOVER_MS = Date.UTC(2026, 6, 13, 6, 0, 0)
 
+// v1's Game struct has no `joinedAt`, so v2's ABI cannot decode it — the v1
+// scan must use v1's own shape.
+const V1_GAME_ABI = [
+  {
+    type: 'function', name: 'gameNonce', stateMutability: 'view',
+    inputs: [], outputs: [{ type: 'uint256' }],
+  },
+  {
+    type: 'function', name: 'getGame', stateMutability: 'view',
+    inputs: [{ name: 'gameId', type: 'uint256' }],
+    outputs: [{
+      type: 'tuple',
+      components: [
+        { name: 'white', type: 'address' },
+        { name: 'black', type: 'address' },
+        { name: 'wager', type: 'uint256' },
+        { name: 'status', type: 'uint8' },
+        { name: 'result', type: 'uint8' },
+        { name: 'createdAt', type: 'uint256' },
+        { name: 'drawProposer', type: 'address' },
+      ],
+    }],
+  },
+] as const
+
 async function getBlockToTimeMapper(): Promise<(block: number) => number> {
   const pub = getPublicClient()
   const latest = await pub.getBlock()
@@ -156,12 +181,13 @@ async function getBlockToTimeMapper(): Promise<(block: number) => number> {
  */
 async function scanContractWindow(
   game: `0x${string}`,
+  abi: Abi,
   toSec: (createdAt: number) => number,
   startMs: number,
   endMs: number,
 ): Promise<WindowGame[]> {
   const pub = getPublicClient()
-  const nonceRaw = (await pub.readContract({ address: game, abi: CHESS_GAME_ABI as Abi, functionName: 'gameNonce' })) as bigint
+  const nonceRaw = (await pub.readContract({ address: game, abi, functionName: 'gameNonce' })) as bigint
   const lastId = Number(nonceRaw) - 1
   if (lastId < 0) return []
 
@@ -173,7 +199,7 @@ async function scanContractWindow(
     const start = Math.max(0, end - SCAN_CHUNK + 1)
     const ids = Array.from({ length: end - start + 1 }, (_, i) => BigInt(start + i))
     const results = await pub.multicall({
-      contracts: ids.map((id) => ({ address: game, abi: CHESS_GAME_ABI as Abi, functionName: 'getGame', args: [id] })),
+      contracts: ids.map((id) => ({ address: game, abi, functionName: 'getGame', args: [id] })),
       allowFailure: true,
     })
 
@@ -203,9 +229,9 @@ async function scanContractWindow(
 /** All settled games played within [startMs, endMs] — v2, plus the retired v1
  *  contract for windows that opened before the cutover. */
 async function collectWindowGames(startMs: number, endMs: number): Promise<WindowGame[]> {
-  const scans = [scanContractWindow(GAME, (t) => t, startMs, endMs)]
+  const scans = [scanContractWindow(GAME, CHESS_GAME_ABI as Abi, (t) => t, startMs, endMs)]
   if (startMs < V2_CUTOVER_MS) {
-    scans.push(getBlockToTimeMapper().then((toSec) => scanContractWindow(V1_GAME, toSec, startMs, endMs)))
+    scans.push(getBlockToTimeMapper().then((toSec) => scanContractWindow(V1_GAME, V1_GAME_ABI as Abi, toSec, startMs, endMs)))
   }
   const games = (await Promise.all(scans)).flat()
 
