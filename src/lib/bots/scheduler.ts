@@ -1,6 +1,6 @@
 import type { Abi } from 'viem'
 import { parseUnits } from 'viem'
-import { BOTS, isBotAddress, BOT_MAX_OPEN_LOBBIES, type BotProfile } from '@/config/bots'
+import { BOTS, isBotAddress, BOT_MAX_OPEN_LOBBIES, BOT_MIN_WAGER, type BotProfile } from '@/config/bots'
 import {
   acquireTickLock,
   countPairingOnce,
@@ -37,8 +37,9 @@ const JOIN_CHANCE = 0.45
 const CREATE_CHANCE = 0.35
 const MAX_FAUCET_CLAIMS_PER_TICK = 2
 
-// Wager menu for bot-created lobbies, weighted toward small stakes.
-const CREATE_WAGERS = [0, 5, 5, 10, 10, 25, 50]
+// Wager menu for bot-created lobbies, floored at BOT_MIN_WAGER and weighted
+// toward the entry stake.
+const CREATE_WAGERS = [100, 100, 100, 150, 150, 200, 250]
 
 interface RecentGame {
   id: number
@@ -130,8 +131,10 @@ async function claimFaucets(): Promise<void> {
 async function maybeJoin(recent: RecentGame[]): Promise<void> {
   if (Math.random() > JOIN_CHANCE) return
   const nowS = Date.now() / 1000
+  const minWager = parseUnits(String(BOT_MIN_WAGER), TOKEN_DECIMALS)
   const candidates = recent.filter((g) => {
     if (g.status !== GameStatus.Waiting || isBotAddress(g.white)) return false
+    if (g.wager < minWager) return false // bots never stake below the floor
     const age = nowS - g.createdAt
     return age >= JOIN_MIN_AGE_S && age <= JOIN_MAX_AGE_S
   })

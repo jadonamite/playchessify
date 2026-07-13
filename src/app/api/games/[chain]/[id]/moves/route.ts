@@ -17,6 +17,7 @@ import {
   type Address,
 } from '@/lib/celo-server'
 import { canonicalMoveMessage, MOVE_TIMEOUT_MS } from '@/lib/settlement'
+import { settleGameById } from '@/lib/settle-game'
 
 export const runtime = 'nodejs'
 
@@ -173,11 +174,23 @@ export async function POST(
     // clients disappear at the terminal position.
     await registerActiveGame(chain, gameId)
 
-    // If the other side is a bot, it now has the move — reply after a short
-    // "thinking" delay. Runs post-response so the human's POST stays fast.
-    const opponent = player.toLowerCase() === game.white.toLowerCase() ? game.black : game.white
-    if (isBotAddress(opponent)) {
-      after(() => botRespondSoon(gameId))
+    if (board.isGameOver()) {
+      // This move ended the game — settle on-chain immediately so the result
+      // and payout land without waiting for a client callback or the cron.
+      after(async () => {
+        try {
+          await settleGameById(chain, gameId)
+        } catch (err) {
+          console.error(`${LOG_PREFIX} instant settle failed`, { chain, gameId, err: (err as Error)?.message })
+        }
+      })
+    } else {
+      // If the other side is a bot, it now has the move — reply after a short
+      // "thinking" delay. Runs post-response so the human's POST stays fast.
+      const opponent = player.toLowerCase() === game.white.toLowerCase() ? game.black : game.white
+      if (isBotAddress(opponent)) {
+        after(() => botRespondSoon(gameId))
+      }
     }
 
     return NextResponse.json({ ok: true, moveCount: newLen, move: record })
