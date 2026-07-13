@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { after } from 'next/server'
 import { Chess } from 'chess.js'
+import { isBotAddress } from '@/config/bots'
+import { botRespondSoon, maybeTickBots } from '@/lib/bots/scheduler'
 import {
   appendMove,
   getMoves,
@@ -43,6 +46,9 @@ export async function GET(
 
   try {
     const moves = await getMoves(chain, gameId)
+    // Players poll this while in a game — a good heartbeat for the bot fleet
+    // (also recovers a bot whose scheduled reply was lost to a cold function).
+    after(() => maybeTickBots())
     return NextResponse.json({ moves })
   } catch (err) {
     console.error(`${LOG_PREFIX} GET failed`, { chain, gameId, err: (err as Error)?.message })
@@ -166,6 +172,14 @@ export async function POST(
     // Register so the settlement worker will finalize this game even if both
     // clients disappear at the terminal position.
     await registerActiveGame(chain, gameId)
+
+    // If the other side is a bot, it now has the move — reply after a short
+    // "thinking" delay. Runs post-response so the human's POST stays fast.
+    const opponent = player.toLowerCase() === game.white.toLowerCase() ? game.black : game.white
+    if (isBotAddress(opponent)) {
+      after(() => botRespondSoon(gameId))
+    }
+
     return NextResponse.json({ ok: true, moveCount: newLen, move: record })
   } catch (err) {
     console.error(`${LOG_PREFIX} POST failed`, { chain, gameId, err: (err as Error)?.message })

@@ -3,6 +3,7 @@ import { Redis } from '@upstash/redis'
 import type { Abi } from 'viem'
 import { getPublicClient } from '@/lib/celo-server'
 import { syncGameIndex, getIndexedPlayers } from '@/lib/game-index'
+import { isBotAddress } from '@/config/bots'
 import { CELO_CONTRACTS } from '@/config/contracts'
 import { CHESS_GAME_ABI } from '@/config/abis'
 
@@ -60,7 +61,8 @@ export async function GET() {
     const cached = await redis.get<LeaderboardEntry[]>(CACHE_KEY)
     if (cached) return NextResponse.json({ entries: cached, cached: true })
     await syncGameIndex()
-    const addresses = await getIndexedPlayers()
+    // Bots play real games but never rank — their opponents' stats still count.
+    const addresses = (await getIndexedPlayers()).filter((a) => !isBotAddress(a))
     if (addresses.length === 0) return NextResponse.json({ entries: [] })
     const statsResults = await getPublicClient().multicall({
       contracts: addresses.map((addr) => ({

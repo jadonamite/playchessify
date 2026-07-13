@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { getBatchProfiles } from '@/lib/profile-store'
+import { maybeTickBots } from '@/lib/bots/scheduler'
 
 export async function POST(req: NextRequest) {
   let body: { addresses?: unknown }
@@ -16,5 +17,7 @@ export async function POST(req: NextRequest) {
   }
 
   const profiles = await getBatchProfiles(addresses)
+  // The lobby polls this for player names — the fleet's busiest heartbeat.
+  after(() => maybeTickBots())
   return NextResponse.json({ profiles })
 }

@@ -3,6 +3,7 @@ import type { Abi } from 'viem'
 import { getPublicClient } from '@/lib/celo-server'
 import { syncGameIndex, getIndexedPlayers } from '@/lib/game-index'
 import { CELO_CONTRACTS } from '@/config/contracts'
+import { isBotAddress } from '@/config/bots'
 import { CHESS_GAME_ABI } from '@/config/abis'
 import {
   TOURNAMENT,
@@ -293,7 +294,10 @@ function scoreWindow(games: WindowGame[], seed: Record<string, number>): BoardEn
     }
   }
 
-  const board: BoardEntry[] = Object.entries(acc).map(([address, a]) => ({
+  // Bot opponents award full XP to humans, but bots themselves never board.
+  const board: BoardEntry[] = Object.entries(acc)
+    .filter(([address]) => !isBotAddress(address))
+    .map(([address, a]) => ({
     address,
     xp: Math.round(a.xp),
     wins: a.wins,

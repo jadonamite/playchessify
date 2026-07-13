@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useWallet } from '@/components/wallet-provider'
 import GlowButton from '@/components/ui/GlowButton'
@@ -12,6 +12,7 @@ import PlayCard from '@/components/ui/PlayCard'
 import ComingSoonOverlay from '@/components/ui/ComingSoonOverlay'
 import { useRouter } from 'next/navigation'
 import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID } from '@/config/contracts'
+import { isBotAddress } from '@/config/bots'
 import { useCeloChess } from '@/hooks/useCeloChess'
 import { useLobby } from '@/hooks/useLobby'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
@@ -109,6 +110,23 @@ export default function LobbyContent() {
 
   const { games: openGames, isLoading: isLobbyLoading, refresh: refreshLobby } = useLobby()
   const { data: lobbyProfileMap = {} } = useBatchProfiles(openGames.map((g) => g.creator))
+
+  // Players who've hit today's bot-pairing cap stop seeing bot lobbies at all —
+  // the fleet won't pair them again, so showing its lobbies would dead-end.
+  const [botCapped, setBotCapped] = useState(false)
+  useEffect(() => {
+    if (!playerAddress) return
+    let cancelled = false
+    fetch(`/api/bots/eligibility?address=${playerAddress}`)
+      .then((r) => r.json())
+      .then((d: { capped?: boolean }) => { if (!cancelled) setBotCapped(!!d?.capped) })
+      .catch(() => { /* fail open — feed just includes bot lobbies */ })
+    return () => { cancelled = true }
+  }, [playerAddress])
+  const visibleGames = useMemo(
+    () => (botCapped ? openGames.filter((g) => !isBotAddress(g.creator)) : openGames),
+    [openGames, botCapped],
+  )
 
   const { data: myProfile } = useProfile(playerAddress ?? null)
   const { streak, isLoading: streakLoading } = useStreak(playerAddress)
@@ -418,9 +436,9 @@ export default function LobbyContent() {
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  {isLobbyLoading && openGames.length === 0 ? (
+                  {isLobbyLoading && visibleGames.length === 0 ? (
                     <LoadingState message="SCANNING LOBBY" />
-                  ) : openGames.length === 0 ? (
+                  ) : visibleGames.length === 0 ? (
                     <div className="py-20 text-center flex flex-col items-center gap-4 border border-white/5 bg-white/[0.02] rounded-3xl">
                       <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center opacity-40">
                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -433,7 +451,7 @@ export default function LobbyContent() {
                     </div>
                   ) : (
                     <>
-                      {openGames.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((game, idx) => (
+                      {visibleGames.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((game, idx) => (
                     <motion.div
                       key={game.id}
                       initial={{ opacity: 0, y: 15 }}
@@ -457,10 +475,22 @@ export default function LobbyContent() {
                               <ChessAvatar address={game.creator} size={28} />
                               <div className="flex flex-col justify-center min-w-0">
                                 <span
-                                  className="text-[10px] tracking-[0.2em] text-gray-500 uppercase font-bold mb-1"
+                                  className="text-[10px] tracking-[0.2em] text-gray-500 uppercase font-bold mb-1 flex items-center gap-1.5"
                                   style={{ fontFamily: 'var(--fd)' }}
                                 >
                                   CHALLENGER
+                                  {isBotAddress(game.creator) && (
+                                    <span
+                                      title="Automated player — plays from its own wallet"
+                                      className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-[4px] bg-white/5 border border-white/10 text-gray-400"
+                                    >
+                                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="5" y="9" width="14" height="10" rx="2.5" />
+                                        <path d="M12 9V5M9.5 5h5" />
+                                        <path d="M9.5 13.5v1M14.5 13.5v1" />
+                                      </svg>
+                                    </span>
+                                  )}
                                 </span>
                                 <ChessName
                                   address={game.creator}
@@ -500,7 +530,7 @@ export default function LobbyContent() {
                       ))}
 
                       {/* Pagination UI */}
-                      {openGames.length > ITEMS_PER_PAGE && (
+                      {visibleGames.length > ITEMS_PER_PAGE && (
                         <div className="flex items-center justify-center gap-4 mt-6 pt-6 border-t border-white/5">
                           <button 
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
@@ -510,11 +540,11 @@ export default function LobbyContent() {
                             PREV
                           </button>
                           <span className="text-[10px] font-black text-[var(--c)] tracking-widest uppercase">
-                            PAGE {currentPage} / {Math.ceil(openGames.length / ITEMS_PER_PAGE)}
+                            PAGE {currentPage} / {Math.ceil(visibleGames.length / ITEMS_PER_PAGE)}
                           </span>
-                          <button 
-                            onClick={() => setCurrentPage(p => Math.min(Math.ceil(openGames.length / ITEMS_PER_PAGE), p + 1))}
-                            disabled={currentPage === Math.ceil(openGames.length / ITEMS_PER_PAGE)}
+                          <button
+                            onClick={() => setCurrentPage(p => Math.min(Math.ceil(visibleGames.length / ITEMS_PER_PAGE), p + 1))}
+                            disabled={currentPage === Math.ceil(visibleGames.length / ITEMS_PER_PAGE)}
                             className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-[10px] tracking-widest uppercase font-black text-white hover:bg-black/60 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                           >
                             NEXT
@@ -522,7 +552,7 @@ export default function LobbyContent() {
                         </div>
                       )}
 
-                      {openGames.length === 0 && (
+                      {visibleGames.length === 0 && (
                         <div className="py-20 text-center border border-dashed border-white/10 rounded-2xl bg-black/40">
                           <p className="text-sm font-medium text-gray-500 tracking-wider">
                             NO OPEN MATCHES ON CELO

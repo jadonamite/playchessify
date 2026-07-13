@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { getCurrentTournament } from '@/lib/tournament'
+import { maybeTickBots } from '@/lib/bots/scheduler'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -11,6 +12,7 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   try {
     const data = await getCurrentTournament()
+    after(() => maybeTickBots()) // fleet heartbeat rides live traffic
     return NextResponse.json(data)
   } catch (err) {
     console.error('[api/tournament/current] failed:', (err as Error)?.message)
