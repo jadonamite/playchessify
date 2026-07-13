@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAddress, formatUnits, type Abi } from 'viem'
-import { getPublicClient, getBlockToTimeMapper } from '@/lib/celo-server'
+import { getPublicClient } from '@/lib/celo-server'
 import { syncGameIndex, getPlayerGameIds } from '@/lib/game-index'
 import { CELO_CONTRACTS, TOKEN_DECIMALS } from '@/config/contracts'
 import { CHESS_GAME_ABI } from '@/config/abis'
@@ -40,18 +40,15 @@ export async function GET(req: NextRequest) {
     const ids = await getPlayerGameIds(me)
     if (ids.length === 0) return NextResponse.json({ history: [] })
 
-    const [results, blockToTime] = await Promise.all([
-      getPublicClient().multicall({
-        contracts: ids.map((id) => ({
-          address: GAME,
-          abi: CHESS_GAME_ABI as Abi,
-          functionName: 'getGame',
-          args: [BigInt(id)],
-        })),
-        allowFailure: true,
-      }),
-      getBlockToTimeMapper(),
-    ])
+    const results = await getPublicClient().multicall({
+      contracts: ids.map((id) => ({
+        address: GAME,
+        abi: CHESS_GAME_ABI as Abi,
+        functionName: 'getGame',
+        args: [BigInt(id)],
+      })),
+      allowFailure: true,
+    })
 
     const items: HistoryItem[] = []
     for (let i = 0; i < results.length; i++) {
@@ -81,8 +78,8 @@ export async function GET(req: NextRequest) {
         wager: formatUnits(g.wager as bigint, TOKEN_DECIMALS),
         status: STATUS_LABELS[statusIdx] ?? 'Unknown',
         result,
-        // createdAt is a block number; map it to a real unix time (seconds).
-        timestamp: blockToTime(Number(g.createdAt)),
+        timestamp: Number(g.createdAt), // v2: unix seconds straight from the chain
+
         canReclaim: false,
       })
     }

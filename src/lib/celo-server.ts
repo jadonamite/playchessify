@@ -10,7 +10,7 @@ import {
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoAlfajores } from 'viem/chains'
-import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
+import { CHESS_GAME_ABI, CHESS_TOKEN_ABI, FORWARDER_ABI } from '@/config/abis'
 import { CELO_CONTRACTS } from '@/config/contracts'
 
 // Server-only viem clients + signing wallets for Chessify on Celo.
@@ -22,7 +22,7 @@ import { CELO_CONTRACTS } from '@/config/contracts'
 //   GAS_SPONSOR_PRIVATE_KEY — drips USDm gas to 0-balance MiniPay EOAs
 // All three hold CELO, so their own txs pay gas natively (no feeCurrency).
 
-// ── Contract result enum (mirrors ChessGame.GameResult) ──────────────────────
+// ── Contract result enum (mirrors PlaychessifyEngine.GameResult) ──────────────────────
 export enum GameResult {
   None = 0,
   WhiteWins = 1,
@@ -48,6 +48,7 @@ const RPC_URL = IS_TESTNET
 
 const GAME_ADDRESS = CELO_CONTRACTS.game as Address
 const TOKEN_ADDRESS = CELO_CONTRACTS.token as Address
+const FORWARDER_ADDRESS = CELO_CONTRACTS.forwarder as Address
 
 // ── Public client (reads) ────────────────────────────────────────────────────
 function makePublicClient() {
@@ -79,7 +80,8 @@ export interface OnchainGame {
   wager: bigint
   status: GameStatus
   result: GameResult
-  createdAt: bigint
+  createdAt: bigint   // unix seconds (v2 contracts use timestamps, not block numbers)
+  joinedAt: bigint    // unix seconds; 0n until an opponent joins
   drawProposer: Address
 }
 
@@ -96,6 +98,7 @@ export async function getOnchainGame(gameId: number): Promise<OnchainGame> {
     status: number
     result: number
     createdAt: bigint
+    joinedAt: bigint
     drawProposer: Address
   }
   return {
@@ -105,6 +108,7 @@ export async function getOnchainGame(gameId: number): Promise<OnchainGame> {
     status: g.status as GameStatus,
     result: g.result as GameResult,
     createdAt: g.createdAt,
+    joinedAt: g.joinedAt,
     drawProposer: g.drawProposer,
   }
 }
@@ -120,23 +124,6 @@ export async function getOnchainGameCached(gameId: number): Promise<OnchainGame>
   const game = await getOnchainGame(gameId)
   _gameCache.set(gameId, { at: Date.now(), game })
   return game
-}
-
-// A game's on-chain `createdAt` is the **block number** it was created in, not a
-// timestamp. Build a mapper from a block number to an estimated unix time (secs)
-// by measuring the current block time from two spaced reference blocks. Accurate
-// to seconds over recent history — enough for history dates and season windows.
-export async function getBlockToTimeMapper(): Promise<(block: number) => number> {
-  const pub = getPublicClient()
-  const latest = await pub.getBlock()
-  const L = Number(latest.number)
-  const tL = Number(latest.timestamp)
-  const olderNum = Math.max(0, L - 2_000_000)
-  const older = await pub.getBlock({ blockNumber: BigInt(olderNum) })
-  const O = Number(older.number)
-  const tO = Number(older.timestamp)
-  const blockTime = O < L ? (tL - tO) / (L - O) : 5 // secs/block; Celo fallback
-  return (block: number) => Math.round(tL - (L - block) * blockTime)
 }
 
 /** Verify a wallet signature over an arbitrary message. Handles EOAs and, via
@@ -165,6 +152,82 @@ export async function settleOnChain(gameId: number, result: GameResult): Promise
     abi: CHESS_GAME_ABI,
     functionName: 'settleGame',
     args: [BigInt(gameId), result],
+  })
+  await getPublicClient().waitForTransactionReceipt({ hash })
+  return hash
+}
+
+/** Oracle voids a joined game in which no move was ever made — both wagers
+ *  refunded, no winner, no Elo. Reverts until VOID_MIN_IDLE has passed. */
+export async function voidOnChain(gameId: number): Promise<Hash> {
+  const { account, client } = walletFor('ORACLE_PRIVATE_KEY')
+  const hash = await client.writeContract({
+    account,
+    chain: CHAIN,
+    address: GAME_ADDRESS,
+    abi: CHESS_GAME_ABI,
+    functionName: 'voidGame',
+    args: [BigInt(gameId)],
+  })
+  await getPublicClient().waitForTransactionReceipt({ hash })
+  return hash
+}
+
+/** Close a Waiting lobby whose 10-minute join window has expired. Permissionless
+ *  on-chain (refund is hard-wired to the creator); the oracle key sweeps it. */
+export async function closeStaleOnChain(gameId: number): Promise<Hash> {
+  const { account, client } = walletFor('ORACLE_PRIVATE_KEY')
+  const hash = await client.writeContract({
+    account,
+    chain: CHAIN,
+    address: GAME_ADDRESS,
+    abi: CHESS_GAME_ABI,
+    functionName: 'closeStaleGame',
+    args: [BigInt(gameId)],
+  })
+  await getPublicClient().waitForTransactionReceipt({ hash })
+  return hash
+}
+
+// ── ERC-2771 meta-tx execution (Tier C gasless) ──────────────────────────────
+
+export interface ForwardRequestData {
+  from: Address
+  to: Address
+  value: bigint
+  gas: bigint
+  deadline: number
+  data: `0x${string}`
+  signature: `0x${string}`
+}
+
+/** Whether the forwarder accepts this request right now (signature, nonce,
+ *  deadline). Read-only preflight so an invalid request never costs gas. */
+export async function verifyForwardRequest(req: ForwardRequestData): Promise<boolean> {
+  try {
+    return (await getPublicClient().readContract({
+      address: FORWARDER_ADDRESS,
+      abi: FORWARDER_ABI,
+      functionName: 'verify',
+      args: [req],
+    })) as boolean
+  } catch {
+    return false
+  }
+}
+
+/** Execute a player-signed ForwardRequest through the trusted forwarder. The
+ *  gas-sponsor wallet pays; the forwarder's signature check means executing a
+ *  request grants us no authority over the player's game. */
+export async function executeForwardRequest(req: ForwardRequestData): Promise<Hash> {
+  const { account, client } = walletFor('GAS_SPONSOR_PRIVATE_KEY')
+  const hash = await client.writeContract({
+    account,
+    chain: CHAIN,
+    address: FORWARDER_ADDRESS,
+    abi: FORWARDER_ABI,
+    functionName: 'execute',
+    args: [req],
   })
   await getPublicClient().waitForTransactionReceipt({ hash })
   return hash
@@ -368,5 +431,5 @@ export const ERC20_MIN_ABI = [
   },
 ] as const
 
-export { GAME_ADDRESS, TOKEN_ADDRESS, getAddress }
+export { GAME_ADDRESS, TOKEN_ADDRESS, FORWARDER_ADDRESS, getAddress }
 export type { Address }

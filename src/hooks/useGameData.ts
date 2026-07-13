@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useReadContract } from 'wagmi'
 import { CHESS_GAME_ABI } from '@/config/abis'
-import { CELO_CONTRACTS, CELO_CHAIN_ID, TOKEN_DECIMALS } from '@/config/contracts'
+import { CELO_CONTRACTS, CELO_CHAIN_ID, TOKEN_DECIMALS, JOIN_WINDOW_SECS } from '@/config/contracts'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
 import { type GameData, ZERO, STATUS_LABELS, norm, resultForColor } from '@/components/game/types'
 
@@ -34,13 +34,14 @@ export function useGameData({ gameId, isBotGame, celoAddress, isConnected }: Use
 
   useEffect(() => {
     if (!celoGameData) return
-    const gd = celoGameData as { white: string; black: string; wager: bigint; status: number; result: number; drawProposer: string }
+    const gd = celoGameData as { white: string; black: string; wager: bigint; status: number; result: number; createdAt: bigint; drawProposer: string }
     setGameData({
       white:  gd.white,
       black:  gd.black,
       wager:  gd.wager.toString(),
       status: gd.status.toString(),
       result: gd.result.toString(),
+      createdAt: gd.createdAt.toString(),
       drawProposer: gd.drawProposer,
     })
   }, [celoGameData])
@@ -73,7 +74,11 @@ export function useGameData({ gameId, isBotGame, celoAddress, isConnected }: Use
   const gameEnded         = payoutSettled || contractCancelled
   // Authoritative outcome from the viewer's perspective once settled.
   const chainResult       = resultForColor(gameData?.result, myColor)
-  const canJoinFromPage   = gameIsWaiting && !isParticipant && !isBotGame && isConnected
+  // v2: joinGame reverts once the lobby is past its 10-minute join window —
+  // don't offer a join that's guaranteed to fail (the sweeper will close it).
+  const joinWindowClosed  = gameIsWaiting && !!gameData &&
+    Math.floor(Date.now() / 1000) - Number(gameData.createdAt) > JOIN_WINDOW_SECS
+  const canJoinFromPage   = gameIsWaiting && !joinWindowClosed && !isParticipant && !isBotGame && isConnected
 
   const wagerFormatted = gameData
     ? (Number(gameData.wager) / Math.pow(10, TOKEN_DECIMALS)).toFixed(0)
@@ -91,7 +96,7 @@ export function useGameData({ gameId, isBotGame, celoAddress, isConnected }: Use
     me, isCreator, isOpponent, isParticipant, myColor,
     drawPending, iProposedDraw, opponentProposedDraw,
     gameIsWaiting, contractActive, contractDone, contractCancelled, contractDraw,
-    payoutSettled, gameEnded, chainResult, canJoinFromPage,
+    payoutSettled, gameEnded, chainResult, canJoinFromPage, joinWindowClosed,
     wagerFormatted, statusLabel, gameProfileMap,
   }
 }

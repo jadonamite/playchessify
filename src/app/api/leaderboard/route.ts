@@ -10,7 +10,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const GAME = CELO_CONTRACTS.game as `0x${string}`
-const CACHE_KEY = 'chess:idx:leaderboard'
+const CACHE_KEY = 'chess:v2:idx:leaderboard'
 const CACHE_TTL = 20 // seconds — stats change slowly; bounds multicall load
 
 export interface LeaderboardEntry {

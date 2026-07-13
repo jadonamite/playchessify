@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { usePublicClient } from 'wagmi'
 import { CHESS_GAME_ABI } from '@/config/abis'
-import { CELO_CONTRACTS } from '@/config/contracts'
+import { CELO_CONTRACTS, JOIN_WINDOW_SECS } from '@/config/contracts'
 
 export interface Game {
   id: number
@@ -29,15 +29,19 @@ export function useLobby() {
       const start = Number(nonce) - 1
       const end = Math.max(0, start - 9)
 
+      const nowSecs = Math.floor(Date.now() / 1000)
       for (let i = start; i >= end; i--) {
         const g = await publicClient.readContract({
           address: CELO_CONTRACTS.game as `0x${string}`,
           abi: CHESS_GAME_ABI,
           functionName: 'getGame',
           args: [BigInt(i)]
-        }) as { white: string; wager: bigint; status: number | bigint }
+        }) as { white: string; wager: bigint; status: number | bigint; createdAt: bigint }
 
-        if (g && Number(g.status) === 0 && g.white !== '0x0000000000000000000000000000000000000000') {
+        // Only lobbies still inside the 10-minute join window — joinGame reverts
+        // past it, so an expired lobby must never be offered as joinable.
+        const withinWindow = nowSecs - Number(g?.createdAt ?? 0) <= JOIN_WINDOW_SECS
+        if (g && Number(g.status) === 0 && withinWindow && g.white !== '0x0000000000000000000000000000000000000000') {
           result.push({
             id: i,
             creator: g.white,

@@ -1,6 +1,6 @@
 import { Redis } from '@upstash/redis'
 import type { Abi } from 'viem'
-import { getPublicClient, getBlockToTimeMapper } from '@/lib/celo-server'
+import { getPublicClient } from '@/lib/celo-server'
 import { syncGameIndex, getIndexedPlayers } from '@/lib/game-index'
 import { CELO_CONTRACTS } from '@/config/contracts'
 import { CHESS_GAME_ABI } from '@/config/abis'
@@ -28,7 +28,7 @@ const BASE_RATING = 1200 // contract's starting ELO; fallback seed for late join
 const SCAN_CHUNK = 200
 const BOARD_TTL = 20 // seconds — live board cache; stats move slowly
 
-// Result / status enum (mirrors ChessGame + src/lib/celo-server.ts)
+// Result / status enum (mirrors PlaychessifyEngine + src/lib/celo-server.ts)
 const RESULT_WHITE_WINS = 1
 const RESULT_DRAW = 3
 const STATUS_FINISHED = 2
@@ -124,24 +124,20 @@ interface WindowGame {
   black: string
   status: number
   result: number
-  playedAt: number // estimated unix seconds (derived from block number)
+  playedAt: number // unix seconds (v2 stores createdAt as a timestamp)
 }
 
 /**
- * All settled games played within [startMs, endMs]. The chain stores a game's
- * `createdAt` as the **block number** it was created in, so we map block → time
- * (see getBlockToTimeMapper). Games are created in id order so their block
- * numbers are monotonic — we scan newest-first and stop once a whole chunk
- * predates the window, bounding work to the window size.
+ * All settled games played within [startMs, endMs]. v2 stores `createdAt` as a
+ * unix timestamp, and games are created in id order so timestamps are monotonic —
+ * we scan newest-first and stop once a whole chunk predates the window, bounding
+ * work to the window size.
  */
 async function collectWindowGames(startMs: number, endMs: number): Promise<WindowGame[]> {
   const pub = getPublicClient()
-  const [nonceRaw, blockToSec] = await Promise.all([
-    pub.readContract({ address: GAME, abi: CHESS_GAME_ABI as Abi, functionName: 'gameNonce' }) as Promise<bigint>,
-    getBlockToTimeMapper(),
-  ])
+  const nonceRaw = (await pub.readContract({ address: GAME, abi: CHESS_GAME_ABI as Abi, functionName: 'gameNonce' })) as bigint
   const lastId = Number(nonceRaw) - 1
-  if (lastId < 0) return []
+  if (lastId < 1) return []
 
   const startSec = Math.floor(startMs / 1000)
   const endSec = Math.floor(endMs / 1000)
@@ -159,7 +155,7 @@ async function collectWindowGames(startMs: number, endMs: number): Promise<Windo
     results.forEach((r, i) => {
       if (r.status !== 'success') return
       const g = r.result as { white: string; black: string; status: number; result: number; createdAt: bigint }
-      const playedAt = blockToSec(Number(g.createdAt))
+      const playedAt = Number(g.createdAt)
       if (playedAt > chunkMaxSec) chunkMaxSec = playedAt
       if (playedAt < startSec || playedAt > endSec) return
       games.push({

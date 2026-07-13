@@ -1,10 +1,11 @@
 'use client'
 
-import { useWriteContract, usePublicClient } from 'wagmi'
+import { useWriteContract, usePublicClient, useSignTypedData } from 'wagmi'
 import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
 import { decodeEventLog, encodeFunctionData, type Abi, type Address } from 'viem'
-import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
+import { CHESS_GAME_ABI, CHESS_TOKEN_ABI, FORWARDER_ABI } from '@/config/abis'
 import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID, USDM_ADDRESS } from '@/config/contracts'
+import { forwarderDomain, FORWARD_REQUEST_TYPES, buildForwardRequestMessage } from '@/lib/meta-tx'
 import { parseUnits } from 'viem'
 import { useCallback, useState } from 'react'
 import { useToastStore } from '@/hooks/useToastStore'
@@ -22,6 +23,11 @@ const APPROVAL_ALLOWANCE = parseUnits('1000000', TOKEN_DECIMALS) // 1,000,000 CH
 const MIN_GAS_USDM = 5_000_000_000_000_000n // 0.005 USDm
 // Minimum native CELO an external (Tier C) wallet needs on hand to pay gas for a write.
 const MIN_GAS_CELO = 5_000_000_000_000_000n // 0.005 CELO
+
+// Tier C gasless is meta-tx based (ERC-2771) when a forwarder is deployed; the
+// CELO drip only remains as the fallback rail when it isn't.
+const ZERO_ADDR = '0x0000000000000000000000000000000000000000'
+const FORWARDER_CONFIGURED = CELO_CONTRACTS.forwarder.toLowerCase() !== ZERO_ADDR
 const GAS_POLL_ATTEMPTS = 12
 const GAS_POLL_INTERVAL_MS = 1_000
 
@@ -55,6 +61,7 @@ interface WriteRequest {
 
 export function useCeloChess() {
   const { writeContractAsync } = useWriteContract()
+  const { signTypedDataAsync } = useSignTypedData()
   const publicClient = usePublicClient({ chainId: CELO_CHAIN_ID })
   const { walletTier, playerAddress: pinnedAddress } = useWallet()
   const { client: smartClient } = useSmartWallets()
@@ -66,12 +73,57 @@ export function useCeloChess() {
   // rather than recording under the wrong address). Don't re-derive it here.
   const playerAddress = (pinnedAddress ?? undefined) as Address | undefined
 
+  // ── Tier C meta-tx (ERC-2771) ────────────────────────────────────────────────
+  // The player signs an EIP-712 ForwardRequest in-wallet (free); the server's
+  // gas-sponsor executes it through the trusted forwarder and pays the gas. The
+  // returned hash is a real tx hash, so callers can waitForTransactionReceipt on
+  // it exactly like a direct write.
+  const sendMetaTx = useCallback(
+    async (req: WriteRequest): Promise<`0x${string}`> => {
+      if (!publicClient || !playerAddress) throw new Error(`${LOG_PREFIX} meta-tx: not ready`)
+      const data = encodeFunctionData({ abi: req.abi, functionName: req.functionName, args: req.args })
+      const nonce = (await publicClient.readContract({
+        address: CELO_CONTRACTS.forwarder as Address,
+        abi: FORWARDER_ABI,
+        functionName: 'nonces',
+        args: [playerAddress],
+      })) as bigint
+
+      const message = buildForwardRequestMessage({ from: playerAddress, to: req.address, data, nonce })
+      const signature = await signTypedDataAsync({
+        domain: forwarderDomain(),
+        types: FORWARD_REQUEST_TYPES,
+        primaryType: 'ForwardRequest',
+        message,
+      })
+
+      const res = await fetch('/api/relay/forward', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          from: message.from,
+          to: message.to,
+          data: message.data,
+          deadline: message.deadline,
+          signature,
+        }),
+      })
+      const body = (await res.json().catch(() => ({}))) as { ok?: boolean; txHash?: string; error?: string }
+      if (!res.ok || !body.ok || !body.txHash) {
+        throw new Error(`${LOG_PREFIX} relay rejected meta-tx: ${body.error ?? res.status}`)
+      }
+      return body.txHash as `0x${string}`
+    },
+    [publicClient, playerAddress, signTypedDataAsync],
+  )
+
   // ── tier-aware write dispatch ────────────────────────────────────────────────
   // One helper isolates the per-tier sponsorship mechanism so createGame/joinGame/
   // approve stay readable:
   //   smart   → Privy smart-wallet client → Pimlico paymaster sponsors the userOp
   //   minipay → legacy tx with feeCurrency = USDm (gas paid from the server drip)
-  //   eoa     → plain write, user pays
+  //   eoa     → ERC-2771 meta-tx via the forwarder (truly gasless); plain
+  //             self-paid write when the forwarder is unset or the relay declines
   const sendWrite = useCallback(
     async (req: WriteRequest): Promise<`0x${string}`> => {
       if (walletTier === 'smart' && smartClient) {
@@ -105,6 +157,18 @@ export function useCeloChess() {
         } as Parameters<typeof writeContractAsync>[0])
       }
 
+      if (walletTier === 'eoa' && FORWARDER_CONFIGURED) {
+        try {
+          return await sendMetaTx(req)
+        } catch (err) {
+          // A user-rejected signature is a real decision — don't re-prompt via
+          // the self-pay path. Relay/infra failures degrade to a direct write.
+          const m = (err instanceof Error ? err.message : '').toLowerCase()
+          if (m.includes('rejected') || m.includes('denied')) throw err
+          console.warn(`${LOG_PREFIX} meta-tx failed, degrading to self-paid write`, err)
+        }
+      }
+
       return writeContractAsync({
         address: req.address,
         abi: req.abi,
@@ -112,7 +176,7 @@ export function useCeloChess() {
         args: req.args,
       } as Parameters<typeof writeContractAsync>[0])
     },
-    [walletTier, smartClient, writeContractAsync],
+    [walletTier, smartClient, writeContractAsync, sendMetaTx],
   )
 
   // Read a wallet's current USDm (gas) balance.
@@ -207,6 +271,9 @@ export function useCeloChess() {
     }
 
     if (walletTier === 'eoa') {
+      // Meta-tx rail: the write itself is gasless, no drip needed up front.
+      if (FORWARDER_CONFIGURED) return 'sponsored'
+
       if ((await readCeloBalance(addr)) >= MIN_GAS_CELO) return 'has-gas'
 
       try {

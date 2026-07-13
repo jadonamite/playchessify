@@ -1,8 +1,10 @@
 // config/contracts.ts
 
 export const CELO_CONTRACTS = {
-  token: process.env.NEXT_PUBLIC_CELO_TOKEN ?? '0xE370aad742dF8DC8Ae9c0F0b9f265334D39e2197',
-  game: process.env.NEXT_PUBLIC_CELO_GAME ?? '0xf85f00D39A84b5180390548Ea9f76B0458607E78',
+  token: process.env.NEXT_PUBLIC_CELO_TOKEN ?? '0x607590fC7ba3F17b6B3274fF281528a131E9b015',
+  game: process.env.NEXT_PUBLIC_CELO_GAME ?? '0xA576321eB523FFb1e5FE568b317F9E7a7374fDdf',
+  // v2: OpenZeppelin ERC2771Forwarder — gasless meta-txs for Tier C EOAs.
+  forwarder: process.env.NEXT_PUBLIC_CELO_FORWARDER ?? '0xd29618312668007d1Da3B9eB591B7209E1A06cC5',
 } as const
 
 // Env-selectable so we can rehearse on Alfajores before mainnet.
@@ -19,5 +21,5 @@ export const USDM_ADDRESS = (process.env.NEXT_PUBLIC_FEE_CURRENCY ??
 
 export const TOKEN_DECIMALS  = 6
 export const FAUCET_AMOUNT   = 1_000_000_000n  // 1000 CHESS
-export const FAUCET_COOLDOWN = 17_280          // ~1 day on Celo (matches ChessToken.FAUCET_COOLDOWN)
-export const BLOCK_TIME_SECS = 5               // Celo block time
+export const FAUCET_COOLDOWN = 86_400          // seconds — PlaychessifyToken v2 cooldown is timestamp-based
+export const JOIN_WINDOW_SECS = 600            // 10 min — matches PlaychessifyEngine.JOIN_WINDOW

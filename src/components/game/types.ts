@@ -6,6 +6,7 @@ export interface GameData {
   wager: string
   status: string // '0'=WAITING '1'=ACTIVE '2'=FINISHED '3'=CANCELLED '4'=DRAW
   result: string // '0'=None '1'=WhiteWins '2'=BlackWins '3'=DrawResult '4'=Cancelled
+  createdAt: string // unix seconds (v2 contracts store timestamps)
   drawProposer: string
 }
 

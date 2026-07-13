@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getActiveGameIds } from '@/lib/moves-store'
 import { settleGameById } from '@/lib/settle-game'
 import { ensureOracleGas } from '@/lib/celo-server'
+import { sweepLifecycle } from '@/lib/lifecycle-sweep'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -68,6 +69,17 @@ export async function GET(req: NextRequest) {
       console.error(`${LOG_PREFIX} settlements need attention`, { failed })
     }
 
+    // v2 lifecycle: close expired wagered lobbies (10-min join window) and void
+    // wagered games where nobody ever moved. Never let a lifecycle hiccup fail
+    // the settlement sweep — report it and move on.
+    let lifecycle: Awaited<ReturnType<typeof sweepLifecycle>> | { error: string }
+    try {
+      lifecycle = await sweepLifecycle(CHAIN)
+    } catch (err) {
+      lifecycle = { error: (err as Error)?.message ?? 'lifecycle sweep failed' }
+      console.error(`${LOG_PREFIX} lifecycle sweep failed`, lifecycle)
+    }
+
     return NextResponse.json({
       ok: true,
       oracle,
@@ -75,6 +87,7 @@ export async function GET(req: NextRequest) {
       settled,
       abandonedInProgress: abandoned.length,
       failed,
+      lifecycle,
     })
   } catch (err) {
     console.error(`${LOG_PREFIX} sweep failed`, { err: (err as Error)?.message })

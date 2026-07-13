@@ -76,7 +76,7 @@ export async function settleGameById(chain: Chain, gameId: number): Promise<Sett
   if (derived.kind === 'illegal') return { ok: false, reason: 'illegal' }
   if (derived.kind === 'not-terminal') return { ok: false, reason: 'not-terminal' }
 
-  const lockKey = `chess:settle:${chain}:${gameId}`
+  const lockKey = `chess:v2:settle:${chain}:${gameId}`
   const acquired = await getRedis().set(lockKey, '1', { nx: true, ex: 120 })
   if (acquired !== 'OK') return { ok: false, reason: 'in-progress' }
 

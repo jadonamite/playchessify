@@ -16,7 +16,7 @@ import SceneBoundary from '@/components/ui/SceneBoundary'
 import FaucetResultModal, { type FaucetResultType } from '@/components/ui/FaucetResultModal'
 import { King, Pawn, Bishop, Knight, PieceIcon } from '@/components/ui/ChessModels'
 import { CHESS_TOKEN_ABI } from '@/config/abis'
-import { CELO_CONTRACTS, TOKEN_DECIMALS, FAUCET_AMOUNT, CELO_CHAIN_ID, USDM_ADDRESS, FAUCET_COOLDOWN, BLOCK_TIME_SECS } from '@/config/contracts'
+import { CELO_CONTRACTS, TOKEN_DECIMALS, FAUCET_AMOUNT, CELO_CHAIN_ID, USDM_ADDRESS } from '@/config/contracts'
 import { formatUnits, encodeFunctionData } from 'viem'
 
 /* ── KEYFRAMES ── */
@@ -155,8 +155,8 @@ export default function FaucetContent() {
   }
 
   // Human-readable time left on the faucet cooldown, e.g. "23h 12m".
-  const formatCooldown = (blocksLeft: bigint): string => {
-    const secs = Number(blocksLeft) * BLOCK_TIME_SECS
+  const formatCooldown = (secondsLeft: bigint): string => {
+    const secs = Number(secondsLeft)
     const h = Math.floor(secs / 3600)
     const m = Math.ceil((secs % 3600) / 60)
     return h > 0 ? `${h}h ${m}m` : `${m}m`
@@ -168,19 +168,14 @@ export default function FaucetContent() {
   const checkCooldown = async (): Promise<boolean> => {
     if (!publicClient || !playerAddress) return false
     try {
-      const [lastClaim, currentBlock] = await Promise.all([
-        publicClient.readContract({
-          address: CELO_CONTRACTS.token as `0x${string}`,
-          abi: CHESS_TOKEN_ABI,
-          functionName: 'lastFaucetClaim',
-          args: [playerAddress as `0x${string}`],
-        }) as Promise<bigint>,
-        publicClient.getBlockNumber(),
-      ])
-      if (lastClaim === 0n) return false
-      const elapsed = currentBlock - lastClaim
-      if (elapsed >= BigInt(FAUCET_COOLDOWN)) return false
-      setCooldownRemaining(formatCooldown(BigInt(FAUCET_COOLDOWN) - elapsed))
+      const remaining = (await publicClient.readContract({
+        address: CELO_CONTRACTS.token as `0x${string}`,
+        abi: CHESS_TOKEN_ABI,
+        functionName: 'faucetCooldownRemaining',
+        args: [playerAddress as `0x${string}`],
+      })) as bigint
+      if (remaining === 0n) return false
+      setCooldownRemaining(formatCooldown(remaining))
       setResultType('cooldown')
       return true
     } catch {

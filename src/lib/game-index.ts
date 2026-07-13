@@ -16,10 +16,12 @@ const ZERO = '0x0000000000000000000000000000000000000000'
 const GAME = CELO_CONTRACTS.game as `0x${string}`
 const SCAN_CHUNK = 200
 
+// `v2` namespace: game ids restart at 1 on the v2 contracts, so the old index
+// (cursor + per-player id sets) must not bleed into the new chain state.
 const K = {
-  cursor: 'chess:idx:cursor',
-  players: 'chess:idx:players',
-  playerGames: (a: string) => `chess:idx:player:${a.toLowerCase()}`,
+  cursor: 'chess:v2:idx:cursor',
+  players: 'chess:v2:idx:players',
+  playerGames: (a: string) => `chess:v2:idx:player:${a.toLowerCase()}`,
 }
 
 let _redis: Redis | null = null

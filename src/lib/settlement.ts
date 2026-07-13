@@ -5,7 +5,7 @@ import type { MoveRecord } from '@/lib/moves-store'
 // moves) and the server (to verify + replay). Keep this file free of any
 // server-only imports (no private keys, no node-only deps).
 
-// Contract GameResult enum values (mirror ChessGame.GameResult).
+// Contract GameResult enum values (mirror PlaychessifyEngine.GameResult).
 export const RESULT = {
   WhiteWins: 1,
   BlackWins: 2,

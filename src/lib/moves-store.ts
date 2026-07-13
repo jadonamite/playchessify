@@ -32,12 +32,14 @@ export interface MoveRecord {
 
 const TTL_SECONDS = 60 * 60 * 24 * 30 // 30 days — long enough for any reasonable game
 
+// Keys are namespaced `v2` — game ids restart at 1 on the v2 contracts, so an
+// unversioned key would read the *v1* game with the same id's move history.
 function key(chain: Chain, gameId: number): string {
-  return `chess:moves:${chain}:${gameId}`
+  return `chess:v2:moves:${chain}:${gameId}`
 }
 
 function activeKey(chain: Chain): string {
-  return `chess:active:${chain}`
+  return `chess:v2:active:${chain}`
 }
 
 /** Register a game as live so the settlement worker can sweep it. Idempotent. */
