@@ -46,6 +46,9 @@ function BgIcon({ children }: { children: React.ReactNode }) {
   )
 }
 
+/** Smallest wager a match can be created with (whole CHESS). */
+const MIN_CREATE_WAGER = 100
+
 export default function LobbyContent() {
   const { isConnected, isReady, playerAddress } = useWallet()
   const { createGame: createCeloGame } = useCeloChess()
@@ -149,6 +152,10 @@ export default function LobbyContent() {
 
   const handleCreateGame = async () => {
     if (MAINTENANCE_MODE) return setIsComingSoonOpen(true)
+    if (wager < MIN_CREATE_WAGER) {
+      setCreateError(`Minimum wager is ${MIN_CREATE_WAGER} CHESS.`)
+      return
+    }
     setIsPending(true)
     setCreateError(null)
     try {
@@ -768,7 +775,7 @@ export default function LobbyContent() {
                             Wager Amount (CHESS)
                           </label>
                           <div className="grid grid-cols-3 gap-2">
-                            {[50, 100, 250, 500, 1000, 2500].map(amt => {
+                            {[100, 150, 250, 500, 1000, 2500].map(amt => {
                               const isInsufficient = !isBalanceUpdating && (parseFloat(balance) || 0) < amt
                               return (
                                 <button
