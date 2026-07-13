@@ -52,6 +52,19 @@ export async function botPlayTurn(gameId: number): Promise<boolean> {
     }
   }
 
+  // Already terminal (e.g. the human mated the bot): settle from the sweep so
+  // a closed tab or dead client never leaves a bot game rotting as Active.
+  const standing = deriveResult(existing, game.white, game.black)
+  if (standing.kind === 'result') {
+    try {
+      await settleGameById(CHAIN, gameId)
+      await unregisterBotGame(gameId)
+    } catch (err) {
+      console.error(`${LOG_PREFIX} settle of terminal game failed`, { gameId, err: (err as Error)?.message })
+    }
+    return false
+  }
+
   const sideToMove = board.turn() === 'w' ? game.white : game.black
   if (sideToMove.toLowerCase() !== bot.address.toLowerCase()) return false
 
