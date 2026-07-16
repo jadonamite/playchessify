@@ -22,6 +22,7 @@ import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import PageBackground from '@/components/ui/PageBackground'
 import ClaimModal from '@/components/ui/ClaimModal'
+import WelcomeGate, { WELCOME_SEEN_KEY } from '@/components/ui/WelcomeGate'
 import LoadingState from '@/components/ui/LoadingState'
 import { CrownIcon, RankIcon, FlameIcon } from '@/components/ui/icons'
 import { useReadContract } from 'wagmi'
@@ -150,6 +151,20 @@ export default function LobbyContent() {
   }, [playerAddress, streakLoading, streak.current, streak.longest])
   const [claimModalOpen, setClaimModalOpen] = useState(false)
   const showClaimBanner = isConnected && !!playerAddress && myProfile === null
+
+  // First-timer welcome — once per device. Reading storage lazily is safe despite
+  // SSR: the gate only renders past the isReady early-return below, which can't be
+  // true until well after hydration. Defaults to "seen" on the server and when
+  // storage is blocked, so a gate we couldn't dismiss can never trap anyone.
+  const [welcomeSeen, setWelcomeSeen] = useState(() => {
+    if (typeof window === 'undefined') return true
+    try { return !!localStorage.getItem(WELCOME_SEEN_KEY) } catch { return true }
+  })
+
+  const dismissWelcome = () => {
+    try { localStorage.setItem(WELCOME_SEEN_KEY, '1') } catch { /* blocked / quota */ }
+    setWelcomeSeen(true)
+  }
 
   const handleCreateGame = async () => {
     if (MAINTENANCE_MODE) return setIsComingSoonOpen(true)
@@ -877,6 +892,8 @@ export default function LobbyContent() {
           onClose={() => setClaimModalOpen(false)}
         />
       )}
+
+      <WelcomeGate open={!welcomeSeen} onDone={dismissWelcome} />
     </main>
   )
 }
