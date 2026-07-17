@@ -6,6 +6,7 @@ import TrainingBoard from '@/components/train/TrainingBoard'
 import TrapButton from '@/components/train/TrapButton'
 import { useAnalysis } from '@/hooks/useAnalysis'
 import { useLearner } from '@/hooks/useLearner'
+import { useRecordStreak } from '@/hooks/useStreak'
 import { useSettingsStore } from '@/hooks/useSettingsStore'
 import { playMoveChime } from '@/lib/audio'
 import { fetchCoachVoice } from '@/lib/coach/client'
@@ -29,19 +30,43 @@ function coachEngineForLevel(base: CoachEngine, level: LearnerLevel): CoachEngin
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
+// Persist the coach game so it survives a reload (bot games do the same via their
+// own key). Only stable learner-to-move positions are saved (see the persist
+// effect), so a restore never lands the board on the coach's turn and stalls.
+const TRAIN_SAVE_KEY = 'chess:train:save'
+
+function loadSavedFen(): string {
+  const fresh = new Chess().fen()
+  if (typeof window === 'undefined') return fresh
+  try {
+    const raw = localStorage.getItem(TRAIN_SAVE_KEY)
+    if (!raw) return fresh
+    const parsed = JSON.parse(raw) as { fen?: unknown }
+    if (typeof parsed.fen === 'string') {
+      new Chess(parsed.fen) // validates — throws on a corrupt fen
+      return parsed.fen
+    }
+  } catch { /* corrupt / blocked — start fresh */ }
+  return fresh
+}
+
 export default function TrainingGame() {
   const { analyze } = useAnalysis()
   const { learner, update } = useLearner()
+  const recordStreak = useRecordStreak()
   const soundEnabled = useSettingsStore((s) => s.soundEnabled)
   const coach = getCoach(learner?.coachId)
   const level = learner?.level ?? 'basics'
 
   const [mode, setMode] = useState<Mode>('guided')
-  const [game, setGame] = useState(() => new Chess())
+  const [game, setGame] = useState(() => new Chess(loadSavedFen()))
   const [phase, setPhase] = useState<Phase>('learner')
   const [note, setNote] = useState<string>('Make your move — I\'ll guide you.')
 
-  const preFenRef = useRef<string>(new Chess().fen())
+  const preFenRef = useRef<string>(loadSavedFen())
+  // A practice session counts toward the daily play streak (source 'puzzle'),
+  // recorded once on the learner's first move. Idempotent per UTC day server-side.
+  const streakDoneRef = useRef(false)
   const pendingRef = useRef<string | null>(null) // learner's move fen, awaiting play-anyway
   const announcedOpeningRef = useRef<string | null>(null)
   const evalBeforeRef = useRef<number>(20)
@@ -78,7 +103,17 @@ export default function TrainingGame() {
     if (r) evalBeforeRef.current = r.whiteCp
   }, [analyze])
 
-  useEffect(() => { void refreshBeforeEval(new Chess().fen()) }, [refreshBeforeEval])
+  useEffect(() => { void refreshBeforeEval(preFenRef.current) }, [refreshBeforeEval])
+
+  // Persist the board so a reload resumes the same coach game. Only save when it's
+  // the learner's turn (white) and the game is live — never a coach-to-move or
+  // finished position, so a restore always resumes on a playable move.
+  useEffect(() => {
+    try {
+      if (phase === 'over' || game.isGameOver()) { localStorage.removeItem(TRAIN_SAVE_KEY); return }
+      if (game.turn() === 'w') localStorage.setItem(TRAIN_SAVE_KEY, JSON.stringify({ fen: game.fen() }))
+    } catch { /* storage blocked / quota */ }
+  }, [game, phase])
 
   const moveNumber = (g: Chess) => Math.ceil(g.history().length / 2)
 
@@ -129,6 +164,8 @@ export default function TrainingGame() {
     liveRef.current = true
     setGame(probe)
     playChime(false)
+    // First move of the session counts the day toward the play streak.
+    if (!streakDoneRef.current) { streakDoneRef.current = true; void recordStreak('puzzle') }
     const movedFen = probe.fen()
 
     if (probe.isGameOver()) { endGame(probe); return true }
@@ -181,7 +218,7 @@ export default function TrainingGame() {
       guidedReply(movedFen)
     })()
     return true
-  }, [phase, game, mode, analyze, coach, level, coachMove, guidedReply, endGame, playChime])
+  }, [phase, game, mode, analyze, coach, level, coachMove, guidedReply, endGame, playChime, recordStreak])
 
   const takeBack = useCallback(() => {
     setGame(new Chess(preFenRef.current))
@@ -209,7 +246,9 @@ export default function TrainingGame() {
     evalBeforeRef.current = 20
     liveRef.current = true
     persistedRef.current = false
+    streakDoneRef.current = false
     conceptDeltaRef.current = {}
+    try { localStorage.removeItem(TRAIN_SAVE_KEY) } catch { /* ignore */ }
     void refreshBeforeEval(g.fen())
     setPhase('learner')
     setNote(m === 'match' ? taunt(coach.id) : 'Make your move — I\'ll guide you.')
