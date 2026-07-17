@@ -41,7 +41,10 @@ const ETHI_HREF = `https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:w
 
 export const WELCOME_SEEN_KEY = 'pc-welcome-seen'
 
-const HOLD_MS = 1600
+// A calm hold — long enough to read each greeting without it feeling like a
+// slideshow. English leads (index 0) and gets an extra beat as the anchor.
+const HOLD_MS = 2800
+const LEAD_MS = 3600
 
 interface WelcomeGateProps {
   open: boolean
@@ -53,12 +56,13 @@ function WelcomeGateInner({ onDone }: { onDone: () => void }) {
   const [i, setI] = useState(0)
 
   // Cycle forever until tapped — a cycle that ends leaves the screen sitting in a
-  // dead state waiting for input.
+  // dead state waiting for input. English (index 0) leads and holds a touch
+  // longer; a self-rescheduling timeout lets that first beat differ from the rest.
   useEffect(() => {
     if (reduceMotion) return
-    const t = setInterval(() => setI((n) => (n + 1) % GREETINGS.length), HOLD_MS)
-    return () => clearInterval(t)
-  }, [reduceMotion])
+    const t = setTimeout(() => setI((n) => (n + 1) % GREETINGS.length), i === 0 ? LEAD_MS : HOLD_MS)
+    return () => clearTimeout(t)
+  }, [reduceMotion, i])
 
   const g = reduceMotion ? GREETINGS[0] : GREETINGS[i]
 
@@ -75,8 +79,12 @@ function WelcomeGateInner({ onDone }: { onDone: () => void }) {
       aria-label="Welcome — tap to continue"
       className="fixed inset-0 z-[70] flex flex-col items-center justify-center overflow-hidden select-none cursor-pointer bg-[var(--bg)]"
     >
-      <link rel="stylesheet" href={DEVA_HREF} precedence="default" />
-      <link rel="stylesheet" href={ETHI_HREF} precedence="default" />
+      {/* No `precedence` — a precedence-marked stylesheet becomes a Suspense
+          resource that freezes this whole subtree until it loads, which stalls
+          the cycle on a slow network. Plain links load async; display=swap keeps
+          the Latin greetings cycling while Noto arrives. */}
+      <link rel="stylesheet" href={DEVA_HREF} />
+      <link rel="stylesheet" href={ETHI_HREF} />
 
       {/* grid backdrop — matches the lobby + match intro */}
       <div
@@ -93,16 +101,19 @@ function WelcomeGateInner({ onDone }: { onDone: () => void }) {
         style={{ background: 'radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--c) 9%, transparent) 0%, transparent 60%)' }}
       />
 
+      {/* Cross-dissolve: the entering and exiting greetings overlap in the same
+          absolutely-centred slot, so there's never a blank frame (no flash) and
+          no `mode="wait"` deadlock. Opacity + a gentle 8px rise, no blur. */}
       <div className="relative z-10 flex items-center justify-center px-6 w-full" style={{ minHeight: '4.5em' }}>
-        <AnimatePresence mode="wait">
+        <AnimatePresence initial={false}>
           <motion.span
             key={g.lang}
             lang={g.lang}
-            initial={reduceMotion ? false : { opacity: 0, y: 14, filter: 'blur(6px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={reduceMotion ? undefined : { opacity: 0, y: -14, filter: 'blur(6px)' }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="text-center leading-tight"
+            initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+            transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
+            className="absolute text-center leading-tight will-change-[opacity,transform]"
             style={{
               fontFamily: g.font,
               fontWeight: 800,
