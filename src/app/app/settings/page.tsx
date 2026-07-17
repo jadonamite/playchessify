@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { useSignMessage } from 'wagmi'
 import { useWallet } from '@/components/wallet-provider'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
+import { useIdentitySigner } from '@/hooks/useIdentitySigner'
 import { useLearner } from '@/hooks/useLearner'
 import { useCoachStore } from '@/hooks/useCoachStore'
 import { COACHES } from '@/config/coaches'
@@ -63,7 +63,7 @@ export default function SettingsPage() {
   const { soundEnabled, setSoundEnabled, boardTheme, setBoardTheme, pieceSet, setPieceSet, aiDifficulty, setAiDifficulty, showMoveHints, setShowMoveHints } = useSettingsStore()
   const { data: profile } = useProfile(playerAddress ?? null)
   const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
-  const { signMessageAsync } = useSignMessage()
+  const signIdentity = useIdentitySigner()
   const { learner, update: updateLearner } = useLearner()
   const coachId = useCoachStore((s) => s.coachId) ?? learner?.coachId ?? null
   const setCoachId = useCoachStore((s) => s.setCoachId)
@@ -94,8 +94,11 @@ export default function SettingsPage() {
     setEditError('')
     try {
       const timestamp = new Date().toISOString()
-      const message = `Chessify Profile Update\n\nAddress: ${playerAddress}\nTimestamp: ${timestamp}`
-      const signature = await signMessageAsync({ message })
+      // Address lowercased to match the server's message exactly — the update
+      // route builds it from a lowercased address, and a casing drift would fail
+      // signature verification.
+      const message = `Chessify Profile Update\n\nAddress: ${playerAddress.toLowerCase()}\nTimestamp: ${timestamp}`
+      const signature = await signIdentity(message)
       await updateProfile({ address: playerAddress, displayName: editDisplayName.trim(), bio: editBio.trim(), signature, timestamp })
       setEditDirty(false)
       setEditSaved(true)

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyMessage } from 'viem'
 import {
   getProfileByAddress,
   validateUsername,
   claimProfile,
   checkRateLimit,
 } from '@/lib/profile-store'
+import { verifyWalletSignature } from '@/lib/celo-server'
 import type { ChessProfile } from '@/types/profile'
 
 export async function POST(req: NextRequest) {
@@ -40,19 +40,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'bio max 120 characters' }, { status: 400 })
   }
 
-  // Verify signature
+  // Verify signature. verifyWalletSignature uses a public client, so it validates
+  // both plain EOA signatures and smart-account (EIP-1271 / ERC-6492) signatures —
+  // the latter is what Tier A embedded/Privy users produce, and a plain ecrecover
+  // check would reject them (the claim would silently do nothing).
   const message = `Chessify Profile Claim\n\nUsername: ${username.toLowerCase()}.chess\nAddress: ${address}\nTimestamp: ${timestamp}`
-
-  try {
-    const valid = await verifyMessage({
-      address: address as `0x${string}`,
-      message,
-      signature: signature as `0x${string}`,
-    })
-    if (!valid) return NextResponse.json({ error: 'invalid signature' }, { status: 401 })
-  } catch {
-    return NextResponse.json({ error: 'signature verification failed' }, { status: 401 })
-  }
+  const valid = await verifyWalletSignature(address as `0x${string}`, message, signature as `0x${string}`)
+  if (!valid) return NextResponse.json({ error: 'invalid signature' }, { status: 401 })
 
   // Rate limit: 2 claims per address per 24h
   const allowed = await checkRateLimit(address, 'claim', 2, 86400)

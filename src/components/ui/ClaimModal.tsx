@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useSignMessage } from 'wagmi'
 import { useQuery } from '@tanstack/react-query'
 import { useCheckUsername, useClaimProfile } from '@/hooks/useProfile'
+import { useIdentitySigner } from '@/hooks/useIdentitySigner'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import GlowButton from '@/components/ui/GlowButton'
 
@@ -71,7 +71,7 @@ export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimM
   const debouncedUsername = username.trim().toLowerCase()
   const { data: checkResult, isLoading: isChecking } = useCheckUsername(debouncedUsername)
   const { mutateAsync: claimProfile, isPending } = useClaimProfile()
-  const { signMessageAsync } = useSignMessage()
+  const signIdentity = useIdentitySigner()
 
   useEffect(() => {
     if (!open) {
@@ -103,7 +103,7 @@ export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimM
     try {
       const timestamp = new Date().toISOString()
       const message = `Chessify Profile Claim\n\nUsername: ${debouncedUsername}.chess\nAddress: ${address}\nTimestamp: ${timestamp}`
-      const signature = await signMessageAsync({ message })
+      const signature = await signIdentity(message)
       await claimProfile({
         address,
         username: debouncedUsername,

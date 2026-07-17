@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyMessage } from 'viem'
 import {
   getProfileByAddress,
   updateProfile,
   validateUsername,
   checkRateLimit,
 } from '@/lib/profile-store'
+import { verifyWalletSignature } from '@/lib/celo-server'
 
 type Ctx = { params: Promise<{ address: string }> }
 
@@ -42,18 +42,11 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ error: 'timestamp expired — re-sign and try again' }, { status: 400 })
   }
 
+  // Client-based verifier — validates smart-account (EIP-1271/6492) signatures as
+  // well as plain EOA ones, so Tier A profile edits don't silently fail.
   const message = `Chessify Profile Update\n\nAddress: ${address.toLowerCase()}\nTimestamp: ${timestamp}`
-
-  try {
-    const valid = await verifyMessage({
-      address: address as `0x${string}`,
-      message,
-      signature: signature as `0x${string}`,
-    })
-    if (!valid) return NextResponse.json({ error: 'invalid signature' }, { status: 401 })
-  } catch {
-    return NextResponse.json({ error: 'signature verification failed' }, { status: 401 })
-  }
+  const valid = await verifyWalletSignature(address as `0x${string}`, message, signature as `0x${string}`)
+  if (!valid) return NextResponse.json({ error: 'invalid signature' }, { status: 401 })
 
   // Rate limit: 5 updates per address per hour
   const allowed = await checkRateLimit(address, 'update', 5, 3600)
