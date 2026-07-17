@@ -202,7 +202,8 @@ export default function GameClient() {
     if (!isConnected || !playerAddress) return
     if (!isBotGame && !isParticipant) return
     streakFiredRef.current = true
-    void recordStreak(isBotGame ? 'bot' : 'multiplayer').then((res) => {
+    const source = isBotGame ? 'bot' : 'multiplayer'
+    void recordStreak(source).then((res) => {
       if (!res) return
       if (isBotGame) {
         dispatchStreak({ mode: 'earned', current: res.current, longest: res.longest })
@@ -210,7 +211,12 @@ export default function GameClient() {
         pendingStreakRef.current = res
       }
     })
-  }, [isBotGame, gameOver, gameResult, isConnected, playerAddress, isParticipant, recordStreak])
+    // Stars — a WIN keeps the daily win streak alive. For bots that's a checkmate
+    // of the bot (iWonByCheckmate, since myColor is white); for PvP any 'won'
+    // result (checkmate, opponent resign, or timeout). Recorded silently.
+    const iWon = isBotGame ? iWonByCheckmate : gameResult === 'won'
+    if (iWon) void recordStreak(source, 'win')
+  }, [isBotGame, gameOver, gameResult, iWonByCheckmate, isConnected, playerAddress, isParticipant, recordStreak])
 
   // Leave a finished game for the lobby, then pop the streak celebration there
   // (so it lands after the result screen, not on top of it).

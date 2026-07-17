@@ -158,6 +158,7 @@ export default function ProfilePage() {
   const winRate = gamesPlayed > 0 ? `${Math.round((wins / gamesPlayed) * 100)}%` : '—'
 
   const { streak } = useStreak(profileAddress)
+  const { streak: winStreak } = useStreak(profileAddress, 'win')
 
   const { data: recentGames = [], isLoading: historyLoading } = usePlayerHistory(profileAddress)
 
@@ -392,6 +393,26 @@ export default function ProfilePage() {
                   label="Longest"
                   value={streak.longest > 0 ? `${streak.longest}d` : '—'}
                   color={streak.longest > 0 ? '#ff8a3d' : undefined}
+                />
+              </div>
+            </ClayCard>
+
+            {/* Win streak — "stars": win a game each day to keep it alive */}
+            <ClayCard className="p-6">
+              <p className="text-[10px] font-black tracking-[0.25em] uppercase text-[var(--t3)] mb-4 flex items-center gap-2">
+                <span style={{ color: '#ffb74d' }}>★</span>
+                Win Streak
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <StatBox
+                  label="Current"
+                  value={winStreak.current > 0 ? `${winStreak.current}★` : '—'}
+                  color={winStreak.current > 0 ? '#ffb74d' : undefined}
+                />
+                <StatBox
+                  label="Longest"
+                  value={winStreak.longest > 0 ? `${winStreak.longest}★` : '—'}
+                  color={winStreak.longest > 0 ? '#ffb74d' : undefined}
                 />
               </div>
             </ClayCard>

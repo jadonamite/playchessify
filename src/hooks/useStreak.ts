@@ -17,6 +17,9 @@ export interface RecordResult extends StreakData {
 
 type ClientSource = 'bot' | 'puzzle' | 'multiplayer'
 
+/** 'play' = the daily play streak; 'win' = the daily WIN streak ("stars"). */
+export type StreakKind = 'play' | 'win'
+
 /** Event the caller dispatches to pop the full-page streak overlay (mounted in
  *  the app layout). `earned` = a real celebration after a completed game;
  *  `nudge` = a daily motivational prompt for users sitting on a 0 streak. */
@@ -46,14 +49,16 @@ export function dispatchStreak(detail: StreakEventDetail) {
 
 // ── read ──────────────────────────────────────────────────────────────────────
 
-/** Live streak for an address (nav badge, profile, faucet). */
-export function useStreak(address?: string | null) {
+/** Live streak for an address (nav badge, profile, faucet). `kind` selects the
+ *  play streak (default) or the win streak ("stars"). */
+export function useStreak(address?: string | null, kind: StreakKind = 'play') {
   const query = useQuery<StreakData>({
-    queryKey: ['streak', address?.toLowerCase()],
+    queryKey: ['streak', kind, address?.toLowerCase()],
     enabled: !!address,
     staleTime: 30_000,
     queryFn: async () => {
-      const res = await fetch(`/api/profile/streak?address=${address}`, { cache: 'no-store' })
+      const qs = kind === 'win' ? `&kind=win` : ''
+      const res = await fetch(`/api/profile/streak?address=${address}${qs}`, { cache: 'no-store' })
       if (!res.ok) throw new Error('streak fetch failed')
       return res.json()
     },
@@ -77,13 +82,13 @@ export function useRecordStreak() {
   const { playerAddress, isConnected } = useWallet()
 
   return useCallback(
-    async (source: ClientSource): Promise<RecordResult | null> => {
+    async (source: ClientSource, kind: StreakKind = 'play'): Promise<RecordResult | null> => {
       if (!isConnected || !playerAddress) return null
       try {
         const res = await fetch('/api/profile/streak', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address: playerAddress, source }),
+          body: JSON.stringify({ address: playerAddress, source, kind }),
         })
         if (!res.ok) return null
         return (await res.json()) as RecordResult

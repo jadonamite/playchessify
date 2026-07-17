@@ -22,6 +22,9 @@ function getRedis(): Redis {
 
 const K = {
   streak: (a: string) => `chess:streak:${a.toLowerCase()}`,
+  // "Stars" — a daily WIN streak, tracked separately from the play streak: win a
+  // game each day to keep it alive. Same atomic mechanics, its own key.
+  win:    (a: string) => `chess:winstreak:${a.toLowerCase()}`,
   rl:     (a: string) => `chess:streak:rl:${a.toLowerCase()}`,
 }
 
@@ -87,17 +90,14 @@ redis.call('HSET', KEYS[1], 'current', current, 'longest', longest, 'last', ARGV
 return {current, longest, incremented}
 `
 
-/**
- * Record a counted play day for `address`. Idempotent within a UTC day — the
- * first play advances/resets the streak; subsequent plays the same day are
- * no-ops. Safe to call concurrently (atomic Lua).
- */
-export async function recordPlayDay(address: string, now: Date = new Date()): Promise<RecordResult> {
+/** Atomic advance/reset of the streak stored at `key`, idempotent within a UTC
+ *  day. Shared by the play streak and the win streak ("stars"). */
+async function recordDay(key: string, now: Date): Promise<RecordResult> {
   const today = utcDateStr(now)
   const yesterday = utcYesterdayStr(now)
   const res = (await getRedis().eval(
     RECORD_LUA,
-    [K.streak(address)],
+    [key],
     [today, yesterday],
   )) as [number, number, number]
 
@@ -109,6 +109,21 @@ export async function recordPlayDay(address: string, now: Date = new Date()): Pr
     playedToday: true,
     incremented: incremented === 1,
   }
+}
+
+/**
+ * Record a counted play day for `address`. Idempotent within a UTC day — the
+ * first play advances/resets the streak; subsequent plays the same day are
+ * no-ops. Safe to call concurrently (atomic Lua).
+ */
+export function recordPlayDay(address: string, now: Date = new Date()): Promise<RecordResult> {
+  return recordDay(K.streak(address), now)
+}
+
+/** Record a counted WIN day ("star") for `address` — same semantics as
+ *  recordPlayDay, on the separate win-streak key. */
+export function recordWinDay(address: string, now: Date = new Date()): Promise<RecordResult> {
+  return recordDay(K.win(address), now)
 }
 
 // ── reads ─────────────────────────────────────────────────────────────────────
@@ -129,8 +144,8 @@ function deriveStreak(stored: StoredStreak | null, now: Date = new Date()): Stre
   }
 }
 
-export async function getStreak(address: string): Promise<StreakData> {
-  const h = await getRedis().hgetall<Record<string, string | number>>(K.streak(address))
+async function readStreak(key: string): Promise<StreakData> {
+  const h = await getRedis().hgetall<Record<string, string | number>>(key)
   const stored: StoredStreak | null = h
     ? {
         current: Number(h.current) || 0,
@@ -139,6 +154,15 @@ export async function getStreak(address: string): Promise<StreakData> {
       }
     : null
   return deriveStreak(stored)
+}
+
+export function getStreak(address: string): Promise<StreakData> {
+  return readStreak(K.streak(address))
+}
+
+/** Read the win streak ("stars") for `address`. */
+export function getWinStreak(address: string): Promise<StreakData> {
+  return readStreak(K.win(address))
 }
 
 // ── light spam guard for the signed client endpoint ───────────────────────────
