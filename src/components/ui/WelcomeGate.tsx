@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 
-// One greeting per region — English leads, then a spread across Africa, Europe,
-// South & SE Asia, Latin America and Oceania. "Champ" is translated wherever a
-// real native word exists (Bingwa, Champion, Campeão, Juara, Mästare, Kampeon,
-// Nhà vô địch, Campione, Campeón); the greeting carries local flavour where it
-// helps (Colombia's "Quiubo", Argentina's "Che", Australia's "G'day").
+// One greeting per MiniPay region — Africa-first (its core base) plus the big
+// Asian markets it reaches. Western/LatAm locales were dropped: no MiniPay
+// footprint, and a Lagos or Nairobi user reads "Ciao"/"G'day" as filler.
+// "Champ" is translated wherever a real native word exists (Bingwa, Champion,
+// Campeão, Juara, Kampeon, Nhà vô địch).
 //
 // Latin scripts render in Plus Jakarta Sans (incl. its vietnamese subset). Hindi
 // and Amharic have no Latin coverage, so they use Noto Sans Devanagari/Ethiopic —
@@ -32,17 +32,12 @@ const GREETINGS: Greeting[] = [
   { lang: 'sw',    text: 'Habari, Bingwa',        font: JAKARTA,   size: 2.5, track: '-0.03em' },
   { lang: 'fr',    text: 'Salut, Champion',       font: JAKARTA,   size: 2.3, track: '-0.03em' },
   { lang: 'hi',    text: 'नमस्ते, विजेता',            font: NOTO_DEVA, size: 2.3, track: '0'       },
+  { lang: 'am',    text: 'ሰላም, ጀግና',              font: NOTO_ETHI, size: 2.3, track: '0'       },
   { lang: 'pt-BR', text: 'Olá, Campeão',          font: JAKARTA,   size: 2.6, track: '-0.03em' },
   { lang: 'id',    text: 'Halo, Juara',           font: JAKARTA,   size: 2.7, track: '-0.03em' },
-  { lang: 'am',    text: 'ሰላም, ጀግና',              font: NOTO_ETHI, size: 2.3, track: '0'       },
-  { lang: 'sv',    text: 'Hej, Mästare',          font: JAKARTA,   size: 2.6, track: '-0.03em' },
   { lang: 'fil',   text: 'Kumusta, Kampeon',      font: JAKARTA,   size: 2.2, track: '-0.03em' },
   { lang: 'vi',    text: 'Xin chào, Nhà vô địch', font: JAKARTA,   size: 1.9, track: '-0.02em' },
-  { lang: 'it',    text: 'Ciao, Campione',        font: JAKARTA,   size: 2.4, track: '-0.03em' },
-  { lang: 'es-CO', text: 'Quiubo, Campeón',       font: JAKARTA,   size: 2.3, track: '-0.03em' },
-  { lang: 'es-AR', text: 'Che, Campeón',          font: JAKARTA,   size: 2.6, track: '-0.03em' },
   { lang: 'ms',    text: 'Apa khabar, Juara',     font: JAKARTA,   size: 2.1, track: '-0.03em' },
-  { lang: 'en-AU', text: "G'day, Champ",          font: JAKARTA,   size: 2.6, track: '-0.03em' },
 ]
 
 // Noto subsets — text-scoped to just the two non-Latin greetings (~4.5KB total).
@@ -55,8 +50,8 @@ const ETHI_HREF = `https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:w
 
 // A calm hold — long enough to read each greeting without it feeling like a
 // slideshow. English leads (index 0) and gets an extra beat as the anchor.
-const HOLD_MS = 2800
-const LEAD_MS = 3600
+const HOLD_MS = 2000
+const LEAD_MS = 2800
 
 interface WelcomeGateProps {
   open: boolean
@@ -109,19 +104,20 @@ function WelcomeGateInner({ onDone }: { onDone: () => void }) {
         style={{ background: 'radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--c) 9%, transparent) 0%, transparent 60%)' }}
       />
 
-      {/* Cross-dissolve: the entering and exiting greetings overlap in the same
-          absolutely-centred slot, so there's never a blank frame (no flash) and
-          no `mode="wait"` deadlock. Opacity + a gentle 8px rise, no blur. */}
+      {/* Pure-opacity cross-dissolve: entering and exiting greetings overlap in
+          the same absolutely-centred slot, so there's never a blank frame (no
+          flash) and no `mode="wait"` deadlock. No translate — a straight fade is
+          the smoothest read, and the overlap keeps it continuous at a short hold. */}
       <div className="relative z-10 flex items-center justify-center px-6 w-full" style={{ minHeight: '4.5em' }}>
         <AnimatePresence initial={false}>
           <motion.span
             key={g.lang}
             lang={g.lang}
-            initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
-            transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
-            className="absolute text-center leading-tight will-change-[opacity,transform]"
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={reduceMotion ? undefined : { opacity: 0 }}
+            transition={{ duration: 1.0, ease: 'easeInOut' }}
+            className="absolute text-center leading-tight will-change-[opacity]"
             style={{
               fontFamily: g.font,
               fontWeight: 800,
