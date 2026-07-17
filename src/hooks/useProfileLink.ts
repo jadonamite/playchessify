@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
 import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
+import { useWelcomeGate } from '@/hooks/useWelcomeGate'
 
 const LOG_PREFIX = '[useProfileLink]'
 
@@ -21,9 +22,13 @@ export function useProfileLink() {
   const { address: eoa } = useAccount()
   const { client: smartClient } = useSmartWallets()
   const { signMessageAsync } = useSignMessage()
+  const welcomeDismissed = useWelcomeGate((s) => s.dismissed)
   const tried = useRef<Set<string>>(new Set())
 
   useEffect(() => {
+    // Hold the link signature until the first-timer welcome is dismissed, so a
+    // fresh user sees the welcome first — never a signature prompt over it.
+    if (!welcomeDismissed) return
     const smart = smartClient?.account?.address
     if (!eoa || !smart) return
     if (eoa.toLowerCase() === smart.toLowerCase()) return
@@ -54,5 +59,5 @@ export function useProfileLink() {
         tried.current.delete(key)
       }
     })()
-  }, [eoa, smartClient, signMessageAsync])
+  }, [eoa, smartClient, signMessageAsync, welcomeDismissed])
 }
