@@ -9,32 +9,39 @@ import {
   STREAK_EVENT,
   STREAK_CELEBRATED_KEY,
   STREAK_NUDGE_KEY,
+  STAR_CELEBRATED_KEY,
   streakDay,
   type StreakEventDetail,
 } from '@/hooks/useStreak'
 
 /**
  * Full-page streak overlay. Mounted once in the app shell; listens for
- * STREAK_EVENT and takes over the screen in one of two modes:
+ * STREAK_EVENT and takes over the screen in one of three modes:
  *
- *  - `earned` → Duolingo-style celebration after a completed game: lit flame,
+ *  - `earned` → play-streak celebration after a completed game: lit flame,
  *               counting-up number, filled 7-day strip, confetti burst.
- *  - `nudge`  → a daily motivational prompt for users sitting on a 0 streak:
- *               an unlit ember, "start your streak" copy, a Play-now CTA.
+ *  - `nudge`  → a daily prompt for users sitting on a 0 streak.
+ *  - `star`   → WIN-streak celebration: a star flings up. Dispatched after the
+ *               flame, so a winning game pops flame → star in sequence.
  *
- * Each mode shows at most once per UTC day (separate localStorage guards).
+ * Events queue (not overwrite), so flame then star show one after another. Each
+ * mode shows at most once per UTC day (separate localStorage guards).
  */
 
 const FLAME = '#ff8a3d'
 const EMBER = '#7a6147'
+const STAR  = '#ffb74d'
 
 export default function StreakCelebration() {
   const router = useRouter()
-  const [data, setData] = useState<StreakEventDetail | null>(null)
+  const [queue, setQueue] = useState<StreakEventDetail[]>([])
   const [count, setCount] = useState(0)
 
+  const data = queue[0] ?? null
   const isNudge = data?.mode === 'nudge'
-  const close = useCallback(() => setData(null), [])
+  const isStar  = data?.mode === 'star'
+  // Advance the queue — the next celebration (if any) shows once this closes.
+  const close = useCallback(() => setQueue((q) => q.slice(1)), [])
 
   // Listen for streak events from anywhere in the app.
   useEffect(() => {
@@ -42,7 +49,10 @@ export default function StreakCelebration() {
       const detail = (e as CustomEvent<StreakEventDetail>).detail
       if (!detail) return
       const today = streakDay()
-      const key = detail.mode === 'nudge' ? STREAK_NUDGE_KEY : STREAK_CELEBRATED_KEY
+      const key =
+        detail.mode === 'nudge' ? STREAK_NUDGE_KEY
+        : detail.mode === 'star' ? STAR_CELEBRATED_KEY
+        : STREAK_CELEBRATED_KEY
 
       if (detail.mode === 'nudge') {
         if (detail.current > 0) return // they already have a streak — nothing to nudge
@@ -54,17 +64,18 @@ export default function StreakCelebration() {
         if (localStorage.getItem(key) === today) return
         localStorage.setItem(key, today)
       } catch { /* storage blocked — still show this session */ }
-      setData(detail)
+      setQueue((q) => [...q, detail])
     }
     window.addEventListener(STREAK_EVENT, onStreak as EventListener)
     return () => window.removeEventListener(STREAK_EVENT, onStreak as EventListener)
   }, [])
 
-  // Count up to the new streak value (earned mode only).
+  // Count up to the new value (earned + star modes).
   useEffect(() => {
     if (!data || data.mode === 'nudge') return
     const target = data.current
     const from = Math.max(0, target - 1)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the counter before the count-up animation
     setCount(from)
     let raf = 0
     const start = performance.now()
@@ -78,19 +89,21 @@ export default function StreakCelebration() {
     return () => { clearTimeout(id); cancelAnimationFrame(raf) }
   }, [data])
 
-  const accent = isNudge ? EMBER : FLAME
+  const accent = isNudge ? EMBER : isStar ? STAR : FLAME
   const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
   const filled = data && !isNudge ? Math.min(data.current, 7) : 0
+  const firstStar = !!data && isStar && data.current <= 1 && data.longest <= 1
 
   const playNow = useCallback(() => {
-    setData(null)
+    close()
     router.push('/app/game/bot')
-  }, [router])
+  }, [router, close])
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {data && (
         <motion.div
+          key={data.mode + '-' + queue.length}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -113,7 +126,7 @@ export default function StreakCelebration() {
               boxShadow: `0 0 90px ${accent}33, 0 40px 80px rgba(0,0,0,0.6)`,
             }}
           >
-            {/* flame — lit (earned) or ember (nudge) */}
+            {/* icon — star (win streak) flings up; otherwise lit flame / ember */}
             <div className="relative flex items-center justify-center" style={{ height: 132 }}>
               <motion.div
                 aria-hidden
@@ -122,18 +135,29 @@ export default function StreakCelebration() {
                 transition={{ duration: isNudge ? 2.6 : 1.8, repeat: Infinity, ease: 'easeInOut' }}
                 style={{ width: 150, height: 150, background: `radial-gradient(circle, ${accent}66, transparent 70%)` }}
               />
-              <motion.div
-                initial={{ scale: 0.4, rotate: -8 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', damping: 10, stiffness: 200, delay: 0.1 }}
-                style={{
-                  color: accent,
-                  opacity: isNudge ? 0.55 : 1,
-                  filter: isNudge ? 'grayscale(0.3)' : `drop-shadow(0 0 28px ${FLAME})`,
-                }}
-              >
-                <FlameIcon size={104} />
-              </motion.div>
+              {isStar ? (
+                <motion.div
+                  initial={{ y: 150, scale: 0.2, rotate: -40, opacity: 0 }}
+                  animate={{ y: [150, -18, 0], scale: [0.2, 1.15, 1], rotate: [-40, 8, 0], opacity: 1 }}
+                  transition={{ duration: 0.9, ease: [0.2, 0.9, 0.3, 1], times: [0, 0.7, 1] }}
+                  style={{ fontSize: 104, lineHeight: 1, color: STAR, filter: `drop-shadow(0 0 30px ${STAR})` }}
+                >
+                  ★
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ scale: 0.4, rotate: -8 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: 'spring', damping: 10, stiffness: 200, delay: 0.1 }}
+                  style={{
+                    color: accent,
+                    opacity: isNudge ? 0.55 : 1,
+                    filter: isNudge ? 'grayscale(0.3)' : `drop-shadow(0 0 28px ${FLAME})`,
+                  }}
+                >
+                  <FlameIcon size={104} />
+                </motion.div>
+              )}
             </div>
 
             {isNudge ? (
@@ -185,6 +209,73 @@ export default function StreakCelebration() {
                     Maybe later
                   </button>
                 </div>
+              </>
+            ) : isStar ? (
+              <>
+                <div className="leading-tight">
+                  <div className="text-[10px] font-black tracking-[0.4em] uppercase mb-2" style={{ color: STAR }}>
+                    {firstStar ? 'First Win' : 'Win Streak'}
+                  </div>
+                  {firstStar ? (
+                    <h2 className="text-3xl font-black uppercase tracking-tight" style={{ fontFamily: 'var(--fd)', color: '#fff' }}>
+                      Your First Star
+                    </h2>
+                  ) : (
+                    <div
+                      className="font-black tabular-nums leading-none"
+                      style={{ fontFamily: 'var(--fd)', fontSize: 66, color: STAR, textShadow: `0 0 40px ${STAR}88` }}
+                    >
+                      {count}<span style={{ fontSize: 34 }}>★</span>
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-sm text-[var(--t3)] leading-relaxed max-w-[17rem]">
+                  {firstStar
+                    ? "Here's a star for your first win. Win again tomorrow to get more stars."
+                    : data.current === 1
+                      ? 'A fresh star. Win again tomorrow to grow your streak.'
+                      : `${data.current} days of wins — keep collecting stars!`}
+                </p>
+
+                {/* star strip — one ★ per winning day, up to a week */}
+                <div className="flex items-center justify-center gap-2">
+                  {dayLabels.map((d, i) => {
+                    const lit = i < filled
+                    return (
+                      <div key={i} className="flex flex-col items-center gap-1.5">
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.35 + i * 0.06, type: 'spring', damping: 12, stiffness: 240 }}
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-[13px]"
+                          style={{
+                            background: lit ? `${STAR}22` : 'rgba(255,255,255,0.04)',
+                            border: `1.5px solid ${lit ? STAR : 'rgba(255,255,255,0.1)'}`,
+                            color: lit ? STAR : 'var(--t3)',
+                          }}
+                        >
+                          {lit ? '★' : null}
+                        </motion.div>
+                        <span className="text-[8px] font-black uppercase" style={{ color: lit ? STAR : 'var(--t3)' }}>{d}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={close}
+                  className="mt-1 w-full py-3.5 rounded-2xl font-black uppercase tracking-widest text-sm active:scale-[0.98] transition-transform"
+                  style={{
+                    fontFamily: 'var(--fd)',
+                    color: '#2a1500',
+                    background: `linear-gradient(180deg, #ffe08a 0%, ${STAR} 60%, #f59e0b 100%)`,
+                    boxShadow: `0 6px 0 #b9770f, 0 12px 26px ${STAR}55`,
+                  }}
+                >
+                  Nice!
+                </button>
               </>
             ) : (
               <>

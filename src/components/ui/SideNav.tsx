@@ -133,12 +133,15 @@ function NavRow({ item, active, href, streakLabel }: { item: ItemDef; active: bo
 
 export default function SideNav() {
   const pathname = usePathname()
-  const { isReady, address, connect, disconnectAll } = useWallet()
+  const { isReady, address, playerAddress, connect, disconnectAll } = useWallet()
   const { soundEnabled, setSoundEnabled } = useSettingsStore()
-  const { streak } = useStreak(address)
+  // The on-chain player identity (smart account for Tier A). Profile, name, avatar
+  // and streaks are all keyed to it — linking the EOA opens an empty profile.
+  const idAddr = playerAddress ?? address
+  const { streak } = useStreak(idAddr)
   const coachId = useCoachStore((s) => s.coachId)
 
-  const showWallet = isReady && !!address
+  const showWallet = isReady && !!idAddr
 
   return (
     <aside
@@ -188,7 +191,7 @@ export default function SideNav() {
       <nav className="flex flex-col gap-1.5">
         {ITEMS.map((item) => {
           const active = item.match.some((m) => pathname.startsWith(m))
-          const href = item.key === 'profile' ? (address ? `/app/profile/${address}` : '/app/lobby') : item.href
+          const href = item.key === 'profile' ? (idAddr ? `/app/profile/${idAddr}` : '/app/lobby') : item.href
           return <NavRow key={item.key} item={item} active={active} href={href} streakLabel={item.key === 'profile' && streak.current > 0 ? String(streak.current) : undefined} />
         })}
       </nav>
@@ -219,18 +222,18 @@ export default function SideNav() {
           {soundEnabled ? 'MUSIC ON' : 'MUSIC OFF'}
         </button>
 
-        {showWallet && address ? (
+        {showWallet && idAddr ? (
           <div
             className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5"
             style={{ background: 'rgba(0,0,0,.28)', border: '1px solid var(--bottom-nav-border)' }}
           >
             <Link
-              href={`/app/profile/${address}`}
+              href={`/app/profile/${idAddr}`}
               className="flex items-center gap-2.5 min-w-0 flex-1"
               style={{ textDecoration: 'none' }}
             >
               <span className="relative shrink-0">
-                <ChessAvatar address={address} size={30} />
+                <ChessAvatar address={idAddr} size={30} />
                 <span
                   className="absolute -bottom-0.5 -right-0.5 block rounded-full"
                   style={{ width: 8, height: 8, background: '#35ee66', boxShadow: '0 0 5px #35ee66', border: '1.5px solid #0b0b1a' }}
@@ -238,7 +241,7 @@ export default function SideNav() {
               </span>
               <span className="min-w-0">
                 <ChessName
-                  address={address}
+                  address={idAddr}
                   short
                   style={{ fontSize: 12, fontWeight: 700, color: 'var(--t1)', display: 'block', fontFamily: 'var(--fb)' }}
                 />

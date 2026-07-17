@@ -123,6 +123,7 @@ export default function GameClient() {
   // player leaves the result screen for the lobby (see leaveToLobby).
   const recordStreak = useRecordStreak()
   const pendingStreakRef = useRef<RecordResult | null>(null)
+  const pendingStarRef = useRef<RecordResult | null>(null)
   const streakFiredRef = useRef(false)
 
   const isMyTurn  = isBotGame
@@ -203,28 +204,35 @@ export default function GameClient() {
     if (!isBotGame && !isParticipant) return
     streakFiredRef.current = true
     const source = isBotGame ? 'bot' : 'multiplayer'
-    void recordStreak(source).then((res) => {
-      if (!res) return
-      if (isBotGame) {
-        dispatchStreak({ mode: 'earned', current: res.current, longest: res.longest })
-      } else {
-        pendingStreakRef.current = res
-      }
-    })
-    // Stars — a WIN keeps the daily win streak alive. For bots that's a checkmate
-    // of the bot (iWonByCheckmate, since myColor is white); for PvP any 'won'
-    // result (checkmate, opponent resign, or timeout). Recorded silently.
+    // A WIN also earns a "star" (daily win streak). For bots that's a checkmate of
+    // the bot (iWonByCheckmate, since myColor is white); for PvP any 'won' result
+    // (checkmate, opponent resign, or timeout). Record play first, then the win,
+    // and celebrate flame → star in that order (the overlay queues them).
     const iWon = isBotGame ? iWonByCheckmate : gameResult === 'won'
-    if (iWon) void recordStreak(source, 'win')
+    void (async () => {
+      const playRes = await recordStreak(source)
+      const winRes = iWon ? await recordStreak(source, 'win') : null
+      if (isBotGame) {
+        if (playRes) dispatchStreak({ mode: 'earned', current: playRes.current, longest: playRes.longest })
+        if (winRes)  dispatchStreak({ mode: 'star', current: winRes.current, longest: winRes.longest })
+      } else {
+        if (playRes) pendingStreakRef.current = playRes
+        if (winRes)  pendingStarRef.current = winRes
+      }
+    })()
   }, [isBotGame, gameOver, gameResult, iWonByCheckmate, isConnected, playerAddress, isParticipant, recordStreak])
 
   // Leave a finished game for the lobby, then pop the streak celebration there
   // (so it lands after the result screen, not on top of it).
   const leaveToLobby = useCallback(() => {
     const s = pendingStreakRef.current
+    const star = pendingStarRef.current
     pendingStreakRef.current = null
+    pendingStarRef.current = null
     router.push('/app/lobby')
+    // Flame first, then star — the overlay queues them into a flame → star sequence.
     if (s) setTimeout(() => dispatchStreak({ mode: 'earned', current: s.current, longest: s.longest }), 80)
+    if (star) setTimeout(() => dispatchStreak({ mode: 'star', current: star.current, longest: star.longest }), 120)
   }, [router])
 
   // Rebuild board from relay. Uses moveHistoryRef (not moveHistory) to avoid

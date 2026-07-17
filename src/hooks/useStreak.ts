@@ -21,12 +21,13 @@ type ClientSource = 'bot' | 'puzzle' | 'multiplayer'
 export type StreakKind = 'play' | 'win'
 
 /** Event the caller dispatches to pop the full-page streak overlay (mounted in
- *  the app layout). `earned` = a real celebration after a completed game;
- *  `nudge` = a daily motivational prompt for users sitting on a 0 streak. */
+ *  the app layout). `earned` = a play-streak celebration after a completed game;
+ *  `nudge` = a daily prompt for users sitting on a 0 streak; `star` = a WIN-streak
+ *  celebration (shown after the flame, so a winning game pops flame → star). */
 export const STREAK_EVENT = 'chessify:streak'
 
 export interface StreakEventDetail {
-  mode: 'earned' | 'nudge'
+  mode: 'earned' | 'nudge' | 'star'
   current: number
   longest: number
 }
@@ -35,6 +36,8 @@ export interface StreakEventDetail {
  *  Shared so the dispatcher (lobby) and the overlay agree on the same key. */
 export const STREAK_CELEBRATED_KEY = 'chess:streak:celebrated'
 export const STREAK_NUDGE_KEY = 'chess:streak:nudge'
+/** One win-streak ("star") celebration per UTC day. */
+export const STAR_CELEBRATED_KEY = 'chess:winstreak:celebrated'
 
 /** UTC calendar day as YYYY-MM-DD (matches the server's day boundary). */
 export function streakDay(): string {

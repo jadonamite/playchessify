@@ -139,14 +139,20 @@ export default function ProfilePage() {
     ((myPlayerAddress?.toLowerCase() === profileAddress.toLowerCase()) ||
      (myAddress?.toLowerCase() === profileAddress.toLowerCase()))
 
+  // Canonical read address. On the OWN profile, always read from the smart-account
+  // player identity (playerAddress) — stats, history and streaks are all recorded
+  // under it. The desktop nav links profiles by the embedded EOA, so without this
+  // a user landing via that link reads an address that never played → all "—".
+  const readAddress = isOwn ? (myPlayerAddress ?? profileAddress) : profileAddress
+
   // On-chain stats
   const { data: stats } = useReadContract({
     address: CELO_CONTRACTS.game as `0x${string}`,
     abi: CHESS_GAME_ABI,
     functionName: 'playerStats',
-    args: profileAddress ? [profileAddress as `0x${string}`] : undefined,
+    args: readAddress ? [readAddress as `0x${string}`] : undefined,
     chainId: CELO_CHAIN_ID,
-    query: { enabled: !!profileAddress },
+    query: { enabled: !!readAddress },
   })
 
   const s = stats as readonly bigint[] | undefined
@@ -157,10 +163,10 @@ export default function ProfilePage() {
   const gamesPlayed = s ? Number(s[4]) : 0
   const winRate = gamesPlayed > 0 ? `${Math.round((wins / gamesPlayed) * 100)}%` : '—'
 
-  const { streak } = useStreak(profileAddress)
-  const { streak: winStreak } = useStreak(profileAddress, 'win')
+  const { streak } = useStreak(readAddress)
+  const { streak: winStreak } = useStreak(readAddress, 'win')
 
-  const { data: recentGames = [], isLoading: historyLoading } = usePlayerHistory(profileAddress)
+  const { data: recentGames = [], isLoading: historyLoading } = usePlayerHistory(readAddress)
 
   const activeGames = recentGames.filter((g) => g.result === 'active' || g.result === 'waiting')
   const finishedGames = recentGames.filter(
