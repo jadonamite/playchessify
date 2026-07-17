@@ -8,7 +8,7 @@ import { useReadContract } from 'wagmi'
 import { useWallet } from '@/components/wallet-provider'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
 import { useStreak } from '@/hooks/useStreak'
-import { useSignMessage } from 'wagmi'
+import { useIdentitySigner } from '@/hooks/useIdentitySigner'
 import GlowButton from '@/components/ui/GlowButton'
 import { FlameIcon } from '@/components/ui/icons'
 import ClayCard from '@/components/ui/ClayCard'
@@ -18,7 +18,7 @@ import ClaimModal from '@/components/ui/ClaimModal'
 import ChessName from '@/components/ui/ChessName'
 import PageBackground from '@/components/ui/PageBackground'
 import { CHESS_GAME_ABI } from '@/config/abis'
-import { CELO_CONTRACTS } from '@/config/contracts'
+import { CELO_CONTRACTS, CELO_CHAIN_ID } from '@/config/contracts'
 import type { ChessProfile } from '@/types/profile'
 import { usePlayerHistory, type PlayerHistoryItem } from '@/hooks/usePlayerHistory'
 
@@ -104,7 +104,7 @@ export default function ProfilePage() {
   const router = useRouter()
   const identifier = decodeURIComponent(params.identifier as string)
   const { address: myAddress, playerAddress: myPlayerAddress } = useWallet()
-  const { signMessageAsync } = useSignMessage()
+  const signIdentity = useIdentitySigner()
   const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
 
   const [editing, setEditing] = useState(false)
@@ -145,6 +145,7 @@ export default function ProfilePage() {
     abi: CHESS_GAME_ABI,
     functionName: 'playerStats',
     args: profileAddress ? [profileAddress as `0x${string}`] : undefined,
+    chainId: CELO_CHAIN_ID,
     query: { enabled: !!profileAddress },
   })
 
@@ -173,14 +174,17 @@ export default function ProfilePage() {
   }
 
   const saveEdit = async () => {
-    if (!myAddress || !profile) return
+    // Update under the on-chain player identity (smart account for Tier A) the
+    // profile is keyed to — not the embedded EOA — and sign with the matching
+    // wallet. Address lowercased to match the server's message exactly.
+    if (!myPlayerAddress || !profile) return
     setEditError('')
     try {
       const timestamp = new Date().toISOString()
-      const message = `Chessify Profile Update\n\nAddress: ${myAddress}\nTimestamp: ${timestamp}`
-      const signature = await signMessageAsync({ message })
+      const message = `Chessify Profile Update\n\nAddress: ${myPlayerAddress.toLowerCase()}\nTimestamp: ${timestamp}`
+      const signature = await signIdentity(message)
       await updateProfile({
-        address: myAddress,
+        address: myPlayerAddress,
         displayName: editDisplayName.trim(),
         bio: editBio.trim(),
         signature,
@@ -365,10 +369,10 @@ export default function ProfilePage() {
               <div className="flex flex-wrap gap-3">
                 <StatBox label="ELO" value={rating || '—'} accent />
                 <StatBox label="WIN%" value={winRate} />
-                <StatBox label="WINS" value={wins} />
-                <StatBox label="LOSSES" value={losses} />
-                <StatBox label="DRAWS" value={draws} />
-                <StatBox label="PLAYED" value={gamesPlayed} />
+                <StatBox label="WINS" value={wins || '—'} />
+                <StatBox label="LOSSES" value={losses || '—'} />
+                <StatBox label="DRAWS" value={draws || '—'} />
+                <StatBox label="PLAYED" value={gamesPlayed || '—'} />
               </div>
             </ClayCard>
 
