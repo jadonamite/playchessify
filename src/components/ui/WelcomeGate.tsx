@@ -3,32 +3,55 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 
-// One greeting per region — English leads, then a spread across Europe, SE Asia,
-// Latin America and Oceania. "Champ" is translated wherever a real native word
-// exists (Mästare, Kampeon, Nhà vô địch, Campione, Campeón, Juara); the greeting
-// itself carries local flavour (Colombia's "Quiubo", Argentina's "Che",
-// Australia's "G'day"). Every string is fully covered by Plus Jakarta Sans —
-// including its vietnamese subset — so there is one font and no runtime loading.
+// One greeting per region — English leads, then a spread across Africa, Europe,
+// South & SE Asia, Latin America and Oceania. "Champ" is translated wherever a
+// real native word exists (Bingwa, Champion, Campeão, Juara, Mästare, Kampeon,
+// Nhà vô địch, Campione, Campeón); the greeting carries local flavour where it
+// helps (Colombia's "Quiubo", Argentina's "Che", Australia's "G'day").
+//
+// Latin scripts render in Plus Jakarta Sans (incl. its vietnamese subset). Hindi
+// and Amharic have no Latin coverage, so they use Noto Sans Devanagari/Ethiopic —
+// text-subsetted and loaded via plain async <link>s below.
 //
 // `size` optically matches each line's width to the English baseline so the
 // greeting doesn't jump between cross-fades.
+const JAKARTA   = 'var(--fb)'
+const NOTO_DEVA = "'Noto Sans Devanagari', var(--fb)"
+const NOTO_ETHI = "'Noto Sans Ethiopic', var(--fb)"
+
 interface Greeting {
   lang: string        // BCP-47, for screen readers
   text: string
+  font: string
   size: number        // rem, mobile base — scaled up at md
+  track: string       // letter-spacing
 }
 
 const GREETINGS: Greeting[] = [
-  { lang: 'en',    text: 'Hello, Champ',          size: 2.6 },
-  { lang: 'sv',    text: 'Hej, Mästare',          size: 2.6 },
-  { lang: 'fil',   text: 'Kumusta, Kampeon',      size: 2.2 },
-  { lang: 'vi',    text: 'Xin chào, Nhà vô địch', size: 1.9 },
-  { lang: 'it',    text: 'Ciao, Campione',        size: 2.4 },
-  { lang: 'es-CO', text: 'Quiubo, Campeón',       size: 2.3 },
-  { lang: 'es-AR', text: 'Che, Campeón',          size: 2.6 },
-  { lang: 'ms',    text: 'Apa khabar, Juara',     size: 2.1 },
-  { lang: 'en-AU', text: "G'day, Champ",          size: 2.6 },
+  { lang: 'en',    text: 'Hello, Champ',          font: JAKARTA,   size: 2.6, track: '-0.03em' },
+  { lang: 'sw',    text: 'Habari, Bingwa',        font: JAKARTA,   size: 2.5, track: '-0.03em' },
+  { lang: 'fr',    text: 'Salut, Champion',       font: JAKARTA,   size: 2.3, track: '-0.03em' },
+  { lang: 'hi',    text: 'नमस्ते, विजेता',            font: NOTO_DEVA, size: 2.3, track: '0'       },
+  { lang: 'pt-BR', text: 'Olá, Campeão',          font: JAKARTA,   size: 2.6, track: '-0.03em' },
+  { lang: 'id',    text: 'Halo, Juara',           font: JAKARTA,   size: 2.7, track: '-0.03em' },
+  { lang: 'am',    text: 'ሰላም, ጀግና',              font: NOTO_ETHI, size: 2.3, track: '0'       },
+  { lang: 'sv',    text: 'Hej, Mästare',          font: JAKARTA,   size: 2.6, track: '-0.03em' },
+  { lang: 'fil',   text: 'Kumusta, Kampeon',      font: JAKARTA,   size: 2.2, track: '-0.03em' },
+  { lang: 'vi',    text: 'Xin chào, Nhà vô địch', font: JAKARTA,   size: 1.9, track: '-0.02em' },
+  { lang: 'it',    text: 'Ciao, Campione',        font: JAKARTA,   size: 2.4, track: '-0.03em' },
+  { lang: 'es-CO', text: 'Quiubo, Campeón',       font: JAKARTA,   size: 2.3, track: '-0.03em' },
+  { lang: 'es-AR', text: 'Che, Campeón',          font: JAKARTA,   size: 2.6, track: '-0.03em' },
+  { lang: 'ms',    text: 'Apa khabar, Juara',     font: JAKARTA,   size: 2.1, track: '-0.03em' },
+  { lang: 'en-AU', text: "G'day, Champ",          font: JAKARTA,   size: 2.6, track: '-0.03em' },
 ]
+
+// Noto subsets — text-scoped to just the two non-Latin greetings (~4.5KB total).
+// Plain links, NO `precedence`: a precedence-marked stylesheet is a Suspense
+// resource that would freeze the gate until it loads. These mount at gate open,
+// so Noto is ready long before the cycle reaches Hindi (pos 4) / Amharic (pos 7);
+// display=swap covers the interim.
+const DEVA_HREF = `https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@700&text=${encodeURIComponent('नमस्ते, विजेता')}&display=swap`
+const ETHI_HREF = `https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@700&text=${encodeURIComponent('ሰላም, ጀግና')}&display=swap`
 
 // A calm hold — long enough to read each greeting without it feeling like a
 // slideshow. English leads (index 0) and gets an extra beat as the anchor.
@@ -68,6 +91,9 @@ function WelcomeGateInner({ onDone }: { onDone: () => void }) {
       aria-label="Welcome — tap to continue"
       className="fixed inset-0 z-[70] flex flex-col items-center justify-center overflow-hidden select-none cursor-pointer bg-[var(--bg)]"
     >
+      <link rel="stylesheet" href={DEVA_HREF} />
+      <link rel="stylesheet" href={ETHI_HREF} />
+
       {/* grid backdrop — matches the lobby + match intro */}
       <div
         className="absolute inset-0 pointer-events-none z-0 opacity-40"
@@ -97,10 +123,10 @@ function WelcomeGateInner({ onDone }: { onDone: () => void }) {
             transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
             className="absolute text-center leading-tight will-change-[opacity,transform]"
             style={{
-              fontFamily: 'var(--fb)',
+              fontFamily: g.font,
               fontWeight: 800,
               fontSize: `clamp(${g.size}rem, ${g.size * 2.4}vw, ${g.size * 1.5}rem)`,
-              letterSpacing: '-0.03em',
+              letterSpacing: g.track,
               color: 'var(--t1)',
               textShadow: '0 0 40px color-mix(in srgb, var(--c) 22%, transparent)',
             }}
