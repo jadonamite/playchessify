@@ -95,9 +95,20 @@ export function useTournamentRewards() {
   }, [refresh])
 
   const claim = useCallback(async () => {
-    if (!status?.isWinner || status.claimed || !publicClient) return
-    if (!status.funded) {
-      showToast('Contract not yet funded — try again later.', 'error')
+    if (!status || status.claimed || !publicClient) return
+
+    // Everyone gets the same button — the answer only lands after a beat of
+    // "checking", so the banner never spoils who's on the whitelist up front.
+    if (!status.isWinner || !status.funded) {
+      setIsClaiming(true)
+      await new Promise((r) => setTimeout(r, 1800))
+      setIsClaiming(false)
+      showToast(
+        !status.isWinner
+          ? 'Sorry, you are not eligible — try again next season.'
+          : 'Contract not yet funded — try again later.',
+        'error',
+      )
       return
     }
     setIsClaiming(true)

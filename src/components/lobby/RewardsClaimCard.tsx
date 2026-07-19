@@ -29,20 +29,17 @@ export default function RewardsClaimCard() {
           <span className="text-lg shrink-0">🏆</span>
           <div className="min-w-0">
             <p className="text-xs font-black tracking-wide text-white">
-              Grand Prix <span style={{ color: '#f5c542' }}>S{seasonId}</span> rewards
-              {isWinner && !claimed && <> — <span style={{ color: '#f5c542' }}>${prize}</span> is yours</>}
+              Grand Prix <span style={{ color: '#f5c542' }}>S{seasonId}</span> has concluded
               {isWinner && claimed && <> — ${prize} claimed ✓</>}
             </p>
             <p className="text-[10px] text-[var(--t3)] truncate">
-              {isWinner
-                ? claimed
-                  ? 'Paid out to your wallet. See you on next season’s podium.'
-                  : 'You made the podium. Claim your USDm prize below.'
-                : 'Sorry, you are not eligible — try again next season.'}
+              {isWinner && claimed
+                ? 'Paid out to your wallet. See you on next season’s podium.'
+                : 'Prizes are live. Tap CLAIM to check your podium finish.'}
             </p>
           </div>
         </div>
-        {isWinner && !claimed && (
+        {!(isWinner && claimed) && (
           <GlowButton
             variant="brand"
             size="sm"
@@ -51,7 +48,7 @@ export default function RewardsClaimCard() {
             disabled={isClaiming}
             onClick={() => void claim()}
           >
-            {isClaiming ? 'CLAIMING…' : 'CLAIM'}
+            {isClaiming ? 'CHECKING…' : 'CLAIM'}
           </GlowButton>
         )}
       </motion.div>
