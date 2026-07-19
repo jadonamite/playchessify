@@ -12,8 +12,8 @@ import { useTournamentRewards } from '@/hooks/useTournamentRewards'
 export default function RewardsClaimCard() {
   const { status, claim, isClaiming } = useTournamentRewards()
 
-  // No seeded season, or the last one was already swept back — nothing to show.
-  if (!status || !status.open) return null
+  // No concluded season with a frozen prize board yet — nothing to show.
+  if (!status) return null
 
   const { seasonId, prize, isWinner, claimed } = status
 

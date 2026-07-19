@@ -1,8 +1,10 @@
 'use client'
 
-// Weekly Grand Prix prize claims. Purely on-chain driven: the card shows the
-// latest seeded season from TournamentRewards.latestSeasonId and the connected
-// player's claimStatus for it — no server round-trip, no stale Redis view.
+// Weekly Grand Prix prize claims. The winner whitelist comes from the frozen
+// final board (/api/tournament/rewards) the moment a season concludes — the
+// banner goes live before the vault is seeded on-chain. On-chain claimStatus
+// overlays it: once openSeason runs, `funded` flips and the CLAIM tx goes
+// through; before that, winners get a "not yet funded" error on click.
 // Claims dispatch through useCeloChess.sendWrite, so every wallet tier keeps
 // its usual gas rail (paymaster / USDm fee currency / 2771 meta-tx).
 
@@ -24,8 +26,13 @@ export interface RewardStatus {
   prize: string
   isWinner: boolean
   claimed: boolean
-  /** Season is seeded and not swept — a winner's claim would succeed. */
-  open: boolean
+  /** Season has been seeded on-chain — a winner's claim would succeed. */
+  funded: boolean
+}
+
+interface RewardsApi {
+  seasonId: number
+  winners: { address: string; amount: number }[]
 }
 
 export function useTournamentRewards() {
@@ -38,30 +45,45 @@ export function useTournamentRewards() {
   const [isClaiming, setIsClaiming] = useState(false)
 
   const refresh = useCallback(async () => {
-    if (!publicClient || !playerAddress) return
+    if (!playerAddress) return
     try {
-      const seasonId = (await publicClient.readContract({
-        address: CELO_CONTRACTS.rewards as Address,
-        abi: REWARDS_ABI,
-        functionName: 'latestSeasonId',
-      })) as bigint
-      if (seasonId === 0n) {
-        setStatus(null) // nothing seeded yet — no card
+      // 1. The frozen board is the whitelist of record — live pre-funding.
+      const res = await fetch('/api/tournament/rewards')
+      if (!res.ok) return
+      const api = (await res.json()) as RewardsApi
+      if (!api.seasonId || api.winners.length === 0) {
+        setStatus(null) // no concluded season yet — no banner
         return
       }
-      const [amount, claimed, open] = (await publicClient.readContract({
-        address: CELO_CONTRACTS.rewards as Address,
-        abi: REWARDS_ABI,
-        functionName: 'claimStatus',
-        args: [seasonId, playerAddress as Address],
-      })) as readonly [bigint, boolean, boolean]
+      const me = playerAddress.toLowerCase()
+      const mine = api.winners.find((w) => w.address.toLowerCase() === me)
+
+      // 2. On-chain overlay: funded once openSeason has run; claimed sticks.
+      let funded = false
+      let claimed = false
+      let prize = mine ? String(mine.amount) : ''
+      if (publicClient) {
+        try {
+          const [amount, claimed_, open] = (await publicClient.readContract({
+            address: CELO_CONTRACTS.rewards as Address,
+            abi: REWARDS_ABI,
+            functionName: 'claimStatus',
+            args: [BigInt(api.seasonId), playerAddress as Address],
+          })) as readonly [bigint, boolean, boolean]
+          funded = open
+          claimed = claimed_
+          if (amount > 0n) prize = formatUnits(amount, USDM_DECIMALS)
+        } catch (err) {
+          console.warn(`${LOG_PREFIX} on-chain overlay failed`, err)
+        }
+      }
 
       setStatus({
-        seasonId: Number(seasonId),
-        prize: amount > 0n ? formatUnits(amount, USDM_DECIMALS) : '',
-        isWinner: amount > 0n,
+        seasonId: api.seasonId,
+        prize,
+        isWinner: Boolean(mine),
         claimed,
-        open,
+        funded,
       })
     } catch (err) {
       console.warn(`${LOG_PREFIX} status read failed`, err)
@@ -74,6 +96,10 @@ export function useTournamentRewards() {
 
   const claim = useCallback(async () => {
     if (!status?.isWinner || status.claimed || !publicClient) return
+    if (!status.funded) {
+      showToast('Contract not yet funded — try again later.', 'error')
+      return
+    }
     setIsClaiming(true)
     try {
       const gas = await ensureGasSponsored()
