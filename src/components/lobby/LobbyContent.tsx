@@ -22,6 +22,7 @@ import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import PageBackground from '@/components/ui/PageBackground'
 import ClaimModal from '@/components/ui/ClaimModal'
+import RewardsClaimCard from '@/components/lobby/RewardsClaimCard'
 import LoadingState from '@/components/ui/LoadingState'
 import { CrownIcon, RankIcon, FlameIcon } from '@/components/ui/icons'
 import { useReadContract } from 'wagmi'
@@ -222,6 +223,9 @@ export default function LobbyContent() {
       <PageBackground hero="king" grid={false} />
 
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-full box-border px-4 md:px-8 py-6 md:py-10">
+
+        {/* ── Grand Prix prize claim banner (everyone sees it; only winners can claim) ── */}
+        {playerAddress && <RewardsClaimCard />}
 
         {/* ── .chess onboarding banner ── */}
         {showClaimBanner && playerAddress && (

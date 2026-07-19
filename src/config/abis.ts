@@ -39,6 +39,16 @@ export const FORWARDER_ABI = [
   { "type": "function", "name": "nonces", "stateMutability": "view", "inputs": [{ "name": "owner", "type": "address" }], "outputs": [{ "type": "uint256" }] }
 ] as const
 
+// TournamentRewards — Weekly Grand Prix prize vault (per-season winner whitelist).
+export const REWARDS_ABI = [
+  { "type": "function", "name": "claim", "stateMutability": "nonpayable", "inputs": [{ "name": "seasonId", "type": "uint256" }], "outputs": [] },
+  { "type": "function", "name": "latestSeasonId", "stateMutability": "view", "inputs": [], "outputs": [{ "type": "uint256" }] },
+  { "type": "function", "name": "claimStatus", "stateMutability": "view", "inputs": [{ "name": "seasonId", "type": "uint256" }, { "name": "who", "type": "address" }], "outputs": [{ "name": "amount", "type": "uint256" }, { "name": "claimed_", "type": "bool" }, { "name": "open", "type": "bool" }] },
+  { "type": "error", "name": "NothingToClaim", "inputs": [] },
+  { "type": "error", "name": "AlreadyClaimed", "inputs": [] },
+  { "type": "error", "name": "SeasonSweptOut", "inputs": [] }
+] as const
+
 export const CHESS_GAME_ABI = [
   { "type": "function", "name": "createGame", "stateMutability": "nonpayable", "inputs": [{ "name": "wager", "type": "uint256" }], "outputs": [{ "name": "gameId", "type": "uint256" }] },
   { "type": "function", "name": "createGameWithPermit", "stateMutability": "nonpayable", "inputs": [{ "name": "wager", "type": "uint256" }, { "name": "deadline", "type": "uint256" }, { "name": "v", "type": "uint8" }, { "name": "r", "type": "bytes32" }, { "name": "s", "type": "bytes32" }], "outputs": [{ "name": "gameId", "type": "uint256" }] },

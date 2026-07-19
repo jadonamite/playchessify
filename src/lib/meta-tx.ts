@@ -30,10 +30,14 @@ export const FORWARD_REQUEST_TYPES = {
 /** Default per-call gas budget — covers every PlaychessifyEngine/PlaychessifyToken action. */
 export const META_TX_GAS = 600_000n
 
-/** Meta-txs are only ever player actions on our two contracts. */
+/** Meta-txs are only ever player actions on our own contracts. */
 export function isAllowedMetaTxTarget(to: string): boolean {
   const t = to.toLowerCase()
-  return t === CELO_CONTRACTS.game.toLowerCase() || t === CELO_CONTRACTS.token.toLowerCase()
+  return (
+    t === CELO_CONTRACTS.game.toLowerCase() ||
+    t === CELO_CONTRACTS.token.toLowerCase() ||
+    t === CELO_CONTRACTS.rewards.toLowerCase()
+  )
 }
 
 /** The message a player signs (nonce comes from forwarder.nonces(from)). */

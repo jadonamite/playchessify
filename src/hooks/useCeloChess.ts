@@ -589,5 +589,5 @@ export function useCeloChess() {
     }
   }, [])
 
-  return { createGame, joinGame, resign, reclaimExpired, proposeDraw, acceptDraw, requestSettle, isPending }
+  return { createGame, joinGame, resign, reclaimExpired, proposeDraw, acceptDraw, requestSettle, isPending, sendWrite, ensureGasSponsored, assertCanSelfPay }
 }

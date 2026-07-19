@@ -5,6 +5,9 @@ export const CELO_CONTRACTS = {
   game: process.env.NEXT_PUBLIC_CELO_GAME ?? '0xA576321eB523FFb1e5FE568b317F9E7a7374fDdf',
   // v2: OpenZeppelin ERC2771Forwarder — gasless meta-txs for Tier C EOAs.
   forwarder: process.env.NEXT_PUBLIC_CELO_FORWARDER ?? '0xd29618312668007d1Da3B9eB591B7209E1A06cC5',
+  // Weekly Grand Prix prize vault — owner seeds each concluded season's winners,
+  // winners pull their USDm prize (2771-aware, so gasless claims ride the relay).
+  rewards: process.env.NEXT_PUBLIC_CELO_REWARDS ?? '0xd867C2467c41Ccbe315eF4fFa3B9eBFa0C2D8d24',
 } as const
 
 // Env-selectable so we can rehearse on Alfajores before mainnet.
