@@ -1,5 +1,5 @@
-import { NextResponse, after } from 'next/server'
 import { getCurrentTournament } from '@/lib/tournament'
+import { NextResponse, after } from 'next/server'
 import { maybeTickBots } from '@/lib/bots/scheduler'
 
 export const runtime = 'nodejs'
