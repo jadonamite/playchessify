@@ -51,7 +51,6 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
     googleBot: { index: true, follow: true, "max-image-preview": "large" },
-  // NOTE: revisit this logic after API migration
   },
   other: {
     "talentapp:project_verification":

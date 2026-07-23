@@ -21,7 +21,7 @@ import { settleGameById } from '@/lib/settle-game'
 
 export const runtime = 'nodejs'
 
-const LOG_PREFIX: string = '[api/moves]'
+const LOG_PREFIX = '[api/moves]'
 
 function parseChain(value: string): Chain | null {
   return value === 'celo' ? value : null
