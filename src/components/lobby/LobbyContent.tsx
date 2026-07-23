@@ -28,6 +28,11 @@ import { CrownIcon, RankIcon, FlameIcon } from '@/components/ui/icons'
 import { useReadContract } from 'wagmi'
 import { CHESS_GAME_ABI, CHESS_TOKEN_ABI } from '@/config/abis'
 import { formatUnits } from 'viem'
+/**
+ * BgIcon
+ * @param {*} { children }: { children: React.ReactNode }
+ * @returns {*}
+ */
 function BgIcon({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
