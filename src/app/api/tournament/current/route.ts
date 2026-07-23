@@ -12,10 +12,11 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   try {
     const data = await getCurrentTournament()
-    after(() => maybeTickBots()) // fleet heartbeat rides live traffic
-    return NextResponse.json(data)
   } catch (err) {
     console.error('[api/tournament/current] failed:', (err as Error)?.message)
     return NextResponse.json({ error: 'tournament unavailable' }, { status: 503 })
   }
+
+  after(() => maybeTickBots()) // fleet heartbeat rides live traffic
+  return NextResponse.json(data)
 }
