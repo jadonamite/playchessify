@@ -62,11 +62,6 @@ export function utcDateStr(d: Date = new Date()): string {
   return d.toISOString().slice(0, 10)
 }
 
-/**
- * utcYesterdayStr
- * @param {*} d: Date
- * @returns {*}
- */
 function utcYesterdayStr(d: Date = new Date()): string {
   return new Date(d.getTime() - 86_400_000).toISOString().slice(0, 10)
 }

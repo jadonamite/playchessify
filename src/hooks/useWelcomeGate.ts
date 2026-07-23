@@ -5,13 +5,9 @@ import { create } from 'zustand'
 // flag: the identity-link signature must not fire until the welcome is gone.
 export const WELCOME_SEEN_KEY = 'pc-welcome-seen'
 
-function getStoredValue(key: string): string | null {
-  try { return localStorage.getItem(key) } catch { return null }
-}
-
-function hasWelcomeBeenDismissed(): boolean {
+function initialDismissed(): boolean {
   if (typeof window === 'undefined') return true // SSR: never render the gate server-side
-  return !!getStoredValue(WELCOME_SEEN_KEY)
+  try { return !!localStorage.getItem(WELCOME_SEEN_KEY) } catch { return true }
 }
 
 interface WelcomeState {
@@ -20,7 +16,7 @@ interface WelcomeState {
 }
 
 export const useWelcomeGate = create<WelcomeState>((set) => ({
-  dismissed: hasWelcomeBeenDismissed(),
+  dismissed: initialDismissed(),
   dismiss: () => {
     try { localStorage.setItem(WELCOME_SEEN_KEY, '1') } catch { /* private mode / quota */ }
     set({ dismissed: true })
