@@ -13,6 +13,12 @@ export interface LeaderboardEntry {
   rank: number
 }
 
+const getMyRank = (myAddress: string | undefined, entries: LeaderboardEntry[]) => {
+  if (!myAddress) return null
+  const myEntry = entries.find((e) => e.address === myAddress.toLowerCase())
+  return myEntry?.rank ?? null
+}
+
 export function useLeaderboard() {
   const { playerAddress: myAddress } = useWallet()
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
@@ -38,9 +44,7 @@ export function useLeaderboard() {
     fetchLeaderboard()
   }, [fetchLeaderboard])
 
-  const myRank = myAddress
-    ? (entries.find((e) => e.address === myAddress.toLowerCase())?.rank ?? null)
-    : null
+  const myRank = getMyRank(myAddress, entries)
 
   return { entries, isLoading, myRank, refresh: fetchLeaderboard }
 }
