@@ -11,7 +11,7 @@ type Ctx = { params: Promise<{ address: string }> }
 
 export async function GET(_req: NextRequest, { params }: Ctx) {
   const { address } = await params
-  if (!address?.startsWith('0x')) {
+  if (!address || !address.startsWith('0x')) {
     return NextResponse.json({ error: 'invalid address' }, { status: 400 })
   }
   const profile = await getProfileByAddress(address)
@@ -21,17 +21,18 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   const { address } = await params
-  if (!address?.startsWith('0x')) {
+  if (!address || !address.startsWith('0x')) {
     return NextResponse.json({ error: 'invalid address' }, { status: 400 })
   }
 
   let body: { signature?: string; timestamp?: string; username?: string; displayName?: string; bio?: string }
-  try { body = await req.json() } catch {
+  try {
+    body = await req.json()
+  } catch {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 })
   }
 
   const { signature, timestamp, username, displayName, bio } = body
-
   if (!signature || !timestamp) {
     return NextResponse.json({ error: 'signature and timestamp required' }, { status: 400 })
   }
