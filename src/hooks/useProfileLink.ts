@@ -26,15 +26,16 @@ export function useProfileLink() {
   const tried = useRef<Set<string>>(new Set())
 
   useEffect(() => {
+    // Hold the link signature until the first-timer welcome is dismissed, so a
+    // fresh user sees the welcome first — never a signature prompt over it.
     if (!welcomeDismissed) return
-    if (!eoa || !smartClient?.account?.address) return
-    if (eoa.toLowerCase() === smartClient.account.address.toLowerCase()) return
+    const smart = smartClient?.account?.address
+    if (!eoa || !smart) return
+    if (eoa.toLowerCase() === smart.toLowerCase()) return
 
-    const smart = smartClient.account.address
     const key = `${eoa.toLowerCase()}:${smart.toLowerCase()}`
     if (tried.current.has(key)) return
     try { if (localStorage.getItem(`chess:linked:${key}`)) return } catch { /* private mode */ }
-
     tried.current.add(key)
 
     ;(async () => {

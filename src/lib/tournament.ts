@@ -1,11 +1,11 @@
-import type { Abi } from 'viem'
-import {
-import { CELO_CONTRACTS } from '@/config/contracts'
-import { CHESS_GAME_ABI } from '@/config/abis'
 import { Redis } from '@upstash/redis'
+import type { Abi } from 'viem'
 import { getPublicClient } from '@/lib/celo-server'
-import { isBotAddress } from '@/config/bots'
 import { syncGameIndex, getIndexedPlayers } from '@/lib/game-index'
+import { CELO_CONTRACTS } from '@/config/contracts'
+import { isBotAddress } from '@/config/bots'
+import { CHESS_GAME_ABI } from '@/config/abis'
+import {
   TOURNAMENT,
   getTournamentAt,
   previousWindow,
