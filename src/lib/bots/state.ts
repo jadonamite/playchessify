@@ -6,13 +6,18 @@ import { BOT_DAILY_HUMAN_CAP } from '@/config/bots'
 // instance and `chess:v2` namespace as the rest of the relay state.
 
 let _redis: Redis | null = null
-function getRedis(): Redis {
+
+function initializeRedis(): Redis {
   if (_redis) return _redis
   const url = process.env.UPSTASH_REDIS_REST_URL
   const token = process.env.UPSTASH_REDIS_REST_TOKEN
   if (!url || !token) throw new Error('[bots/state] Upstash env not configured')
   _redis = new Redis({ url, token })
   return _redis
+}
+
+function getRedis(): Redis {
+  return initializeRedis()
 }
 
 function utcDay(): string {
