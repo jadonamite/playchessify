@@ -1,7 +1,7 @@
 'use client'
 
-import { getCoach } from '@/config/coaches'
 import { useCoachStore } from '@/hooks/useCoachStore'
+import { getCoach } from '@/config/coaches'
 
 interface Props { size?: number }
 

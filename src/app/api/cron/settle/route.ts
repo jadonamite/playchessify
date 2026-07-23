@@ -28,11 +28,6 @@ const EXPECTED_SKIPS = new Set(['not-terminal', 'not-active', 'in-progress'])
 //
 // Protected by CRON_SECRET. Vercel Cron sends it automatically as a Bearer token;
 // a manual call must include `Authorization: Bearer $CRON_SECRET`.
-/**
- * GET
- * @param {*} req: NextRequest
- * @returns {*}
- */
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET
   if (secret) {
