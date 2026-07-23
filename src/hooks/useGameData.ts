@@ -20,7 +20,7 @@ interface UseGameDataArgs {
 export function useGameData({ gameId, isBotGame, celoAddress, isConnected }: UseGameDataArgs) {
   const [gameData, setGameData] = useState<GameData | null>(null)
 
-  const { data: celoGameData } = useReadContract({
+  const { payload: celoGameData } = useReadContract({
     address: CELO_CONTRACTS.game as `0x${string}`,
     abi: CHESS_GAME_ABI,
     functionName: 'getGame',
@@ -89,7 +89,7 @@ export function useGameData({ gameId, isBotGame, celoAddress, isConnected }: Use
   const playerAddrs = gameData
     ? [gameData.white, gameData.black].filter((a) => a && a !== ZERO && a.startsWith('0x'))
     : []
-  const { data: gameProfileMap = {} } = useBatchProfiles(playerAddrs)
+  const { payload: gameProfileMap = {} } = useBatchProfiles(playerAddrs)
 
   return {
     gameData,
