@@ -8,10 +8,10 @@ import {
   type Address,
   type Hash,
 } from 'viem'
-import { privateKeyToAccount } from 'viem/accounts'
-import { celo, celoAlfajores } from 'viem/chains'
-import { CHESS_GAME_ABI, CHESS_TOKEN_ABI, FORWARDER_ABI } from '@/config/abis'
 import { CELO_CONTRACTS } from '@/config/contracts'
+import { CHESS_GAME_ABI, CHESS_TOKEN_ABI, FORWARDER_ABI } from '@/config/abis'
+import { celo, celoAlfajores } from 'viem/chains'
+import { privateKeyToAccount } from 'viem/accounts'
 
 // Server-only viem clients + signing wallets for Chessify on Celo.
 // NEVER import this from client components — it reads private keys.
