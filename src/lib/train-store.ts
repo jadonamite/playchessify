@@ -1,3 +1,10 @@
+/**
+ * Learner model store (Upstash Redis). Mirrors profile-store.ts conventions:
+ * lazy client, namespaced keys, simple rate limiting. One record per address
+ * holds the learner's level, per-concept mastery, and lesson progress — this is
+ * what makes training continuous instead of a one-off game.
+ */
+
 import { Redis } from '@upstash/redis'
 import {
   type LearnerModel,
@@ -44,29 +51,8 @@ export async function saveLearner(model: LearnerModel): Promise<void> {
   await getRedis().set(K.learner(model.address), JSON.stringify(model))
 }
 
-function updateModel(model: LearnerModel, patch: {
-  coachId?: string
-  level?: LearnerLevel
-  placed?: boolean
-  concepts?: Partial<Record<Concept, number>>
-  completedLesson?: string
-}): LearnerModel {
-  if (patch.coachId) model.coachId = patch.coachId
-  if (patch.level) model.level = patch.level
-  if (patch.placed !== undefined) model.placed = patch.placed
-  if (patch.concepts) {
-    for (const [c, v] of Object.entries(patch.concepts)) {
-      if (v == null) continue
-      model.concepts[c as Concept] = Math.max(0, Math.min(1, v))
-    }
-  }
-  if (patch.completedLesson && !model.completedLessons.includes(patch.completedLesson)) {
-    model.completedLessons.push(patch.completedLesson)
-  }
-  return model
-}
-
-/** Merge an update into the learner model. Concept mastery is clamped to 0..1
+/**
+ * Merge an update into the learner model. Concept mastery is clamped to 0..1
  * and merged (not replaced) so callers can update one concept at a time.
  */
 export async function updateLearner(
@@ -80,12 +66,24 @@ export async function updateLearner(
   },
 ): Promise<LearnerModel> {
   const model = await getOrCreateLearner(address, patch.coachId)
-  const updatedModel = updateModel(model, patch)
-  await saveLearner(updatedModel)
-  return updatedModel
+  if (patch.coachId) model.coachId = patch.coachId
+  if (patch.level) model.level = patch.level
+  if (patch.placed !== undefined) model.placed = patch.placed
+  if (patch.concepts) {
+    for (const [c, v] of Object.entries(patch.concepts)) {
+      if (v == null) continue
+      model.concepts[c as Concept] = Math.max(0, Math.min(1, v))
+    }
+  }
+  if (patch.completedLesson && !model.completedLessons.includes(patch.completedLesson)) {
+    model.completedLessons.push(patch.completedLesson)
+  }
+  await saveLearner(model)
+  return model
 }
 
-/** Nudge a concept's mastery by a delta (e.g. +0.15 on a solved drill, -0.1 on a
+/**
+ * Nudge a concept's mastery by a delta (e.g. +0.15 on a solved drill, -0.1 on a
  * blunder of that concept), clamped to 0..1. Returns the new value.
  */
 export async function bumpConcept(address: string, concept: Concept, delta: number): Promise<number> {

@@ -178,7 +178,7 @@ export default function TrainingGame() {
         if (!liveRef.current) return
         coachMove(movedFen, () => {
           const op = recognizeOpening(new Chess(preFenRef.current).history())
-          if (op?.name !== announcedOpeningRef.current) { announcedOpeningRef.current = op.name; setNote(op.note) }
+          if (op && op.name !== announcedOpeningRef.current) { announcedOpeningRef.current = op.name; setNote(op.note) }
           else if (moveNumber(probe) % 4 === 0) setNote(banter(moveNumber(probe)))
           else setNote('Your move.')
           setPhase('learner')
