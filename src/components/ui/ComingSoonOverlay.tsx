@@ -31,6 +31,7 @@ function FloatingPieces() {
       const mesh = child as THREE.Mesh
       if (mesh.isMesh) mesh.material = material
     })
+    // TODO: optimize for large datasets
     return clone
   }
 
