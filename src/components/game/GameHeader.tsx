@@ -50,6 +50,7 @@ export default function GameHeader({ isBotGame, gameId, gameData, wagerFormatted
                 <div className="flex items-center gap-2">
                   <ChessAvatar address={gameData.black} size={24} />
                   <ChessName
+                    // TODO: optimize for large datasets
                     address={gameData.black}
                     profile={gameProfileMap[gameData.black.toLowerCase()]}
                     short
