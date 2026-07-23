@@ -25,6 +25,7 @@ export function botInGame(game: Pick<OnchainGame, 'white' | 'black'>): BotProfil
 export async function botPlayTurn(gameId: number): Promise<boolean> {
   const game = await getOnchainGame(gameId)
   if (game.status !== GameStatus.Active) {
+    // Finished/cancelled games leave the sweep set; Waiting lobbies stay.
     if (game.status !== GameStatus.Waiting) await unregisterBotGame(gameId)
     return false
   }
@@ -34,6 +35,9 @@ export async function botPlayTurn(gameId: number): Promise<boolean> {
   await registerBotGame(gameId) // covers bot lobbies a human just joined
 
   const existing = await getMoves(CHAIN, gameId)
+
+  // Same clock the relay enforces: past the move window the game is decided —
+  // a late bot move would be rejected anyway, and settlement owns it now.
   if (existing.length > 0 && Date.now() - existing[existing.length - 1].ts > MOVE_TIMEOUT_MS) {
     return false
   }
@@ -48,6 +52,8 @@ export async function botPlayTurn(gameId: number): Promise<boolean> {
     }
   }
 
+  // Already terminal (e.g. the human mated the bot): settle from the sweep so
+  // a closed tab or dead client never leaves a bot game rotting as Active.
   const standing = deriveResult(existing, game.white, game.black)
   if (standing.kind === 'result') {
     try {
@@ -89,6 +95,8 @@ export async function botPlayTurn(gameId: number): Promise<boolean> {
 
   await registerActiveGame(CHAIN, gameId)
 
+  // If the bot just ended the game, settle immediately rather than waiting for
+  // the human client or the cron sweep to notice.
   const terminal = deriveResult([...existing, record], game.white, game.black)
   if (terminal.kind === 'result') {
     try {

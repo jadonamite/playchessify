@@ -15,16 +15,6 @@ export type HistoryItem = {
   canReclaim: boolean
 }
 
-const parseFetchResponse = (res: Response): Promise<HistoryItem[]> => {
-  return res.json().then(body => {
-    if (Array.isArray(body.history)) {
-      return body.history
-    } else {
-      return []
-    }
-  }).catch(() => [])
-}
-
 export function useHistory() {
   const { playerAddress } = useWallet()
   const [history, setHistory] = useState<HistoryItem[]>([])
@@ -35,7 +25,8 @@ export function useHistory() {
     if (!playerAddress) return []
     try {
       const res = await fetch(`/api/history?address=${playerAddress}`)
-      return parseFetchResponse(res)
+      const body = (await res.json().catch(() => ({}))) as { history?: HistoryItem[] }
+      return Array.isArray(body.history) ? body.history : []
     } catch (err) {
       console.error('[useHistory] fetch failed:', err)
       return []
