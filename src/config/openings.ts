@@ -1,5 +1,5 @@
 /**
- * Curated opening book for the coach's 'Just Play' commentary. Not the full ECO
+ * Curated opening book for the coach's "Just Play" commentary. Not the full ECO
  * (3,000+ lines) — just the openings people actually reach in casual play, keyed
  * by their SAN move prefix. The matcher returns the LONGEST matching line, so a
  * Najdorf is recognised over a generic Sicilian once the moves arrive.
