@@ -1,9 +1,9 @@
 'use client'
 
 import { useCallback } from 'react'
+import { useWallet } from '@/components/wallet-provider'
 import { useSignMessage } from 'wagmi'
 import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
-import { useWallet } from '@/components/wallet-provider'
 
 /**
  * Signs an off-chain identity message (profile claim / update) with the wallet
