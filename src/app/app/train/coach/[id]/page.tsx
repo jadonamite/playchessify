@@ -16,15 +16,6 @@ const PROMISE: Record<Specialty, string> = {
   universal: 'We\'ll build rock-solid, all-round fundamentals so you\'re dangerous in every kind of position.',
 }
 
-const composeIntro = (coach: any) => {
-  const traits = coach.tags.split(' · ').join(', ').toLowerCase()
-  return [
-    `I'm ${coach.name}. Some call me ${coach.title}.`,
-    `My game is ${traits}. ${PROMISE[coach.teaching.specialty]}`,
-    `Here's how this works: you play, and I watch every move. When you go wrong, I'll stop you, show you exactly why, and let you try again. When you find the right idea, you'll hear it from me. Game after game, I'll meet you where you are and push you forward.`,
-  ]
-}
-
 export default function CoachIntroPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
@@ -33,7 +24,16 @@ export default function CoachIntroPage() {
 
   const begin = () => { setCoachId(coach.id); router.push(`/app/train?coach=${coach.id}`) }
 
-  const intro = useMemo(() => composeIntro(coach), [coach])
+  // First-person introduction composed from the coach's own data — always works,
+  // no LLM needed, so it's reliable on production.
+  const intro = useMemo(() => {
+    const traits = coach.tags.split(' · ').join(', ').toLowerCase()
+    return [
+      `I'm ${coach.name}. Some call me ${coach.title}.`,
+      `My game is ${traits}. ${PROMISE[coach.teaching.specialty]}`,
+      `Here's how this works: you play, and I watch every move. When you go wrong, I'll stop you, show you exactly why, and let you try again. When you find the right idea, you'll hear it from me. Game after game, I'll meet you where you are and push you forward.`,
+    ]
+  }, [coach])
 
   return (
     <div className="relative mx-auto w-full max-w-2xl px-4 py-8">

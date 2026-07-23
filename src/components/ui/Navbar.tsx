@@ -1,18 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import Link from 'next/link'
-import Image from 'next/image'
-import { useWallet } from '@/components/wallet-provider'
-import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
-import GlowButton from '@/components/ui/GlowButton'
+import ChessName from '@/components/ui/ChessName'
 import CoachNavIcon from '@/components/ui/CoachNavIcon'
+import GlowButton from '@/components/ui/GlowButton'
+import Image from 'next/image'
+import Link from 'next/link'
 import { FlameIcon } from '@/components/ui/icons'
-import { useSettingsStore } from '@/hooks/useSettingsStore'
-import { useStreak } from '@/hooks/useStreak'
+import { motion, AnimatePresence } from 'framer-motion'
 import { stopAmbient } from '@/lib/audio'
+import { useSettingsStore } from '@/hooks/useSettingsStore'
+import { useState, useEffect } from 'react'
+import { useStreak } from '@/hooks/useStreak'
+import { useWallet } from '@/components/wallet-provider'
 
 const NAV_LINKS = [
   { label: 'Leaderboard', path: '/app/leaderboard' },
