@@ -20,7 +20,7 @@ interface ConfettiProps {
   count?: number
   palette?: keyof typeof PALETTES
   variant?: 'fall' | 'burst'
-  className?: string
+  className?: string,
 }
 
 export default function Confetti({
