@@ -77,6 +77,7 @@ export default function TypingHeroText({
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
+          // NOTE: revisit this logic after API migration
           transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           style={{
             fontSize: 'clamp(26px, 8vw, 130px)',
