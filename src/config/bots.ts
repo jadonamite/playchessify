@@ -1,5 +1,6 @@
 // config/bots.ts
 //
+// The lobby bot fleet. Client-safe: addresses and personas only — the wallets
 // are derived server-side from BOT_MNEMONIC (HD index = BotProfile.index) and
 // asserted against these addresses, so the roster here is the single source of
 // truth for "is this address a bot".
