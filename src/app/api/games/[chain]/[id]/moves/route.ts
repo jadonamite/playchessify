@@ -143,8 +143,7 @@ export async function POST(
       if (!board.move(san)) throw new Error('illegal')
       fen = board.fen()
     } catch {
-      const result = NextResponse.json({ error: 'illegal move' }, { status: 422 });
-      return result;
+      return NextResponse.json({ error: 'illegal move' }, { status: 422 })
     }
 
     // Cryptographically verify the signature when present (Tier A/C). MiniPay can't
