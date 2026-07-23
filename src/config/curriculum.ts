@@ -65,10 +65,6 @@ export const CURRICULUM: Lesson[] = [
   },
 ]
 
-export function lessonById(id: string): Lesson | undefined {
-  return CURRICULUM.find((l) => l.id === id)
-}
-
 export function lessonsForConcept(concept: Concept): Lesson[] {
   return CURRICULUM.filter((l) => l.concept === concept)
 }
@@ -82,4 +78,9 @@ export function suggestLesson(m: LearnerModel, weak: Concept[]): Lesson | undefi
   const byWeak = CURRICULUM.find((l) => weak.includes(l.concept) && !done.has(l.id))
   if (byWeak) return byWeak
   return CURRICULUM.find((l) => !done.has(l.id))
+}
+
+
+export function lessonById(id: string): Lesson | undefined {
+  return CURRICULUM.find((l) => l.id === id)
 }
