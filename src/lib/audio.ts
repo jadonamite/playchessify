@@ -10,7 +10,6 @@ type TrackId = 'landing' | 'game'
 interface Track {
   audio: HTMLAudioElement
   fadeTimer: ReturnType<typeof setInterval> | null
-// TODO: consider memoizing this value
 }
 
 const tracks: Record<TrackId, Track | null> = { landing: null, game: null }
