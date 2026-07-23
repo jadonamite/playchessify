@@ -17,6 +17,12 @@ import ChessAvatar from '@/components/ui/ChessAvatar'
 import ClaimModal from '@/components/ui/ClaimModal'
 import PageBackground from '@/components/ui/PageBackground'
 
+/**
+ * Section
+ * @param {*} { title
+ * @param {*} children }: { title: string; children: React.ReactNode }
+ * @returns {*}
+ */
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <motion.div

@@ -11,7 +11,7 @@ export interface IconProps {
 
 function svg(size: number, className: string | undefined, style: React.CSSProperties | undefined, children: ReactElement | ReactElement[]) {
   return (
-    <svg width={size} height={size} viewBox='0 0 24 24' fill='currentColor' className={className} style={style} xmlns='http://www.w3.org/2000/svg'>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
       {children}
     </svg>
   )
