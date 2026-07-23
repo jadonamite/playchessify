@@ -61,32 +61,6 @@ export default function HoldButton({
 
   useEffect(() => clear, [clear])
 
-  const getButtonStyles = (inactive: boolean, holding: boolean, accent: string, fullWidth: boolean) => ({
-    position: 'relative',
-    width: fullWidth ? '100%' : undefined,
-    height: 54,
-    overflow: 'hidden',
-    border: 'none',
-    borderRadius: 16,
-    cursor: inactive ? 'default' : 'pointer',
-    background: 'linear-gradient(180deg, #14142a, #0d0d1e)',
-    boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${accent} 45%, transparent), 0 6px 0 rgba(0,0,0,.5), 0 10px 26px rgba(0,0,0,.45)`,
-    opacity: inactive ? 0.55 : 1,
-    touchAction: 'none',
-    WebkitTapHighlightColor: 'transparent',
-    userSelect: 'none',
-    WebkitUserSelect: 'none',
-    WebkitTouchCallout: 'none',
-  })
-
-  const getButtonTextStyles = (holding: boolean, accent: string) => ({
-    zIndex: 2,
-    fontFamily: 'var(--fd)',
-    fontSize: 13,
-    letterSpacing: '.08em',
-    color: holding ? '#fff' : accent,
-  })
-
   const inactive = disabled || loading
   const text = loading ? loadingLabel : holding ? holdingLabel : label
 
@@ -100,7 +74,23 @@ export default function HoldButton({
       whileTap={inactive ? undefined : { scale: 0.985 }}
       disabled={inactive}
       aria-label={label}
-      style={getButtonStyles(inactive, holding, accent, fullWidth)}
+      style={{
+        position: 'relative',
+        width: fullWidth ? '100%' : undefined,
+        height: 54,
+        overflow: 'hidden',
+        border: 'none',
+        borderRadius: 16,
+        cursor: inactive ? 'default' : 'pointer',
+        background: 'linear-gradient(180deg, #14142a, #0d0d1e)',
+        boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${accent} 45%, transparent), 0 6px 0 rgba(0,0,0,.5), 0 10px 26px rgba(0,0,0,.45)`,
+        opacity: inactive ? 0.55 : 1,
+        touchAction: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitTouchCallout: 'none',
+      }}
     >
       {/* battery fill */}
       <motion.span
@@ -138,7 +128,13 @@ export default function HoldButton({
       )}
       <span
         className="relative font-black uppercase"
-        style={getButtonTextStyles(holding, accent)}
+        style={{
+          zIndex: 2,
+          fontFamily: 'var(--fd)',
+          fontSize: 13,
+          letterSpacing: '.08em',
+          color: holding ? '#fff' : accent,
+        }}
       >
         {text}
       </span>
