@@ -8,16 +8,12 @@ import Link from 'next/link'
 import GlowButton from '@/components/ui/GlowButton'
 import { Navbar } from '@/components/landing/Hero'
 
-function KnightModel() {
-  const { scene } = useGLTF('/models/chess-knight.glb')
-  const meshRef = useRef<THREE.Group>(null)
-
+const renderKnightModel = (meshRef, scene) => {
   useFrame((state) => {
     if (meshRef.current) {
       meshRef.current.rotation.y = state.clock.getElapsedTime() * 0.5
     }
   })
-
   return (
     <primitive 
       ref={meshRef} 
@@ -26,6 +22,13 @@ function KnightModel() {
       position={[0, -2, 0]}
     />
   )
+}
+
+function KnightModel() {
+  const { scene } = useGLTF('/models/chess-knight.glb')
+  const meshRef = useRef<THREE.Group>(null)
+
+  return renderKnightModel(meshRef, scene)
 }
 
 function Scene() {
@@ -38,7 +41,6 @@ function Scene() {
       <Suspense fallback={null}>
         <PresentationControls
           global
-
           snap
           rotation={[0, 0.3, 0]}
           polar={[-Math.PI / 3, Math.PI / 3]}
