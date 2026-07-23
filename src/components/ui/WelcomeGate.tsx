@@ -51,7 +51,7 @@ const ETHI_HREF = `https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:w
 // A calm hold — long enough to read each greeting without it feeling like a
 // slideshow. English leads (index 0) and gets an extra beat as the anchor.
 const HOLD_MS = 2000
-const LEAD_MS = 2800
+const LEAD_MS: number = 2800
 
 interface WelcomeGateProps {
   open: boolean
