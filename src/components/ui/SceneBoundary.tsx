@@ -33,8 +33,8 @@ export class SceneBoundary extends React.Component<Props, State> {
   }
 
   render() {
-    if (!this.state.failed) return this.props.children
-    return this.props.fallback ?? null
+    if (this.state.failed) return this.props.fallback ?? null
+    return this.props.children
   }
 }
 
