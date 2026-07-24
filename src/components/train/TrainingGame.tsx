@@ -75,6 +75,12 @@ export default function TrainingGame() {
   const persistedRef = useRef(false)
   const audioRef = useRef<AudioContext | null>(null)
 
+  // Blunders per starting position. A first slip at a position gets a gentle
+  // nudge; a SECOND slip at the same position stops hinting and teaches — why the
+  // move fails and the concrete move to play instead (highlighted on the board).
+  const attemptRef = useRef<Record<string, number>>({})
+  const [suggested, setSuggested] = useState<{ from: string; to: string } | null>(null)
+
   // ── sound ──────────────────────────────────────────────────────────────────
   const playChime = useCallback((opponent: boolean) => {
     if (!soundEnabled) return
@@ -161,6 +167,7 @@ export default function TrainingGame() {
     const move = probe.move({ from, to, promotion: 'q' })
     if (!move) return false
     preFenRef.current = preFen
+    setSuggested(null) // clear any "play this instead" highlight once they retry
     liveRef.current = true
     setGame(probe)
     playChime(false)
@@ -200,15 +207,40 @@ export default function TrainingGame() {
         conceptDeltaRef.current[lossCp >= 400 ? 'hanging-piece' : 'calculation'] =
           (conceptDeltaRef.current[lossCp >= 400 ? 'hanging-piece' : 'calculation'] ?? 0) - 0.05
         pendingRef.current = movedFen
-        setNote('Hold on — that gives something away. Want it back?')
         setPhase('intercept')
-        // Enrich asynchronously with a named better move + coach voice.
+
+        const attempts = (attemptRef.current[preFen] ?? 0) + 1
+        attemptRef.current[preFen] = attempts
+
+        // First slip → nudge only; let them find the fix themselves.
+        if (attempts < 2) {
+          setSuggested(null)
+          setNote('Hold on — that gives something away. Take it back and look for a safer move.')
+          return
+        }
+
+        // Second slip at the same spot → TEACH: why it fails + what to play, and
+        // highlight that move on the board. The engine names the move (never the
+        // LLM); the deterministic floor below always fires, then the coach voice
+        // enriches the phrasing if a provider is available.
+        setNote('You\'ve hit this twice — let me show you why.')
         void (async () => {
-          const pre = await analyze(preFen, { movetime: 250 })
+          const pre = await analyze(preFen, { movetime: 300 })
+          const bestSan = uciToSan(preFen, pre?.bestMove ?? null)
+          if (pre?.bestMove) {
+            setSuggested({ from: pre.bestMove.slice(0, 2), to: pre.bestMove.slice(2, 4) })
+          }
+          const why = lossCp >= 400 ? 'it leaves a piece undefended' : 'it hands back the advantage'
+          const floor = bestSan
+            ? `Twice now — ${why}. Take it back and play ${bestSan} instead (highlighted).`
+            : `Twice now — ${why}. Take it back and look for a safer square.`
+          if (liveRef.current && pendingRef.current === movedFen) setNote(floor)
           const v = await fetchCoachVoice({
             coachName: coach.name, coachVoice: coach.teaching.voice, learnerLevel: level,
-            kind: 'blunder', playerMoveSan: move.san, bestMoveSan: uciToSan(preFen, pre?.bestMove ?? null) ?? undefined,
-            evalDeltaCp: lossCp, detail: 'that move gives ground', fen: preFen,
+            kind: 'blunder', playerMoveSan: move.san, bestMoveSan: bestSan ?? undefined,
+            evalDeltaCp: lossCp, concept: lossCp >= 400 ? 'a hanging piece' : 'a tactical slip',
+            detail: 'the student just made this same mistake twice — explain plainly why it fails and what to play instead',
+            fen: preFen,
           })
           if (liveRef.current && pendingRef.current === movedFen) setNote(v.text)
         })()
@@ -231,6 +263,7 @@ export default function TrainingGame() {
   const playAnyway = useCallback(() => {
     const fen = pendingRef.current
     pendingRef.current = null
+    setSuggested(null)
     if (!fen) { setPhase('learner'); return }
     setPhase('thinking')
     guidedReply(fen)
@@ -248,6 +281,8 @@ export default function TrainingGame() {
     persistedRef.current = false
     streakDoneRef.current = false
     conceptDeltaRef.current = {}
+    attemptRef.current = {}
+    setSuggested(null)
     try { localStorage.removeItem(TRAIN_SAVE_KEY) } catch { /* ignore */ }
     void refreshBeforeEval(g.fen())
     setPhase('learner')
@@ -260,9 +295,20 @@ export default function TrainingGame() {
     reset(m)
   }, [mode, reset])
 
+  const highlights = useMemo(
+    () =>
+      suggested
+        ? {
+            [suggested.from]: { backgroundColor: 'rgba(251,191,36,0.45)' },
+            [suggested.to]: { background: 'radial-gradient(circle, rgba(251,191,36,0.7) 30%, transparent 32%)' },
+          }
+        : {},
+    [suggested],
+  )
+
   const board = useMemo(() => (
-    <TrainingBoard game={game} orientation="white" interactive={phase === 'learner'} onMove={onMove} />
-  ), [game, phase, onMove])
+    <TrainingBoard game={game} orientation="white" interactive={phase === 'learner'} onMove={onMove} highlights={highlights} />
+  ), [game, phase, onMove, highlights])
 
   const thinking = phase === 'thinking'
 

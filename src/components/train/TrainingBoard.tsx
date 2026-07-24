@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Chess, type Square } from 'chess.js'
 import { buildPieces } from '@/lib/chessPieces'
@@ -57,6 +57,30 @@ export default function TrainingBoard({
     return ok
   }
 
+  // Unified tap handler. react-chessboard v5 fires onSquareClick only for empty
+  // squares; taps on a piece (select / capture) fire onPieceClick. Wire both so
+  // click-to-move never gets "stuck" on a piece. Dedup the desktop echo where a
+  // piece tap bubbles and fires both.
+  const lastTapRef = useRef<{ square: string; at: number } | null>(null)
+  const handleTap = (square: string) => {
+    if (!interactive) return
+    const now = Date.now()
+    const last = lastTapRef.current
+    if (last && last.square === square && now - last.at < 250) return
+    lastTapRef.current = { square, at: now }
+
+    if (!moveFrom) {
+      const piece = game.get(square as Square)
+      if (piece && piece.color === game.turn()) setMoveFrom(square)
+      return
+    }
+    if (square === moveFrom) { setMoveFrom(''); return }
+    if (!tryMove(moveFrom, square)) {
+      const piece = game.get(square as Square)
+      if (piece && piece.color === game.turn()) setMoveFrom(square)
+    }
+  }
+
   return (
     <div className="aspect-square w-full">
       <Chessboard
@@ -68,19 +92,8 @@ export default function TrainingBoard({
           allowDragging: interactive,
           onPieceDrop: ({ sourceSquare, targetSquare }: { sourceSquare: string; targetSquare: string | null }) =>
             targetSquare ? tryMove(sourceSquare, targetSquare) : false,
-          onSquareClick: ({ square }: { square: string }) => {
-            if (!interactive) return
-            if (!moveFrom) {
-              const piece = game.get(square as Square)
-              if (piece && piece.color === game.turn()) setMoveFrom(square)
-              return
-            }
-            if (square === moveFrom) { setMoveFrom(''); return }
-            if (!tryMove(moveFrom, square)) {
-              const piece = game.get(square as Square)
-              if (piece && piece.color === game.turn()) setMoveFrom(square)
-            }
-          },
+          onSquareClick: ({ square }: { square: string }) => handleTap(square),
+          onPieceClick: ({ square }: { square: string | null }) => { if (square) handleTap(square) },
           darkSquareStyle: { backgroundColor: BOARD_THEMES[boardTheme].dark },
           lightSquareStyle: { backgroundColor: BOARD_THEMES[boardTheme].light },
           squareStyles: { ...(moveFrom ? legalStyles(moveFrom) : {}), ...highlights },

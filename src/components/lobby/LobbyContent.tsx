@@ -60,6 +60,9 @@ export default function LobbyContent() {
   const MAINTENANCE_MODE = false
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  // Step before the wager modal: choose a human match (relay/on-chain) or a
+  // quick offline game vs the AI.
+  const [isCreateChoiceOpen, setIsCreateChoiceOpen] = useState(false)
   const [isPending, setIsPending] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const [searchError, setSearchError] = useState<string | null>(null)
@@ -359,7 +362,7 @@ export default function LobbyContent() {
                     parallelogram
                     variant="brand"
                     size="lg"
-                    onClick={() => handleAction(() => setIsCreateModalOpen(true))}
+                    onClick={() => handleAction(() => setIsCreateChoiceOpen(true))}
                     className="w-full"
                   >
                     CREATE NEW MATCH
@@ -700,6 +703,74 @@ export default function LobbyContent() {
           </div>
         </div>
       </div>
+
+      {/* ── CREATE: HUMAN vs AI CHOICE ── */}
+      <AnimatePresence>
+        {isCreateChoiceOpen && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-6 box-border">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsCreateChoiceOpen(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md box-border"
+            >
+              <ClayCard className="overflow-hidden border border-white/10 bg-slate-950/90 backdrop-blur-2xl shadow-[0_24px_60px_rgba(0,0,0,0.8)] rounded-[32px]">
+                <div className="p-6 sm:p-8 relative">
+                  <button
+                    onClick={() => setIsCreateChoiceOpen(false)}
+                    className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors text-xl font-bold cursor-pointer"
+                  >
+                    ×
+                  </button>
+                  <h4 className="text-xl font-black uppercase tracking-wider text-white mb-1" style={{ fontFamily: 'var(--fd)' }}>
+                    New Match
+                  </h4>
+                  <p className="text-xs text-gray-400 mb-6">Who do you want to play?</p>
+
+                  <div className="flex flex-col gap-3">
+                    {/* Human — the existing on-chain / relay create flow */}
+                    <button
+                      onClick={() => { setIsCreateChoiceOpen(false); setIsCreateModalOpen(true) }}
+                      className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition hover:border-[var(--c)]/40 hover:bg-[var(--c)]/[0.06]"
+                    >
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ background: 'rgba(0,204,255,0.12)', color: 'var(--c)' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.4 0-8 2.7-8 6v2h16v-2c0-3.3-3.6-6-8-6Z" /></svg>
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-bold text-white">Play with human</span>
+                        <span className="block text-xs text-gray-400">Wager CHESS &amp; match a real opponent.</span>
+                      </span>
+                      <span className="text-gray-500 transition group-hover:translate-x-0.5 group-hover:text-[var(--c)]">›</span>
+                    </button>
+
+                    {/* AI — offline bot quick play */}
+                    <button
+                      onClick={() => { setIsCreateChoiceOpen(false); router.push('/app/game/bot') }}
+                      className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition hover:border-[var(--candy-lime)]/40 hover:bg-[var(--candy-lime)]/[0.06]"
+                    >
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ background: 'rgba(132,227,107,0.14)', color: 'var(--candy-lime)' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a2 2 0 0 1 2 2v1h3a3 3 0 0 1 3 3v2h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v2a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-2H3a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1V8a3 3 0 0 1 3-3h3V4a2 2 0 0 1 2-2Zm-3 9a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm6 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z" /></svg>
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-bold text-white">Play with AI</span>
+                        <span className="block text-xs text-gray-400">Quick, no-stakes game vs the bot.</span>
+                      </span>
+                      <span className="text-gray-500 transition group-hover:translate-x-0.5 group-hover:text-[var(--candy-lime)]">›</span>
+                    </button>
+                  </div>
+                </div>
+              </ClayCard>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* ── CREATE MATCH MODAL ── */}
       <AnimatePresence>

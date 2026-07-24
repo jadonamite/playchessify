@@ -85,48 +85,51 @@ export default function PlacementPage() {
   ), [game, phase, onMove])
 
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-6">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <div className="text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">Placement</div>
-          <h1 className="font-bold text-xl text-white">Where do you stand?</h1>
-        </div>
-        <div className="text-right text-sm text-slate-400">
-          {idx + 1}/{PLACEMENT.length}
-          <div className="text-emerald-400">{solvedCount} solved</div>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-white/10 bg-[#0a1220]/80 p-3">
-        {board}
-      </div>
-
-      <div className="mt-4 min-h-[92px] rounded-xl border p-4 text-slate-200"
-           style={{ borderColor: phase === 'feedback' ? accent + '66' : 'rgba(255,255,255,0.1)' }}>
-        {phase === 'solving' && (
-          <p className="text-[15px]">{item.prompt}{!ready && <span className="ml-2 text-xs text-slate-500">(engine warming…)</span>}</p>
-        )}
-        {phase === 'judging' && <p className="text-slate-400">Checking your move…</p>}
-        {phase === 'feedback' && (
+    <div className="flex w-full flex-col items-center pb-8">
+      <div className="w-full max-w-[600px] px-4 pt-6">
+        <div className="mb-4 flex items-center justify-between">
           <div>
-            <p className="font-semibold" style={{ color: accent }}>
-              {lastSolved ? 'Correct — well played.' : 'Not the strongest here.'}
-            </p>
-            <p className="mt-1 text-sm text-slate-400">
-              {lastSolved ? 'That\'s the move.' : `The key idea was ${item.expectedUci.slice(0, 2)}→${item.expectedUci.slice(2, 4)}.`}
-            </p>
+            <div className="text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">Placement</div>
+            <h1 className="font-bold text-xl text-white">Where do you stand?</h1>
+          </div>
+          <div className="text-right text-sm text-slate-400">
+            {idx + 1}/{PLACEMENT.length}
+            <div className="text-emerald-400">{solvedCount} solved</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Same full-width, height-aware board as the game + coach boards. */}
+      <div className="pc-board-wrap mt-1">{board}</div>
+
+      <div className="w-full max-w-[600px] px-4">
+        <div className="mt-4 min-h-[92px] rounded-xl border p-4 text-slate-200"
+             style={{ borderColor: phase === 'feedback' ? accent + '66' : 'rgba(255,255,255,0.1)' }}>
+          {phase === 'solving' && (
+            <p className="text-[15px]">{item.prompt}{!ready && <span className="ml-2 text-xs text-slate-500">(engine warming…)</span>}</p>
+          )}
+          {phase === 'judging' && <p className="text-slate-400">Checking your move…</p>}
+          {phase === 'feedback' && (
+            <div>
+              <p className="font-semibold" style={{ color: accent }}>
+                {lastSolved ? 'Correct — well played.' : 'Not the strongest here.'}
+              </p>
+              <p className="mt-1 text-sm text-slate-400">
+                {lastSolved ? 'That\'s the move.' : `The key idea was ${item.expectedUci.slice(0, 2)}→${item.expectedUci.slice(2, 4)}.`}
+              </p>
+            </div>
+          )}
+          {phase === 'done' && <p className="text-slate-300">{saving ? 'Saving your starting point…' : 'Done.'}</p>}
+        </div>
+
+        {phase === 'feedback' && (
+          <div className="mt-4">
+            <TrapButton onClick={next}>
+              {idx + 1 < PLACEMENT.length ? 'Next position ▸' : 'See my level ▸'}
+            </TrapButton>
           </div>
         )}
-        {phase === 'done' && <p className="text-slate-300">{saving ? 'Saving your starting point…' : 'Done.'}</p>}
       </div>
-
-      {phase === 'feedback' && (
-        <div className="mt-4">
-          <TrapButton onClick={next}>
-            {idx + 1 < PLACEMENT.length ? 'Next position ▸' : 'See my level ▸'}
-          </TrapButton>
-        </div>
-      )}
     </div>
   )
 }

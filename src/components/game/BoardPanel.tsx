@@ -5,6 +5,7 @@ import { Chess, type Square } from 'chess.js'
 import ClayCard from '@/components/ui/ClayCard'
 import { BOARD_THEMES, type PieceSet } from '@/hooks/useSettingsStore'
 import CapturedTray from './CapturedTray'
+import KingShatter from './KingShatter'
 
 const Chessboard = dynamic(() => import('react-chessboard').then(m => m.Chessboard), { ssr: false })
 
@@ -32,6 +33,23 @@ interface BoardPanelProps {
   handleCanDragPiece: (args: { isSparePiece: boolean; piece: unknown; square: string | null }) => boolean
   handlePieceDrop: (args: { piece: unknown; sourceSquare: string; targetSquare: string | null }) => boolean
   handleSquareClick: (args: { piece: unknown; square: string }) => void
+  handlePieceClick: (args: { isSparePiece: boolean; piece: unknown; square: string | null }) => void
+}
+
+// Locate the checkmated king (the side to move at mate is the loser).
+function matedKingSquare(game: Chess): string | null {
+  if (!game.isCheckmate()) return null
+  const loser = game.turn()
+  const board = game.board()
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const p = board[r][c]
+      if (p && p.type === 'k' && p.color === loser) {
+        return `${'abcdefgh'[c]}${8 - r}`
+      }
+    }
+  }
+  return null
 }
 
 export default function BoardPanel(props: BoardPanelProps) {
@@ -39,8 +57,11 @@ export default function BoardPanel(props: BoardPanelProps) {
     game, customPieces, myColor, canAct, gameOver, isBotGame, turn, isMyTurn,
     moveFrom, hintMove, showMoveHints, boardTheme, pieceSet, iAmWhite,
     myCaptured, oppCaptured, myAdvantage, soundOn, setSoundOn,
-    handleCanDragPiece, handlePieceDrop, handleSquareClick,
+    handleCanDragPiece, handlePieceDrop, handleSquareClick, handlePieceClick,
   } = props
+
+  const matedKing = matedKingSquare(game)
+  const orientation: 'white' | 'black' = myColor === 'black' ? 'black' : 'white'
 
   return (
     <ClayCard padding="none" className="pc-board-card p-0 md:p-8">
@@ -57,17 +78,18 @@ export default function BoardPanel(props: BoardPanelProps) {
         <div className="mb-1.5 md:mb-2 px-1">
           <CapturedTray pieces={oppCaptured} color={iAmWhite ? 'w' : 'b'} advantage={-myAdvantage} set={pieceSet} />
         </div>
-        <div className="aspect-square">
+        <div className="aspect-square relative">
           <Chessboard
             options={{
               id: 'board',
               position: game.fen(),
               pieces: customPieces,
-              boardOrientation: myColor === 'black' ? 'black' : 'white',
+              boardOrientation: orientation,
               allowDragging: canAct && !gameOver && (isBotGame ? turn === 'w' : isMyTurn),
               canDragPiece: handleCanDragPiece,
               onPieceDrop: handlePieceDrop,
               onSquareClick: handleSquareClick,
+              onPieceClick: handlePieceClick,
               darkSquareStyle: { backgroundColor: BOARD_THEMES[boardTheme].dark },
               lightSquareStyle: { backgroundColor: BOARD_THEMES[boardTheme].light },
               squareStyles: (() => {
@@ -93,6 +115,15 @@ export default function BoardPanel(props: BoardPanelProps) {
               boardStyle: { borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' },
             }}
           />
+          {matedKing && (
+            <KingShatter
+              square={matedKing}
+              color={turn}
+              orientation={orientation}
+              boardTheme={boardTheme}
+              pieceSet={pieceSet}
+            />
+          )}
         </div>
         {/* Your captures (pieces you've taken) */}
         <div className="mt-1.5 md:mt-2 px-1">

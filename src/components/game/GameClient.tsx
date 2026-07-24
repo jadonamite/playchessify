@@ -421,11 +421,24 @@ export default function GameClient() {
     [executeMove]
   )
 
-  const handleSquareClick = useCallback(
-    ({ square }: { piece: unknown; square: string }) => {
+  // Unified tap handler for click-to-move. react-chessboard v5 fires onSquareClick
+  // only for EMPTY squares; a tap that lands on a piece (selecting your own, or
+  // capturing an enemy) fires onPieceClick instead. Wiring only onSquareClick made
+  // those taps dead — the piece got "stuck" selected and the move never fired
+  // (drag still worked). Route both events here.
+  const lastTapRef = useRef<{ square: string; at: number } | null>(null)
+  const onBoardTap = useCallback(
+    (square: string) => {
       if (!canAct || gameOver) return
       if (isBotGame && game.turn() === 'b') return
       if (!isBotGame && !isMyTurn) return
+
+      // Dedup: on desktop a piece tap bubbles, firing BOTH onPieceClick and
+      // onSquareClick for the same square. Ignore the echo within a short window.
+      const now = Date.now()
+      const last = lastTapRef.current
+      if (last && last.square === square && now - last.at < 250) return
+      lastTapRef.current = { square, at: now }
 
       if (!moveFrom) {
         const piece = game.get(square as Square)
@@ -433,6 +446,10 @@ export default function GameClient() {
         return
       }
 
+      // Re-tapping the selected square deselects it (escape hatch, never stuck).
+      if (square === moveFrom) { setMoveFrom(''); return }
+
+      // Tapping another of your own pieces reselects.
       const piece = game.get(square as Square)
       if (piece && piece.color === game.turn()) { setMoveFrom(square); return }
 
@@ -441,6 +458,27 @@ export default function GameClient() {
     },
     [canAct, gameOver, game, moveFrom, executeMove, isBotGame, isMyTurn]
   )
+
+  const handleSquareClick = useCallback(
+    ({ square }: { piece: unknown; square: string }) => onBoardTap(square),
+    [onBoardTap]
+  )
+
+  const handlePieceClick = useCallback(
+    ({ square }: { isSparePiece: boolean; piece: unknown; square: string | null }) => {
+      if (square) onBoardTap(square)
+    },
+    [onBoardTap]
+  )
+
+  // Self-heal a stuck selection: if the highlighted square is no longer
+  // actionable (turn flipped, game ended, or actions disabled by a transient
+  // participant/tx state), drop it so the board never looks frozen mid-tap.
+  useEffect(() => {
+    if (!moveFrom) return
+    const mine = isBotGame ? game.turn() === 'w' : isMyTurn
+    if (gameOver || !canAct || !mine) setMoveFrom('')
+  }, [moveFrom, gameOver, canAct, isBotGame, isMyTurn, game])
 
   const handleCanDragPiece = useCallback(
     ({ square }: { isSparePiece: boolean; piece: unknown; square: string | null }) => {
@@ -609,6 +647,7 @@ export default function GameClient() {
                 handleCanDragPiece={handleCanDragPiece}
                 handlePieceDrop={handlePieceDrop}
                 handleSquareClick={handleSquareClick}
+                handlePieceClick={handlePieceClick}
               />
             </div>
 
