@@ -27,7 +27,7 @@ const SHARDS = PERIM.map((p, i) => {
   return { clip, nx: mx / mag, ny: my / mag, spin: (i % 2 ? 1 : -1) * (120 + i * 22) }
 })
 
-const CELL = 12.5 // one square = 1/8 of the board, in %
+const CELL: number = 12.5 // one square = 1/8 of the board, in %
 
 interface Props {
   square: string                       // e.g. "e8" — the mated king's square
