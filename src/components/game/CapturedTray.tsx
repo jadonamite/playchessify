@@ -1,6 +1,10 @@
 import { type PieceSet } from '@/hooks/useSettingsStore'
 import { piecePath } from '@/lib/chessPieces'
 
+const getPieceSrc = (set: PieceSet, color: 'w' | 'b', piece: string) => {
+  return piecePath(set, `${color}${piece.toUpperCase()}`)
+}
+
 export default function CapturedTray({ pieces, color, advantage, set }: { pieces: string[]; color: 'w' | 'b'; advantage: number; set: PieceSet }) {
   return (
     <div className="flex items-center gap-2 min-h-[22px]">
@@ -9,7 +13,7 @@ export default function CapturedTray({ pieces, color, advantage, set }: { pieces
           // eslint-disable-next-line @next/next/no-img-element -- dynamic SVG piece sprite, next/image unsuitable
           <img
             key={i}
-            src={piecePath(set, `${color}${p.toUpperCase()}`)}
+            src={getPieceSrc(set, color, p)}
             alt={p}
             draggable={false}
             className="w-[18px] h-[18px] -mr-1.5 last:mr-0 drop-shadow"
