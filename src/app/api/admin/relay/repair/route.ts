@@ -25,7 +25,9 @@ function parseGameId(v: unknown): number | null {
 }
 
 export async function GET(req: NextRequest) {
-  if (!process.env.RELAY_ADMIN_SECRET) return NextResponse.json({ error: 'admin disabled' }, { status: 503 })
+  if (!process.env.RELAY_ADMIN_SECRET) {
+    return NextResponse.json({ error: 'admin disabled' }, { status: 503 })
+  }
   if (!authed(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
   const gameId = parseGameId(req.nextUrl.searchParams.get('gameId'))
@@ -36,7 +38,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!process.env.RELAY_ADMIN_SECRET) return NextResponse.json({ error: 'admin disabled' }, { status: 503 })
+  if (!process.env.RELAY_ADMIN_SECRET) {
+    return NextResponse.json({ error: 'admin disabled' }, { status: 503 })
+  }
   if (!authed(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
   let body: { gameId?: unknown; chain?: unknown }

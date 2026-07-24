@@ -13,7 +13,7 @@ export interface MoveRecord {
   moveNumber: number
   ts: number
   sig?: string
-  signer?: string,
+  signer?: string
 }
 
 export type SignMove = (message: string) => Promise<`0x${string}` | null>
