@@ -25,22 +25,19 @@ const ALLOWANCE_FLOOR = parseUnits('1000', TOKEN_DECIMALS)
 // per bot within this instance and never sign below it.
 const nextNonce = new Map<string, bigint>()
 
-function getNextNonce(bot: BotProfile): bigint {
+async function botMetaTx(bot: BotProfile, to: Address, data: `0x${string}`): Promise<Hash> {
   const account = getBotAccount(bot)
-  const onchain = (getPublicClient().readContract({
+  const onchain = (await getPublicClient().readContract({
     address: FORWARDER,
     abi: FORWARDER_ABI,
     functionName: 'nonces',
     args: [account.address],
-  }) as Promise<bigint>)
+  })) as bigint
   const tracked = nextNonce.get(bot.address) ?? 0n
-  return Promise.all([onchain]).then(([onchainNonce]) => onchainNonce > tracked ? onchainNonce : tracked)
-}
+  const nonce = onchain > tracked ? onchain : tracked
 
-async function botMetaTx(bot: BotProfile, to: Address, data: `0x${string}`): Promise<Hash> {
-  const nonce = await getNextNonce(bot)
-  const message = buildForwardRequestMessage({ from: getBotAccount(bot).address, to, data, nonce })
-  const signature = await getBotAccount(bot).signTypedData({
+  const message = buildForwardRequestMessage({ from: account.address, to, data, nonce })
+  const signature = await account.signTypedData({
     domain: forwarderDomain(),
     types: FORWARD_REQUEST_TYPES,
     primaryType: 'ForwardRequest',

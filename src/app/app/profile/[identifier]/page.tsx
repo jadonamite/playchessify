@@ -22,6 +22,26 @@ import { CELO_CONTRACTS, CELO_CHAIN_ID } from '@/config/contracts'
 import type { ChessProfile } from '@/types/profile'
 import { usePlayerHistory, type PlayerHistoryItem } from '@/hooks/usePlayerHistory'
 
+function StatBox({ label, value, accent, color }: { label: string; value: string | number; accent?: boolean; color?: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1 px-4 py-3 rounded-2xl bg-black/30 border border-white/5 min-w-[80px]">
+      <span className="text-[8px] font-black tracking-[0.25em] uppercase text-[var(--t3)]">{label}</span>
+      <span
+        className="text-xl font-black leading-none"
+        style={{ fontFamily: 'var(--fd)', color: color ?? (accent ? 'var(--c)' : 'var(--t1)') }}
+      >{value}</span>
+    </div>
+  )
+}
+
+const RESULT_BADGE: Record<PlayerHistoryItem['result'], { label: string; bg: string; color: string }> = {
+  win: { label: 'WIN', bg: 'rgba(74,222,128,0.12)', color: '#4ade80' },
+  loss: { label: 'LOSS', bg: 'rgba(239,68,68,0.12)', color: '#f87171' },
+  draw: { label: 'DRAW', bg: 'rgba(255,255,255,0.05)', color: 'var(--t3)' },
+  active: { label: 'LIVE', bg: 'rgba(255,255,255,0.04)', color: 'var(--c)' },
+  waiting: { label: 'WAITING', bg: 'rgba(251,191,36,0.12)', color: '#fbbf24' },
+}
+
 function GameRow({ g, cta, onClick }: { g: PlayerHistoryItem; cta: string; onClick: () => void }) {
   const badge = RESULT_BADGE[g.result]
   const live = g.result === 'active'
@@ -60,14 +80,6 @@ function GameRow({ g, cta, onClick }: { g: PlayerHistoryItem; cta: string; onCli
   )
 }
 
-const RESULT_BADGE: Record<PlayerHistoryItem['result'], { label: string; bg: string; color: string }> = {
-  win: { label: 'WIN', bg: 'rgba(74,222,128,0.12)', color: '#4ade80' },
-  loss: { label: 'LOSS', bg: 'rgba(239,68,68,0.12)', color: '#f87171' },
-  draw: { label: 'DRAW', bg: 'rgba(255,255,255,0.05)', color: 'var(--t3)' },
-  active: { label: 'LIVE', bg: 'rgba(255,255,255,0.04)', color: 'var(--c)' },
-  waiting: { label: 'WAITING', bg: 'rgba(251,191,36,0.12)', color: '#fbbf24' },
-}
-
 function EditField({
   label, value, onChange, maxLength, placeholder,
 }: { label: string; value: string; onChange: (v: string) => void; maxLength: number; placeholder: string }) {
@@ -86,29 +98,6 @@ function EditField({
     </div>
   )
 }
-
-  const saveEdit = async () => {
-    // Update under the on-chain player identity (smart account for Tier A) the
-    // profile is keyed to — not the embedded EOA — and sign with the matching
-    // wallet. Address lowercased to match the server's message exactly.
-    if (!myPlayerAddress || !profile) return
-    setEditError('')
-    try {
-      const timestamp = new Date().toISOString()
-      const message = `Chessify Profile Update\n\nAddress: ${myPlayerAddress.toLowerCase()}\nTimestamp: ${timestamp}`
-      const signature = await signIdentity(message)
-      await updateProfile({
-        address: myPlayerAddress,
-        displayName: editDisplayName.trim(),
-        bio: editBio.trim(),
-        signature,
-        timestamp,
-      })
-      setEditing(false)
-    } catch (e) {
-      setEditError(e instanceof Error ? e.message : 'Update failed')
-    }
-  }
 
 export default function ProfilePage() {
   const params = useParams()
@@ -184,23 +173,34 @@ export default function ProfilePage() {
     (g) => g.result === 'win' || g.result === 'loss' || g.result === 'draw',
   )
 
-function StatBox({ label, value, accent, color }: { label: string; value: string | number; accent?: boolean; color?: string }) {
-  return (
-    <div className="flex flex-col items-center gap-1 px-4 py-3 rounded-2xl bg-black/30 border border-white/5 min-w-[80px]">
-      <span className="text-[8px] font-black tracking-[0.25em] uppercase text-[var(--t3)]">{label}</span>
-      <span
-        className="text-xl font-black leading-none"
-        style={{ fontFamily: 'var(--fd)', color: color ?? (accent ? 'var(--c)' : 'var(--t1)') }}
-      >{value}</span>
-    </div>
-  )
-}
-
   const startEdit = () => {
     setEditDisplayName(profile?.displayName ?? '')
     setEditBio(profile?.bio ?? '')
     setEditError('')
     setEditing(true)
+  }
+
+  const saveEdit = async () => {
+    // Update under the on-chain player identity (smart account for Tier A) the
+    // profile is keyed to — not the embedded EOA — and sign with the matching
+    // wallet. Address lowercased to match the server's message exactly.
+    if (!myPlayerAddress || !profile) return
+    setEditError('')
+    try {
+      const timestamp = new Date().toISOString()
+      const message = `Chessify Profile Update\n\nAddress: ${myPlayerAddress.toLowerCase()}\nTimestamp: ${timestamp}`
+      const signature = await signIdentity(message)
+      await updateProfile({
+        address: myPlayerAddress,
+        displayName: editDisplayName.trim(),
+        bio: editBio.trim(),
+        signature,
+        timestamp,
+      })
+      setEditing(false)
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : 'Update failed')
+    }
   }
 
   const joinedDate = profile

@@ -2,19 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getOrCreateLearner, updateLearner, checkRateLimit } from '@/lib/train-store'
 import type { Concept, LearnerLevel } from '@/types/training'
 
-const validateAddress = async (params: Promise<{ address: string }>) => {
+type Ctx = { params: Promise<{ address: string }> }
+
+export async function GET(_req: NextRequest, { params }: Ctx) {
   const { address } = await params
   if (!address || !address.startsWith('0x')) {
     return NextResponse.json({ error: 'invalid address' }, { status: 400 })
   }
-}
-
-type Ctx = { params: Promise<{ address: string }> }
-
-export async function GET(_req: NextRequest, { params }: Ctx) {
-  const response = await validateAddress(params)
-  if (response) return response
-  const learner = await getOrCreateLearner((await params).address)
+  const learner = await getOrCreateLearner(address)
   return NextResponse.json({ learner })
 }
 
@@ -26,8 +21,10 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
  * the only guard, which is plenty for griefing-only risk.
  */
 export async function PATCH(req: NextRequest, { params }: Ctx) {
-  const response = await validateAddress(params)
-  if (response) return response
+  const { address } = await params
+  if (!address || !address.startsWith('0x')) {
+    return NextResponse.json({ error: 'invalid address' }, { status: 400 })
+  }
 
   let body: {
     coachId?: string
@@ -44,11 +41,11 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 
   // Rate limit: 120 training writes per address per hour (covers rapid drills +
   // per-game diagnostics) without ever prompting the user.
-  if (!(await checkRateLimit((await params).address, 'update', 120, 3600))) {
+  if (!(await checkRateLimit(address, 'update', 120, 3600))) {
     return NextResponse.json({ error: 'rate limit exceeded' }, { status: 429 })
   }
 
-  const learner = await updateLearner((await params).address, {
+  const learner = await updateLearner(address, {
     coachId: body.coachId,
     level: body.level,
     placed: body.placed,
