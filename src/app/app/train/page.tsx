@@ -1,13 +1,13 @@
 'use client'
 
-import TrapButton from '@/components/train/TrapButton'
-import { COACHES, getCoach } from '@/config/coaches'
-import { CONCEPT_LABEL, weakestConcepts } from '@/types/training'
-import { suggestLesson } from '@/config/curriculum'
-import { useCoachStore } from '@/hooks/useCoachStore'
 import { useEffect, useRef } from 'react'
-import { useLearner } from '@/hooks/useLearner'
 import { useRouter } from 'next/navigation'
+import { useLearner } from '@/hooks/useLearner'
+import { COACHES, getCoach } from '@/config/coaches'
+import { suggestLesson } from '@/config/curriculum'
+import { CONCEPT_LABEL, weakestConcepts } from '@/types/training'
+import TrapButton from '@/components/train/TrapButton'
+import { useCoachStore } from '@/hooks/useCoachStore'
 
 export default function TrainHubPage() {
   const router = useRouter()
