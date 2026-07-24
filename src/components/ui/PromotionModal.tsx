@@ -75,7 +75,7 @@ export default function PromotionModal({ open, color, onSelect, onCancel }: Prom
                 </span>
               </div>
               <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white leading-none">
-                CHOOSE YOUR <span className='text-[var(--c)]'>PROMOTION</span>
+                CHOOSE YOUR <span className="text-[var(--c)]">PROMOTION</span>
               </h2>
               <p className="text-xs text-[var(--t3)] mt-2 leading-relaxed">
                 Your pawn has reached the final rank. Select the piece it ascends to.
