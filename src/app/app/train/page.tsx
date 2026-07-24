@@ -19,7 +19,7 @@ export default function TrainHubPage() {
 
   // Keep the nav/lobby coach face in sync with the server learner model.
   useEffect(() => {
-    if (learner?.coachId) setCoachId(learner.coachId),
+    if (learner?.coachId) setCoachId(learner.coachId)
   }, [learner?.coachId, setCoachId])
 
   // Adopt the coach chosen on the landing page (?coach=…), once, if it differs.
