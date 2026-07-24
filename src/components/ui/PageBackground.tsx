@@ -1,9 +1,9 @@
 'use client'
 
-import { Suspense } from 'react'
-import { Canvas } from '@react-three/fiber'
 import SceneBoundary from '@/components/ui/SceneBoundary'
+import { Canvas } from '@react-three/fiber'
 import { King, Queen, Pawn, Bishop, Knight } from '@/components/ui/ChessModels'
+import { Suspense } from 'react'
 
 /**
  * Shared decorative background — the floating chess pieces + neon grid used across

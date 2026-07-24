@@ -51,6 +51,12 @@ function startTrack(id: TrackId, volume = 0.55) {
   activeTrack = id
 }
 
+/**
+ * stopTrack
+ * @param {*} id: TrackId
+ * @param {*} durationMs
+ * @returns {*}
+ */
 function stopTrack(id: TrackId, durationMs = 1200) {
   const track = tracks[id]
   if (!track || track.audio.paused) return
