@@ -13,6 +13,15 @@ export type PlayerHistoryItem = {
 
 type ApiHistoryItem = PlayerHistoryItem & { chain: string; opponent: string; timestamp: number }
 
+const mapApiHistoryItemToPlayerHistoryItem = (apiHistoryItem: ApiHistoryItem): PlayerHistoryItem => ({
+  id: apiHistoryItem.id,
+  role: apiHistoryItem.role,
+  opponent: apiHistoryItem.opponent === 'Waiting...' ? '' : apiHistoryItem.opponent,
+  wager: apiHistoryItem.wager,
+  status: apiHistoryItem.status,
+  result: apiHistoryItem.result,
+})
+
 export function usePlayerHistory(playerAddress: string | null | undefined) {
   return useQuery({
     queryKey: ['player-history', playerAddress?.toLowerCase()],
@@ -23,14 +32,7 @@ export function usePlayerHistory(playerAddress: string | null | undefined) {
       const res = await fetch(`/api/history?address=${playerAddress}`)
       const body = (await res.json().catch(() => ({}))) as { history?: ApiHistoryItem[] }
       if (!Array.isArray(body.history)) return []
-      return body.history.map((h) => ({
-        id: h.id,
-        role: h.role,
-        opponent: h.opponent === 'Waiting...' ? '' : h.opponent,
-        wager: h.wager,
-        status: h.status,
-        result: h.result,
-      }))
+      return body.history.map(mapApiHistoryItemToPlayerHistoryItem)
     },
     enabled: !!playerAddress,
     staleTime: 2 * 60 * 1000,
