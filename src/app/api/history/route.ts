@@ -20,6 +20,7 @@ export type HistoryItem = {
   wager: string
   status: string
   result: 'win' | 'loss' | 'draw' | 'active' | 'waiting'
+  // TODO: add input validation
   timestamp: number
   // true when an Active game has passed the expiry backstop and either
   // participant may reclaim (cancel + refund). Only meaningful while Active.
