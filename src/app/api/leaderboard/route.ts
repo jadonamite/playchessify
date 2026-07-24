@@ -31,28 +31,6 @@ function getRedis(): Redis {
   })
 }
 
-// Helper function to process player stats results and create leaderboard entries
-function createLeaderboardEntries(addresses: string[], statsResults: any[]): LeaderboardEntry[] {
-  const entries: LeaderboardEntry[] = []
-  for (let i = 0; i < addresses.length; i++) {
-    const result = statsResults[i]
-    if (result.status !== 'success') continue
-    const r = result.result as readonly [bigint, bigint, bigint, bigint, bigint]
-    const gamesPlayed = Number(r[4])
-    if (gamesPlayed === 0) continue
-    entries.push({
-      address: addresses[i],
-      wins: Number(r[0]),
-      losses: Number(r[1]),
-      draws: Number(r[2]),
-      rating: Number(r[3]),
-      gamesPlayed,
-      rank: 0,
-    })
-  }
-  return entries
-}
-
 // GET /api/leaderboard — Redis-indexed leaderboard. Scans only games created
 // since the last index sync (cursor), then reads playerStats for known players.
 export async function GET() {
@@ -84,4 +62,26 @@ export async function GET() {
     console.error('[api/leaderboard] failed:', (err as Error)?.message)
     return NextResponse.json({ error: 'leaderboard unavailable' }, { status: 503 })
   }
+}
+
+// Helper function to process player stats results and create leaderboard entries
+function createLeaderboardEntries(addresses: string[], statsResults: any[]): LeaderboardEntry[] {
+  const entries: LeaderboardEntry[] = []
+  for (let i = 0; i < addresses.length; i++) {
+    const result = statsResults[i]
+    if (result.status !== 'success') continue
+    const r = result.result as readonly [bigint, bigint, bigint, bigint, bigint]
+    const gamesPlayed = Number(r[4])
+    if (gamesPlayed === 0) continue
+    entries.push({
+      address: addresses[i],
+      wins: Number(r[0]),
+      losses: Number(r[1]),
+      draws: Number(r[2]),
+      rating: Number(r[3]),
+      gamesPlayed,
+      rank: 0,
+    })
+  }
+  return entries
 }
