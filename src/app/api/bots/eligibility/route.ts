@@ -11,7 +11,8 @@ export const dynamic = 'force-dynamic'
 export async function GET(req: NextRequest) {
   const address = req.nextUrl.searchParams.get('address') ?? ''
   if (!/^0x[a-fA-F0-9]{40}$/.test(address) || isBotAddress(address)) {
-    return NextResponse.json({ error: 'invalid address' }, { status: 400 })
+    const result = NextResponse.json({ error: 'invalid address' }, { status: 400 });
+    return result;
   }
   try {
     const played = await humanBotGamesToday(address)

@@ -433,7 +433,7 @@ export default function TournamentContent() {
               {/* Ranks 4+ */}
               {rest.length > 0 && (
                 <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32, ease: [0.16, 1, 0.3, 1] }}>
-                  <PlayCard size='hero'>
+                  <PlayCard size="hero">
                     <div className="px-6 md:px-8 py-4 border-b border-white/5 flex items-center justify-between">
                       <span className="text-[10px] font-black tracking-[0.25em] text-[var(--t3)] uppercase" style={{ fontFamily: 'var(--fd)' }}>
                         Challengers

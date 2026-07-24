@@ -69,11 +69,6 @@ export function lessonById(id: string): Lesson | undefined {
   return CURRICULUM.find((l) => l.id === id)
 }
 
-/**
- * lessonsForConcept
- * @param {*} concept: Concept
- * @returns {*}
- */
 export function lessonsForConcept(concept: Concept): Lesson[] {
   return CURRICULUM.filter((l) => l.concept === concept)
 }
