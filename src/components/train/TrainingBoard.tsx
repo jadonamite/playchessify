@@ -66,18 +66,18 @@ export default function TrainingBoard({
     if (!interactive) return
     const now = Date.now()
     const last = lastTapRef.current
-    if (last && last.square === square && now - last.at < 250) return
+    if (last?.square === square && now - last.at < 250) return
     lastTapRef.current = { square, at: now }
 
     if (!moveFrom) {
       const piece = game.get(square as Square)
-      if (piece && piece.color === game.turn()) setMoveFrom(square)
+      if (piece?.color === game.turn()) setMoveFrom(square)
       return
     }
     if (square === moveFrom) { setMoveFrom(''); return }
     if (!tryMove(moveFrom, square)) {
       const piece = game.get(square as Square)
-      if (piece && piece.color === game.turn()) setMoveFrom(square)
+      if (piece?.color === game.turn()) setMoveFrom(square)
     }
   }
 
