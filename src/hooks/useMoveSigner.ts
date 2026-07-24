@@ -20,6 +20,8 @@ export function useMoveSigner() {
 
   const signMove = useCallback(
     async (message: string): Promise<`0x${string}` | null> => {
+      if (walletTier === 'minipay') return null
+
       try {
         if (walletTier === 'smart' && smartClient) {
           return await smartClient.signMessage({ message })
@@ -27,13 +29,12 @@ export function useMoveSigner() {
         if (walletTier === 'eoa') {
           return await signMessageAsync({ message })
         }
-        return null // minipay
       } catch (err) {
         console.warn('[useMoveSigner] sign failed, submitting unsigned', err)
         return null
       }
     },
-    [walletTier, smartClient, signMessageAsync],
+    [walletTier, smartClient, signMessageAsync]
   )
 
   const canSign = walletTier !== 'minipay'
