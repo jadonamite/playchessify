@@ -187,7 +187,7 @@ export default function PodiumCard({
 
         {/* ── chrome bracket-corner glass card: title · name · hero ── */}
         <div
-          className='relative w-full mt-1 rounded-xl px-2.5 pt-2.5 pb-2 flex flex-col items-center gap-1'
+          className="relative w-full mt-1 rounded-xl px-2.5 pt-2.5 pb-2 flex flex-col items-center gap-1"
           style={{
             background: 'linear-gradient(180deg, rgba(10,16,28,0.72), rgba(4,7,14,0.82))',
             border: `1px solid ${m.border}`,

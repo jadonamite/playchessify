@@ -10,15 +10,13 @@ import type { ExplainFacts } from '@/lib/coach/voice'
 export async function fetchCoachVoice(
   facts: ExplainFacts & { fen?: string },
 ): Promise<{ text: string; source: 'llm' | 'template' }> {
-  const res = await fetch('/api/coach/explain', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(facts),
-  })
-
-  if (!res.ok) return { text: localTemplate(facts), source: 'template' }
-
   try {
+    const res = await fetch('/api/coach/explain', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(facts),
+    })
+    if (!res.ok) throw new Error('explain failed')
     const data = await res.json()
     return { text: data.text, source: data.source }
   } catch {
