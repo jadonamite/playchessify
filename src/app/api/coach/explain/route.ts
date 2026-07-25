@@ -29,32 +29,29 @@ function cacheKey(fen: string, f: ExplainFacts): string {
 }
 
 export async function POST(req: NextRequest) {
-  try {
-    const body: ExplainFacts & { fen?: string } = await req.json()
-    if (!body.coachName || !body.coachVoice || !body.kind || !body.learnerLevel) {
-      return NextResponse.json({ error: 'missing required facts' }, { status: 400 })
-    }
+  let body: ExplainFacts & { fen?: string }
+  try { body = await req.json() } catch {
+    return NextResponse.json({ error: 'invalid json' }, { status: 400 })
+  }
+  if (!body.coachName || !body.coachVoice || !body.kind || !body.learnerLevel) {
+    return NextResponse.json({ error: 'missing required facts' }, { status: 400 })
+  }
 
-    const redis = getRedis()
-    if (!redis) return NextResponse.json({ error: 'redis not available' }, { status: 500 })
+  const redis = getRedis()
+  const key = redis ? cacheKey(body.fen ?? '', body) : null
 
-    const key = cacheKey(body.fen ?? '', body)
+  if (redis && key) {
     const cached = await redis.get<{ text: string; source: 'llm' | 'template' }>(key)
     if (cached) return NextResponse.json({ ...cached, cached: true })
-
-    const result = await coachExplain(body)
-
-    // Only cache LLM results (templates are free to recompute and may improve once
-    // keys are added).
-    if (result.source === 'llm') {
-      await redis.set(key, result, { ex: 60 * 60 * 24 * 30 })
-    }
-
-    return NextResponse.json({ ...result, cached: false })
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: 'invalid json' }, { status: 400 })
-    }
-    throw error
   }
+
+  const result = await coachExplain(body)
+
+  // Only cache LLM results (templates are free to recompute and may improve once
+  // keys are added).
+  if (redis && key && result.source === 'llm') {
+    await redis.set(key, result, { ex: 60 * 60 * 24 * 30 })
+  }
+
+  return NextResponse.json({ ...result, cached: false })
 }

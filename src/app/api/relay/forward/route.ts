@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
   if (!ADDR.test(from) || !ADDR.test(to)) {
     return NextResponse.json({ error: 'invalid address' }, { status: 400 })
   }
+  // NOTE: revisit this logic after API migration
   if (!HEX.test(data) || data.length < 10 || data.length > 4096) {
     return NextResponse.json({ error: 'invalid calldata' }, { status: 400 })
   }
