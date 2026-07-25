@@ -22,12 +22,17 @@ export function useIdentitySigner() {
   const { client: smartClient } = useSmartWallets()
   const { signMessageAsync } = useSignMessage()
 
+  const getSigner = () => {
+    if (walletTier === 'smart' && smartClient) {
+      return smartClient.signMessage
+    }
+    return signMessageAsync
+  }
+
   return useCallback(
     async (message: string): Promise<`0x${string}`> => {
-      if (walletTier === 'smart' && smartClient) {
-        return smartClient.signMessage({ message })
-      }
-      return signMessageAsync({ message })
+      const signer = getSigner()
+      return signer({ message })
     },
     [walletTier, smartClient, signMessageAsync],
   )

@@ -32,7 +32,7 @@ export default function CoachIntroPage() {
       `I'm ${coach.name}. Some call me ${coach.title}.`,
       `My game is ${traits}. ${PROMISE[coach.teaching.specialty]}`,
       `Here's how this works: you play, and I watch every move. When you go wrong, I'll stop you, show you exactly why, and let you try again. When you find the right idea, you'll hear it from me. Game after game, I'll meet you where you are and push you forward.`,
-    ]
+    ],
   }, [coach])
 
   return (
