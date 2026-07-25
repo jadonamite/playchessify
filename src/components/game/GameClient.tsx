@@ -29,10 +29,6 @@ import MatchIntro from './MatchIntro'
 import JoinRoom from './JoinRoom'
 import { BOT_SAVE_KEY, TURN_TIMEOUT_SECS, type GameResult } from './types'
 
-/**
- * GameClient
- * @returns {*}
- */
 export default function GameClient() {
   const params  = useParams()
   const router  = useRouter()
