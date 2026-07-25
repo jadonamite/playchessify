@@ -18,13 +18,14 @@ import {
 const CLIENT_SOURCES: StreakSource[] = ['bot', 'puzzle', 'multiplayer']
 
 // ── GET /api/profile/streak?address=0x…[&kind=win] — read a wallet's streak ──
-// kind=win reads the daily WIN streak ("stars"); otherwise the play streak.
+// kind=win reads the daily WIN streak ("stars/Dk); otherwise the play streak.
 export async function GET(req: NextRequest) {
   const address = req.nextUrl.searchParams.get('address')
-  const kind = req.nextUrl.searchParams.get('kind')
-  if (!address?.startsWith('0x')) {
+  if (!address || !address.startsWith('0x')) {
     return NextResponse.json({ error: 'invalid address' }, { status: 400 })
   }
+
+  const kind = req.nextUrl.searchParams.get('kind')
   const streak = kind === 'win' ? await getWinStreak(address) : await getStreak(address)
   return NextResponse.json(streak, {
     headers: { 'Cache-Control': 'no-store' },
@@ -36,13 +37,14 @@ export async function GET(req: NextRequest) {
 // streak; a win is also a play, so the client posts both.
 export async function POST(req: NextRequest) {
   let body: { address?: string; source?: string; kind?: string }
-  try { body = await req.json() } catch {
+  try {
+    body = await req.json()
+  } catch {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 })
   }
 
   const { address, source, kind } = body
-
-  if (!address?.startsWith('0x')) {
+  if (!address || !address.startsWith('0x')) {
     return NextResponse.json({ error: 'invalid address' }, { status: 400 })
   }
   if (!source || !CLIENT_SOURCES.includes(source as StreakSource)) {
