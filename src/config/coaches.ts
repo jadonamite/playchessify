@@ -17,7 +17,7 @@ export interface StyleWeights {
   sacrifice: number  // tolerance for giving up material for initiative
   positional: number // reward piece-square / prophylactic quiet moves
   simplify: number   // reward trading down when ahead (endgame grind)
-  forcing: number    // reward checks / captures / threats
+  forcing: number    // reward checks / captures / threats,
 }
 
 /* ── engine config ──────────────────────────────────────────────────────────

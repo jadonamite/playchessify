@@ -316,7 +316,7 @@ export default function TrainingGame() {
     <div className="flex w-full flex-col items-center pb-8">
       {/* ── Coach, ON TOP (the opponent across the table) ── */}
       <div className="w-full max-w-[600px] px-4 pt-4">
-        <div className="mb-3 flex items-center justify-between">
+        <div className='mb-3 flex items-center justify-between'>
           <div className="inline-flex rounded-xl border border-white/10 bg-white/5 p-1 text-sm">
             {(['guided', 'match'] as const).map((m) => (
               <button key={m} onClick={() => switchMode(m)}
