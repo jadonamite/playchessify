@@ -6,7 +6,7 @@ import type { ReactElement } from 'react'
 export interface IconProps {
   size?: number
   className?: string
-  style?: React.CSSProperties,
+  style?: React.CSSProperties
 }
 
 function svg(size: number, className: string | undefined, style: React.CSSProperties | undefined, children: ReactElement | ReactElement[]) {

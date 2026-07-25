@@ -5,36 +5,39 @@ import { persist } from 'zustand/middleware'
 
 export type BoardTheme = 'dark' | 'forest' | 'classic' | 'midnight'
 
-export const getBoardThemes = (): Record<BoardTheme, { dark: string; light: string; name: string }> => ({
+export const BOARD_THEMES: Record<BoardTheme, { dark: string; light: string; name: string }> = {
   dark: { dark: '#0f172a', light: '#1e293b', name: 'Dark (Default)' },
   forest: { dark: '#1a3a2a', light: '#2d5a3d', name: 'Forest' },
   classic: { dark: '#b58863', light: '#f0d9b5', name: 'Classic' },
   midnight: { dark: '#1a0a2e', light: '#2d1b54', name: 'Midnight' },
-})
+}
 
 export type PieceSet = 'chessnut' | 'caliente' | 'maestro' | 'fresca' | 'cooke'
 
-export const getPieceSets = (): { id: PieceSet; name: string }[] => ([
+// Available in-game piece sets. SVG assets live in `public/pieces/<id>/`.
+export const PIECE_SETS: { id: PieceSet; name: string }[] = [
   { id: 'chessnut', name: 'Chessnut' },
   { id: 'caliente', name: 'Caliente' },
   { id: 'maestro', name: 'Maestro' },
   { id: 'fresca', name: 'Fresca' },
   { id: 'cooke', name: 'Cooke' },
-])
+]
 
 export type AiDifficulty = 'easy' | 'medium' | 'hard'
 
-export const getAiDepth = (difficulty: AiDifficulty): number => ({
+// Difficulty maps to minimax search depth. Capped at 3 — deeper search
+// gets sluggish in-browser.
+export const AI_DEPTH: Record<AiDifficulty, number> = {
   easy: 1,
   medium: 2,
   hard: 3,
-}[difficulty])
+}
 
-export const getAiDifficultyLabels = (difficulty: AiDifficulty): string => ({
+export const AI_DIFFICULTY_LABELS: Record<AiDifficulty, string> = {
   easy: 'Easy',
   medium: 'Medium',
   hard: 'Hard',
-}[difficulty])
+}
 
 interface SettingsState {
   soundEnabled: boolean
