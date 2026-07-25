@@ -1,10 +1,3 @@
-'use client'
-
-// Weekly Grand Prix prize banner — shown to every connected player once a
-// season has been seeded on-chain. Winners get their amount and a CLAIM
-// button; everyone else gets the consolation line. Claimed state persists
-// (on-chain) so returning winners see a quiet "claimed" chip, not a dead CTA.
-
 import { motion } from 'framer-motion'
 import GlowButton from '@/components/ui/GlowButton'
 import { useTournamentRewards } from '@/hooks/useTournamentRewards'
@@ -17,6 +10,36 @@ export default function RewardsClaimCard() {
 
   const { seasonId, prize, isWinner, claimed } = status
 
+  const renderPrizeBanner = () => (
+    <>
+      <span className="text-lg shrink-0">🏆</span>
+      <div className="min-w-0">
+        <p className="text-xs font-black tracking-wide text-white">
+          Grand Prix <span style={{ color: '#f5c542' }}>S{seasonId}</span> has concluded
+          {isWinner && claimed && <> — ${prize} claimed ✓</>}
+        </p>
+        <p className="text-[10px] text-[var(--t3)] truncate">
+          {isWinner && claimed
+            ? 'Paid out to your wallet. See you on next season’s podium.'
+            : 'Prizes are live. Tap CLAIM to check your podium finish.'}
+        </p>
+      </div>
+    </>
+  )
+
+  const renderClaimButton = () => (
+    <GlowButton
+      variant="brand"
+      size="sm"
+      parallelogram
+      className="shrink-0"
+      disabled={isClaiming}
+      onClick={() => void claim()}
+    >
+      {isClaiming ? 'CHECKING…' : 'CLAIM'}
+    </GlowButton>
+  )
+
   return (
     <div className="w-full max-w-7xl mx-auto mb-6">
       <motion.div
@@ -26,31 +49,9 @@ export default function RewardsClaimCard() {
         style={{ background: 'linear-gradient(90deg,rgba(245,197,66,0.08) 0%,rgba(6,6,15,0.7) 100%)' }}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-lg shrink-0">🏆</span>
-          <div className="min-w-0">
-            <p className="text-xs font-black tracking-wide text-white">
-              Grand Prix <span style={{ color: '#f5c542' }}>S{seasonId}</span> has concluded
-              {isWinner && claimed && <> — ${prize} claimed ✓</>}
-            </p>
-            <p className="text-[10px] text-[var(--t3)] truncate">
-              {isWinner && claimed
-                ? 'Paid out to your wallet. See you on next season’s podium.'
-                : 'Prizes are live. Tap CLAIM to check your podium finish.'}
-            </p>
-          </div>
+          {renderPrizeBanner()}
         </div>
-        {!(isWinner && claimed) && (
-          <GlowButton
-            variant="brand"
-            size="sm"
-            parallelogram
-            className="shrink-0"
-            disabled={isClaiming}
-            onClick={() => void claim()}
-          >
-            {isClaiming ? 'CHECKING…' : 'CLAIM'}
-          </GlowButton>
-        )}
+        {!(isWinner && claimed) && renderClaimButton()}
       </motion.div>
     </div>
   )
