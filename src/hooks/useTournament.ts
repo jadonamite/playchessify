@@ -38,16 +38,6 @@ export interface TournamentData {
   frozen: boolean
 }
 
-const handleFetchResponse = (res: Response): TournamentData | null => {
-  try {
-    const body = res.json().catch(() => null) as TournamentData | null
-    return body && body.window ? body : null
-  } catch (err) {
-    console.error('[useTournament] fetch failed:', err)
-    return null
-  }
-}
-
 export function useTournament() {
   const [data, setData] = useState<TournamentData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -56,8 +46,10 @@ export function useTournament() {
     setIsLoading(true)
     try {
       const res = await fetch('/api/tournament/current')
-      const body = await handleFetchResponse(res)
-      if (body) setData(body)
+      const body = (await res.json().catch(() => null)) as TournamentData | null
+      if (body && body.window) setData(body)
+    } catch (err) {
+      console.error('[useTournament] fetch failed:', err)
     } finally {
       setIsLoading(false)
     }
