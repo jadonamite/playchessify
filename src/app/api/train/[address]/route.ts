@@ -39,8 +39,6 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 })
   }
 
-  // Rate limit: 120 training writes per address per hour (covers rapid drills +
-  // per-game diagnostics) without ever prompting the user.
   if (!(await checkRateLimit(address, 'update', 120, 3600))) {
     return NextResponse.json({ error: 'rate limit exceeded' }, { status: 429 })
   }
