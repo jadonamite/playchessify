@@ -7,7 +7,7 @@ interface GlowButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   parallelogram?: boolean
   loading?: boolean
   fullWidth?: boolean
-  icon?: ReactNode
+  icon?: ReactNode,
 }
 
 /* ── shared brand colours (work in both themes via CSS vars) ── */
