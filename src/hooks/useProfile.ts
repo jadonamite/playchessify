@@ -7,12 +7,18 @@ export function profileKey(address: string) {
   return ['profile', address.toLowerCase()]
 }
 
+const handleFetchResponse = async <T>(res: Response) => {
+  if (!res.ok) {
+    const data = await res.json()
+    throw new Error(data.error ?? 'Request failed')
+  }
+  return res.json() as Promise<T>
+}
+
 async function fetchProfile(address: string): Promise<ChessProfile | null> {
   const res = await fetch(`/api/profile/${address}`)
   if (res.status === 404) return null
-  if (!res.ok) throw new Error('Failed to fetch profile')
-  const data = await res.json()
-  return data.profile as ChessProfile
+  return handleFetchResponse(res)
 }
 
 export function useProfile(address: string | null | undefined) {
@@ -31,7 +37,7 @@ export function useCheckUsername(username: string) {
     queryFn: async () => {
       if (username.length < 3) return { available: false, reason: 'Too short' }
       const res = await fetch(`/api/profile/check/${username.toLowerCase()}`)
-      return res.json() as Promise<{ available: boolean; reason?: string }>
+      return handleFetchResponse<{ available: boolean; reason?: string }>(res)
     },
     enabled: username.length >= 3,
     staleTime: 30 * 1000,
@@ -55,9 +61,7 @@ export function useClaimProfile() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Claim failed')
-      return data
+      return handleFetchResponse(res)
     },
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: profileKey(vars.address) })
@@ -82,9 +86,7 @@ export function useUpdateProfile() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rest),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Update failed')
-      return data
+      return handleFetchResponse(res)
     },
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: profileKey(vars.address) })
