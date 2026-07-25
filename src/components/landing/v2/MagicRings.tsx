@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import './MagicRings.css'
 import * as THREE from 'three'
 
-import './MagicRings.css'
+import { useEffect, useRef } from 'react'
 
 const vertexShader = `
 void main() {
