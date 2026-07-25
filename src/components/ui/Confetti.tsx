@@ -32,7 +32,6 @@ export default function Confetti({
   const colors = PALETTES[palette]
   const isBurst = variant === 'burst'
 
-  // Generate once via lazy initial state — particles stay stable across re-renders.
   const [pieces] = useState(() =>
     Array.from({ length: count }, (_, i) => ({
       id: i,
