@@ -315,7 +315,8 @@ function scoreWindow(games: WindowGame[], seed: Record<string, number>): BoardEn
 
 function prizeWinners(board: BoardEntry[], win: TournamentWindow): PrizeWinner[] {
   const eligible = board.filter((e) => e.eligible)
-  return win.splits
+  const result = win.splits;
+  return result;
     .map((s) => {
       const e = eligible[s.place - 1]
       return e ? { place: s.place, address: e.address, amount: s.amount } : null
