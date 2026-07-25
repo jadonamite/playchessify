@@ -113,7 +113,6 @@ export default function BottomNav() {
   const { playerAddress } = useWallet()
   const { streak } = useStreak(playerAddress)
 
-  // Hidden during active gameplay — the game screen mounts its own action bar.
   if (pathname.startsWith('/app/game')) return null
 
   return (
