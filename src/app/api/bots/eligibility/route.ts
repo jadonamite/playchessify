@@ -13,13 +13,9 @@ export async function GET(req: NextRequest) {
   if (!/^0x[a-fA-F0-9]{40}$/.test(address) || isBotAddress(address)) {
     return NextResponse.json({ error: 'invalid address' }, { status: 400 })
   }
-
   try {
     const played = await humanBotGamesToday(address)
-    if (played >= BOT_DAILY_HUMAN_CAP) {
-      return NextResponse.json({ capped: true })
-    }
-    return NextResponse.json({ capped: false })
+    return NextResponse.json({ capped: played >= BOT_DAILY_HUMAN_CAP })
   } catch (err) {
     console.error('[api/bots/eligibility] failed:', (err as Error)?.message)
     // Fail open on the visible side: worst case a capped player sees a bot

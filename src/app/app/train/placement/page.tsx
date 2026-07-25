@@ -69,7 +69,6 @@ export default function PlacementPage() {
     try {
       await update({ placed: true, level: outcome.level, concepts: outcome.concepts })
     } catch { /* not connected / sign declined — placement still completes locally */ }
-    // TODO: add error boundary here
     router.replace('/app/train')
   }, [idx, results, update, router])
 
