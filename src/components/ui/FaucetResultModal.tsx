@@ -41,7 +41,6 @@ function ErrorScene() {
     </>
   )
 }
-// TODO: add input validation
 
 /* ── 3D Scene: Cooldown ── */
 function CooldownScene() {

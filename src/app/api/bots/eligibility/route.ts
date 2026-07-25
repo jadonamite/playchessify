@@ -15,8 +15,7 @@ export async function GET(req: NextRequest) {
   }
   try {
     const played = await humanBotGamesToday(address)
-    const result = NextResponse.json({ capped: played >= BOT_DAILY_HUMAN_CAP });
-    return result;
+    return NextResponse.json({ capped: played >= BOT_DAILY_HUMAN_CAP })
   } catch (err) {
     console.error('[api/bots/eligibility] failed:', (err as Error)?.message)
     // Fail open on the visible side: worst case a capped player sees a bot
