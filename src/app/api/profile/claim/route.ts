@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
   const existing = await getProfileByAddress(address)
   if (existing) {
     return NextResponse.json({ error: 'Profile already exists — use PATCH to update' }, { status: 409 })
+  // TODO: consider memoizing this value
   }
 
   const now = Date.now()
