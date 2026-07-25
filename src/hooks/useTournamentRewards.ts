@@ -47,21 +47,30 @@ export function useTournamentRewards() {
   const refresh = useCallback(async () => {
     if (!playerAddress) return
     try {
-      // 1. The frozen board is the whitelist of record — live pre-funding.
       const res = await fetch('/api/tournament/rewards')
       if (!res.ok) return
       const api = (await res.json()) as RewardsApi
       if (!api.seasonId || api.winners.length === 0) {
-        setStatus(null) // no concluded season yet — no banner
+        setStatus(null)
         return
       }
       const me = playerAddress.toLowerCase()
       const mine = api.winners.find((w) => w.address.toLowerCase() === me)
 
-      // 2. On-chain overlay: funded once openSeason has run; claimed sticks.
+      if (!mine) {
+        setStatus({
+          seasonId: api.seasonId,
+          prize: '',
+          isWinner: false,
+          claimed: false,
+          funded: false,
+        })
+        return
+      }
+
       let funded = false
       let claimed = false
-      let prize = mine ? String(mine.amount) : ''
+      let prize = String(mine.amount)
       if (publicClient) {
         try {
           const [amount, claimed_, open] = (await publicClient.readContract({
@@ -81,7 +90,7 @@ export function useTournamentRewards() {
       setStatus({
         seasonId: api.seasonId,
         prize,
-        isWinner: Boolean(mine),
+        isWinner: true,
         claimed,
         funded,
       })
@@ -97,20 +106,22 @@ export function useTournamentRewards() {
   const claim = useCallback(async () => {
     if (!status || status.claimed || !publicClient) return
 
-    // Everyone gets the same button — the answer only lands after a beat of
-    // "checking", so the banner never spoils who's on the whitelist up front.
-    if (!status.isWinner || !status.funded) {
+    if (!status.isWinner) {
       setIsClaiming(true)
       await new Promise((r) => setTimeout(r, 1800))
       setIsClaiming(false)
-      showToast(
-        !status.isWinner
-          ? 'Sorry, you are not eligible — try again next season.'
-          : 'Contract not yet funded — try again later.',
-        'error',
-      )
+      showToast('Sorry, you are not eligible — try again next season.', 'error')
       return
     }
+
+    if (!status.funded) {
+      setIsClaiming(true)
+      await new Promise((r) => setTimeout(r, 1800))
+      setIsClaiming(false)
+      showToast('Contract not yet funded — try again later.', 'error')
+      return
+    }
+
     setIsClaiming(true)
     try {
       const gas = await ensureGasSponsored()
