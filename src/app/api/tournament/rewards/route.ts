@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { getTournamentAt, previousWindow } from '@/config/tournaments'
 import { getFinalTournament } from '@/lib/tournament'
+import { getTournamentAt, previousWindow } from '@/config/tournaments'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
