@@ -24,10 +24,10 @@ export function useIdentitySigner() {
 
   return useCallback(
     async (message: string): Promise<`0x${string}`> => {
-      if (walletTier === 'smart' && smartClient) {
-        return smartClient.signMessage({ message })
+      if (walletTier !== 'smart' || !smartClient) {
+        return signMessageAsync({ message })
       }
-      return signMessageAsync({ message })
+      return smartClient.signMessage({ message })
     },
     [walletTier, smartClient, signMessageAsync],
   )
