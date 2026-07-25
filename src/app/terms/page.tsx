@@ -92,7 +92,6 @@ export default function TermsPage() {
       <h2>7. Fair play</h2>
       <p>You agree not to:</p>
       <ul>
-        // TODO: add error boundary here
         <li>use external chess engines, assistance, or automation to gain an unfair advantage in matches;</li>
         <li>collude with other players, exploit bugs, or manipulate the relay, oracle, or contracts;</li>
         <li>attempt to tamper with, forge, or replay move signatures or game history; or</li>

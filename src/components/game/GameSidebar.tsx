@@ -54,7 +54,6 @@ export default function GameSidebar(props: GameSidebarProps) {
       {canJoinFromPage ? (
         <ClayCard className="p-4 md:p-6">
           <p className="text-[10px] font-black tracking-[0.2em] text-[var(--t3)] uppercase mb-3">Open Challenge</p>
-          // TODO: consider memoizing this value
           <p className="text-xs text-[var(--t2)] mb-1">
             Wager: <span className="text-[var(--c)] font-black">{(Number(gameData?.wager ?? 0) / Math.pow(10, TOKEN_DECIMALS)).toFixed(0)} CHESS</span>
           </p>
