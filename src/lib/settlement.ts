@@ -45,6 +45,10 @@ export type Terminal =
   | { kind: 'not-terminal' }
   | { kind: 'illegal' }
 
+function isGameTerminal(chess: Chess): boolean {
+  return chess.isCheckmate() || chess.isStalemate() || chess.isInsufficientMaterial() || chess.isDraw()
+}
+
 /**
  * Replay the authoritative move list and decide the result. NEVER trusts the
  * client — the SAN list is replayed move-by-move with chess.js, and an illegal
@@ -61,15 +65,13 @@ export function deriveResult(moves: MoveRecord[], white: string, black: string):
     }
   }
 
-  // Checkmate: the side to move is mated → opponent wins.
-  if (chess.isCheckmate()) {
-    const loserIsWhite = chess.turn() === 'w'
-    return { kind: 'result', result: loserIsWhite ? RESULT.BlackWins : RESULT.WhiteWins }
-  }
-
-  // Any drawn terminal position (stalemate, insufficient material, 3-fold, 50-move).
-  if (chess.isStalemate() || chess.isInsufficientMaterial() || chess.isDraw()) {
-    return { kind: 'result', result: RESULT.Draw }
+  if (isGameTerminal(chess)) {
+    if (chess.isCheckmate()) {
+      const loserIsWhite = chess.turn() === 'w'
+      return { kind: 'result', result: loserIsWhite ? RESULT.BlackWins : RESULT.WhiteWins }
+    } else {
+      return { kind: 'result', result: RESULT.Draw }
+    }
   }
 
   // Not terminal by board — check the move clock for a timeout forfeit.

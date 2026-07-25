@@ -93,7 +93,7 @@ export default function TrainHubPage() {
             {weak.length > 0 && (
               <div className="mt-3">
                 <div className="text-xs text-slate-400">Working on</div>
-                <div className='mt-1.5 flex flex-wrap gap-2'>
+                <div className="mt-1.5 flex flex-wrap gap-2">
                   {weak.map((c) => (
                     <span key={c} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
                       {CONCEPT_LABEL[c]}
