@@ -27,7 +27,6 @@ export function getCaptureSummary(board: ReturnType<Chess['board']>): CaptureSum
   }
   let whiteMaterial = 0
   let blackMaterial = 0
-// TODO: add input validation
 
   for (const row of board) {
     for (const sq of row) {

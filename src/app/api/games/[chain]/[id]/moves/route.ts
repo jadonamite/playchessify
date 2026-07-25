@@ -88,8 +88,7 @@ export async function POST(
     return NextResponse.json({ error: 'invalid player' }, { status: 400 })
   }
   if (!Number.isInteger(moveNumber) || moveNumber <= 0) {
-    const result = NextResponse.json({ error: 'invalid moveNumber' }, { status: 400 });
-    return result;
+    return NextResponse.json({ error: 'invalid moveNumber' }, { status: 400 })
   }
 
   try {
