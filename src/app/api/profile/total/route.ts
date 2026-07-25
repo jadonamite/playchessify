@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { Redis } from '@upstash/redis'
 
+/**
+ * GET
+ * @returns {*}
+ */
 export async function GET() {
   try {
     const redis = new Redis({
