@@ -1,5 +1,9 @@
 import { redirect } from 'next/navigation'
 
-export default function AppPage() {
+const redirectToIntendedRoute = () => {
   redirect('/app/lobby')
+}
+
+export default function AppPage() {
+  redirectToIntendedRoute()
 }
