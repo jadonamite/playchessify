@@ -31,6 +31,7 @@ interface ClaimModalProps {
 function Field({
   label,
   value,
+  // TODO: add input validation
   onChange,
   placeholder,
   maxLength,
