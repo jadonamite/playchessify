@@ -1,16 +1,16 @@
 'use client'
 
-import TrainingBoard from '@/components/train/TrainingBoard'
-import TrapButton from '@/components/train/TrapButton'
-import { CONCEPT_LABEL } from '@/types/training'
+import { useCallback, useMemo, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import { Chess } from 'chess.js'
+import TrainingBoard from '@/components/train/TrainingBoard'
+import { useAnalysis } from '@/hooks/useAnalysis'
+import { useLearner } from '@/hooks/useLearner'
 import { fetchCoachVoice } from '@/lib/coach/client'
 import { getCoach } from '@/config/coaches'
 import { lessonById, type DrillStep } from '@/config/curriculum'
-import { useAnalysis } from '@/hooks/useAnalysis'
-import { useCallback, useMemo, useState } from 'react'
-import { useLearner } from '@/hooks/useLearner'
-import { useParams, useRouter } from 'next/navigation'
+import { CONCEPT_LABEL } from '@/types/training'
+import TrapButton from '@/components/train/TrapButton'
 
 type Phase = 'solving' | 'checking' | 'wrong' | 'right' | 'complete'
 
