@@ -53,6 +53,11 @@ function createLeaderboardEntries(addresses: string[], statsResults: any[]): Lea
   return entries
 }
 
+// Helper function to sort and rank leaderboard entries
+function sortAndRankLeaderboardEntries(entries: LeaderboardEntry[]): LeaderboardEntry[] {
+  return entries.sort((a, b) => b.rating - a.rating || b.wins - a.wins).map((e, i) => ({ ...e, rank: i + 1 }))
+}
+
 // GET /api/leaderboard — Redis-indexed leaderboard. Scans only games created
 // since the last index sync (cursor), then reads playerStats for known players.
 export async function GET() {
@@ -74,12 +79,9 @@ export async function GET() {
       allowFailure: true,
     })
     const entries = createLeaderboardEntries(addresses, statsResults)
-    entries.sort((a, b) => b.rating - a.rating || b.wins - a.wins)
-    entries.forEach((e, i) => {
-      e.rank = i + 1
-    })
-    await redis.set(CACHE_KEY, entries, { ex: CACHE_TTL })
-    return NextResponse.json({ entries })
+    const sortedAndRankedEntries = sortAndRankLeaderboardEntries(entries)
+    await redis.set(CACHE_KEY, sortedAndRankedEntries, { ex: CACHE_TTL })
+    return NextResponse.json({ entries: sortedAndRankedEntries })
   } catch (err) {
     console.error('[api/leaderboard] failed:', (err as Error)?.message)
     return NextResponse.json({ error: 'leaderboard unavailable' }, { status: 503 })
