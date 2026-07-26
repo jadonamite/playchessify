@@ -1,0 +1,606 @@
+{
+  "window": {
+    "seasonIndex": 2,
+    "id": "S2",
+    "name": "Weekly Grand Prix S2",
+    "startsAt": 1784242800000,
+    "endsAt": 1784847600000,
+    "status": "live",
+    "prizePool": 100,
+    "currency": "USD",
+    "splits": [
+      {
+        "place": 1,
+        "amount": 50
+      },
+      {
+        "place": 2,
+        "amount": 30
+      },
+      {
+        "place": 3,
+        "amount": 20
+      }
+    ]
+  },
+  "board": [
+    {
+      "address": "0x5d9b2a33ad009c055ed4cb49a3a83b503ce1e8a3",
+      "xp": 62,
+      "wins": 6,
+      "losses": 0,
+      "draws": 0,
+      "games": 6,
+      "eligible": true,
+      "rank": 1
+    },
+    {
+      "address": "0x20861fbdff437923006a3bd1b0dc5cc1cbbc552e",
+      "xp": 48,
+      "wins": 4,
+      "losses": 3,
+      "draws": 0,
+      "games": 7,
+      "eligible": true,
+      "rank": 2
+    },
+    {
+      "address": "0x081877c9bf78b4afa97b436441945b68ad45aa25",
+      "xp": 39,
+      "wins": 3,
+      "losses": 1,
+      "draws": 1,
+      "games": 5,
+      "eligible": true,
+      "rank": 3
+    },
+    {
+      "address": "0x2e9de2dee51250db97a56841c1f3de3d5376b87d",
+      "xp": 26,
+      "wins": 2,
+      "losses": 0,
+      "draws": 0,
+      "games": 2,
+      "eligible": false,
+      "rank": 4
+    },
+    {
+      "address": "0x7904fd8686a381ef94da51012edeaa3341317e9e",
+      "xp": 23,
+      "wins": 2,
+      "losses": 0,
+      "draws": 1,
+      "games": 3,
+      "eligible": true,
+      "rank": 5
+    },
+    {
+      "address": "0x1f87b76910643a62ae300facb448e8088b8c2d27",
+      "xp": 21,
+      "wins": 1,
+      "losses": 2,
+      "draws": 2,
+      "games": 5,
+      "eligible": true,
+      "rank": 6
+    },
+    {
+      "address": "0xd4c3dde1f6587ff303a6f1c9a27f6715dfe648b7",
+      "xp": 20,
+      "wins": 1,
+      "losses": 0,
+      "draws": 2,
+      "games": 3,
+      "eligible": true,
+      "rank": 7
+    },
+    {
+      "address": "0x00ba49c9de79cd8b0113ffd65b3c5b825919e23b",
+      "xp": 20,
+      "wins": 2,
+      "losses": 2,
+      "draws": 0,
+      "games": 4,
+      "eligible": true,
+      "rank": 8
+    },
+    {
+      "address": "0x14a6b34f5499866b5a489f032a3b921976b034f6",
+      "xp": 20,
+      "wins": 1,
+      "losses": 2,
+      "draws": 2,
+      "games": 5,
+      "eligible": true,
+      "rank": 9
+    },
+    {
+      "address": "0x3d75c976f2cd0cdf42bd8d47fab6617ca1b1936d",
+      "xp": 19,
+      "wins": 2,
+      "losses": 1,
+      "draws": 0,
+      "games": 3,
+      "eligible": true,
+      "rank": 10
+    },
+    {
+      "address": "0xf49664dcee3882dc09944bc432761808688bc39d",
+      "xp": 19,
+      "wins": 1,
+      "losses": 0,
+      "draws": 2,
+      "games": 3,
+      "eligible": true,
+      "rank": 11
+    },
+    {
+      "address": "0x97f8fb306919697e1877f4ddd5955779b5270194",
+      "xp": 18,
+      "wins": 2,
+      "losses": 0,
+      "draws": 0,
+      "games": 2,
+      "eligible": false,
+      "rank": 12
+    },
+    {
+      "address": "0xbbab9d03162bfb131fe08336b3a03ce20f704ceb",
+      "xp": 18,
+      "wins": 2,
+      "losses": 1,
+      "draws": 0,
+      "games": 3,
+      "eligible": true,
+      "rank": 13
+    },
+    {
+      "address": "0xad89a6991caaecfabe9886463e074e3897f6dd9c",
+      "xp": 18,
+      "wins": 3,
+      "losses": 1,
+      "draws": 0,
+      "games": 4,
+      "eligible": true,
+      "rank": 14
+    },
+    {
+      "address": "0x43624d4d53b8cfdfcf1846a9e21db6a51359e4be",
+      "xp": 17,
+      "wins": 1,
+      "losses": 1,
+      "draws": 2,
+      "games": 4,
+      "eligible": true,
+      "rank": 15
+    },
+    {
+      "address": "0x6418a0e91a0a6b85a7c858910d3cd5c1a47ef200",
+      "xp": 15,
+      "wins": 1,
+      "losses": 0,
+      "draws": 1,
+      "games": 2,
+      "eligible": false,
+      "rank": 16
+    },
+    {
+      "address": "0x15ae04a3f0f50b077c78fe36ed666372b785eb1e",
+      "xp": 14,
+      "wins": 1,
+      "losses": 0,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 17
+    },
+    {
+      "address": "0x77832e2aaf30201b4fd90fdb37e68d2f7979f9ed",
+      "xp": 14,
+      "wins": 1,
+      "losses": 0,
+      "draws": 1,
+      "games": 2,
+      "eligible": false,
+      "rank": 18
+    },
+    {
+      "address": "0xadd5bd6d2c62bf970a5744d4a852e3a569ca81f7",
+      "xp": 14,
+      "wins": 1,
+      "losses": 1,
+      "draws": 1,
+      "games": 3,
+      "eligible": true,
+      "rank": 19
+    },
+    {
+      "address": "0x87dc50b57356e07c3dfe1fc396fc3659e3034408",
+      "xp": 13,
+      "wins": 1,
+      "losses": 0,
+      "draws": 1,
+      "games": 2,
+      "eligible": false,
+      "rank": 20
+    },
+    {
+      "address": "0xcd52fa297e40eb912705ad355f081aeda1f4e048",
+      "xp": 13,
+      "wins": 1,
+      "losses": 1,
+      "draws": 0,
+      "games": 2,
+      "eligible": false,
+      "rank": 21
+    },
+    {
+      "address": "0x51808eb569fd11907668da1c6f2574a55b3e2519",
+      "xp": 12,
+      "wins": 1,
+      "losses": 0,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 22
+    },
+    {
+      "address": "0xfd149e165df86febf22a081dae0bf15bd6cc1c36",
+      "xp": 12,
+      "wins": 1,
+      "losses": 1,
+      "draws": 0,
+      "games": 2,
+      "eligible": false,
+      "rank": 23
+    },
+    {
+      "address": "0xfad293f07db63b56652af0c37a363c76492a3451",
+      "xp": 12,
+      "wins": 1,
+      "losses": 2,
+      "draws": 0,
+      "games": 3,
+      "eligible": true,
+      "rank": 24
+    },
+    {
+      "address": "0x19ee57ace3f6be9adae077679f6d09fc1b0fa2f9",
+      "xp": 11,
+      "wins": 1,
+      "losses": 0,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 25
+    },
+    {
+      "address": "0x37a5bc120df4fcddecbf1c7dc31397c82d74183a",
+      "xp": 11,
+      "wins": 1,
+      "losses": 0,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 26
+    },
+    {
+      "address": "0x48d5b9142504772d603ad7ba2ba905cf3a99a2ae",
+      "xp": 11,
+      "wins": 1,
+      "losses": 0,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 27
+    },
+    {
+      "address": "0x20937d27ded0a29bdde7cc826dc846d3fff29617",
+      "xp": 11,
+      "wins": 1,
+      "losses": 0,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 28
+    },
+    {
+      "address": "0x25f3b56ff9897c7baa4f3eb1ad5f99c1cc463609",
+      "xp": 10,
+      "wins": 1,
+      "losses": 0,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 29
+    },
+    {
+      "address": "0x1d1866c04620757b6c87f0474cefd201b5530403",
+      "xp": 10,
+      "wins": 1,
+      "losses": 1,
+      "draws": 0,
+      "games": 2,
+      "eligible": false,
+      "rank": 30
+    },
+    {
+      "address": "0x86ec41360a78fa874da4003351122ac74fd4519a",
+      "xp": 9,
+      "wins": 0,
+      "losses": 1,
+      "draws": 2,
+      "games": 3,
+      "eligible": true,
+      "rank": 31
+    },
+    {
+      "address": "0x53b66a96bc71423c895616e9c6a9e74fc01caf01",
+      "xp": 8,
+      "wins": 1,
+      "losses": 0,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 32
+    },
+    {
+      "address": "0x919df3a030c541a54bf38bc5fb4897490dab78d8",
+      "xp": 8,
+      "wins": 1,
+      "losses": 2,
+      "draws": 0,
+      "games": 3,
+      "eligible": true,
+      "rank": 33
+    },
+    {
+      "address": "0x316ed52acc23c5168be0a0947f5fea068670c930",
+      "xp": 7,
+      "wins": 1,
+      "losses": 1,
+      "draws": 0,
+      "games": 2,
+      "eligible": false,
+      "rank": 34
+    },
+    {
+      "address": "0xfd7f4037de96dc7dba6a62dc129aeff14021d590",
+      "xp": 7,
+      "wins": 0,
+      "losses": 2,
+      "draws": 1,
+      "games": 3,
+      "eligible": true,
+      "rank": 35
+    },
+    {
+      "address": "0xc05660401afb11b49944f5d1ddfc277a019aef94",
+      "xp": 6,
+      "wins": 0,
+      "losses": 1,
+      "draws": 1,
+      "games": 2,
+      "eligible": false,
+      "rank": 36
+    },
+    {
+      "address": "0xdeaedf9dd885805bb7e4636dd35a665dcf047957",
+      "xp": 6,
+      "wins": 0,
+      "losses": 1,
+      "draws": 1,
+      "games": 2,
+      "eligible": false,
+      "rank": 37
+    },
+    {
+      "address": "0x7809b28e72038e106fdb8b45d1447f06f8d5c42b",
+      "xp": 6,
+      "wins": 0,
+      "losses": 2,
+      "draws": 1,
+      "games": 3,
+      "eligible": true,
+      "rank": 38
+    },
+    {
+      "address": "0x2e0db36e466ec27a2ab1b25fef0c1d13f6388e1d",
+      "xp": 5,
+      "wins": 0,
+      "losses": 1,
+      "draws": 1,
+      "games": 2,
+      "eligible": false,
+      "rank": 39
+    },
+    {
+      "address": "0x8821ee496313af8a2c9a52c514940623f515bf4a",
+      "xp": 4,
+      "wins": 0,
+      "losses": 0,
+      "draws": 1,
+      "games": 1,
+      "eligible": false,
+      "rank": 40
+    },
+    {
+      "address": "0x44dac721692a88acdcd15f02eb36fe3968984cd8",
+      "xp": 4,
+      "wins": 0,
+      "losses": 0,
+      "draws": 1,
+      "games": 1,
+      "eligible": false,
+      "rank": 41
+    },
+    {
+      "address": "0x4791e57902f029ac71f077bd955cada166b91c6c",
+      "xp": 3,
+      "wins": 0,
+      "losses": 0,
+      "draws": 1,
+      "games": 1,
+      "eligible": false,
+      "rank": 42
+    },
+    {
+      "address": "0xb1a98f47975ec8d7d76615cc9689f75f947aaf21",
+      "xp": 3,
+      "wins": 0,
+      "losses": 3,
+      "draws": 0,
+      "games": 3,
+      "eligible": true,
+      "rank": 43
+    },
+    {
+      "address": "0xc011d17ea39cc774b148fe79db81deadfb405bfb",
+      "xp": 2,
+      "wins": 0,
+      "losses": 2,
+      "draws": 0,
+      "games": 2,
+      "eligible": false,
+      "rank": 44
+    },
+    {
+      "address": "0xc6dad645e1b5fcbfa20ffd476f8561d0bd39cf2c",
+      "xp": 2,
+      "wins": 0,
+      "losses": 2,
+      "draws": 0,
+      "games": 2,
+      "eligible": false,
+      "rank": 45
+    },
+    {
+      "address": "0xf2e37765824ed62435b20746aa9cee9c47135adc",
+      "xp": 2,
+      "wins": 0,
+      "losses": 2,
+      "draws": 0,
+      "games": 2,
+      "eligible": false,
+      "rank": 46
+    },
+    {
+      "address": "0x0439729429293a32a975ac7a111aa6c7940ca5ff",
+      "xp": 2,
+      "wins": 0,
+      "losses": 2,
+      "draws": 0,
+      "games": 2,
+      "eligible": false,
+      "rank": 47
+    },
+    {
+      "address": "0xdc55006e86bea9fe6878b127b8562534bf9b2335",
+      "xp": 1,
+      "wins": 0,
+      "losses": 1,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 48
+    },
+    {
+      "address": "0xe3912d8fbc6d2347c985ab7de2d57c9b9f7e2146",
+      "xp": 1,
+      "wins": 0,
+      "losses": 1,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 49
+    },
+    {
+      "address": "0xfd835014ec141b31454cec830e84c76a8e983954",
+      "xp": 1,
+      "wins": 0,
+      "losses": 1,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 50
+    },
+    {
+      "address": "0x6d8ba7bd38a6c107e9eaffce8ce19d7cab1490bf",
+      "xp": 1,
+      "wins": 0,
+      "losses": 1,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 51
+    },
+    {
+      "address": "0xad720cb4201f76477f0a6b9c97048447751699f4",
+      "xp": 1,
+      "wins": 0,
+      "losses": 1,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 52
+    },
+    {
+      "address": "0xabddf04ce02f54d047d27ec545a295f1427ed1aa",
+      "xp": 1,
+      "wins": 0,
+      "losses": 1,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 53
+    },
+    {
+      "address": "0x3cb53f0c036807980393b80c997b2bd95a0c6ee1",
+      "xp": 1,
+      "wins": 0,
+      "losses": 1,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 54
+    },
+    {
+      "address": "0x18edb72c15ae110f064eb965aeff84d23ac2ab3f",
+      "xp": 1,
+      "wins": 0,
+      "losses": 1,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 55
+    },
+    {
+      "address": "0x6c94d12b32630e909231e4acd53f6bb4af755385",
+      "xp": 1,
+      "wins": 0,
+      "losses": 1,
+      "draws": 0,
+      "games": 1,
+      "eligible": false,
+      "rank": 56
+    }
+  ],
+  "winners": [
+    {
+      "place": 1,
+      "address": "0x5d9b2a33ad009c055ed4cb49a3a83b503ce1e8a3",
+      "amount": 50
+    },
+    {
+      "place": 2,
+      "address": "0x20861fbdff437923006a3bd1b0dc5cc1cbbc552e",
+      "amount": 30
+    },
+    {
+      "place": 3,
+      "address": "0x081877c9bf78b4afa97b436441945b68ad45aa25",
+      "amount": 20
+    }
+  ],
+  "frozen": true
+}

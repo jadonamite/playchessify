@@ -1,9 +1,11 @@
 // config/tournaments.ts
 //
-// Recurring tournament ("Weekly Grand Prix") definition. The app never hardcodes
-// a single event — it stores one cadence + prize rule here and derives *which*
-// season is live right now from the clock (getTournamentAt). Next week rolls to
-// the next season on its own; nothing needs to be touched between tournaments.
+// Tournament ("Weekly Grand Prix") definition: the prize/scoring rules, plus the
+// explicit registry of which seasons exist (see SEASONS below).
+//
+// Seasons are deliberately NOT derived from the clock. The Grand Prix runs one
+// week on, one week off, and each season is opened by hand — so between seasons
+// there is simply no live tournament, and nothing starts itself.
 //
 // Scoring is XP-based so everyone "starts from zero" each season and only ever
 // climbs. XP per game is weighted by opponent strength (anti-farm + skill signal)
@@ -38,8 +40,6 @@ export interface TournamentConfig {
   prizePool: number
   splits: TournamentSplit[]
   xp: TournamentXpRules
-  /** Start of Season 1, in UTC ms. Everything is derived from this anchor. */
-  epochMs: number
   /** Length of one season, in ms. */
   seasonLengthMs: number
   /** Display timezone for start/end labels. */
@@ -72,13 +72,12 @@ export const TOURNAMENT: TournamentConfig = {
     diminishingFactor: 0.8,
     minGamesEligible: 3,
   },
-  epochMs: SEASON_1_EPOCH_MS,
   seasonLengthMs: WEEK_MS,
   tzLabel: 'WAT',
   tzOffsetMinutes: 60,
 }
 
-export type TournamentStatus = 'upcoming' | 'live'
+export type TournamentStatus = 'upcoming' | 'live' | 'ended'
 
 export interface TournamentWindow {
   seasonIndex: number
@@ -91,6 +90,24 @@ export interface TournamentWindow {
   currency: string
   splits: TournamentSplit[]
 }
+
+/**
+ * The season registry — the single source of truth for which seasons exist.
+ *
+ * The Grand Prix runs one week on, one week off: the rest week keeps it an
+ * event rather than a grind. That cadence is NOT derived from the clock, and
+ * seasons never open on their own — a season exists only because it is listed
+ * here. Opening the next one is a deliberate act: add an entry, ship it.
+ *
+ * The gap between two entries is the rest week; no separate rule encodes it.
+ */
+const SEASONS: { seasonIndex: number; startsAt: number }[] = [
+  // S1 — July 10–17 2026 WAT. Ran and closed; winners pending payout.
+  { seasonIndex: 1, startsAt: SEASON_1_EPOCH_MS },
+
+  // S2 opens when we say so — one week off after S1 at the earliest:
+  // { seasonIndex: 2, startsAt: Date.UTC(2026, 6, 23, 23, 0, 0) },
+]
 
 function buildWindow(seasonIndex: number, startsAt: number, status: TournamentStatus): TournamentWindow {
   const id = `S${seasonIndex}`
@@ -107,22 +124,29 @@ function buildWindow(seasonIndex: number, startsAt: number, status: TournamentSt
   }
 }
 
+const registry = () =>
+  [...SEASONS]
+    .sort((a, b) => a.startsAt - b.startsAt)
+    .map((s) => buildWindow(s.seasonIndex, s.startsAt, 'live'))
+
 /**
- * Derive the tournament season live at `nowMs`. Seasons run back-to-back from the
- * epoch, so there is always exactly one current season (once the epoch passes).
+ * The season running right now, or null during a rest week (and before S1).
+ * Null is the normal resting state, not an error.
  */
-export function getTournamentAt(nowMs: number = Date.now()): TournamentWindow {
-  const { epochMs, seasonLengthMs } = TOURNAMENT
-  if (nowMs < epochMs) {
-    // Before S1 opens — advertise S1 as upcoming.
-    return buildWindow(1, epochMs, 'upcoming')
-  }
-  const idx = Math.floor((nowMs - epochMs) / seasonLengthMs)
-  return buildWindow(idx + 1, epochMs + idx * seasonLengthMs, 'live')
+export function getActiveSeason(nowMs: number = Date.now()): TournamentWindow | null {
+  const win = registry().find((w) => nowMs >= w.startsAt && nowMs < w.endsAt)
+  return win ? { ...win, status: 'live' } : null
 }
 
-/** The season immediately before `win`, or null if `win` is Season 1. */
-export function previousWindow(win: TournamentWindow): TournamentWindow | null {
-  if (win.seasonIndex <= 1) return null
-  return buildWindow(win.seasonIndex - 1, win.startsAt - TOURNAMENT.seasonLengthMs, 'live')
+/** The most recently concluded season — whose board freezes and pays out. */
+export function getLatestConcludedSeason(nowMs: number = Date.now()): TournamentWindow | null {
+  const ended = registry().filter((w) => nowMs >= w.endsAt)
+  const win = ended[ended.length - 1]
+  return win ? { ...win, status: 'ended' } : null
+}
+
+/** The next scheduled season, if one has been put on the board yet. */
+export function getNextSeason(nowMs: number = Date.now()): TournamentWindow | null {
+  const win = registry().find((w) => nowMs < w.startsAt)
+  return win ? { ...win, status: 'upcoming' } : null
 }

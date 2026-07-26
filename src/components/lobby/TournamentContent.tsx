@@ -236,6 +236,7 @@ export default function TournamentContent() {
 
   const myAddress = playerAddress?.toLowerCase()
   const win = data?.window
+  const nextWin = data?.next
   const winnerAmount = (addr: string) => data?.winners.find((w) => w.address === addr)?.amount
 
   const top3 = board.slice(0, 3)
@@ -392,6 +393,25 @@ export default function TournamentContent() {
             <div className="py-32">
               <LoadingState message="LOADING TOURNAMENT" />
             </div>
+          ) : !win ? (
+            /* Rest week — the Grand Prix runs one week on, one week off, so
+               "no season" is the healthy idle state, not an empty board. */
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-32 text-center flex flex-col items-center gap-5">
+              <div className="text-5xl opacity-40">🛡️</div>
+              <p className="text-sm font-bold tracking-widest text-[var(--t3)] uppercase">
+                No season running right now
+              </p>
+              <p className="text-xs text-[var(--t3)] max-w-sm">
+                The Grand Prix runs one week on, one week off.{' '}
+                {nextWin
+                  ? `${nextWin.name} opens ${fmtDate(nextWin.startsAt)}.`
+                  : 'The next season will be announced soon.'}{' '}
+                Ranked games you play now still count toward your rating.
+              </p>
+              <GlowButton variant="brand" size="sm" parallelogram onClick={() => router.push('/app/lobby')}>
+                PLAY A RANKED MATCH
+              </GlowButton>
+            </motion.div>
           ) : board.length === 0 ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-32 text-center flex flex-col items-center gap-5">
               <div className="text-5xl opacity-40">🏆</div>

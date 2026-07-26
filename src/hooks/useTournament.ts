@@ -25,17 +25,20 @@ export interface TournamentWindowMeta {
   name: string
   startsAt: number
   endsAt: number
-  status: 'upcoming' | 'live'
+  status: 'upcoming' | 'live' | 'ended'
   prizePool: number
   currency: string
   splits: { place: number; amount: number }[]
 }
 
 export interface TournamentData {
-  window: TournamentWindowMeta
+  /** null during a rest week — no season is running. */
+  window: TournamentWindowMeta | null
   board: TournamentBoardEntry[]
   winners: TournamentPrizeWinner[]
   frozen: boolean
+  /** Only set while idle, and only once the next season has been scheduled. */
+  next?: TournamentWindowMeta | null
 }
 
 export function useTournament() {

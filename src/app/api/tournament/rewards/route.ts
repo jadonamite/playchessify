@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getTournamentAt, previousWindow } from '@/config/tournaments'
+import { getLatestConcludedSeason } from '@/config/tournaments'
 import { getFinalTournament } from '@/lib/tournament'
 
 export const runtime = 'nodejs'
@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 // while the vault is still waiting to be funded.
 export async function GET() {
   try {
-    const prev = previousWindow(getTournamentAt())
+    const prev = getLatestConcludedSeason()
     if (!prev) return NextResponse.json({ seasonId: 0, winners: [] })
     const final = await getFinalTournament(prev.id)
     return NextResponse.json({

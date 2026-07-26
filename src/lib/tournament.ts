@@ -7,8 +7,9 @@ import { isBotAddress } from '@/config/bots'
 import { CHESS_GAME_ABI } from '@/config/abis'
 import {
   TOURNAMENT,
-  getTournamentAt,
-  previousWindow,
+  getActiveSeason,
+  getLatestConcludedSeason,
+  getNextSeason,
   type TournamentWindow,
 } from '@/config/tournaments'
 
@@ -69,11 +70,14 @@ export interface PrizeWinner {
 }
 
 export interface TournamentBoard {
-  window: TournamentWindow
+  /** null during a rest week — no season is running. */
+  window: TournamentWindow | null
   board: BoardEntry[]
   winners: PrizeWinner[]
   frozen: boolean
   cached?: boolean
+  /** Set only when idle, and only once the next season has been scheduled. */
+  next?: TournamentWindow | null
 }
 
 // ── seed ratings ─────────────────────────────────────────────────────────────
@@ -333,12 +337,13 @@ async function buildBoard(win: TournamentWindow): Promise<TournamentBoard> {
 }
 
 /**
- * Freeze a season's final board the first time we notice it has ended. Runs
- * opportunistically when the *next* season is read, so each concluded season is
- * locked in exactly once — this frozen board is the source of truth for payout.
+ * Freeze the most recently concluded season's final board, once. Runs
+ * opportunistically on any board read — including during a rest week, which is
+ * exactly when a season has just ended. The frozen board is the source of
+ * truth for payout.
  */
-async function freezePreviousIfNeeded(current: TournamentWindow): Promise<void> {
-  const prev = previousWindow(current)
+async function freezeConcludedIfNeeded(): Promise<void> {
+  const prev = getLatestConcludedSeason()
   if (!prev) return
   const redis = getRedis()
   if (await redis.exists(K.final(prev.id))) return
@@ -351,19 +356,24 @@ async function freezePreviousIfNeeded(current: TournamentWindow): Promise<void> 
 
 /** The live season's board + prize standings. Cached briefly. */
 export async function getCurrentTournament(): Promise<TournamentBoard> {
-  const win = getTournamentAt()
+  const win = getActiveSeason()
   const redis = getRedis()
 
-  if (win.status === 'upcoming') {
-    return { window: win, board: [], winners: [], frozen: false }
+  // Rest week (or before S1 ever opened): nothing is running. Still take the
+  // chance to lock in the season that just ended.
+  if (!win) {
+    freezeConcludedIfNeeded().catch((e) =>
+      console.error('[tournament] freeze concluded failed:', (e as Error)?.message),
+    )
+    return { window: null, board: [], winners: [], frozen: false, next: getNextSeason() }
   }
 
   const cached = await redis.get<TournamentBoard>(K.board(win.id))
   if (cached) return { ...cached, cached: true }
 
   // Lock in the previous season if it just ended (non-blocking best-effort).
-  freezePreviousIfNeeded(win).catch((e) =>
-    console.error('[tournament] freeze previous failed:', (e as Error)?.message),
+  freezeConcludedIfNeeded().catch((e) =>
+    console.error('[tournament] freeze concluded failed:', (e as Error)?.message),
   )
 
   const result = await buildBoard(win)
