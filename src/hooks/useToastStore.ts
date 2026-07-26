@@ -6,7 +6,7 @@ const DEFAULT_DURATION: Record<ToastType, number> = {
   success: 4000,
   error: 4000,
   info: 3000,
-  invalid: 2500,
+  invalid: 1500,
   check: 3000,
   checkmate: 7000,
   draw: 5000,

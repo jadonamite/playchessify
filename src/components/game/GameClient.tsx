@@ -413,9 +413,16 @@ export default function GameClient() {
 
   // ── board event handlers ─────────────────────────────────────────────────────
 
+  // onBoardTap is defined below; hold it in a ref so the drop handler can reuse
+  // it without a declaration-order dance or a stale closure.
+  const onBoardTapRef = useRef<((square: string) => void) | null>(null)
+
   const handlePieceDrop = useCallback(
     ({ sourceSquare, targetSquare }: { piece: unknown; sourceSquare: string; targetSquare: string | null }) => {
       if (!targetSquare) return false
+      // Picked up and put straight back down — the player meant to tap, not move.
+      // Treat it as a selection so it never fires an "illegal move" toast.
+      if (targetSquare === sourceSquare) { onBoardTapRef.current?.(sourceSquare); return false }
       return executeMove(sourceSquare, targetSquare)
     },
     [executeMove]
@@ -458,6 +465,7 @@ export default function GameClient() {
     },
     [canAct, gameOver, game, moveFrom, executeMove, isBotGame, isMyTurn]
   )
+  onBoardTapRef.current = onBoardTap
 
   const handleSquareClick = useCallback(
     ({ square }: { piece: unknown; square: string }) => onBoardTap(square),

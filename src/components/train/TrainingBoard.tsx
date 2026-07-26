@@ -28,6 +28,16 @@ interface TrainingBoardProps {
  * and board themes but stays decoupled from the live GameClient so teacher-mode
  * work never touches the wagered-game paths.
  */
+// Chessify-blue border glow on legal destinations (mirrors BoardPanel).
+const MOVE_GLOW: React.CSSProperties = {
+  boxShadow: 'inset 0 0 0 3px rgba(0,204,255,0.85), inset 0 0 16px 2px rgba(0,204,255,0.35)',
+  borderRadius: '6px',
+}
+const CAPTURE_GLOW: React.CSSProperties = {
+  boxShadow: 'inset 0 0 0 4px rgba(0,204,255,1), inset 0 0 22px 4px rgba(0,204,255,0.55)',
+  borderRadius: '6px',
+}
+
 export default function TrainingBoard({
   game, orientation = 'white', interactive, onMove, highlights = {}, showLegalDots = true,
 }: TrainingBoardProps) {
@@ -43,9 +53,7 @@ export default function TrainingBoard({
       const legal = game.moves({ square: from as Square, verbose: true }) as Array<{ to: string; flags: string }>
       legal.forEach(({ to, flags }) => {
         const isCapture = flags.includes('c') || flags.includes('e')
-        styles[to] = isCapture
-          ? { boxShadow: 'inset 0 0 0 3px rgba(74,222,128,0.7)', borderRadius: '4px' }
-          : { background: 'radial-gradient(circle, rgba(74,222,128,0.7) 30%, transparent 32%)' }
+        styles[to] = isCapture ? CAPTURE_GLOW : MOVE_GLOW
       })
     }
     return styles
@@ -90,8 +98,16 @@ export default function TrainingBoard({
           pieces: customPieces,
           boardOrientation: orientation,
           allowDragging: interactive,
-          onPieceDrop: ({ sourceSquare, targetSquare }: { sourceSquare: string; targetSquare: string | null }) =>
-            targetSquare ? tryMove(sourceSquare, targetSquare) : false,
+          // See BoardPanel — 1px default turns clicks into drags.
+          dragActivationDistance: 8,
+          onPieceDrop: ({ sourceSquare, targetSquare }: { sourceSquare: string; targetSquare: string | null }) => {
+            // Dropped back on its own square: that was a tap, not a move.
+            if (!targetSquare || targetSquare === sourceSquare) {
+              if (targetSquare) handleTap(sourceSquare)
+              return false
+            }
+            return tryMove(sourceSquare, targetSquare)
+          },
           onSquareClick: ({ square }: { square: string }) => handleTap(square),
           onPieceClick: ({ square }: { square: string | null }) => { if (square) handleTap(square) },
           darkSquareStyle: { backgroundColor: BOARD_THEMES[boardTheme].dark },

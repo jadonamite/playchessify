@@ -84,6 +84,11 @@ export default function CenterToast() {
 
   const cfg = toast ? CONFIGS[toast.type] : null
 
+  // A mispress toast must never stand between the player and the board: let
+  // clicks fall straight through it, and drop the dismiss button (there is
+  // nothing to dismiss when it isn't in the way).
+  const blocking = toast ? toast.type !== 'invalid' && toast.type !== 'check' : false
+
   return (
     <AnimatePresence>
       {toast && cfg && (
@@ -94,7 +99,7 @@ export default function CenterToast() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.94 }}
             transition={{ type: 'spring', damping: 24, stiffness: 320 }}
-            className="pointer-events-auto w-full max-w-[300px]"
+            className={`w-full max-w-[300px] ${blocking ? 'pointer-events-auto' : 'pointer-events-none'}`}
           >
             <div
               className="relative flex flex-col items-center gap-2.5 rounded-3xl border px-7 pt-7 pb-6 text-center backdrop-blur-xl overflow-hidden"
@@ -104,16 +109,18 @@ export default function CenterToast() {
                 boxShadow: `0 0 40px ${cfg.glow}, 0 24px 48px rgba(0,0,0,0.55)`,
               }}
             >
-              {/* Dismiss */}
-              <button
-                onClick={hideToast}
-                className="absolute right-3 top-3 rounded-lg p-1.5 text-white/25 transition-colors hover:bg-white/5 hover:text-white/60"
-                aria-label="Dismiss"
-              >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
+              {/* Dismiss — only on toasts that actually hold the screen */}
+              {blocking && (
+                <button
+                  onClick={hideToast}
+                  className="absolute right-3 top-3 rounded-lg p-1.5 text-white/25 transition-colors hover:bg-white/5 hover:text-white/60"
+                  aria-label="Dismiss"
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
 
               {/* Icon bubble */}
               <motion.div

@@ -36,6 +36,18 @@ interface BoardPanelProps {
   handlePieceClick: (args: { isSparePiece: boolean; piece: unknown; square: string | null }) => void
 }
 
+// Move hints: a Chessify-blue border glow tracing the destination square,
+// instead of the old green dot/ring. Captures glow harder so they still read
+// as distinct from a quiet move at a glance.
+const MOVE_GLOW: React.CSSProperties = {
+  boxShadow: 'inset 0 0 0 3px rgba(0,204,255,0.85), inset 0 0 16px 2px rgba(0,204,255,0.35)',
+  borderRadius: '6px',
+}
+const CAPTURE_GLOW: React.CSSProperties = {
+  boxShadow: 'inset 0 0 0 4px rgba(0,204,255,1), inset 0 0 22px 4px rgba(0,204,255,0.55)',
+  borderRadius: '6px',
+}
+
 // Locate the checkmated king (the side to move at mate is the loser).
 function matedKingSquare(game: Chess): string | null {
   if (!game.isCheckmate()) return null
@@ -86,6 +98,11 @@ export default function BoardPanel(props: BoardPanelProps) {
               pieces: customPieces,
               boardOrientation: orientation,
               allowDragging: canAct && !gameOver && (isBotGame ? turn === 'w' : isMyTurn),
+              // Library default is 1px, so any real click (which always drifts a
+              // pixel or two) activates a drag instead — dnd-kit then swallows the
+              // click event and leaves the piece at 50% opacity. 8px keeps click
+              // and drag distinct.
+              dragActivationDistance: 8,
               canDragPiece: handleCanDragPiece,
               onPieceDrop: handlePieceDrop,
               onSquareClick: handleSquareClick,
@@ -100,9 +117,7 @@ export default function BoardPanel(props: BoardPanelProps) {
                     const legalMoves = game.moves({ square: moveFrom as Square, verbose: true }) as Array<{ to: string; flags: string }>
                     legalMoves.forEach(({ to, flags }) => {
                       const isCapture = flags.includes('c') || flags.includes('e')
-                      styles[to] = isCapture
-                        ? { boxShadow: 'inset 0 0 0 3px rgba(74,222,128,0.7)', borderRadius: '4px' }
-                        : { background: 'radial-gradient(circle, rgba(74,222,128,0.7) 30%, transparent 32%)' }
+                      styles[to] = isCapture ? CAPTURE_GLOW : MOVE_GLOW
                     })
                   }
                 }
