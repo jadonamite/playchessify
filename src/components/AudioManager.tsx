@@ -5,6 +5,10 @@ import { usePathname } from 'next/navigation'
 import { useSettingsStore } from '@/hooks/useSettingsStore'
 import { startAmbient, startGameTrack, setMuted } from '@/lib/audio'
 
+/**
+ * AudioManager
+ * @returns {*}
+ */
 export default function AudioManager() {
   const pathname = usePathname()
   const { soundEnabled } = useSettingsStore()

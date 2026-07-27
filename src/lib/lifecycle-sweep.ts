@@ -38,15 +38,9 @@ const VOID_MIN_IDLE_S = 600
 const GRACE_S = 60
 const SCAN_CHUNK = 200
 
-let _redis: Redis | null = null
-function getRedis(): Redis {
-  if (_redis) return _redis
-  const url = process.env.UPSTASH_REDIS_REST_URL
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN
-  if (!url || !token) throw new Error(`${LOG_PREFIX} Upstash env not configured`)
-  _redis = new Redis({ url, token })
-  return _redis
-}
+  const watched = ((await redis.smembers(K.open(chain))) as Array<string | number>)
+    .map(Number)
+    .filter(Number.isInteger)
 
 interface SweepReport {
   scannedNew: number
@@ -64,6 +58,15 @@ interface RawGame {
   createdAt: bigint
   joinedAt: bigint
 }
+
+/**
+ * One sweep pass: fold newly created games into the watch set, then close
+ * expired wagered lobbies and void wagered no-move games. Call after the
+ * settlement sweep (shares the oracle's gas preflight).
+ */
+export async function sweepLifecycle(chain: Chain): Promise<SweepReport> {
+  const redis = getRedis()
+  const pub = getPublicClient()
 
 async function readGames(ids: number[]): Promise<Map<number, RawGame>> {
   const pub = getPublicClient()
@@ -86,15 +89,6 @@ async function readGames(ids: number[]): Promise<Map<number, RawGame>> {
   return out
 }
 
-/**
- * One sweep pass: fold newly created games into the watch set, then close
- * expired wagered lobbies and void wagered no-move games. Call after the
- * settlement sweep (shares the oracle's gas preflight).
- */
-export async function sweepLifecycle(chain: Chain): Promise<SweepReport> {
-  const redis = getRedis()
-  const pub = getPublicClient()
-
   const nonce = Number((await pub.readContract({
     address: GAME_ADDRESS,
     abi: CHESS_GAME_ABI as Abi,
@@ -106,9 +100,15 @@ export async function sweepLifecycle(chain: Chain): Promise<SweepReport> {
   const newIds: number[] = []
   for (let id = cursor + 1; id <= lastId; id++) newIds.push(id)
 
-  const watched = ((await redis.smembers(K.open(chain))) as Array<string | number>)
-    .map(Number)
-    .filter(Number.isInteger)
+let _redis: Redis | null = null
+function getRedis(): Redis {
+  if (_redis) return _redis
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) throw new Error(`${LOG_PREFIX} Upstash env not configured`)
+  _redis = new Redis({ url, token })
+  return _redis
+}
 
   const candidates = [...new Set([...watched, ...newIds])]
   const report: SweepReport = {
