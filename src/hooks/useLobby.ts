@@ -52,8 +52,8 @@ export function useLobby() {
         }
       }
       return result
-    } catch (error) {
-      console.error('Lobby fetch error:', error)
+    } catch (err) {
+      console.error('Lobby fetch error:', err)
       return []
     }
   }, [publicClient])
