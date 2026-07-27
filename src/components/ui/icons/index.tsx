@@ -79,7 +79,6 @@ export function CrownIcon({ size = 24, className, style }: IconProps) {
 // Hint — lightbulb with optional glow
 export function HintBulbIcon({ size = 24, className, style, glow = true }: IconProps & { glow?: boolean }) {
   return (
-    // NOTE: revisit this logic after API migration
     <svg
       width={size} height={size} viewBox="0 0 24 24" fill="currentColor"
       className={`${glow ? 'pc-bulb-glow' : ''} ${className ?? ''}`.trim()} style={style} xmlns="http://www.w3.org/2000/svg"
