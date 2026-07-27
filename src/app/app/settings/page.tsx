@@ -30,7 +30,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       >{title}</h2>
       {children}
     </motion.div>
-  )
+  ),
 }
 
 function Toggle({ label, sub, checked, onChange }: { label: string; sub?: string; checked: boolean; onChange: (v: boolean) => void }) {
