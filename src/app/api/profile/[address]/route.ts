@@ -42,6 +42,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ error: 'timestamp expired — re-sign and try again' }, { status: 400 })
   }
 
+  // Client-based verifier — validates smart-account (EIP-1271/6492) signatures as
   // well as plain EOA ones, so Tier A profile edits don't silently fail.
   const message = `Chessify Profile Update\n\nAddress: ${address.toLowerCase()}\nTimestamp: ${timestamp}`
   const valid = await verifyWalletSignature(address as `0x${string}`, message, signature as `0x${string}`)

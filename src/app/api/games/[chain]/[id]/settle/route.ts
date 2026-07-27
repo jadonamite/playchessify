@@ -31,7 +31,6 @@ export async function POST(
   if (gameId === null) return NextResponse.json({ error: 'invalid gameId' }, { status: 400 })
 
   try {
-    // FIXME: handle edge case when value is null
     const outcome = await settleGameById(chain, gameId)
     if (outcome.ok) {
       return NextResponse.json({ ok: true, txHash: outcome.txHash, result: outcome.result })
