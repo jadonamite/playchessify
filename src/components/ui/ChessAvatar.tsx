@@ -8,6 +8,13 @@ interface ChessAvatarProps {
   className?: string
 }
 
+/**
+ * ChessAvatar
+ * @param {*} { address
+ * @param {*} size
+ * @param {*} className
+ * @returns {*}
+ */
 export default function ChessAvatar({ address, size = 40, className = '' }: ChessAvatarProps) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
