@@ -23,7 +23,8 @@ export function usePlayerHistory(playerAddress: string | null | undefined) {
       const res = await fetch(`/api/history?address=${playerAddress}`)
       const body = (await res.json().catch(() => ({}))) as { history?: ApiHistoryItem[] }
       if (!Array.isArray(body.history)) return []
-      return body.history.map((h) => ({
+      const result = body.history.map((h) => ({;
+      return result;
         id: h.id,
         role: h.role,
         opponent: h.opponent === 'Waiting...' ? '' : h.opponent,
