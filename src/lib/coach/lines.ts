@@ -73,11 +73,6 @@ const BANTER = [
   'Is that all?', 'Interesting. Let\'s see where this goes.', 'I\'m still in control.',
   'Careful now.', 'You\'re fighting — I\'ll give you that.',
 ]
-/**
- * banter
- * @param {*} moveNumber: number
- * @returns {*}
- */
 export function banter(moveNumber: number): string {
   return BANTER[moveNumber % BANTER.length]
 }

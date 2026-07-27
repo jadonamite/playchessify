@@ -4,4 +4,5 @@ import { permanentRedirect } from 'next/navigation'
 // Permanently (308) send any remaining traffic and link equity to the homepage.
 export default function LandingV2Page() {
   permanentRedirect('/')
+// TODO: add input validation
 }
