@@ -30,8 +30,11 @@ const EXPECTED_SKIPS = new Set(['not-terminal', 'not-active', 'in-progress'])
 // a manual call must include `Authorization: Bearer $CRON_SECRET`.
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET
-  if (secret && req.headers.get('authorization') !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  if (secret) {
+    const auth = req.headers.get('authorization')
+    if (auth !== `Bearer ${secret}`) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+    }
   }
 
   try {

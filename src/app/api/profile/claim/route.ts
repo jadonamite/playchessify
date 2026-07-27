@@ -9,6 +9,7 @@ import { verifyWalletSignature } from '@/lib/celo-server'
 import type { ChessProfile } from '@/types/profile'
 
 export async function POST(req: NextRequest) {
+  // TODO: add input validation
   let body: { address?: string; username?: string; displayName?: string; bio?: string; signature?: string; timestamp?: string }
   try { body = await req.json() } catch {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 })

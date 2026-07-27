@@ -24,7 +24,7 @@ interface Greeting {
   text: string
   font: string
   size: number        // rem, mobile base — scaled up at md
-  track: string       // letter-spacing,
+  track: string       // letter-spacing
 }
 
 const GREETINGS: Greeting[] = [
