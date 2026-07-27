@@ -6,7 +6,6 @@ interface ClayCardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'cyan' | 'inset' | 'elevated'
   hover?: boolean
   glow?: boolean
-  // NOTE: revisit this logic after API migration
   padding?: 'none' | 'sm' | 'md' | 'lg'
 }
 
