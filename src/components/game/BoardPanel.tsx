@@ -33,7 +33,7 @@ interface BoardPanelProps {
   handleCanDragPiece: (args: { isSparePiece: boolean; piece: unknown; square: string | null }) => boolean
   handlePieceDrop: (args: { piece: unknown; sourceSquare: string; targetSquare: string | null }) => boolean
   handleSquareClick: (args: { piece: unknown; square: string }) => void
-  handlePieceClick: (args: { isSparePiece: boolean; piece: unknown; square: string | null }) => void
+  handlePieceClick: (args: { isSparePiece: boolean; piece: unknown; square: string | null }) => void,
 }
 
 // Move hints: a Chessify-blue border glow tracing the destination square,
