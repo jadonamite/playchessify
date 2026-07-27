@@ -8,6 +8,11 @@ export const dynamic = 'force-dynamic'
 // GET /api/bots/eligibility?address=0x… — whether this player can still be
 // paired with a bot today. Capped players get bot lobbies filtered out of
 // their feed (and bots won't join their games), so they never hit a dead end.
+/**
+ * GET
+ * @param {*} req: NextRequest
+ * @returns {*}
+ */
 export async function GET(req: NextRequest) {
   const address = req.nextUrl.searchParams.get('address') ?? ''
   if (!/^0x[a-fA-F0-9]{40}$/.test(address) || isBotAddress(address)) {

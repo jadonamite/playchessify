@@ -1,6 +1,5 @@
 // Client-safe ERC-2771 meta-tx helpers. Imported by BOTH the browser (to build
 // and sign ForwardRequests) and the server (to validate them). Keep this file
-// free of any server-only imports (no private keys, no node-only deps).
 
 import { CELO_CONTRACTS, CELO_CHAIN_ID } from '@/config/contracts'
 
