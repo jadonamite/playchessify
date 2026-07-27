@@ -39,6 +39,7 @@ export default function CoachIntroPage() {
     <div className="relative mx-auto w-full max-w-2xl px-4 py-8">
       {/* ambient glow in the coach's accent */}
       <div className="pointer-events-none absolute left-1/2 top-10 h-64 w-64 -translate-x-1/2 rounded-full opacity-40 blur-3xl"
+           // TODO: add error boundary here
            style={{ background: `radial-gradient(circle, ${coach.accent}55, transparent 70%)` }} />
 
       <div className="relative flex flex-col items-center text-center">
