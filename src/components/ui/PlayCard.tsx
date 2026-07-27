@@ -21,35 +21,30 @@ interface PlayCardProps extends HTMLAttributes<HTMLDivElement> {
   accent?: string
 }
 
-const getToneStyle = (tone: 'neon' | 'candy' | 'clay', accent?: string): React.CSSProperties => {
-  switch (tone) {
-    case 'candy':
-      return {
-        border: `1px solid color-mix(in srgb, ${accent} 28%, transparent)`,
-        background: `linear-gradient(180deg, color-mix(in srgb, ${accent} 7%, rgba(15,15,30,.6)), rgba(9,9,26,.6))`,
-        boxShadow: `0 1px 0 color-mix(in srgb, ${accent} 22%, transparent) inset, 0 18px 50px rgba(0,0,0,.45)`,
-      }
-    case 'clay':
-      return {
-        border: '1px solid rgba(255,255,255,.1)',
-        background: 'linear-gradient(180deg, rgba(26,26,48,.7), rgba(13,13,30,.7))',
-        boxShadow: '0 2px 0 rgba(255,255,255,.08) inset, 0 -3px 0 rgba(0,0,0,.5) inset, 0 18px 50px rgba(0,0,0,.5)',
-      }
-    default:
-      return {
-        border: '1px solid rgba(255,255,255,.1)',
-        background: 'rgba(15,23,42,.6)',
-        boxShadow: '0 18px 50px rgba(0,0,0,.45)',
-      }
-  }
-}
-
 const PlayCard = forwardRef<HTMLDivElement, PlayCardProps>(
   ({ tone = 'neon', size = 'hero', accent = 'var(--c)', className = '', style, children, ...props }, ref) => {
     const radius = size === 'hero' ? 32 : 28
     const blur = size === 'hero' ? 'backdrop-blur-xl' : 'backdrop-blur-md'
 
-    const toneStyle = getToneStyle(tone, accent)
+    const toneStyle: React.CSSProperties =
+      tone === 'candy'
+        ? {
+            border: `1px solid color-mix(in srgb, ${accent} 28%, transparent)`,
+            background: `linear-gradient(180deg, color-mix(in srgb, ${accent} 7%, rgba(15,15,30,.6)), rgba(9,9,26,.6))`,
+            boxShadow: `0 1px 0 color-mix(in srgb, ${accent} 22%, transparent) inset, 0 18px 50px rgba(0,0,0,.45)`,
+          }
+        : tone === 'clay'
+        ? {
+            border: '1px solid rgba(255,255,255,.1)',
+            background: 'linear-gradient(180deg, rgba(26,26,48,.7), rgba(13,13,30,.7))',
+            boxShadow:
+              '0 2px 0 rgba(255,255,255,.08) inset, 0 -3px 0 rgba(0,0,0,.5) inset, 0 18px 50px rgba(0,0,0,.5)',
+          }
+        : {
+            border: '1px solid rgba(255,255,255,.1)',
+            background: 'rgba(15,23,42,.6)',
+            boxShadow: '0 18px 50px rgba(0,0,0,.45)',
+          }
 
     return (
       <div

@@ -76,6 +76,7 @@ export default function TrainingGame() {
   const audioRef = useRef<AudioContext | null>(null)
 
   // Blunders per starting position. A first slip at a position gets a gentle
+  // nudge; a SECOND slip at the same position stops hinting and teaches — why the
   // move fails and the concrete move to play instead (highlighted on the board).
   const attemptRef = useRef<Record<string, number>>({})
   const [suggested, setSuggested] = useState<{ from: string; to: string } | null>(null)
