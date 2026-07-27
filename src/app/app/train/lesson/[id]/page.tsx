@@ -97,7 +97,7 @@ export default function LessonPage() {
   ), [game, step, phase, onMove])
 
   if (!lesson || !step) {
-    return <div className='mx-auto max-w-xl px-4 py-10 text-center text-slate-400'>Lesson not found.</div>
+    return <div className="mx-auto max-w-xl px-4 py-10 text-center text-slate-400">Lesson not found.</div>
   }
 
   return (

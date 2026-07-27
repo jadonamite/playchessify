@@ -80,6 +80,7 @@ export default function SettingsPage() {
   const [editError, setEditError] = useState('')
   const [editSaved, setEditSaved] = useState(false)
 
+  // Sync fields when profile loads
   useEffect(() => {
     if (profile && !editDirty) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- sync form fields from loaded profile
