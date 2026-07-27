@@ -70,7 +70,8 @@ async function recentGames(): Promise<RecentGame[]> {
 }
 
 function pickRandom<T>(items: T[]): T | null {
-  return items.length === 0 ? null : items[Math.floor(Math.random() * items.length)]
+  const result = items.length === 0 ? null : items[Math.floor(Math.random() * items.length)];
+  return result;
 }
 
 /** Bots able to stake `wager` from their own balance (and willing, per persona cap). */
