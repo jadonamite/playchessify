@@ -16,7 +16,7 @@ function BgIcon({ children }: { children: React.ReactNode }) {
     }}>
       {children}
     </div>
-  )
+  ),
 }
 
 const titleStyle = (color: string, size = 18): React.CSSProperties => ({
