@@ -23,6 +23,11 @@ const TAUNTS: Record<string, string> = {
   harmon: 'Make it interesting. I dare you to keep up.',
 }
 
+/**
+ * taunt
+ * @param {*} coachId: string
+ * @returns {*}
+ */
 export function taunt(coachId: string): string {
   return TAUNTS[coachId] ?? 'Let\'s play. Show me what you can do.'
 }
