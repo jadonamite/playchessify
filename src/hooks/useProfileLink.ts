@@ -43,12 +43,12 @@ export function useProfileLink() {
         const timestamp = new Date().toISOString()
         const message = `Chessify Identity Link\n\nEOA: ${eoa.toLowerCase()}\nSmart: ${smart.toLowerCase()}\nTimestamp: ${timestamp}`
         const signature = await signMessageAsync({ message })
-        const res = await fetch('/api/profile/link', {
+        const response = await fetch('/api/profile/link', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ eoa, smart, signature, timestamp }),
         })
-        if (res.ok) {
+        if (response.ok) {
           try { localStorage.setItem(`chess:linked:${key}`, '1') } catch { /* ignore */ }
         } else {
           tried.current.delete(key) // allow a retry on a later mount
