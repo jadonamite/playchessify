@@ -65,6 +65,11 @@ export const CURRICULUM: Lesson[] = [
   },
 ]
 
+/**
+ * lessonById
+ * @param {*} id: string
+ * @returns {*}
+ */
 export function lessonById(id: string): Lesson | undefined {
   return CURRICULUM.find((l) => l.id === id)
 }
