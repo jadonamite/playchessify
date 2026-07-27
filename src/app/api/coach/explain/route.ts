@@ -28,9 +28,9 @@ function cacheKey(fen: string, f: ExplainFacts): string {
   return `chess:coach:explain:${h >>> 0}`
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   let body: ExplainFacts & { fen?: string }
-  try { body = await req.json() } catch {
+  try { body = await request.json() } catch {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 })
   }
   if (!body.coachName || !body.coachVoice || !body.kind || !body.learnerLevel) {
