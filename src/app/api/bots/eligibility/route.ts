@@ -1,6 +1,6 @@
+import { BOT_DAILY_HUMAN_CAP, isBotAddress } from '@/config/bots'
 import { NextRequest, NextResponse } from 'next/server'
 import { humanBotGamesToday } from '@/lib/bots/state'
-import { BOT_DAILY_HUMAN_CAP, isBotAddress } from '@/config/bots'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
