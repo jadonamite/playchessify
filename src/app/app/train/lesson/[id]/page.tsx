@@ -131,7 +131,7 @@ export default function LessonPage() {
         {phase === 'right' && (
           <div>
             <p className="font-semibold" style={{ color: coach.accent }}>Correct!</p>
-            <p className="mt-1 text-sm text-slate-200">{voice || 'Well played — that\'s the move.'}</p>
+            <p className="mt-1 text-sm text-slate-200">{voice ?? 'Well played — that\'s the move.'}</p>
           </div>
         )}
         {phase === 'complete' && <p className="text-slate-300">{saving ? 'Saving your progress…' : 'Lesson complete.'}</p>}
