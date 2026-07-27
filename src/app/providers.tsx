@@ -1,15 +1,15 @@
 'use client'
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useState } from 'react'
-import { WagmiProvider } from '@privy-io/wagmi'
-import { PrivyProvider } from '@privy-io/react-auth'
-import { SmartWalletsProvider } from '@privy-io/react-auth/smart-wallets'
-import dynamic from 'next/dynamic'
-import { celo } from 'viem/chains'
-import { wagmiConfig } from '@/config/wagmi'
-import { ThemeProvider } from 'next-themes'
 import CenterToast from '@/components/ui/CenterToast'
+import dynamic from 'next/dynamic'
+import { PrivyProvider } from '@privy-io/react-auth'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { SmartWalletsProvider } from '@privy-io/react-auth/smart-wallets'
+import { ThemeProvider } from 'next-themes'
+import { WagmiProvider } from '@privy-io/wagmi'
+import { celo } from 'viem/chains'
+import { useState } from 'react'
+import { wagmiConfig } from '@/config/wagmi'
 
 const WalletProvider = dynamic(
   () => import('@/components/wallet-provider').then(mod => mod.WalletProvider),
