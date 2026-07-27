@@ -9,10 +9,6 @@ import { motion } from 'framer-motion'
 import GlowButton from '@/components/ui/GlowButton'
 import { useTournamentRewards } from '@/hooks/useTournamentRewards'
 
-/**
- * RewardsClaimCard
- * @returns {*}
- */
 export default function RewardsClaimCard() {
   const { status, claim, isClaiming } = useTournamentRewards()
 
