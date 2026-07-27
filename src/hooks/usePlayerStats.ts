@@ -13,12 +13,12 @@ export interface PlayerStats {
 
 /** Map an ELO rating onto a candy-themed ladder tier. */
 export function ratingTier(rating: number): string {
-  if (rating >= 2000) return 'Grandmaster'
-  if (rating >= 1800) return 'Master'
-  if (rating >= 1600) return 'Expert'
-  if (rating >= 1400) return 'Knight'
-  if (rating >= 1200) return 'Apprentice'
-  return 'Novice'
+  if (rating < 1200) return 'Novice'
+  if (rating < 1400) return 'Apprentice'
+  if (rating < 1600) return 'Knight'
+  if (rating < 1800) return 'Expert'
+  if (rating < 2000) return 'Master'
+  return 'Grandmaster'
 }
 
 const BASE_RATING = 1200
@@ -29,7 +29,7 @@ const BASE_RATING = 1200
  * matching how the lobby treats an unseeded account.
  */
 export function usePlayerStats(address?: string | null): PlayerStats | null {
-  const enabled = !!address && address !== ZERO && address.startsWith('0x')
+  if (!address || address === ZERO || !address.startsWith('0x')) return null
 
   const { data } = useReadContract({
     address: CELO_CONTRACTS.game as `0x${string}`,
@@ -37,7 +37,7 @@ export function usePlayerStats(address?: string | null): PlayerStats | null {
     functionName: 'playerStats',
     args: [address as `0x${string}`],
     chainId: CELO_CHAIN_ID,
-    query: { enabled },
+    query: { enabled: true },
   })
 
   if (!data) return null
