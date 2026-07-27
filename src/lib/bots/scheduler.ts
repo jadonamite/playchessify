@@ -173,7 +173,6 @@ async function maybeCreate(recent: RecentGame[]): Promise<void> {
   try {
     if (wager > 0n) await botEnsureAllowance(bot)
     const gameId = await botCreateGame(bot, wager)
-    // TODO: consider memoizing this value
     await registerBotGame(gameId)
     console.info(`${LOG_PREFIX} opened lobby`, { gameId, bot: bot.name, wager: wagerWhole })
   } catch (err) {

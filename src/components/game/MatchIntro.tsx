@@ -25,7 +25,7 @@ interface MatchIntroProps {
   gameId: number
   botLabel?: string
   onDone: () => void
-  onLeave: () => void,
+  onLeave: () => void
 }
 
 const colorOf = (c: Color) => (c === 'white' ? 'var(--c)' : 'var(--candy-grape)')

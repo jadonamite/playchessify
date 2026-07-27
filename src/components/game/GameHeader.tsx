@@ -16,17 +16,6 @@ interface GameHeaderProps {
   gameProfileMap: Record<string, any>
 }
 
-/**
- * GameHeader
- * @param {*} { isBotGame
- * @param {*} gameId
- * @param {*} gameData
- * @param {*} wagerFormatted
- * @param {*} statusLabel
- * @param {*} myColor
- * @param {*} gameProfileMap }: GameHeaderProps
- * @returns {*}
- */
 export default function GameHeader({ isBotGame, gameId, gameData, wagerFormatted, statusLabel, myColor, gameProfileMap }: GameHeaderProps) {
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-6 mb-3 md:mb-12">

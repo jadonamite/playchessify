@@ -54,7 +54,7 @@ async function botMetaTx(bot: BotProfile, to: Address, data: `0x${string}`): Pro
     signature,
   })
   nextNonce.set(bot.address, nonce + 1n)
-  return hash,
+  return hash
 }
 
 /** Claim the daily faucet if the cooldown has elapsed. Returns whether a claim ran. */

@@ -63,8 +63,7 @@ export function useStreak(address?: string | null, kind: StreakKind = 'play') {
       const qs = kind === 'win' ? `&kind=win` : ''
       const res = await fetch(`/api/profile/streak?address=${address}${qs}`, { cache: 'no-store' })
       if (!res.ok) throw new Error('streak fetch failed')
-      const result = res.json();
-      return result;
+      return res.json()
     },
   })
   return {
