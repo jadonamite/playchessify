@@ -105,8 +105,8 @@ export async function GET(req: NextRequest) {
 
     items.sort((a, b) => b.timestamp - a.timestamp)
     return NextResponse.json({ history: items })
-  } catch (err) {
-    console.error('[api/history] failed:', (err as Error)?.message)
+  } catch (error) {
+    console.error('[api/history] failed:', (error as Error)?.message)
     return NextResponse.json({ error: 'history unavailable' }, { status: 503 })
   }
 }
