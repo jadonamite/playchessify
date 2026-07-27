@@ -95,13 +95,13 @@ return {current, longest, incremented}
 async function recordDay(key: string, now: Date): Promise<RecordResult> {
   const today = utcDateStr(now)
   const yesterday = utcYesterdayStr(now)
-  const res = (await getRedis().eval(
+  const response = (await getRedis().eval(
     RECORD_LUA,
     [key],
     [today, yesterday],
   )) as [number, number, number]
 
-  const [current, longest, incremented] = res
+  const [current, longest, incremented] = response
   return {
     current,
     longest,

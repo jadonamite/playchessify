@@ -68,7 +68,7 @@ export function useTournamentRewards() {
             address: CELO_CONTRACTS.rewards as Address,
             abi: REWARDS_ABI,
             functionName: 'claimStatus',
-            params: [BigInt(api.seasonId), playerAddress as Address],
+            args: [BigInt(api.seasonId), playerAddress as Address],
           })) as readonly [bigint, boolean, boolean]
           funded = open
           claimed = claimed_
@@ -119,7 +119,7 @@ export function useTournamentRewards() {
         address: CELO_CONTRACTS.rewards as Address,
         abi: REWARDS_ABI,
         functionName: 'claim',
-        params: [BigInt(status.seasonId)],
+        args: [BigInt(status.seasonId)],
       })
       await publicClient.waitForTransactionReceipt({ hash })
       showToast(`$${status.prize} prize claimed — congrats, champion!`, 'success')

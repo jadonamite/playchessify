@@ -61,7 +61,7 @@ export default function SettingsPage() {
   const router = useRouter()
   const { playerAddress, isConnected } = useWallet()
   const { soundEnabled, setSoundEnabled, boardTheme, setBoardTheme, pieceSet, setPieceSet, aiDifficulty, setAiDifficulty, showMoveHints, setShowMoveHints } = useSettingsStore()
-  const { payload: profile } = useProfile(playerAddress ?? null)
+  const { data: profile } = useProfile(playerAddress ?? null)
   const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
   const signIdentity = useIdentitySigner()
   const { learner, update: updateLearner } = useLearner()

@@ -14,8 +14,8 @@ export async function GET() {
     const data = await getCurrentTournament()
     after(() => maybeTickBots()) // fleet heartbeat rides live traffic
     return NextResponse.json(data)
-  } catch (err) {
-    console.error('[api/tournament/current] failed:', (err as Error)?.message)
+  } catch (error) {
+    console.error('[api/tournament/current] failed:', (error as Error)?.message)
     return NextResponse.json({ error: 'tournament unavailable' }, { status: 503 })
   }
 }
