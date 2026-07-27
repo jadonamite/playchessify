@@ -29,7 +29,7 @@ export default function ChessName({
   asLink = false,
 }: ChessNameProps) {
   const skip = preloaded !== undefined
-  const { data: fetched, isLoading } = useProfile(skip ? null : address)
+  const { payload: fetched, isLoading } = useProfile(skip ? null : address)
 
   const profile = skip ? preloaded : fetched
 

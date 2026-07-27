@@ -36,7 +36,7 @@ export interface StreakEventDetail {
  *  Shared so the dispatcher (lobby) and the overlay agree on the same key. */
 export const STREAK_CELEBRATED_KEY = 'chess:streak:celebrated'
 export const STREAK_NUDGE_KEY = 'chess:streak:nudge'
-/** One win-streak ("star") celebration per UTC day. */
+/** One win-streak ('star') celebration per UTC day. */
 export const STAR_CELEBRATED_KEY = 'chess:winstreak:celebrated'
 
 /** UTC calendar day as YYYY-MM-DD (matches the server's day boundary). */
