@@ -240,7 +240,6 @@ export default function FaucetContent() {
         backgroundSize: '52px 52px', pointerEvents: 'none', zIndex: 0, opacity: 0.4,
       }} />
 
-      // TODO: optimize for large datasets
       {/* ── CONTENT ── */}
       <div className="relative z-10 flex-1 flex flex-col items-center w-full max-w-full box-border px-4 md:px-8 py-12 md:py-24">
         <div className="w-full max-w-2xl mx-auto flex flex-col gap-8">

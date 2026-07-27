@@ -109,27 +109,6 @@ const SEASONS: { seasonIndex: number; startsAt: number }[] = [
   // { seasonIndex: 2, startsAt: Date.UTC(2026, 6, 23, 23, 0, 0) },
 ]
 
-const registry = () =>
-  [...SEASONS]
-    .sort((a, b) => a.startsAt - b.startsAt)
-    .map((s) => buildWindow(s.seasonIndex, s.startsAt, 'live'))
-
-/** The next scheduled season, if one has been put on the board yet. */
-export function getNextSeason(nowMs: number = Date.now()): TournamentWindow | null {
-  const win = registry().find((w) => nowMs < w.startsAt)
-  return win ? { ...win, status: 'upcoming' } : null
-}
-
-
-/**
- * The season running right now, or null during a rest week (and before S1).
- * Null is the normal resting state, not an error.
- */
-export function getActiveSeason(nowMs: number = Date.now()): TournamentWindow | null {
-  const win = registry().find((w) => nowMs >= w.startsAt && nowMs < w.endsAt)
-  return win ? { ...win, status: 'live' } : null
-}
-
 function buildWindow(seasonIndex: number, startsAt: number, status: TournamentStatus): TournamentWindow {
   const id = `S${seasonIndex}`
   return {
@@ -145,9 +124,29 @@ function buildWindow(seasonIndex: number, startsAt: number, status: TournamentSt
   }
 }
 
+const registry = () =>
+  [...SEASONS]
+    .sort((a, b) => a.startsAt - b.startsAt)
+    .map((s) => buildWindow(s.seasonIndex, s.startsAt, 'live'))
+
+/**
+ * The season running right now, or null during a rest week (and before S1).
+ * Null is the normal resting state, not an error.
+ */
+export function getActiveSeason(nowMs: number = Date.now()): TournamentWindow | null {
+  const win = registry().find((w) => nowMs >= w.startsAt && nowMs < w.endsAt)
+  return win ? { ...win, status: 'live' } : null
+}
+
 /** The most recently concluded season — whose board freezes and pays out. */
 export function getLatestConcludedSeason(nowMs: number = Date.now()): TournamentWindow | null {
   const ended = registry().filter((w) => nowMs >= w.endsAt)
   const win = ended[ended.length - 1]
   return win ? { ...win, status: 'ended' } : null
+}
+
+/** The next scheduled season, if one has been put on the board yet. */
+export function getNextSeason(nowMs: number = Date.now()): TournamentWindow | null {
+  const win = registry().find((w) => nowMs < w.startsAt)
+  return win ? { ...win, status: 'upcoming' } : null
 }

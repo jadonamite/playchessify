@@ -5,6 +5,7 @@ import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import type { ChessProfile } from '@/types/profile'
 
+// ── medal palettes (shared by the leaderboard + tournament podiums) ──────────
 export const MEDAL = {
   1: {
     color: '#FFD700',
