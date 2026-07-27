@@ -11,7 +11,7 @@ import { King, Queen, Pawn, Bishop, Knight } from '@/components/ui/ChessModels'
  * alive, so contexts never accumulate). Deliberately light: no HDR environment
  * (lit by plain lights instead), dpr-capped, low-power — so adding it to a page
  * doesn't cost what the landing king does. Wrapped in SceneBoundary so a lost
- * context degrades to "no background" rather than crashing the page.
+ * context degrades to 'no background' rather than crashing the page.
  */
 function Scene({ hero }: { hero: 'king' | 'queen' }) {
   return (
