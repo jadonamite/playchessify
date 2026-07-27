@@ -90,6 +90,7 @@ class StockfishEngine {
       if (depthM) this.latest.depth = Number(depthM[1])
       if (mateM) {
         this.latest.mate = Number(mateM[1])
+        // Represent mate as a large cp so deltas stay comparable.
         const stm = (this.latest.mate > 0 ? 1 : -1) * (100000 - Math.abs(this.latest.mate))
         this.latest.stmCp = stm
         this.latest.whiteCp = stm * this.sideToMove

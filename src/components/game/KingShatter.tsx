@@ -30,7 +30,7 @@ const SHARDS = PERIM.map((p, i) => {
 const CELL = 12.5 // one square = 1/8 of the board, in %
 
 interface Props {
-  square: string                       // e.g. 'e8' — the mated king's square
+  square: string                       // e.g. "e8" — the mated king's square
   color: 'w' | 'b'                     // mated king colour
   orientation: 'white' | 'black'       // board orientation
   boardTheme: keyof typeof BOARD_THEMES
