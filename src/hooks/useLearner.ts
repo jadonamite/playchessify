@@ -1,8 +1,8 @@
 'use client'
 
+import type { Concept, LearnerLevel, LearnerModel } from '@/types/training'
 import { useCallback, useEffect, useState } from 'react'
 import { useWallet } from '@/components/wallet-provider'
-import type { Concept, LearnerLevel, LearnerModel } from '@/types/training'
 
 /**
  * Client access to the learner model. Training progress is low-stakes, so
