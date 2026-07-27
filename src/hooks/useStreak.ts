@@ -17,7 +17,7 @@ export interface RecordResult extends StreakData {
 
 type ClientSource = 'bot' | 'puzzle' | 'multiplayer'
 
-/** 'play' = the daily play streak; 'win' = the daily WIN streak ("stars"). */
+/** 'play' = the daily play streak; 'win' = the daily WIN streak ('stars'). */
 export type StreakKind = 'play' | 'win'
 
 /** Event the caller dispatches to pop the full-page streak overlay (mounted in
