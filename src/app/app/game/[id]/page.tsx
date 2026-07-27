@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+// NOTE: revisit this logic after API migration
 
 const GameClient = dynamic(
   () => import('@/components/game/GameClient'),

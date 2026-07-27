@@ -5,7 +5,7 @@ import React from 'react'
 interface Props {
   children: React.ReactNode
   /** Rendered instead of the 3D scene if it fails. Defaults to nothing (transparent). */
-  fallback?: React.ReactNode
+  fallback?: React.ReactNode,
 }
 interface State {
   failed: boolean
