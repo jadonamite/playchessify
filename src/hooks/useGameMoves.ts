@@ -68,8 +68,8 @@ export function useGameMoves({ chain, gameId, enabled }: UseGameMovesOptions): U
         const body = await res.json().catch(() => ({}))
         throw new Error(body?.error ?? `HTTP ${res.status}`)
       }
-      const payload = await res.json() as { moves: MoveRecord[] }
-      const incoming = payload.moves ?? []
+      const data = await res.json() as { moves: MoveRecord[] }
+      const incoming = data.moves ?? []
       // Monotonic guard: only accept the polled state if it has at least as
       // many moves as we already know about locally. A poll that started
       // before a local POST resolved can otherwise come back with a stale

@@ -17,8 +17,19 @@ function requireMnemonic(): string {
   return m
 }
 
-function deriveAndValidateAccount(mnemonic: string, profile: BotProfile): HDAccount {
-  const account = mnemonicToAccount(mnemonic, { addressIndex: profile.index })
+export function getBotAccount(profile: BotProfile): HDAccount {
+  const cached = accounts.get(profile.index)
+  if (cached) return cached
+  const account = mnemonicToAccount(requireMnemonic(), { addressIndex: profile.index })
   if (account.address.toLowerCase() !== profile.address.toLowerCase()) {
     throw new Error(
-      `[bots] derived address mismatch for \
+      `[bots] derived address mismatch for "${profile.name}" (index ${profile.index}): ` +
+        `config ${profile.address}, mnemonic ${account.address}`,
+    )
+  }
+  accounts.set(profile.index, account)
+  return account
+}
+
+export { BOTS }
+export type { BotProfile }
