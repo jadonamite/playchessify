@@ -10,7 +10,6 @@ export async function GET() {
     const total = (await redis.get<number>('chess:profile:total')) ?? 0
     return NextResponse.json({ total })
   } catch {
-    const result = NextResponse.json({ total: 0 });
-    return result;
+    return NextResponse.json({ total: 0 })
   }
 }
