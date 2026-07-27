@@ -20,6 +20,12 @@ function getRedis(): Redis | null {
   return _redis
 }
 
+/**
+ * cacheKey
+ * @param {*} fen: string
+ * @param {*} f: ExplainFacts
+ * @returns {*}
+ */
 function cacheKey(fen: string, f: ExplainFacts): string {
   const sig = [f.coachName, f.learnerLevel, f.kind, f.concept ?? '', f.playerMoveSan ?? '', f.bestMoveSan ?? '', fen].join('|')
   // Cheap stable hash — avoids overly long Redis keys.
