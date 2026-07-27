@@ -10,7 +10,7 @@ interface PromotionModalProps {
   open: boolean
   color: 'white' | 'black'
   onSelect: (piece: PromotionPiece) => void
-  onCancel: () => void,
+  onCancel: () => void
 }
 
 const OPTIONS: Array<{
