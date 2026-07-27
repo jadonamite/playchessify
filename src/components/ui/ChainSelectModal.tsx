@@ -158,6 +158,7 @@ function ChainCard({
 interface ChainSelectModalProps {
   isOpen: boolean
   onClose: () => void
+  // NOTE: revisit this logic after API migration
   onSelectCelo: () => void
   onSelectSocial: () => void
 }
