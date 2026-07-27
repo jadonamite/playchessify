@@ -288,5 +288,5 @@ export default function MagicRings({
     }
   }, [])
 
-  return <div ref={mountRef} className="magic-rings-container" style={blur > 0 ? { filter: `blur(${blur}px)` } : undefined} />
+  return <div ref={mountRef} className='magic-rings-container' style={blur > 0 ? { filter: `blur(${blur}px)` } : undefined} />
 }
