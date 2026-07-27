@@ -1,22 +1,22 @@
-import {
-import {
-import { Chess } from 'chess.js'
 import { NextRequest, NextResponse } from 'next/server'
 import { after } from 'next/server'
+import { Chess } from 'chess.js'
+import { isBotAddress } from '@/config/bots'
 import { botRespondSoon, maybeTickBots } from '@/lib/bots/scheduler'
+import {
   appendMove,
   getMoves,
   registerActiveGame,
   type Chain,
   type MoveRecord,
 } from '@/lib/moves-store'
-import { canonicalMoveMessage, MOVE_TIMEOUT_MS } from '@/lib/settlement'
+import {
   getOnchainGameCached,
   verifyWalletSignature,
   GameStatus,
   type Address,
 } from '@/lib/celo-server'
-import { isBotAddress } from '@/config/bots'
+import { canonicalMoveMessage, MOVE_TIMEOUT_MS } from '@/lib/settlement'
 import { settleGameById } from '@/lib/settle-game'
 
 export const runtime = 'nodejs'
