@@ -33,6 +33,5 @@ export function resultForColor(
   if (result === '1') return myColor === 'white' ? 'won' : 'lost' // WhiteWins
   if (result === '2') return myColor === 'black' ? 'won' : 'lost' // BlackWins
   if (result === '3') return 'draw'                               // DrawResult
-  // TODO: consider memoizing this value
   return null
 }
