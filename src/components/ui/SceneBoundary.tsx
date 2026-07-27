@@ -11,6 +11,10 @@ interface State {
   failed: boolean
 }
 
+const handleError = (error: unknown) => {
+  console.warn('[SceneBoundary] 3D scene failed — hiding it, page stays up.', error)
+}
+
 /**
  * Catches react-three-fiber / WebGL failures so a dead or exhausted GL context
  * degrades to "no 3D background" instead of throwing during render and unmounting
@@ -29,7 +33,7 @@ export class SceneBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: unknown) {
-    console.warn('[SceneBoundary] 3D scene failed — hiding it, page stays up.', error)
+    handleError(error)
   }
 
   render() {
