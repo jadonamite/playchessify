@@ -8,7 +8,8 @@ export async function GET() {
       token: process.env.UPSTASH_REDIS_REST_TOKEN!,
     })
     const total = (await redis.get<number>('chess:profile:total')) ?? 0
-    return NextResponse.json({ total })
+    const result = NextResponse.json({ total });
+    return result;
   } catch {
     return NextResponse.json({ total: 0 })
   }
