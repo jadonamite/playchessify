@@ -60,8 +60,8 @@ export async function GET(req: NextRequest) {
         if (outcome.ok) settled.push(gameId)
         else if (EXPECTED_SKIPS.has(outcome.reason)) abandoned.push(gameId)
         else failed.push({ gameId, reason: outcome.reason })
-      } catch (error) {
-        failed.push({ gameId, reason: (error as Error)?.message ?? 'error' })
+      } catch (err) {
+        failed.push({ gameId, reason: (err as Error)?.message ?? 'error' })
       }
     }
 
@@ -75,8 +75,8 @@ export async function GET(req: NextRequest) {
     let lifecycle: Awaited<ReturnType<typeof sweepLifecycle>> | { error: string }
     try {
       lifecycle = await sweepLifecycle(CHAIN)
-    } catch (error) {
-      lifecycle = { error: (error as Error)?.message ?? 'lifecycle sweep failed' }
+    } catch (err) {
+      lifecycle = { error: (err as Error)?.message ?? 'lifecycle sweep failed' }
       console.error(`${LOG_PREFIX} lifecycle sweep failed`, lifecycle)
     }
 
@@ -89,8 +89,8 @@ export async function GET(req: NextRequest) {
       failed,
       lifecycle,
     })
-  } catch (error) {
-    console.error(`${LOG_PREFIX} sweep failed`, { error: (error as Error)?.message })
+  } catch (err) {
+    console.error(`${LOG_PREFIX} sweep failed`, { err: (err as Error)?.message })
     return NextResponse.json({ error: 'sweep failed' }, { status: 503 })
   }
 }

@@ -3,6 +3,5 @@ import { getRecentProfiles } from '@/lib/profile-store'
 
 export async function GET() {
   const profiles = await getRecentProfiles(10)
-  const result = NextResponse.json({ profiles });
-  return result;
+  return NextResponse.json({ profiles })
 }

@@ -200,7 +200,7 @@ export async function maybeTickBots(): Promise<void> {
   }
 }
 
-/** Fast path for one game: give the bot 2–8s of 'thinking', then move. */
+/** Fast path for one game: give the bot 2–8s of "thinking", then move. */
 export async function botRespondSoon(gameId: number): Promise<void> {
   const delay = 2000 + Math.floor(Math.random() * 6000)
   await new Promise((r) => setTimeout(r, delay))
