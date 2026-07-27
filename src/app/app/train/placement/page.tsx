@@ -9,6 +9,7 @@ import { useLearner } from '@/hooks/useLearner'
 import { PLACEMENT, scorePlacement, type PlacementItem } from '@/config/placement'
 import TrapButton from '@/components/train/TrapButton'
 
+
 type Phase = 'solving' | 'judging' | 'feedback' | 'done'
 
 export default function PlacementPage() {
@@ -27,16 +28,19 @@ export default function PlacementPage() {
 
   /** Judge a move with Stockfish: exact best, or within ~0.6 pawns of best. */
   const judge = useCallback(async (uci: string): Promise<boolean> => {
+    if (!ready) return uci === item.expectedUci // engine down → fall back to key
     const pre = await analyze(item.fen, { movetime: 300 })
-    if (!pre) return uci === item.expectedUci // engine down → fall back to key
+    if (!pre) return false
     if (pre.bestMove === uci) return true
+
     const g = new Chess(item.fen)
     const move = g.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: 'q' })
     if (!move) return false
+
     const post = await analyze(g.fen(), { movetime: 300 })
-    if (!post) return uci === item.expectedUci
+    if (!post) return false
     return pre.whiteCp - post.whiteCp <= 60
-  }, [analyze, item])
+  }, [analyze, item, ready])
 
   const onMove = useCallback((from: string, to: string): boolean => {
     if (phase !== 'solving') return false
