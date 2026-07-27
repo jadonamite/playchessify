@@ -21,7 +21,7 @@ function Scene({ hero }: { hero: 'king' | 'queen' }) {
       <directionalLight position={[-10, -10, -5]} intensity={1} color="#6a0dad" />
 
       {hero === 'queen' ? (
-        <Queen position={[0, -0.5, -2]} color="#0f172a" emissive="#00ccff" emissiveIntensity={0.15} floatSpeed={0.5} floatIntensity={0.3} rotationIntensity={0.1} scale={2.5} />
+        <Queen position={[0, -0.5, -2]} color='#0f172a' emissive='#00ccff' emissiveIntensity={0.15} floatSpeed={0.5} floatIntensity={0.3} rotationIntensity={0.1} scale={2.5} />
       ) : (
         <King position={[0, -0.5, -2]} color="#0f172a" emissive="#00ccff" emissiveIntensity={0.15} floatSpeed={0.5} floatIntensity={0.3} rotationIntensity={0.1} scale={2.5} />
       )}

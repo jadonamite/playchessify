@@ -103,7 +103,7 @@ export default function StreakCelebration() {
     <AnimatePresence mode="wait">
       {data && (
         <motion.div
-          key={data.mode + '-' + queue.length}
+          key={data.mode + `-${queue.length}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
