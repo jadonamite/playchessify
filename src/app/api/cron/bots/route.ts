@@ -1,5 +1,5 @@
-import { maybeTickBots } from '@/lib/bots/scheduler'
 import { NextRequest, NextResponse } from 'next/server'
+import { maybeTickBots } from '@/lib/bots/scheduler'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

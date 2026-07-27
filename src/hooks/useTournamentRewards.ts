@@ -73,8 +73,8 @@ export function useTournamentRewards() {
           funded = open
           claimed = claimed_
           if (amount > 0n) prize = formatUnits(amount, USDM_DECIMALS)
-        } catch (err) {
-          console.warn(`${LOG_PREFIX} on-chain overlay failed`, err)
+        } catch (error) {
+          console.warn(`${LOG_PREFIX} on-chain overlay failed`, error)
         }
       }
 
@@ -85,8 +85,8 @@ export function useTournamentRewards() {
         claimed,
         funded,
       })
-    } catch (err) {
-      console.warn(`${LOG_PREFIX} status read failed`, err)
+    } catch (error) {
+      console.warn(`${LOG_PREFIX} status read failed`, error)
     }
   }, [publicClient, playerAddress])
 
@@ -124,9 +124,9 @@ export function useTournamentRewards() {
       await publicClient.waitForTransactionReceipt({ hash })
       showToast(`$${status.prize} prize claimed — congrats, champion!`, 'success')
       await refresh()
-    } catch (err) {
-      console.error(`${LOG_PREFIX} claim failed`, err)
-      const m = (err instanceof Error ? err.message : '').toLowerCase()
+    } catch (error) {
+      console.error(`${LOG_PREFIX} claim failed`, error)
+      const m = (error instanceof Error ? error.message : '').toLowerCase()
       if (!m.includes('rejected') && !m.includes('denied') && !m.includes('self-pay not possible')) {
         showToast('Claim failed — please try again.', 'error')
       }

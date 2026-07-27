@@ -5,7 +5,7 @@ export type LearnerLevel = 'basics' | 'intermediate' | 'expert'
 /**
  * Concept taxonomy the curriculum + diagnostic tag against. Mastery is tracked
  * per concept as a 0..1 score in the learner model. Keep ids stable — they key
- * Redis payload and lesson modules.
+ * Redis data and lesson modules.
  */
 export const CONCEPTS = [
   // basics

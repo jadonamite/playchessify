@@ -30,7 +30,6 @@ export const CURRICULUM: Lesson[] = [
     intro: 'A fork attacks two pieces at once. The knight is the trickiest forker — it can hit a king and a queen that feel safely apart.',
     steps: [
       { fen: '8/2q5/5k2/8/1N6/8/8/4K3 w - - 0 1', prompt: 'Leap the knight so it checks the king AND hits the queen.', expectedUci: 'b4d5',
-        // NOTE: revisit this logic after API migration
         hints: ['Look for a square that attacks both the king on f6 and the queen on c7.', 'A knight on d5 touches both.', 'Play Nd5+ — after the king moves, take the queen.'] },
       { fen: '8/8/2q3k1/8/8/3N4/8/4K3 w - - 0 1', prompt: 'Find the forking leap.', expectedUci: 'd3e5',
         hints: ['Which knight square checks the king and eyes the queen?', 'e5 hits g6 and c6.', 'Play Ne5+, then capture on c6.'] },
