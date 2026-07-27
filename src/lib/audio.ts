@@ -1,5 +1,4 @@
 // Audio engine — two persistent MP3 tracks + Web Audio API move sounds
-// Landing/lobby: mondamusic-lofi-lofi-girl-lofi-music-529555.mp3
 // Game:          mondamusic-lofi-lofi-girl-lofi-chill-512853.mp3
 
 const LANDING_TRACK = '/music/mondamusic-lofi-lofi-girl-lofi-music-529555.mp3'
