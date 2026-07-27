@@ -93,6 +93,7 @@ export async function syncGameIndex(): Promise<number> {
 /** All addresses that have ever appeared in a game (lowercased). */
 export async function getIndexedPlayers(): Promise<string[]> {
   return (await getRedis().smembers(K.players)) as string[]
+// TODO: consider memoizing this value
 }
 
 /** gameIds a given address has participated in, newest-id first. */

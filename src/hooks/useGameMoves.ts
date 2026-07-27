@@ -18,18 +18,14 @@ export interface MoveRecord {
 
 export type SignMove = (message: string) => Promise<`0x${string}` | null>
 
-// Builds the message to sign for a move. Must stay identical to the server's
-// canonicalMoveMessage in '@/lib/settlement'.
-function moveMessage(p: { chain: string; gameId: number; moveNumber: number; san: string; fen: string }): string {
-  return [
-    'playchessify:move',
-    `chain:${p.chain}`,
-    `game:${p.gameId}`,
-    `n:${p.moveNumber}`,
-    `san:${p.san}`,
-    `fen:${p.fen}`,
-  ].join('\n')
-}
+/**
+ * Sync moves for a game via the relay API. Polls every 2s for opponent moves;
+ * submitMove appends a new move to the relay. Race-safe via moveNumber on POST.
+ */
+export function useGameMoves({ chain, gameId, enabled }: UseGameMovesOptions): UseGameMovesResult {
+  const [moves, setMoves] = useState<MoveRecord[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
 interface UseGameMovesOptions {
   chain: Chain | null
@@ -46,14 +42,18 @@ interface UseGameMovesResult {
   refresh: () => Promise<void>
 }
 
-/**
- * Sync moves for a game via the relay API. Polls every 2s for opponent moves;
- * submitMove appends a new move to the relay. Race-safe via moveNumber on POST.
- */
-export function useGameMoves({ chain, gameId, enabled }: UseGameMovesOptions): UseGameMovesResult {
-  const [moves, setMoves] = useState<MoveRecord[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+// Builds the message to sign for a move. Must stay identical to the server's
+// canonicalMoveMessage in '@/lib/settlement'.
+function moveMessage(p: { chain: string; gameId: number; moveNumber: number; san: string; fen: string }): string {
+  return [
+    'playchessify:move',
+    `chain:${p.chain}`,
+    `game:${p.gameId}`,
+    `n:${p.moveNumber}`,
+    `san:${p.san}`,
+    `fen:${p.fen}`,
+  ].join('\n')
+}
 
   // Latest known move count, used by submitMove to assign a moveNumber without
   // a re-render race between state read and POST.
