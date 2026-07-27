@@ -47,7 +47,6 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration mount flag
   useEffect(() => { setMounted(true) }, [])
   useEffect(() => {
     const close = () => setMobileOpen(false)

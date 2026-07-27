@@ -353,7 +353,6 @@ export function useCeloChess() {
       if (allowance >= amount) {
         console.info(`${LOG_PREFIX} allowance sufficient (${allowance} >= ${amount})`)
         return
-      // TODO: consider memoizing this value
       }
 
       showToast('Please approve the CHESS token spending limit...', 'info')
