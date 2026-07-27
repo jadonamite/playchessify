@@ -33,7 +33,7 @@ const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
 // Persist the coach game so it survives a reload (bot games do the same via their
 // own key). Only stable learner-to-move positions are saved (see the persist
 // effect), so a restore never lands the board on the coach's turn and stalls.
-const TRAIN_SAVE_KEY = 'chess:train:save'
+const TRAIN_SAVE_KEY: string = 'chess:train:save'
 
 function loadSavedFen(): string {
   const fresh = new Chess().fen()
