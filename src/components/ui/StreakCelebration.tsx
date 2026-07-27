@@ -291,6 +291,7 @@ export default function StreakCelebration() {
                     Day Streak
                   </div>
                 </div>
+// TODO: consider memoizing this value
 
                 <p className="text-sm text-[var(--t3)] leading-relaxed max-w-[16rem]">
                   {data.current === 1
