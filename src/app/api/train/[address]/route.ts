@@ -20,7 +20,7 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
  * wallet popup on every tap would be terrible UX. A per-address rate limit is
  * the only guard, which is plenty for griefing-only risk.
  */
-export async function PATCH(req: NextRequest, { params }: Ctx) {
+export async function PATCH(request: NextRequest, { params }: Ctx) {
   const { address } = await params
   if (!address || !address.startsWith('0x')) {
     return NextResponse.json({ error: 'invalid address' }, { status: 400 })
@@ -34,7 +34,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     completedLesson?: string
   }
   try {
-    body = await req.json()
+    body = await request.json()
   } catch {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 })
   }
