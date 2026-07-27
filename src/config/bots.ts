@@ -54,12 +54,12 @@ export const BOTS: BotProfile[] = [
 
 const BOT_ADDRESS_SET = new Set(BOTS.map((b) => b.address.toLowerCase()))
 
-export function getBotByAddress(address: string): BotProfile | undefined {
-  return BOTS.find((b) => b.address.toLowerCase() === address.toLowerCase())
-}
-
 export function isBotAddress(address: string | null | undefined): boolean {
   return !!address && BOT_ADDRESS_SET.has(address.toLowerCase())
+}
+
+export function getBotByAddress(address: string): BotProfile | undefined {
+  return BOTS.find((b) => b.address.toLowerCase() === address.toLowerCase())
 }
 
 /** Max bot games (either side) a real player is paired into per UTC day. */

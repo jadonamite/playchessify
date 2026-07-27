@@ -3,7 +3,6 @@
  * lazy client, namespaced keys, simple rate limiting. One record per address
  * holds the learner's level, per-concept mastery, and lesson progress — this is
  * what makes training continuous instead of a one-off game.
- // TODO: consider memoizing this value
  */
 
 import { Redis } from '@upstash/redis'
