@@ -74,6 +74,7 @@ export default function GameResultOverlay({ gameResult, resultMessage, gameData,
                   {gameResult === 'won' ? 'You Won' : gameResult === 'lost' ? 'You Lost' : 'Stalemate'}
                 </h2>
                 <p className="text-sm text-[var(--t3)] mt-3 leading-relaxed">{resultMessage}</p>
+              // TODO: add error boundary here
               </div>
 
               {/* Wager / prize chip — a win pays out the full pot (2× wager) */}
