@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
-import { usePublicClient } from 'wagmi'
-import { CHESS_GAME_ABI } from '@/config/abis'
 import { CELO_CONTRACTS, JOIN_WINDOW_SECS } from '@/config/contracts'
+import { CHESS_GAME_ABI } from '@/config/abis'
+import { usePublicClient } from 'wagmi'
+import { useState, useEffect, useCallback } from 'react'
 
 export interface Game {
   id: number
