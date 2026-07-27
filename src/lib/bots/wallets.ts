@@ -11,10 +11,6 @@ import { BOTS, type BotProfile } from '@/config/bots'
 
 const accounts = new Map<number, HDAccount>()
 
-/**
- * requireMnemonic
- * @returns {*}
- */
 function requireMnemonic(): string {
   const m = process.env.BOT_MNEMONIC
   if (!m) throw new Error('[bots] BOT_MNEMONIC must be set')

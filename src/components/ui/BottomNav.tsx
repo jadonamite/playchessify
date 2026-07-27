@@ -73,7 +73,6 @@ function Tab({ tab, active, href, streakLabel }: { tab: TabDef; active: boolean;
             {streakLabel}
           </span>
         )}
-        // TODO: consider memoizing this value
         {active && (
           <motion.span
             layoutId="pc-nav-chip"
