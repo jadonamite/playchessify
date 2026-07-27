@@ -52,27 +52,19 @@ interface SettingsState {
   setShowMoveHints: (v: boolean) => void
 }
 
-const initializeSettings = () => ({
-  soundEnabled: true,
-  boardTheme: 'dark',
-  pieceSet: 'chessnut',
-  aiDifficulty: 'medium',
-  showMoveHints: true,
-})
-
-const createSettingsUpdater = (set: any) => ({
-  setSoundEnabled: (v: boolean) => set({ soundEnabled: v }),
-  setBoardTheme: (t: BoardTheme) => set({ boardTheme: t }),
-  setPieceSet: (p: PieceSet) => set({ pieceSet: p }),
-  setAiDifficulty: (d: AiDifficulty) => set({ aiDifficulty: d }),
-  setShowMoveHints: (v: boolean) => set({ showMoveHints: v }),
-})
-
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      ...initializeSettings(),
-      ...createSettingsUpdater(set),
+      soundEnabled: true,
+      boardTheme: 'dark',
+      pieceSet: 'chessnut',
+      aiDifficulty: 'medium',
+      showMoveHints: true,
+      setSoundEnabled: (v) => set({ soundEnabled: v }),
+      setBoardTheme: (t) => set({ boardTheme: t }),
+      setPieceSet: (p) => set({ pieceSet: p }),
+      setAiDifficulty: (d) => set({ aiDifficulty: d }),
+      setShowMoveHints: (v) => set({ showMoveHints: v }),
     }),
     { name: 'chessify-settings' },
   ),

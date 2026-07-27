@@ -55,27 +55,17 @@ export const PLACEMENT: PlacementItem[] = [
  * scores per concept. Solved → 0.6 mastery, missed → 0.15. Level rises with
  * the share solved (expert is reached through lessons, not placement).
  */
-export function calculateConceptMastery(concepts: Partial<Record<Concept, number>>, results: { item: PlacementItem; solved: boolean }[]): Partial<Record<Concept, number>> {
-  for (const { item, solved } of results) {
-    const prev = concepts[item.concept] ?? 0
-    concepts[item.concept] = Math.max(prev, solved ? 0.6 : 0.15)
-  }
-  return concepts
-}
-
-export function calculateLevel(results: { item: PlacementItem; solved: boolean }[]): LearnerLevel {
-  const solvedCount = results.filter((r) => r.solved).length
-  const interSolved = results.filter((r) => r.solved && r.item.level === 'intermediate').length
-  let level: LearnerLevel = 'basics'
-  if (solvedCount >= 4 && interSolved >= 1) level = 'intermediate'
-  return level
-}
-
 export function scorePlacement(
   results: { item: PlacementItem; solved: boolean }[],
 ): { level: LearnerLevel; concepts: Partial<Record<Concept, number>> } {
   const concepts: Partial<Record<Concept, number>> = {}
-  const calculatedConcepts = calculateConceptMastery(concepts, results)
-  const level = calculateLevel(results)
-  return { level, concepts: calculatedConcepts }
+  for (const { item, solved } of results) {
+    const prev = concepts[item.concept] ?? 0
+    concepts[item.concept] = Math.max(prev, solved ? 0.6 : 0.15)
+  }
+  const solvedCount = results.filter((r) => r.solved).length
+  const interSolved = results.filter((r) => r.solved && r.item.level === 'intermediate').length
+  let level: LearnerLevel = 'basics'
+  if (solvedCount >= 4 && interSolved >= 1) level = 'intermediate'
+  return { level, concepts }
 }

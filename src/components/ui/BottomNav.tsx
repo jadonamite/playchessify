@@ -32,14 +32,6 @@ const TABS: TabDef[] = [
   { key: 'faucet', label: 'Faucet', href: '/app/faucet', match: ['/app/faucet'], Icon: FaucetIcon, accent: 'var(--candy-lime)' },
 ]
 
-/**
- * Tab
- * @param {*} { tab
- * @param {*} active
- * @param {*} href
- * @param {*} streakLabel }: { tab: TabDef; active: boolean; href: string; streakLabel?: string }
- * @returns {*}
- */
 function Tab({ tab, active, href, streakLabel }: { tab: TabDef; active: boolean; href: string; streakLabel?: string }) {
   const { Icon } = tab
   return (

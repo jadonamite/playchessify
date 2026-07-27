@@ -21,26 +21,6 @@ const AudioManager = dynamic(
   { ssr: false }
 )
 
-const getPrivyConfig = () => ({
-  appId: process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? 'placeholder-set-env-var',
-  config: {
-    defaultChain: celo,
-    supportedChains: [celo],
-    appearance: {
-      theme: 'dark',
-      accentColor: '#00ccff',
-      logo: '/chessify.png',
-      walletChainType: 'ethereum-only',
-    },
-    loginMethods: ['google', 'twitter', 'discord', 'github', 'email', 'wallet'],
-    embeddedWallets: {
-      ethereum: {
-        createOnLogin: 'users-without-wallets',
-      },
-    },
-  },
-})
-
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
@@ -50,7 +30,25 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <PrivyProvider {...getPrivyConfig()}>
+      <PrivyProvider
+        appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? 'placeholder-set-env-var'}
+        config={{
+          defaultChain: celo,
+          supportedChains: [celo],
+          appearance: {
+            theme: 'dark',
+            accentColor: '#00ccff',
+            logo: '/chessify.png',
+            walletChainType: 'ethereum-only',
+          },
+          loginMethods: ['google', 'twitter', 'discord', 'github', 'email', 'wallet'],
+          embeddedWallets: {
+            ethereum: {
+              createOnLogin: 'users-without-wallets',
+            },
+          },
+        }}
+      >
         <WagmiProvider config={wagmiConfig} reconnectOnMount>
           {/* Tier A — ERC-4337 smart wallets for social/email/embedded users.
               The Celo custom-chain config (forno RPC + Pimlico bundler/paymaster URLs,
