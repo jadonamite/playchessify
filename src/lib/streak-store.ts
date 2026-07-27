@@ -126,7 +126,6 @@ export function recordWinDay(address: string, now: Date = new Date()): Promise<R
   return recordDay(K.win(address), now)
 }
 
-// ── reads ─────────────────────────────────────────────────────────────────────
 
 function deriveStreak(stored: StoredStreak | null, now: Date = new Date()): StreakData {
   if (!stored || !stored.lastPlayedDate) {
