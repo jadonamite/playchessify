@@ -58,6 +58,7 @@ export function useTournamentRewards() {
       const me = playerAddress.toLowerCase()
       const mine = api.winners.find((w) => w.address.toLowerCase() === me)
 
+      // 2. On-chain overlay: funded once openSeason has run; claimed sticks.
       let funded = false
       let claimed = false
       let prize = mine ? String(mine.amount) : ''

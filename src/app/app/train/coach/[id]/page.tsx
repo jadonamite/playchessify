@@ -16,10 +16,6 @@ const PROMISE: Record<Specialty, string> = {
   universal: 'We\'ll build rock-solid, all-round fundamentals so you\'re dangerous in every kind of position.',
 }
 
-/**
- * CoachIntroPage
- * @returns {*}
- */
 export default function CoachIntroPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
