@@ -312,7 +312,7 @@ export default function ChessifyLanding() {
     return () => window.removeEventListener('resize', close)
   }, [])
 
-  const goDrawer = useCallback((fn: () => void) => { setMenuOpen(false); fn() }, [])
+  const goDrawer = useCallback((handler: () => void) => { setMenuOpen(false); handler() }, [])
 
   const charge = useCallback(() => {
     const k = document.getElementById('ccv-king')
@@ -437,14 +437,14 @@ export default function ChessifyLanding() {
           {menuOpen && (
             <div className="ccv-burger" style={css('position:fixed;top:66px;left:0;right:0;z-index:79;flex-direction:column;gap:4px;padding:14px 18px 20px;background:rgba(6,10,24,.98);backdrop-filter:blur(18px);border-bottom:1px solid rgba(120,200,255,.1);box-shadow:0 24px 50px rgba(0,0,0,.55);')}>
               {[
-                { label: 'Leaderboard', fn: () => router.push('/app/leaderboard') },
-                { label: 'History', fn: () => router.push('/app/history') },
-                { label: 'Faucet', fn: () => router.push('/app/faucet') },
-                { label: 'Coaches', fn: () => scrollTo('coaches') },
-                { label: 'Arena', fn: () => scrollTo('modes') },
-                { label: 'How it works', fn: () => scrollTo('how') },
+                { label: 'Leaderboard', handler: () => router.push('/app/leaderboard') },
+                { label: 'History', handler: () => router.push('/app/history') },
+                { label: 'Faucet', handler: () => router.push('/app/faucet') },
+                { label: 'Coaches', handler: () => scrollTo('coaches') },
+                { label: 'Arena', handler: () => scrollTo('modes') },
+                { label: 'How it works', handler: () => scrollTo('how') },
               ].map((it) => (
-                <span key={it.label} className="ccv-drawer-link" onClick={() => goDrawer(it.fn)} style={css("display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:12px;cursor:pointer;font-family:'Chakra Petch';font-weight:600;font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:#9fb2c8;")}>
+                <span key={it.label} className="ccv-drawer-link" onClick={() => goDrawer(it.handler)} style={css("display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:12px;cursor:pointer;font-family:'Chakra Petch';font-weight:600;font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:#9fb2c8;")}>
                   <span style={{ color: '#5ce1ff', fontSize: 8, opacity: 0.7 }}>◈</span>{it.label}
                 </span>
               ))}
