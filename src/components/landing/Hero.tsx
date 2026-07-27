@@ -141,6 +141,7 @@ export default function Hero() {
 
       {/* Scroll */}
       {!isMobile && (
+        // NOTE: revisit this logic after API migration
         <div style={{ textAlign: 'center', paddingBottom: 36, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, position: 'relative', zIndex: 4 }}>
           <span style={{ fontFamily: 'var(--fd)', fontSize: 9, letterSpacing: '.2em', color: 'var(--scroll-color)' }}>SCROLL</span>
           <div style={{ width: 1, height: 32, background: 'linear-gradient(var(--c),transparent)' }} />
