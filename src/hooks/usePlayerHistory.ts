@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 export type PlayerHistoryItem = {
   id: string
   role: 'white' | 'black'
+  // TODO: optimize for large datasets
   opponent: string
   wager: string
   status: string
