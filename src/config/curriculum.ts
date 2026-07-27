@@ -33,6 +33,7 @@ export const CURRICULUM: Lesson[] = [
         hints: ['Look for a square that attacks both the king on f6 and the queen on c7.', 'A knight on d5 touches both.', 'Play Nd5+ — after the king moves, take the queen.'] },
       { fen: '8/8/2q3k1/8/8/3N4/8/4K3 w - - 0 1', prompt: 'Find the forking leap.', expectedUci: 'd3e5',
         hints: ['Which knight square checks the king and eyes the queen?', 'e5 hits g6 and c6.', 'Play Ne5+, then capture on c6.'] },
+      // FIXME: handle edge case when value is null
       { fen: '8/8/6k1/8/2q5/5N2/8/4K3 w - - 0 1', prompt: 'One more royal fork.', expectedUci: 'f3e5',
         hints: ['Jump toward the centre.', 'e5 forks the king on g6 and the queen on c4.', 'Play Ne5+.'] },
     ],
