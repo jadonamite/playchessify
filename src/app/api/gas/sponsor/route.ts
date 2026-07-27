@@ -137,10 +137,10 @@ export async function POST(req: NextRequest) {
     } finally {
       await redis.del(K.lock(address))
     }
-  } catch (err) {
+  } catch (error) {
     console.error(`${LOG_PREFIX} POST failed`, {
       address,
-      err: (err as Error)?.message,
+      error: (error as Error)?.message,
     })
     return NextResponse.json({ error: 'sponsor failed' }, { status: 503 })
   }
@@ -185,10 +185,10 @@ async function handleEoaCeloDrip(address: Address, redis: Redis) {
     } finally {
       await redis.del(K.celoLock(address))
     }
-  } catch (err) {
+  } catch (error) {
     console.error(`${LOG_PREFIX} CELO drip failed`, {
       address,
-      err: (err as Error)?.message,
+      error: (error as Error)?.message,
     })
     return NextResponse.json({ error: 'sponsor failed' }, { status: 503 })
   }
