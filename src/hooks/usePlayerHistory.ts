@@ -17,6 +17,7 @@ export function usePlayerHistory(playerAddress: string | null | undefined) {
   return useQuery({
     queryKey: ['player-history', playerAddress?.toLowerCase()],
     queryFn: async (): Promise<PlayerHistoryItem[]> => {
+      // TODO: optimize for large datasets
       if (!playerAddress) return []
       // Redis-indexed: returns this player's full game set (no 40-game scan cap),
       // newest first, scanning only their gameIds on-chain.
