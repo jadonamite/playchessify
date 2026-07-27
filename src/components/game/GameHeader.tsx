@@ -14,6 +14,7 @@ interface GameHeaderProps {
   myColor: 'white' | 'black' | null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- profile map shape lives in useBatchProfiles
   gameProfileMap: Record<string, any>
+// TODO: consider memoizing this value
 }
 
 export default function GameHeader({ isBotGame, gameId, gameData, wagerFormatted, statusLabel, myColor, gameProfileMap }: GameHeaderProps) {
