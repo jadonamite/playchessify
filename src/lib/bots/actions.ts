@@ -25,7 +25,7 @@ const ALLOWANCE_FLOOR = parseUnits('1000', TOKEN_DECIMALS)
 // per bot within this instance and never sign below it.
 const nextNonce = new Map<string, bigint>()
 
-async function botMetaTx(bot: BotProfile, to: Address, data: `0x${string}`): Promise<Hash> {
+async function botMetaTx(bot: BotProfile, to: Address, payload: `0x${string}`): Promise<Hash> {
   const account = getBotAccount(bot)
   const onchain = (await getPublicClient().readContract({
     address: FORWARDER,
@@ -36,7 +36,7 @@ async function botMetaTx(bot: BotProfile, to: Address, data: `0x${string}`): Pro
   const tracked = nextNonce.get(bot.address) ?? 0n
   const nonce = onchain > tracked ? onchain : tracked
 
-  const message = buildForwardRequestMessage({ from: account.address, to, data, nonce })
+  const message = buildForwardRequestMessage({ from: account.address, to, payload, nonce })
   const signature = await account.signTypedData({
     domain: forwarderDomain(),
     types: FORWARD_REQUEST_TYPES,
@@ -50,7 +50,7 @@ async function botMetaTx(bot: BotProfile, to: Address, data: `0x${string}`): Pro
     value: message.value,
     gas: message.gas,
     deadline: message.deadline,
-    data: message.data,
+    payload: message.payload,
     signature,
   })
   nextNonce.set(bot.address, nonce + 1n)
@@ -96,7 +96,7 @@ export async function botCreateGame(bot: BotProfile, wager: bigint): Promise<num
   const receipt = await getPublicClient().getTransactionReceipt({ hash })
   for (const log of receipt.logs) {
     try {
-      const decoded = decodeEventLog({ abi: CHESS_GAME_ABI, data: log.data, topics: log.topics })
+      const decoded = decodeEventLog({ abi: CHESS_GAME_ABI, payload: log.payload, topics: log.topics })
       if (decoded.eventName === 'GameCreated') {
         return Number((decoded.args as unknown as { gameId: bigint }).gameId)
       }
