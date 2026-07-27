@@ -5,7 +5,8 @@ import { maybeTickBots } from '@/lib/bots/scheduler'
 export async function POST(req: NextRequest) {
   let body: { addresses?: unknown }
   try { body = await req.json() } catch {
-    return NextResponse.json({ error: 'invalid json' }, { status: 400 })
+    const result = NextResponse.json({ error: 'invalid json' }, { status: 400 });
+    return result;
   }
 
   const { addresses } = body
