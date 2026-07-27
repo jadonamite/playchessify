@@ -12,6 +12,8 @@ const DEFAULT_DURATION: Record<ToastType, number> = {
   draw: 5000,
 }
 
+const getToastDuration = (type: ToastType, duration?: number): number => duration ?? DEFAULT_DURATION[type]
+
 interface Toast {
   message: string
   type: ToastType
@@ -27,7 +29,7 @@ interface ToastState {
 export const useToastStore = create<ToastState>((set) => ({
   toast: null,
   showToast: (message, type, duration) => {
-    set({ toast: { message, type, duration: duration ?? DEFAULT_DURATION[type] } })
+    set({ toast: { message, type, duration: getToastDuration(type, duration) } })
   },
   hideToast: () => set({ toast: null }),
 }))
