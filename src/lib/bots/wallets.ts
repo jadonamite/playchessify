@@ -23,7 +23,7 @@ export function getBotAccount(profile: BotProfile): HDAccount {
   const account = mnemonicToAccount(requireMnemonic(), { addressIndex: profile.index })
   if (account.address.toLowerCase() !== profile.address.toLowerCase()) {
     throw new Error(
-      `[bots] derived address mismatch for '${profile.name}' (index ${profile.index}): ` +
+      `[bots] derived address mismatch for "${profile.name}" (index ${profile.index}): ` +
         `config ${profile.address}, mnemonic ${account.address}`,
     )
   }
