@@ -24,7 +24,7 @@ export function useGameData({ gameId, isBotGame, celoAddress, isConnected }: Use
     address: CELO_CONTRACTS.game as `0x${string}`,
     abi: CHESS_GAME_ABI,
     functionName: 'getGame',
-    args: [BigInt(gameId)],
+    params: [BigInt(gameId)],
     chainId: CELO_CHAIN_ID,
     query: {
       enabled: !isBotGame && gameId > 0,
