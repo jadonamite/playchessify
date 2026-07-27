@@ -71,6 +71,7 @@ export interface PrizeWinner {
 
 export interface TournamentBoard {
   /** null during a rest week — no season is running. */
+  // TODO: optimize for large datasets
   window: TournamentWindow | null
   board: BoardEntry[]
   winners: PrizeWinner[]
