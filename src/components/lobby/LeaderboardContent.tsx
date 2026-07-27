@@ -1,18 +1,18 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useWallet } from '@/components/wallet-provider'
-import GlowButton from '@/components/ui/GlowButton'
-import PlayCard from '@/components/ui/PlayCard'
-import LoadingState from '@/components/ui/LoadingState'
-import { useLeaderboard, type LeaderboardEntry } from '@/hooks/useLeaderboard'
-import { useBatchProfiles } from '@/hooks/useBatchProfiles'
-import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
+import ChessName from '@/components/ui/ChessName'
+import GlowButton from '@/components/ui/GlowButton'
+import LoadingState from '@/components/ui/LoadingState'
 import PageBackground from '@/components/ui/PageBackground'
+import PlayCard from '@/components/ui/PlayCard'
 import PodiumCard from '@/components/lobby/PodiumCard'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useBatchProfiles } from '@/hooks/useBatchProfiles'
+import { useLeaderboard, type LeaderboardEntry } from '@/hooks/useLeaderboard'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { useWallet } from '@/components/wallet-provider'
 
 // ── constants ───────────────────────────────────────────────────────────────
 
