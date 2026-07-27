@@ -83,7 +83,7 @@ export default function PromotionModal({ open, color, onSelect, onCancel }: Prom
             </div>
 
             {/* Options grid */}
-            <div className='grid grid-cols-2 md:grid-cols-4 gap-3 p-6'>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-6">
               {OPTIONS.map(({ piece, label, view, hint }) => (
                 <button
                   key={piece}

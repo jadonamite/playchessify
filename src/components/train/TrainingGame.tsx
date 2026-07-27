@@ -70,7 +70,6 @@ export default function TrainingGame() {
   const pendingRef = useRef<string | null>(null) // learner's move fen, awaiting play-anyway
   const announcedOpeningRef = useRef<string | null>(null)
   const evalBeforeRef = useRef<number>(20)
-  // NOTE: revisit this logic after API migration
   const liveRef = useRef(true)
   const conceptDeltaRef = useRef<Partial<Record<Concept, number>>>({})
   const persistedRef = useRef(false)

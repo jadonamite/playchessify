@@ -1,8 +1,4 @@
 // Decorative blurred glow blobs behind the game view.
-/**
- * AmbientBackground
- * @returns {*}
- */
 export default function AmbientBackground() {
   return (
     <div className="fixed inset-0 pointer-events-none">
