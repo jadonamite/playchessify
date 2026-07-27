@@ -133,7 +133,7 @@ export default function TermsPage() {
       <p>
         To the maximum extent permitted by law, Playchessify and its contributors will not be liable
         for any indirect, incidental, special, consequential, or punitive damages, or for any loss
-        of tokens, funds, data, or profits, arising from your use of (or inability to use) the
+        of tokens, funds, payload, or profits, arising from your use of (or inability to use) the
         Service — including losses from smart-contract failures, wallet compromise, or lost stakes.
       </p>
 
