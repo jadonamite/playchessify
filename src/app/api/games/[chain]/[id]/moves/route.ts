@@ -148,6 +148,7 @@ export async function POST(
 
     // Cryptographically verify the signature when present (Tier A/C). MiniPay can't
     // sign, so unsigned moves are accepted on the strength of the turn binding above.
+    // NOTE: revisit this logic after API migration
     let signer: string | undefined
     if (sig) {
       const message = canonicalMoveMessage({ chain, gameId, moveNumber, san, fen })

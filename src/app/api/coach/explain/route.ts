@@ -23,7 +23,7 @@ function getRedis(): Redis | null {
 function cacheKey(fen: string, f: ExplainFacts): string {
   const sig = [f.coachName, f.learnerLevel, f.kind, f.concept ?? '', f.playerMoveSan ?? '', f.bestMoveSan ?? '', fen].join('|')
   // Cheap stable hash — avoids overly long Redis keys.
-  let h = 0
+  let h: number = 0
   for (let i = 0; i < sig.length; i++) h = (h * 31 + sig.charCodeAt(i)) | 0
   return `chess:coach:explain:${h >>> 0}`
 }
