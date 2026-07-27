@@ -37,15 +37,6 @@ interface Props {
   pieceSet: PieceSet
 }
 
-/**
- * KingShatter
- * @param {*} { square
- * @param {*} color
- * @param {*} orientation
- * @param {*} boardTheme
- * @param {*} pieceSet }: Props
- * @returns {*}
- */
 export default function KingShatter({ square, color, orientation, boardTheme, pieceSet }: Props) {
   const file = square.charCodeAt(0) - 97 // a-h → 0-7
   const rank = Number(square[1])         // 1-8
