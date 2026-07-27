@@ -5,7 +5,6 @@
 // asserted against these addresses, so the roster here is the single source of
 // truth for "is this address a bot".
 //
-// Bots are ordinary on-chain players: they claim the daily faucet, escrow real
 // CHESS wagers, and appear in the lobby like anyone else — the UI's only tell
 // is the small "automated" mark on their open-game badge.
 
