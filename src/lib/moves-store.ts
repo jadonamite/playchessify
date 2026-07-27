@@ -107,19 +107,22 @@ export async function getMoves(chain: Chain, gameId: number): Promise<MoveRecord
   })
 }
 
-/** Length of the longest prefix of `moves` that replays legally. A healthy
- *  history returns `moves.length`; a corrupt one returns the index of the first
- *  move that doesn't fit the position (chess.js v1 throws on an illegal move). */
+function validateMove(board: Chess, move: MoveRecord): boolean {
+  try {
+    board.move(move.san)
+    return true
+  } catch {
+    return false
+  }
+}
+
 function longestLegalPrefix(moves: MoveRecord[]): number {
   const board = new Chess()
-  for (let i = 0; i < moves.length; i++) {
-    try {
-      board.move(moves[i].san)
-    } catch {
-      return i
-    }
+  let i = 0
+  while (i < moves.length && validateMove(board, moves[i])) {
+    i++
   }
-  return moves.length
+  return i
 }
 
 /**

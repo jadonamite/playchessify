@@ -49,6 +49,39 @@ interface RecentGame {
   createdAt: number
 }
 
+/** Maybe join one open human lobby (cap-aware, randomized). */
+async function maybeJoin(recent: RecentGame[]): Promise<void> {
+  if (Math.random() > JOIN_CHANCE) return
+  const nowS = Date.now() / 1000
+  const minWager = parseUnits(String(BOT_MIN_WAGER), TOKEN_DECIMALS)
+  const candidates = recent.filter((g) => {
+    if (g.status !== GameStatus.Waiting || isBotAddress(g.white)) return false
+    if (g.wager < minWager) return false // bots never stake below the floor
+    const age = nowS - g.createdAt
+    return age >= JOIN_MIN_AGE_S && age <= JOIN_MAX_AGE_S
+  })
+  const target = pickRandom(candidates)
+  if (!target) return
+  if (!(await humanUnderBotCap(target.white))) return
+
+/** Bots able to stake `wager` from their own balance (and willing, per persona cap). */
+async function botsAffording(wager: bigint): Promise<BotProfile[]> {
+  const balances = await Promise.all(BOTS.map((b) => chessBalanceOf(b.address).catch(() => 0n)))
+  return BOTS.filter((b, i) => {
+    const cap = parseUnits(String(b.maxWager), TOKEN_DECIMALS)
+    return balances[i] >= wager && cap >= wager
+  })
+}
+
+/** Maybe open one lobby of our own, holding the fleet under its visible-lobby cap. */
+async function maybeCreate(recent: RecentGame[]): Promise<void> {
+  if (Math.random() > CREATE_CHANCE) return
+  const nowS = Date.now() / 1000
+  const liveBotLobbies = recent.filter(
+    (g) => g.status === GameStatus.Waiting && isBotAddress(g.white) && nowS - g.createdAt <= JOIN_WINDOW_SECS,
+  ).length
+  if (liveBotLobbies >= BOT_MAX_OPEN_LOBBIES) return
+
 async function recentGames(): Promise<RecentGame[]> {
   const pub = getPublicClient()
   const nonce = (await pub.readContract({ address: GAME, abi: CHESS_GAME_ABI as Abi, functionName: 'gameNonce' })) as bigint
@@ -68,30 +101,6 @@ async function recentGames(): Promise<RecentGame[]> {
   })
   return games
 }
-
-function pickRandom<T>(items: T[]): T | null {
-  return items.length === 0 ? null : items[Math.floor(Math.random() * items.length)]
-}
-
-/** Bots able to stake `wager` from their own balance (and willing, per persona cap). */
-async function botsAffording(wager: bigint): Promise<BotProfile[]> {
-  const balances = await Promise.all(BOTS.map((b) => chessBalanceOf(b.address).catch(() => 0n)))
-  return BOTS.filter((b, i) => {
-    const cap = parseUnits(String(b.maxWager), TOKEN_DECIMALS)
-    return balances[i] >= wager && cap >= wager
-  })
-}
-
-/** Sweep every game the fleet is in: count fresh pairings, play due turns, drop settled ones. */
-async function sweepBotGames(): Promise<void> {
-  const ids = await getBotGameIds()
-  for (const gameId of ids.sort((a, b) => b - a).slice(0, 20)) {
-    try {
-      const pub = getPublicClient()
-      const g = (await pub.readContract({
-        address: GAME, abi: CHESS_GAME_ABI as Abi, functionName: 'getGame', args: [BigInt(gameId)],
-      })) as { white: string; black: string; status: number; createdAt: bigint }
-      const status = Number(g.status)
 
       if (status === GameStatus.Waiting) {
         // Expired lobbies leave the sweep set; the lifecycle sweep refunds escrow.
@@ -114,33 +123,19 @@ async function sweepBotGames(): Promise<void> {
   }
 }
 
-/** Claim due faucets so the fleet always has tomorrow's bankroll. */
-async function claimFaucets(): Promise<void> {
-  let claims = 0
-  for (const bot of BOTS) {
-    if (claims >= MAX_FAUCET_CLAIMS_PER_TICK) return
-    try {
-      if (await botClaimFaucetIfDue(bot)) claims++
-    } catch (err) {
-      console.error(`${LOG_PREFIX} faucet claim failed`, { bot: bot.name, err: (err as Error)?.message })
-    }
-  }
+function pickRandom<T>(items: T[]): T | null {
+  return items.length === 0 ? null : items[Math.floor(Math.random() * items.length)]
 }
 
-/** Maybe join one open human lobby (cap-aware, randomized). */
-async function maybeJoin(recent: RecentGame[]): Promise<void> {
-  if (Math.random() > JOIN_CHANCE) return
-  const nowS = Date.now() / 1000
-  const minWager = parseUnits(String(BOT_MIN_WAGER), TOKEN_DECIMALS)
-  const candidates = recent.filter((g) => {
-    if (g.status !== GameStatus.Waiting || isBotAddress(g.white)) return false
-    if (g.wager < minWager) return false // bots never stake below the floor
-    const age = nowS - g.createdAt
-    return age >= JOIN_MIN_AGE_S && age <= JOIN_MAX_AGE_S
-  })
-  const target = pickRandom(candidates)
-  if (!target) return
-  if (!(await humanUnderBotCap(target.white))) return
+/**
+ * One fleet heartbeat. Cheap no-op when another tick holds the lock or the
+ * fleet isn't configured. Never throws — this runs piggybacked (via after())
+ * on user-facing requests and must not affect them.
+ */
+export async function maybeTickBots(): Promise<void> {
+  try {
+    if (!process.env.BOT_MNEMONIC) return
+    if (!(await acquireTickLock(TICK_LOCK_SECONDS))) return
 
   const bot = pickRandom(await botsAffording(target.wager))
   if (!bot) return
@@ -157,14 +152,18 @@ async function maybeJoin(recent: RecentGame[]): Promise<void> {
   }
 }
 
-/** Maybe open one lobby of our own, holding the fleet under its visible-lobby cap. */
-async function maybeCreate(recent: RecentGame[]): Promise<void> {
-  if (Math.random() > CREATE_CHANCE) return
-  const nowS = Date.now() / 1000
-  const liveBotLobbies = recent.filter(
-    (g) => g.status === GameStatus.Waiting && isBotAddress(g.white) && nowS - g.createdAt <= JOIN_WINDOW_SECS,
-  ).length
-  if (liveBotLobbies >= BOT_MAX_OPEN_LOBBIES) return
+/** Claim due faucets so the fleet always has tomorrow's bankroll. */
+async function claimFaucets(): Promise<void> {
+  let claims = 0
+  for (const bot of BOTS) {
+    if (claims >= MAX_FAUCET_CLAIMS_PER_TICK) return
+    try {
+      if (await botClaimFaucetIfDue(bot)) claims++
+    } catch (err) {
+      console.error(`${LOG_PREFIX} faucet claim failed`, { bot: bot.name, err: (err as Error)?.message })
+    }
+  }
+}
 
   const wagerWhole = pickRandom(CREATE_WAGERS) ?? 0
   const wager = parseUnits(String(wagerWhole), TOKEN_DECIMALS)
@@ -180,15 +179,16 @@ async function maybeCreate(recent: RecentGame[]): Promise<void> {
   }
 }
 
-/**
- * One fleet heartbeat. Cheap no-op when another tick holds the lock or the
- * fleet isn't configured. Never throws — this runs piggybacked (via after())
- * on user-facing requests and must not affect them.
- */
-export async function maybeTickBots(): Promise<void> {
-  try {
-    if (!process.env.BOT_MNEMONIC) return
-    if (!(await acquireTickLock(TICK_LOCK_SECONDS))) return
+/** Sweep every game the fleet is in: count fresh pairings, play due turns, drop settled ones. */
+async function sweepBotGames(): Promise<void> {
+  const ids = await getBotGameIds()
+  for (const gameId of ids.sort((a, b) => b - a).slice(0, 20)) {
+    try {
+      const pub = getPublicClient()
+      const g = (await pub.readContract({
+        address: GAME, abi: CHESS_GAME_ABI as Abi, functionName: 'getGame', args: [BigInt(gameId)],
+      })) as { white: string; black: string; status: number; createdAt: bigint }
+      const status = Number(g.status)
 
     await sweepBotGames()
     await claimFaucets()
