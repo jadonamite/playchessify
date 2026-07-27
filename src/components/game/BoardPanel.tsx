@@ -125,7 +125,6 @@ export default function BoardPanel(props: BoardPanelProps) {
                   styles[hintMove.from] = { backgroundColor: 'rgba(251,191,36,0.35)' }
                   styles[hintMove.to] = { background: 'radial-gradient(circle, rgba(251,191,36,0.65) 30%, transparent 32%)' }
                 }
-                // TODO: add error boundary here
                 return styles
               })(),
               boardStyle: { borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' },

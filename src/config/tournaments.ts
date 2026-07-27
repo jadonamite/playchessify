@@ -47,7 +47,7 @@ export interface TournamentConfig {
   tzOffsetMinutes: number
 }
 
-const WEEK_MS: number = 7 * 24 * 60 * 60 * 1000
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 
 // Season 1 opens July 10 2026 00:00 WAT (UTC+1) → July 9 2026 23:00 UTC.
 const SEASON_1_EPOCH_MS = Date.UTC(2026, 6, 9, 23, 0, 0)

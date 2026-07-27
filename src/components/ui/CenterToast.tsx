@@ -72,10 +72,6 @@ const CONFIGS: Record<ToastType, Config> = {
   },
 }
 
-/**
- * CenterToast
- * @returns {*}
- */
 export default function CenterToast() {
   const { toast, hideToast } = useToastStore()
   const duration = toast?.duration ?? 4000
