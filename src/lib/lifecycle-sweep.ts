@@ -39,10 +39,6 @@ const GRACE_S = 60
 const SCAN_CHUNK = 200
 
 let _redis: Redis | null = null
-/**
- * getRedis
- * @returns {*}
- */
 function getRedis(): Redis {
   if (_redis) return _redis
   const url = process.env.UPSTASH_REDIS_REST_URL

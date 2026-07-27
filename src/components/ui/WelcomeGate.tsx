@@ -1,7 +1,7 @@
 'use client'
 
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useEffect, useState } from 'react'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 
 // One greeting per MiniPay region — Africa-first (its core base) plus the big
 // Asian markets it reaches. Western/LatAm locales were dropped: no MiniPay
