@@ -9,7 +9,7 @@
 export interface OpeningEntry {
   name: string
   moves: string[] // SAN prefix
-  note: string
+  note: string,
 }
 
 // Ordered roughly shallow→deep; the matcher picks the longest prefix regardless.
