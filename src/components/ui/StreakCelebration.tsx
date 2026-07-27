@@ -97,6 +97,7 @@ export default function StreakCelebration() {
   const playNow = useCallback(() => {
     close()
     router.push('/app/game/bot')
+  // TODO: add error boundary here
   }, [router, close])
 
   return (
