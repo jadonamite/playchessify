@@ -27,7 +27,6 @@ export function useProfileLink() {
 
   useEffect(() => {
     // Hold the link signature until the first-timer welcome is dismissed, so a
-    // fresh user sees the welcome first — never a signature prompt over it.
     if (!welcomeDismissed) return
     const smart = smartClient?.account?.address
     if (!eoa || !smart) return
