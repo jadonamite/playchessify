@@ -24,7 +24,7 @@ export const FORWARDER_ABI = [
     { "name": "value", "type": "uint256" },
     { "name": "gas", "type": "uint256" },
     { "name": "deadline", "type": "uint48" },
-    { "name": "data", "type": "bytes" },
+    { "name": "payload", "type": "bytes" },
     { "name": "signature", "type": "bytes" }
   ]}], "outputs": [] },
   { "type": "function", "name": "verify", "stateMutability": "view", "inputs": [{ "name": "request", "type": "tuple", "components": [
@@ -33,7 +33,7 @@ export const FORWARDER_ABI = [
     { "name": "value", "type": "uint256" },
     { "name": "gas", "type": "uint256" },
     { "name": "deadline", "type": "uint48" },
-    { "name": "data", "type": "bytes" },
+    { "name": "payload", "type": "bytes" },
     { "name": "signature", "type": "bytes" }
   ]}], "outputs": [{ "type": "bool" }] },
   { "type": "function", "name": "nonces", "stateMutability": "view", "inputs": [{ "name": "owner", "type": "address" }], "outputs": [{ "type": "uint256" }] }
