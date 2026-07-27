@@ -92,38 +92,38 @@ export function setMuted(muted: boolean) {
 
 // ─── move sound (Web Audio API) ─────────────────────────────────────────────
 
-function noiseBuf(ctx: AudioContext): AudioBuffer {
-  const len = ctx.sampleRate * 3
-  const buf = ctx.createBuffer(1, len, ctx.sampleRate)
+function noiseBuf(context: AudioContext): AudioBuffer {
+  const len = context.sampleRate * 3
+  const buf = context.createBuffer(1, len, context.sampleRate)
   const d = buf.getChannelData(0)
   for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1
   return buf
 }
 
-export function playMoveSound(ctx: AudioContext, isOpponent = false) {
-  if (ctx.state === 'suspended') ctx.resume()
-  const t = ctx.currentTime
-  const buf = noiseBuf(ctx)
+export function playMoveSound(context: AudioContext, isOpponent = false) {
+  if (context.state === 'suspended') context.resume()
+  const t = context.currentTime
+  const buf = noiseBuf(context)
 
-  const ns = ctx.createBufferSource()
+  const ns = context.createBufferSource()
   ns.buffer = buf
-  const nbp = ctx.createBiquadFilter()
+  const nbp = context.createBiquadFilter()
   nbp.type = 'bandpass'
   nbp.frequency.value = isOpponent ? 280 : 340
   nbp.Q.value = 1.2
-  const ng = ctx.createGain()
+  const ng = context.createGain()
   ng.gain.setValueAtTime(isOpponent ? 0.28 : 0.34, t)
   ng.gain.exponentialRampToValueAtTime(0.001, t + 0.12)
-  ns.connect(nbp); nbp.connect(ng); ng.connect(ctx.destination)
+  ns.connect(nbp); nbp.connect(ng); ng.connect(context.destination)
   ns.start(t); ns.stop(t + 0.14)
 
-  const sub = ctx.createOscillator()
-  const sg = ctx.createGain()
+  const sub = context.createOscillator()
+  const sg = context.createGain()
   sub.frequency.setValueAtTime(isOpponent ? 90 : 110, t)
   sub.frequency.exponentialRampToValueAtTime(40, t + 0.1)
   sg.gain.setValueAtTime(isOpponent ? 0.22 : 0.28, t)
   sg.gain.exponentialRampToValueAtTime(0.001, t + 0.18)
-  sub.connect(sg); sg.connect(ctx.destination)
+  sub.connect(sg); sg.connect(context.destination)
   sub.start(t); sub.stop(t + 0.2)
 }
 
