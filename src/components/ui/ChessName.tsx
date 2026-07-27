@@ -12,7 +12,7 @@ interface ChessNameProps {
   short?: boolean
   className?: string
   style?: React.CSSProperties
-  asLink?: boolean   // wraps in Link → /app/profile/{address}
+  asLink?: boolean   // wraps in Link → /app/profile/{address},
 }
 
 function fmtAddr(addr: string) {
