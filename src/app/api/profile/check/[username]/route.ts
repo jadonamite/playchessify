@@ -3,6 +3,12 @@ import { validateUsername, isUsernameAvailable } from '@/lib/profile-store'
 
 type Ctx = { params: Promise<{ username: string }> }
 
+/**
+ * GET
+ * @param {*} _req: NextRequest
+ * @param {*} { params }: Ctx
+ * @returns {*}
+ */
 export async function GET(_req: NextRequest, { params }: Ctx) {
   const { username } = await params
   if (!username) return NextResponse.json({ available: false, reason: 'invalid username' })
