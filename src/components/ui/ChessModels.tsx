@@ -32,6 +32,7 @@ function BasePiece({ modelPath, color = '#00ccff', emissive, emissiveIntensity, 
 
   const material = useMemo(() => {
     // Default emissive is a soft self-tint so the piece reads in low light;
+    // callers can override with a stronger glow (e.g. modal accents).
     const resolvedEmissive = emissive ?? (color === '#00ccff' ? color : '#000')
     const resolvedEmissiveIntensity = emissiveIntensity ?? 0.15
     return new THREE.MeshStandardMaterial({
