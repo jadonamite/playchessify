@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 interface HoldButtonProps {
   /** Fired once the user holds the button to completion. */
