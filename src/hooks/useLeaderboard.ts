@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
 import { useWallet } from '@/components/wallet-provider'
+import { useState, useEffect, useCallback } from 'react'
 
 export interface LeaderboardEntry {
   address: string
