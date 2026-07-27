@@ -1,13 +1,35 @@
-'use client'
-
-// Weekly Grand Prix prize banner — shown to every connected player once a
-// season has been seeded on-chain. Winners get their amount and a CLAIM
-// button; everyone else gets the consolation line. Claimed state persists
-// (on-chain) so returning winners see a quiet "claimed" chip, not a dead CTA.
-
 import { motion } from 'framer-motion'
 import GlowButton from '@/components/ui/GlowButton'
 import { useTournamentRewards } from '@/hooks/useTournamentRewards'
+
+const getClaimStatusText = (isWinner: boolean, claimed: boolean, prize: number) => {
+  if (isWinner && claimed) {
+    return <> — ${prize} claimed ✓</>
+  } else if (isWinner) {
+    return 'Tap CLAIM to check your podium finish.'
+  } else {
+    return 'Prizes are live.'
+  }
+}
+
+const getClaimButtonStatus = (isWinner: boolean, claimed: boolean, isClaiming: boolean) => {
+  if (isWinner && claimed) {
+    return null
+  } else {
+    return (
+      <GlowButton
+        variant="brand"
+        size="sm"
+        parallelogram
+        className="shrink-0"
+        disabled={isClaiming}
+        onClick={() => void claim()}
+      >
+        {isClaiming ? 'CHECKING…' : 'CLAIM'}
+      </GlowButton>
+    )
+  }
+}
 
 export default function RewardsClaimCard() {
   const { status, claim, isClaiming } = useTournamentRewards()
@@ -30,27 +52,18 @@ export default function RewardsClaimCard() {
           <div className="min-w-0">
             <p className="text-xs font-black tracking-wide text-white">
               Grand Prix <span style={{ color: '#f5c542' }}>S{seasonId}</span> has concluded
-              {isWinner && claimed && <> — ${prize} claimed ✓</>}
+              {getClaimStatusText(isWinner, claimed, prize)}
             </p>
             <p className="text-[10px] text-[var(--t3)] truncate">
               {isWinner && claimed
                 ? 'Paid out to your wallet. See you on next season’s podium.'
-                : 'Prizes are live. Tap CLAIM to check your podium finish.'}
+                : getClaimButtonStatus(isWinner, claimed, isClaiming) !== null
+                  ? 'Prizes are live. Tap CLAIM to check your podium finish.'
+                  : ''}
             </p>
           </div>
         </div>
-        {!(isWinner && claimed) && (
-          <GlowButton
-            variant="brand"
-            size="sm"
-            parallelogram
-            className="shrink-0"
-            disabled={isClaiming}
-            onClick={() => void claim()}
-          >
-            {isClaiming ? 'CHECKING…' : 'CLAIM'}
-          </GlowButton>
-        )}
+        {getClaimButtonStatus(isWinner, claimed, isClaiming)}
       </motion.div>
     </div>
   )
