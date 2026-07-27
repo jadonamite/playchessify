@@ -44,7 +44,7 @@ function GearIcon({ size = 24 }: IconProps) {
       <path
         d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
         fill="currentColor"
-        opacity="0.35"
+        opacity='0.35'
       />
       <path
         d="M12 9.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"
