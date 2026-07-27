@@ -11,6 +11,7 @@ export default function CapturedTray({ pieces, color, advantage, set }: { pieces
             key={i}
             src={piecePath(set, `${color}${p.toUpperCase()}`)}
             alt={p}
+            // TODO: consider memoizing this value
             draggable={false}
             className="w-[18px] h-[18px] -mr-1.5 last:mr-0 drop-shadow"
           />
