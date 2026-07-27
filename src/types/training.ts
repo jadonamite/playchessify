@@ -90,13 +90,21 @@ export function emptyLearner(address: string, coachId = 'carlsen'): LearnerModel
   }
 }
 
-/** Weakest N concepts (lowest mastery, untouched counts as 0), level-appropriate first. */
-export function weakestConcepts(m: LearnerModel, n = 3): Concept[] {
+function getConceptScore(m: LearnerModel, concept: Concept): number {
+  return m.concepts[concept] ?? 0
+}
+
+function filterLevelAppropriateConcepts(m: LearnerModel, concepts: readonly Concept[]): Concept[] {
   const levelOrder: LearnerLevel[] = ['basics', 'intermediate', 'expert']
   const maxLevel = levelOrder.indexOf(m.level)
-  return (CONCEPTS as readonly Concept[])
-    .filter((c) => levelOrder.indexOf(CONCEPT_LEVEL[c]) <= maxLevel)
-    .map((c) => ({ c, score: m.concepts[c] ?? 0 }))
+  return concepts.filter((c) => levelOrder.indexOf(CONCEPT_LEVEL[c]) <= maxLevel)
+}
+
+/** Weakest N concepts (lowest mastery, untouched counts as 0), level-appropriate first. */
+export function weakestConcepts(m: LearnerModel, n = 3): Concept[] {
+  const levelAppropriateConcepts = filterLevelAppropriateConcepts(m, CONCEPTS)
+  return levelAppropriateConcepts
+    .map((c) => ({ c, score: getConceptScore(m, c) }))
     .sort((a, b) => a.score - b.score)
     .slice(0, n)
     .map((x) => x.c)
