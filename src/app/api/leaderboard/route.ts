@@ -55,6 +55,10 @@ function createLeaderboardEntries(addresses: string[], statsResults: any[]): Lea
 
 // GET /api/leaderboard — Redis-indexed leaderboard. Scans only games created
 // since the last index sync (cursor), then reads playerStats for known players.
+/**
+ * GET
+ * @returns {*}
+ */
 export async function GET() {
   try {
     const redis = getRedis()
