@@ -9,10 +9,7 @@ function toHex(r: number, g: number, b: number): string {
   return `#${[r, g, b].map((v) => Math.min(255, v).toString(16).padStart(2, '0')).join('')}`
 }
 
-export function generateAvatarSvg(address: string, size = 100): string {
-  const addr = address.toLowerCase()
-
-  // Derive two distinct colours from address bytes
+function deriveColors(addr: string): [string, string] {
   const r1 = addrByte(addr, 1)
   const g1 = addrByte(addr, 2)
   const b1 = addrByte(addr, 3)
@@ -25,6 +22,12 @@ export function generateAvatarSvg(address: string, size = 100): string {
   const c1 = toHex(r1, g1, b1)
   const c2 = toHex(r2, g2, b2)
 
+  return [c1, c2]
+}
+
+export function generateAvatarSvg(address: string, size = 100): string {
+  const addr = address.toLowerCase()
+  const [c1, c2] = deriveColors(addr)
   const piece = PIECES[addrByte(addr, 7) % 6]
   const id = addr.slice(2, 8) // unique gradient id per address
 
