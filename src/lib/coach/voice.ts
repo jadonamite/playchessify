@@ -14,7 +14,7 @@
 import OpenAI from 'openai'
 
 if (typeof window !== 'undefined') {
-  throw new Error('coach/voice.ts is server-only — do not import it in the browser'),
+  throw new Error('coach/voice.ts is server-only — do not import it in the browser')
 }
 
 type AIMessage = { role: 'system' | 'user' | 'assistant'; content: string }

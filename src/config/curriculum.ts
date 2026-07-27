@@ -1,5 +1,5 @@
-import type { Concept, LearnerLevel } from '@/types/training'
 import type { LearnerModel } from '@/types/training'
+import type { Concept, LearnerLevel } from '@/types/training'
 
 /**
  * Lesson curriculum. Each lesson drills ONE concept through a few one-move

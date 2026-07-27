@@ -9,7 +9,7 @@ interface TrapButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /**
- * The brand trapezoid CTA (same clip-path as the landing's 'TRAIN WITH' button),
+ * The brand trapezoid CTA (same clip-path as the landing's "TRAIN WITH" button),
  * but accent-aware so coach-coloured calls-to-action stay on-brand across the
  * training flow.
  */

@@ -109,7 +109,6 @@ const GlowButton = forwardRef<HTMLButtonElement, GlowButtonProps>(
     return (
       <button
         ref={ref}
-        // FIXME: handle edge case when value is null
         disabled={isDisabled}
         style={combined}
         onMouseEnter={e => {

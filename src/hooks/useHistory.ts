@@ -15,10 +15,6 @@ export type HistoryItem = {
   canReclaim: boolean
 }
 
-/**
- * useHistory
- * @returns {*}
- */
 export function useHistory() {
   const { playerAddress } = useWallet()
   const [history, setHistory] = useState<HistoryItem[]>([])
