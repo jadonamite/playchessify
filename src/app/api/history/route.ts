@@ -28,11 +28,6 @@ export type HistoryItem = {
 
 // GET /api/history?address=0x… — a player's games, resolved via the Redis index
 // (only that player's gameIds are read on-chain, not the whole game table).
-/**
- * GET
- * @param {*} req: NextRequest
- * @returns {*}
- */
 export async function GET(req: NextRequest) {
   const address = (req.nextUrl.searchParams.get('address') ?? '').trim()
   if (!isAddress(address)) {
