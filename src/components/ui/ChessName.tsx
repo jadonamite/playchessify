@@ -53,7 +53,7 @@ export default function ChessName({
         {display}
         {badge && profile.og && (
           <span
-            title="OG — first 100 players"
+            title='OG — first 100 players'
             style={{ marginLeft: '4px', color: '#fbbf24', fontSize: '0.75em' }}
           >
             ✦
