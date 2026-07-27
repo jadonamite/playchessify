@@ -245,7 +245,7 @@ function enemyKingSquare(game: Chess, coachColor: 'w' | 'b'): [number, number] |
   for (let r = 0; r < 8; r++) {
     for (let c = 0; c < 8; c++) {
       const p = board[r][c]
-      if (p?.type === 'k' && p.color === enemy) return [c, 7 - r]
+      if (p && p.type === 'k' && p.color === enemy) return [c, 7 - r]
     }
   }
   return null
