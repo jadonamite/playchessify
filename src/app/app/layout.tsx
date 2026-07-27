@@ -30,25 +30,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isConnected } = useWallet()
   const { dismissed, dismiss } = useWelcomeGate()
 
-  if (isGame) {
-    return (
-      <div className="pc-app-shell">
-        <SideNav />
-        <div className="pc-app-scroll">{children}</div>
-        <StreakCelebration />
-        <WelcomeGate open={isConnected && !dismissed} onDone={dismiss} />
-      </div>
-    )
-  }
-
   return (
     <div className="pc-app-shell">
       <SideNav />
-      <div className="pc-mobile-chrome">
-        <Navbar />
-      </div>
-      <div className="pc-app-scroll">{children}</div>
-      <BottomNav />
+      {!isGame && (
+        <div className="pc-mobile-chrome">
+          <Navbar />
+        </div>
+      )}
+      <div className={isGame ? undefined : 'pc-app-scroll'}>{children}</div>
+      {!isGame && <BottomNav />}
       <StreakCelebration />
       <WelcomeGate open={isConnected && !dismissed} onDone={dismiss} />
     </div>

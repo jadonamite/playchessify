@@ -33,7 +33,7 @@ export default function GameHeader({ isBotGame, gameId, gameData, wagerFormatted
             <div className="flex flex-wrap gap-3 md:gap-4 mt-2 md:mt-4">
               <StatBadge label="WAGER" value={`${wagerFormatted} CHESS`} accent />
               <StatBadge label="STATUS" value={statusLabel} />
-              {myColor && <StatBadge label='YOU PLAY' value={myColor.toUpperCase()} />}
+              {myColor && <StatBadge label="YOU PLAY" value={myColor.toUpperCase()} />}
             </div>
             <div className="flex items-center gap-3 mt-2 md:mt-4">
               <div className="flex items-center gap-2">

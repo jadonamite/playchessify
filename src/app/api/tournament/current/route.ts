@@ -1,6 +1,6 @@
 import { NextResponse, after } from 'next/server'
-import { maybeTickBots } from '@/lib/bots/scheduler'
 import { getCurrentTournament } from '@/lib/tournament'
+import { maybeTickBots } from '@/lib/bots/scheduler'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

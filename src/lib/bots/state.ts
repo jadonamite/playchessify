@@ -59,10 +59,6 @@ export async function unregisterBotGame(gameId: number): Promise<void> {
   await getRedis().srem(K.games, gameId)
 }
 
-/**
- * getBotGameIds
- * @returns {*}
- */
 export async function getBotGameIds(): Promise<number[]> {
   const raw = await getRedis().smembers(K.games)
   return raw.map(Number).filter(Number.isInteger)
