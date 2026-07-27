@@ -1,5 +1,5 @@
-import { validateUsername, isUsernameAvailable } from '@/lib/profile-store'
 import { NextRequest, NextResponse } from 'next/server'
+import { validateUsername, isUsernameAvailable } from '@/lib/profile-store'
 
 type Ctx = { params: Promise<{ username: string }> }
 

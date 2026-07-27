@@ -88,12 +88,12 @@ export async function appendMove(
   move: MoveRecord,
   expectedLen: number,
 ): Promise<number | null> {
-  const response = (await getRedis().eval(
+  const res = (await getRedis().eval(
     APPEND_LUA,
     [key(chain, gameId)],
     [JSON.stringify(move), String(expectedLen), String(TTL_SECONDS)],
   )) as number
-  return response < 0 ? null : response
+  return res < 0 ? null : res
 }
 
 /** Fetch all moves for a game in submission order. */
