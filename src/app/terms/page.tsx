@@ -163,5 +163,5 @@ export default function TermsPage() {
         <a href="mailto:support@playchessify.xyz">support@playchessify.xyz</a>.
       </p>
     </LegalPage>
-  ),
+  )
 }
