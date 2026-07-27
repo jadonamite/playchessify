@@ -265,6 +265,7 @@ export async function ensureOracleGas(): Promise<OracleGasStatus> {
       return { ok: true, balanceCelo: formatEther(balance), refilled: false }
     }
 
+    // Low — try one refill from the source wallet, keeping its reserve intact.
     const { account: src, client: srcClient } = walletFor(REFILL_SOURCE_ENV)
     const srcBalance = await pub.getBalance({ address: src.address })
     const need = ORACLE_TARGET_CELO - balance

@@ -98,8 +98,7 @@ export async function botCreateGame(bot: BotProfile, wager: bigint): Promise<num
     try {
       const decoded = decodeEventLog({ abi: CHESS_GAME_ABI, data: log.data, topics: log.topics })
       if (decoded.eventName === 'GameCreated') {
-        const result = Number((decoded.args as unknown as { gameId: bigint }).gameId);
-        return result;
+        return Number((decoded.args as unknown as { gameId: bigint }).gameId)
       }
     } catch {
       // log from another contract — skip
