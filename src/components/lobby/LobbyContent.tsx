@@ -57,7 +57,7 @@ export default function LobbyContent() {
   const coachId = useCoachStore((s) => s.coachId)
 
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
-  const MAINTENANCE_MODE = false
+  const MAINTENANCE_MODE: boolean = false
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   // Step before the wager modal: choose a human match (relay/on-chain) or a

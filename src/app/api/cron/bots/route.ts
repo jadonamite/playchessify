@@ -12,11 +12,8 @@ export const dynamic = 'force-dynamic'
 // Protected by CRON_SECRET, same convention as /api/cron/settle.
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET
-  if (secret) {
-    const auth = req.headers.get('authorization')
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
-    }
+  if (!secret || req.headers.get('authorization') !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
   await maybeTickBots()
   return NextResponse.json({ ok: true })

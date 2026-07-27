@@ -198,8 +198,8 @@ export default function FaucetContent() {
       // stats) so navigating back to the lobby fetches the fresh on-chain balance
       // instead of serving the stale cache.
       queryClient.invalidateQueries()
-    } catch (err) {
-      const msg = (err instanceof Error ? err.message : '') || 'Unknown error'
+    } catch (error) {
+      const msg = (error instanceof Error ? error.message : '') || 'Unknown error'
 
       if (msg === 'TIMEOUT') {
         setResultType('timeout')
