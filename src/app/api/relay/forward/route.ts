@@ -110,6 +110,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, txHash })
   } catch (err) {
     console.error(`${LOG_PREFIX} execution failed`, { from, to, err: (err as Error)?.message })
-    return NextResponse.json({ error: 'relay execution failed' }, { status: 502 })
+    const result = NextResponse.json({ error: 'relay execution failed' }, { status: 502 });
+    return result;
   }
 }
