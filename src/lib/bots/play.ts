@@ -8,7 +8,7 @@ import { canonicalMoveMessage, deriveResult, MOVE_TIMEOUT_MS } from '@/lib/settl
 import { getCoachMove, getBestMove } from '@/lib/chess-engine'
 import { settleGameById } from '@/lib/settle-game'
 
-const LOG_PREFIX = '[bots/play]'
+const LOG_PREFIX: string = '[bots/play]'
 const CHAIN: Chain = 'celo'
 
 /** The bot participating in a game, if any (bots never face each other). */
