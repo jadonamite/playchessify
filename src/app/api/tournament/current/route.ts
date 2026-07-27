@@ -9,6 +9,10 @@ export const dynamic = 'force-dynamic'
 // prize standings. Seeds ratings lazily on first read after open and freezes the
 // prior season's final board opportunistically. Payout stays manual: this endpoint
 // only reports who is winning.
+/**
+ * GET
+ * @returns {*}
+ */
 export async function GET() {
   try {
     const data = await getCurrentTournament()

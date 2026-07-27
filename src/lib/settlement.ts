@@ -102,5 +102,6 @@ export function sideToMoveAddress(moves: MoveRecord[], white: string, black: str
       return null
     }
   }
-  return chess.turn() === 'w' ? white : black
+  const result = chess.turn() === 'w' ? white : black;
+  return result;
 }
