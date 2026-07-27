@@ -74,8 +74,8 @@ async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
  * failure we drop to the next. Throws only if EVERY provider fails — callers
  * (coachExplain) catch that and fall back to the template.
  */
-async function complete(messages: AIMessage[], options: { maxTokens?: number; temperature?: number } = {}): Promise<string> {
-  const { maxTokens = 160, temperature = 0.5 } = options
+async function complete(messages: AIMessage[], opts: { maxTokens?: number; temperature?: number } = {}): Promise<string> {
+  const { maxTokens = 160, temperature = 0.5 } = opts
   const chain = providers()
   if (chain.length === 0) throw new Error('no LLM providers configured')
 
