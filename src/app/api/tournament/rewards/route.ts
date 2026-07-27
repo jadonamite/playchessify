@@ -13,19 +13,13 @@ export async function GET() {
   try {
     const prev = getLatestConcludedSeason()
     if (!prev) return NextResponse.json({ seasonId: 0, winners: [] })
-
-    try {
-      const final = await getFinalTournament(prev.id)
-      return NextResponse.json({
-        seasonId: prev.seasonIndex,
-        winners: (final?.winners ?? []).map((w) => ({ address: w.address, amount: w.amount })),
-      })
-    } catch (err) {
-      console.error('[api/tournament/rewards] failed to fetch final tournament:', (err as Error)?.message)
-      return NextResponse.json({ error: 'rewards unavailable' }, { status: 503 })
-    }
+    const final = await getFinalTournament(prev.id)
+    return NextResponse.json({
+      seasonId: prev.seasonIndex,
+      winners: (final?.winners ?? []).map((w) => ({ address: w.address, amount: w.amount })),
+    })
   } catch (err) {
-    console.error('[api/tournament/rewards] failed to fetch latest concluded season:', (err as Error)?.message)
+    console.error('[api/tournament/rewards] failed:', (err as Error)?.message)
     return NextResponse.json({ error: 'rewards unavailable' }, { status: 503 })
   }
 }

@@ -109,8 +109,7 @@ export default function GameClient() {
         audioCtxRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
       }
       if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume()
-      const result = audioCtxRef.current;
-      return result;
+      return audioCtxRef.current
     } catch { return null }
   }, [])
 

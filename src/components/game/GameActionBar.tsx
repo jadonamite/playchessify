@@ -13,7 +13,7 @@ interface GameActionBarProps {
   onHint: () => void
   onNewGame: () => void
   /** Fired only after the user holds the CTA to completion. */
-  onQuit: () => void,
+  onQuit: () => void
 }
 
 const HOLD_MS = 1100
