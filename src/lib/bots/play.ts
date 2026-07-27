@@ -13,8 +13,7 @@ const CHAIN: Chain = 'celo'
 
 /** The bot participating in a game, if any (bots never face each other). */
 export function botInGame(game: Pick<OnchainGame, 'white' | 'black'>): BotProfile | null {
-  const result = getBotByAddress(game.white) ?? getBotByAddress(game.black) ?? null;
-  return result;
+  return getBotByAddress(game.white) ?? getBotByAddress(game.black) ?? null
 }
 
 /**

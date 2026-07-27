@@ -213,7 +213,7 @@ export default function MagicRings({
 
     let frameId = 0
     let running = false
-    let inView: boolean = true
+    let inView = true
     const animate = (t: number) => {
       const p = propsRef.current
       if (!p) { if (running) frameId = requestAnimationFrame(animate); return }

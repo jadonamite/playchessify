@@ -30,7 +30,7 @@ function fadeTo(track: Track, target: number, durationMs: number, onDone?: () =>
   const start = track.audio.volume
   const delta = target - start
   const steps = Math.max(1, Math.round(durationMs / 30))
-  let step: number = 0
+  let step = 0
   track.fadeTimer = setInterval(() => {
     step++
     track.audio.volume = Math.min(1, Math.max(0, start + delta * (step / steps)))

@@ -1,9 +1,9 @@
 'use client'
 
-import * as THREE from 'three'
-import { useFrame } from '@react-three/fiber'
-import { useGLTF, Float } from '@react-three/drei'
 import { useMemo, useRef } from 'react'
+import { useGLTF, Float } from '@react-three/drei'
+import { useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
 
 /* ── PRELOADS ──
    Only the King is shown above the fold (landing hero). The other pieces
