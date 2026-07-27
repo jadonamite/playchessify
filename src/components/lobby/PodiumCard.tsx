@@ -273,7 +273,7 @@ export default function PodiumCard({
           {/* compact W / L / D */}
           <div className="flex items-center gap-1 text-[9px] font-black" style={{ fontFamily: 'var(--fd)' }}>
             <span className="text-green-400">{wins}</span>
-            <span className='text-gray-600'>/</span>
+            <span className="text-gray-600">/</span>
             <span className="text-red-400">{losses}</span>
             <span className="text-gray-600">/</span>
             <span className="text-gray-400">{draws}</span>
