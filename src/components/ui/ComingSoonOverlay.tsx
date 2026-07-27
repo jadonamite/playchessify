@@ -12,6 +12,10 @@ useGLTF.preload('/models/King.glb')
 useGLTF.preload('/models/QueenChess.glb')
 useGLTF.preload('/models/Rook.glb')
 
+/**
+ * FloatingPieces
+ * @returns {*}
+ */
 function FloatingPieces() {
   const king = useGLTF('/models/King.glb')
   const queen = useGLTF('/models/QueenChess.glb')

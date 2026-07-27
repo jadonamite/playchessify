@@ -363,6 +363,11 @@ function MatchIntroInner({
   )
 }
 
+/**
+ * MatchIntro
+ * @param {*} props: MatchIntroProps
+ * @returns {*}
+ */
 export default function MatchIntro(props: MatchIntroProps) {
   return (
     <AnimatePresence>
