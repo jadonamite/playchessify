@@ -35,10 +35,6 @@ interface RewardsApi {
   winners: { address: string; amount: number }[]
 }
 
-/**
- * useTournamentRewards
- * @returns {*}
- */
 export function useTournamentRewards() {
   const publicClient = usePublicClient({ chainId: CELO_CHAIN_ID })
   const { playerAddress } = useWallet()
