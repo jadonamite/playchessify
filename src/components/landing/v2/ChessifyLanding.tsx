@@ -1,16 +1,16 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import GlowButton from '@/components/ui/GlowButton'
+import MagicRings from './MagicRings'
+import { COACHES, type Coach } from '@/config/coaches'
 import { Canvas } from '@react-three/fiber'
 import { Environment } from '@react-three/drei'
 import { King } from '@/components/ui/ChessModels'
-import MagicRings from './MagicRings'
-import { useWallet } from '@/components/wallet-provider'
-import GlowButton from '@/components/ui/GlowButton'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { startAmbient, stopAmbient, setMuted } from '@/lib/audio'
-import { COACHES, type Coach } from '@/config/coaches'
 import { useCoachStore } from '@/hooks/useCoachStore'
+import { useRouter } from 'next/navigation'
+import { useWallet } from '@/components/wallet-provider'
 
 /* ───────────────────────── helpers ───────────────────────── */
 
