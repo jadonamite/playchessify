@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
 import { HintBulbIcon } from '@/components/ui/icons'
+import { motion } from 'framer-motion'
+import { useCallback, useRef, useState } from 'react'
 
 interface GameActionBarProps {
   gameOver: boolean
