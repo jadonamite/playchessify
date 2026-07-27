@@ -42,7 +42,7 @@ export interface TournamentData {
 }
 
 export function useTournament() {
-  const [payload, setData] = useState<TournamentData | null>(null)
+  const [data, setData] = useState<TournamentData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   const fetchTournament = useCallback(async () => {
@@ -62,5 +62,5 @@ export function useTournament() {
     fetchTournament()
   }, [fetchTournament])
 
-  return { payload, isLoading, refresh: fetchTournament }
+  return { data, isLoading, refresh: fetchTournament }
 }
