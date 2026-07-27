@@ -10,7 +10,6 @@ const Chessboard = dynamic(() => import('react-chessboard').then((m) => m.Chessb
 
 interface TrainingBoardProps {
   game: Chess
-  // TODO: add input validation
   orientation?: 'white' | 'black'
   /** Whose move the human may make; if false the board is read-only. */
   interactive: boolean
