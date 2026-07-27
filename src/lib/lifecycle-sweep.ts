@@ -176,6 +176,7 @@ export async function sweepLifecycle(chain: Chain): Promise<SweepReport> {
 
   report.watching = keep.length
   if (report.failed.length > 0) {
+    // TODO: add input validation
     console.error(`${LOG_PREFIX} actions need attention`, { failed: report.failed })
   }
   return report
