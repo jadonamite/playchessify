@@ -12,10 +12,14 @@ useGLTF.preload('/models/King.glb')
 useGLTF.preload('/models/QueenChess.glb')
 useGLTF.preload('/models/Rook.glb')
 
-function FloatingPieces() {
-  const king = useGLTF('/models/King.glb')
-  const queen = useGLTF('/models/QueenChess.glb')
-  const rook = useGLTF('/models/Rook.glb')
+  const applyMaterial = (scene: THREE.Group, material: THREE.Material) => {
+    const clone = scene.clone()
+    clone.traverse((child) => {
+      const mesh = child as THREE.Mesh
+      if (mesh.isMesh) mesh.material = material
+    })
+    return clone
+  }
 
   const cyanMaterial = useMemo(() => new THREE.MeshStandardMaterial({
     color: '#00ccff', emissive: '#00ccff', emissiveIntensity: 0.4, roughness: 0.2, metalness: 0.8
@@ -25,14 +29,8 @@ function FloatingPieces() {
     color: '#0f172a', roughness: 0.4, metalness: 0.6
   }), [])
 
-  const applyMaterial = (scene: THREE.Group, material: THREE.Material) => {
-    const clone = scene.clone()
-    clone.traverse((child) => {
-      const mesh = child as THREE.Mesh
-      if (mesh.isMesh) mesh.material = material
-    })
-    return clone
-  }
+export default function ComingSoonOverlay({ isOpen, onClose }: ComingSoonOverlayProps) {
+  const [mounted, setMounted] = useState(false)
 
   const coloredQueen = useMemo(() => applyMaterial(queen.scene, cyanMaterial), [queen.scene, cyanMaterial])
   const coloredKing = useMemo(() => applyMaterial(king.scene, cyanMaterial), [king.scene, cyanMaterial])
@@ -66,8 +64,10 @@ interface ComingSoonOverlayProps {
   onClose: () => void
 }
 
-export default function ComingSoonOverlay({ isOpen, onClose }: ComingSoonOverlayProps) {
-  const [mounted, setMounted] = useState(false)
+function FloatingPieces() {
+  const king = useGLTF('/models/King.glb')
+  const queen = useGLTF('/models/QueenChess.glb')
+  const rook = useGLTF('/models/Rook.glb')
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration mount flag
