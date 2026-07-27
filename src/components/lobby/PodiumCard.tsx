@@ -1,9 +1,9 @@
 'use client'
 
-import ChessAvatar from '@/components/ui/ChessAvatar'
-import ChessName from '@/components/ui/ChessName'
-import type { ChessProfile } from '@/types/profile'
 import { motion } from 'framer-motion'
+import ChessName from '@/components/ui/ChessName'
+import ChessAvatar from '@/components/ui/ChessAvatar'
+import type { ChessProfile } from '@/types/profile'
 
 // ── medal palettes (shared by the leaderboard + tournament podiums) ──────────
 export const MEDAL = {
