@@ -64,7 +64,7 @@ export default function GameActionBar({
 
   return (
     <div
-      className="pc-game-bar"
+      className='pc-game-bar'
       style={{
         alignItems: 'center',
         justifyContent: 'center',

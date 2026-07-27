@@ -8,9 +8,16 @@ import Link from 'next/link'
 import GlowButton from '@/components/ui/GlowButton'
 import { Navbar } from '@/components/landing/Hero'
 
-function KnightModel() {
-  const { scene } = useGLTF('/models/chess-knight.glb')
-  const meshRef = useRef<THREE.Group>(null)
+export default function NotFound() {
+  return (
+    <main className="min-h-screen bg-[var(--bg)] flex flex-col items-center relative overflow-hidden">
+      <Navbar />
+      
+      <div className="absolute inset-0 z-0">
+        <Canvas camera={{ position: [0, 0, 10], fov: 35 }}>
+          <Scene />
+        </Canvas>
+      </div>
 
   useFrame((state) => {
     if (meshRef.current) {
@@ -28,16 +35,9 @@ function KnightModel() {
   )
 }
 
-function Scene() {
-  return (
-    <>
-      <ambientLight intensity={0.5} />
-      <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={2} color="#00ccff" />
-      <pointLight position={[-10, -10, -10]} intensity={1} color="#783cdc" />
-      
-      <Suspense fallback={null}>
-        <PresentationControls
-          global
+function KnightModel() {
+  const { scene } = useGLTF('/models/chess-knight.glb')
+  const meshRef = useRef<THREE.Group>(null)
 
           snap
           rotation={[0, 0.3, 0]}
@@ -57,16 +57,16 @@ function Scene() {
 
 import { motion } from 'framer-motion'
 
-export default function NotFound() {
+function Scene() {
   return (
-    <main className="min-h-screen bg-[var(--bg)] flex flex-col items-center relative overflow-hidden">
-      <Navbar />
+    <>
+      <ambientLight intensity={0.5} />
+      <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={2} color="#00ccff" />
+      <pointLight position={[-10, -10, -10]} intensity={1} color="#783cdc" />
       
-      <div className="absolute inset-0 z-0">
-        <Canvas camera={{ position: [0, 0, 10], fov: 35 }}>
-          <Scene />
-        </Canvas>
-      </div>
+      <Suspense fallback={null}>
+        <PresentationControls
+          global
 
       <div className="relative z-10 flex flex-col items-center justify-center flex-1 text-center px-6">
         <motion.div 
