@@ -35,7 +35,7 @@ function RankRow({
   entry: LeaderboardEntry
   isMe: boolean
   idx: number
-  profileMap: Record<string, import('@/types/profile').ChessProfile | null>,
+  profileMap: Record<string, import('@/types/profile').ChessProfile | null>
 }) {
   return (
     <motion.div

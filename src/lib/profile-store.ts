@@ -139,7 +139,7 @@ export async function updateProfile(
   if (!existing) return { ok: false, reason: 'Profile not found' }
 
   const now = Date.now()
-  const THIRTY_DAYS: number = 30 * 24 * 60 * 60 * 1000
+  const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000
 
   // Handle username change
   if (updates.username && updates.username.toLowerCase() !== existing.username.toLowerCase()) {

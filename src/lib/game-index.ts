@@ -10,7 +10,6 @@ import { CHESS_GAME_ABI } from '@/config/abis'
 // leaderboard and history don't have to re-scan every game on the chain on each
 // load. A cursor records the highest gameId already folded into the index; each
 // sync only scans the delta (cursor+1 .. current gameNonce).
-// NOTE: revisit this logic after API migration
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ZERO = '0x0000000000000000000000000000000000000000'
