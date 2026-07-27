@@ -17,6 +17,41 @@ import ChessAvatar from '@/components/ui/ChessAvatar'
 import ClaimModal from '@/components/ui/ClaimModal'
 import PageBackground from '@/components/ui/PageBackground'
 
+export default function SettingsPage() {
+  const router = useRouter()
+  const { playerAddress, isConnected } = useWallet()
+  const { soundEnabled, setSoundEnabled, boardTheme, setBoardTheme, pieceSet, setPieceSet, aiDifficulty, setAiDifficulty, showMoveHints, setShowMoveHints } = useSettingsStore()
+  const { data: profile } = useProfile(playerAddress ?? null)
+  const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
+  const signIdentity = useIdentitySigner()
+  const { learner, update: updateLearner } = useLearner()
+  const coachId = useCoachStore((s) => s.coachId) ?? learner?.coachId ?? null
+  const setCoachId = useCoachStore((s) => s.setCoachId)
+
+  const handleSaveProfile = async () => {
+    if (!playerAddress || !profile) return
+    setEditError('')
+    try {
+      const timestamp = new Date().toISOString()
+      // Address lowercased to match the server's message exactly — the update
+      // route builds it from a lowercased address, and a casing drift would fail
+      // signature verification.
+      const message = `Chessify Profile Update\n\nAddress: ${playerAddress.toLowerCase()}\nTimestamp: ${timestamp}`
+      const signature = await signIdentity(message)
+      await updateProfile({ address: playerAddress, displayName: editDisplayName.trim(), bio: editBio.trim(), signature, timestamp })
+      setEditDirty(false)
+      setEditSaved(true)
+      setTimeout(() => setEditSaved(false), 3000)
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : 'Update failed')
+    }
+  }
+
+  const chooseCoach = (id: string) => {
+    setCoachId(id) // instant UI everywhere (no signature — training is low-stakes)
+    void updateLearner({ coachId: id }).catch(() => {})
+  }
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <motion.div
@@ -32,6 +67,22 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     </motion.div>
   )
 }
+
+  const [claimOpen, setClaimOpen] = useState(false)
+  const [editDisplayName, setEditDisplayName] = useState('')
+  const [editBio, setEditBio] = useState('')
+  const [editDirty, setEditDirty] = useState(false)
+  const [editError, setEditError] = useState('')
+  const [editSaved, setEditSaved] = useState(false)
+
+  // Sync fields when profile loads
+  useEffect(() => {
+    if (profile && !editDirty) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync form fields from loaded profile
+      setEditDisplayName(profile.displayName ?? '')
+      setEditBio(profile.bio ?? '')
+    }
+  }, [profile, editDirty])
 
 function Toggle({ label, sub, checked, onChange }: { label: string; sub?: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -56,57 +107,6 @@ function Toggle({ label, sub, checked, onChange }: { label: string; sub?: string
     </div>
   )
 }
-
-export default function SettingsPage() {
-  const router = useRouter()
-  const { playerAddress, isConnected } = useWallet()
-  const { soundEnabled, setSoundEnabled, boardTheme, setBoardTheme, pieceSet, setPieceSet, aiDifficulty, setAiDifficulty, showMoveHints, setShowMoveHints } = useSettingsStore()
-  const { data: profile } = useProfile(playerAddress ?? null)
-  const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
-  const signIdentity = useIdentitySigner()
-  const { learner, update: updateLearner } = useLearner()
-  const coachId = useCoachStore((s) => s.coachId) ?? learner?.coachId ?? null
-  const setCoachId = useCoachStore((s) => s.setCoachId)
-
-  const chooseCoach = (id: string) => {
-    setCoachId(id) // instant UI everywhere (no signature — training is low-stakes)
-    void updateLearner({ coachId: id }).catch(() => {})
-  }
-
-  const [claimOpen, setClaimOpen] = useState(false)
-  const [editDisplayName, setEditDisplayName] = useState('')
-  const [editBio, setEditBio] = useState('')
-  const [editDirty, setEditDirty] = useState(false)
-  const [editError, setEditError] = useState('')
-  const [editSaved, setEditSaved] = useState(false)
-
-  // Sync fields when profile loads
-  useEffect(() => {
-    if (profile && !editDirty) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync form fields from loaded profile
-      setEditDisplayName(profile.displayName ?? '')
-      setEditBio(profile.bio ?? '')
-    }
-  }, [profile, editDirty])
-
-  const handleSaveProfile = async () => {
-    if (!playerAddress || !profile) return
-    setEditError('')
-    try {
-      const timestamp = new Date().toISOString()
-      // Address lowercased to match the server's message exactly — the update
-      // route builds it from a lowercased address, and a casing drift would fail
-      // signature verification.
-      const message = `Chessify Profile Update\n\nAddress: ${playerAddress.toLowerCase()}\nTimestamp: ${timestamp}`
-      const signature = await signIdentity(message)
-      await updateProfile({ address: playerAddress, displayName: editDisplayName.trim(), bio: editBio.trim(), signature, timestamp })
-      setEditDirty(false)
-      setEditSaved(true)
-      setTimeout(() => setEditSaved(false), 3000)
-    } catch (e) {
-      setEditError(e instanceof Error ? e.message : 'Update failed')
-    }
-  }
 
   const BOARD_THEME_KEYS = Object.keys(BOARD_THEMES) as BoardTheme[]
   const AI_DIFFICULTIES: AiDifficulty[] = ['easy', 'medium', 'hard']
