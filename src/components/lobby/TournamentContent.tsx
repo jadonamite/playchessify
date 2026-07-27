@@ -230,14 +230,14 @@ function TrophyRow({
 export default function TournamentContent() {
   const router = useRouter()
   const { playerAddress } = useWallet()
-  const { data, isLoading, refresh } = useTournament()
-  const board = data?.board ?? []
-  const { data: profileMap = {} } = useBatchProfiles(board.map((e) => e.address))
+  const { payload, isLoading, refresh } = useTournament()
+  const board = payload?.board ?? []
+  const { payload: profileMap = {} } = useBatchProfiles(board.map((e) => e.address))
 
   const myAddress = playerAddress?.toLowerCase()
-  const win = data?.window
-  const nextWin = data?.next
-  const winnerAmount = (addr: string) => data?.winners.find((w) => w.address === addr)?.amount
+  const win = payload?.window
+  const nextWin = payload?.next
+  const winnerAmount = (addr: string) => payload?.winners.find((w) => w.address === addr)?.amount
 
   const top3 = board.slice(0, 3)
   const podium = ([2, 1, 3] as const)
