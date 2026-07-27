@@ -20,11 +20,6 @@ export type SignMove = (message: string) => Promise<`0x${string}` | null>
 
 // Builds the message to sign for a move. Must stay identical to the server's
 // canonicalMoveMessage in '@/lib/settlement'.
-/**
- * moveMessage
- * @param {*} p: { chain: string; gameId: number; moveNumber: number; san: string; fen: string }
- * @returns {*}
- */
 function moveMessage(p: { chain: string; gameId: number; moveNumber: number; san: string; fen: string }): string {
   return [
     'playchessify:move',
