@@ -82,7 +82,7 @@ export default function CenterToast() {
     return () => clearTimeout(t)
   }, [toast, hideToast, duration])
 
-  const cfg = toast ? CONFIGS[toast.type] : null
+  const config = toast ? CONFIGS[toast.type] : null
 
   // A mispress toast must never stand between the player and the board: let
   // clicks fall straight through it, and drop the dismiss button (there is
@@ -91,7 +91,7 @@ export default function CenterToast() {
 
   return (
     <AnimatePresence>
-      {toast && cfg && (
+      {toast && config && (
         <div className="fixed inset-0 pointer-events-none z-[9999] flex items-center justify-center px-4">
           <motion.div
             key={toast.type + toast.message}
@@ -104,9 +104,9 @@ export default function CenterToast() {
             <div
               className="relative flex flex-col items-center gap-2.5 rounded-3xl border px-7 pt-7 pb-6 text-center backdrop-blur-xl overflow-hidden"
               style={{
-                background: cfg.bg,
-                borderColor: cfg.border,
-                boxShadow: `0 0 40px ${cfg.glow}, 0 24px 48px rgba(0,0,0,0.55)`,
+                background: config.bg,
+                borderColor: config.border,
+                boxShadow: `0 0 40px ${config.glow}, 0 24px 48px rgba(0,0,0,0.55)`,
               }}
             >
               {/* Dismiss — only on toasts that actually hold the screen */}
@@ -129,21 +129,21 @@ export default function CenterToast() {
                 transition={{ type: 'spring', damping: 12, stiffness: 300, delay: 0.05 }}
                 className="flex h-14 w-14 items-center justify-center rounded-2xl text-2xl font-black"
                 style={{
-                  background: `radial-gradient(circle at 30% 25%, ${cfg.glow}, transparent 75%)`,
-                  border: `1.5px solid ${cfg.border}`,
-                  color: cfg.labelColor,
-                  boxShadow: `0 6px 18px ${cfg.glow}, inset 0 1px 0 rgba(255,255,255,0.15)`,
+                  background: `radial-gradient(circle at 30% 25%, ${config.glow}, transparent 75%)`,
+                  border: `1.5px solid ${config.border}`,
+                  color: config.labelColor,
+                  boxShadow: `0 6px 18px ${config.glow}, inset 0 1px 0 rgba(255,255,255,0.15)`,
                 }}
               >
-                {cfg.icon}
+                {config.icon}
               </motion.div>
 
               {/* Label */}
               <span
                 className="text-[10px] font-black uppercase tracking-[0.28em]"
-                style={{ color: cfg.labelColor, fontFamily: 'var(--fd)' }}
+                style={{ color: config.labelColor, fontFamily: 'var(--fd)' }}
               >
-                {cfg.label}
+                {config.label}
               </span>
 
               {/* Message */}
@@ -158,7 +158,7 @@ export default function CenterToast() {
                 animate={{ scaleX: 0 }}
                 transition={{ duration: duration / 1000, ease: 'linear' }}
                 className="absolute bottom-0 left-0 h-1 w-full origin-left"
-                style={{ background: cfg.labelColor, opacity: 0.55 }}
+                style={{ background: config.labelColor, opacity: 0.55 }}
               />
             </div>
           </motion.div>
