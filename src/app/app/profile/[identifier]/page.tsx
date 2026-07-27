@@ -122,10 +122,10 @@ export default function ProfilePage() {
   const { data: profileByName, isLoading: loadingByName } = useQuery({
     queryKey: ['profile-name', identifier.toLowerCase()],
     queryFn: async (): Promise<ChessProfile | null> => {
-      const res = await fetch(`/api/profile/name/${identifier.toLowerCase()}`)
-      if (res.status === 404) return null
-      if (!res.ok) return null
-      const data = await res.json()
+      const response = await fetch(`/api/profile/name/${identifier.toLowerCase()}`)
+      if (response.status === 404) return null
+      if (!response.ok) return null
+      const data = await response.json()
       return data.profile ?? null
     },
     enabled: !isAddress && identifier.length >= 3,
