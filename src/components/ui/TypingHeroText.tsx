@@ -6,7 +6,7 @@ interface TypingHeroTextProps {
   prefix?: string
   subtitle?: string
   words?: string[]
-  className?: string,
+  className?: string
 }
 
 export default function TypingHeroText({ 
