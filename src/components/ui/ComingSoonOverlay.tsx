@@ -70,7 +70,6 @@ export default function ComingSoonOverlay({ isOpen, onClose }: ComingSoonOverlay
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration mount flag
     setMounted(true)
   }, [])
 
