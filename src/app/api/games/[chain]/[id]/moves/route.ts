@@ -51,8 +51,8 @@ export async function GET(
     // (also recovers a bot whose scheduled reply was lost to a cold function).
     after(() => maybeTickBots())
     return NextResponse.json({ moves })
-  } catch (err) {
-    console.error(`${LOG_PREFIX} GET failed`, { chain, gameId, err: (err as Error)?.message })
+  } catch (error) {
+    console.error(`${LOG_PREFIX} GET failed`, { chain, gameId, error: (error as Error)?.message })
     return NextResponse.json({ error: 'relay unavailable' }, { status: 503 })
   }
 }
@@ -180,8 +180,8 @@ export async function POST(
       after(async () => {
         try {
           await settleGameById(chain, gameId)
-        } catch (err) {
-          console.error(`${LOG_PREFIX} instant settle failed`, { chain, gameId, err: (err as Error)?.message })
+        } catch (error) {
+          console.error(`${LOG_PREFIX} instant settle failed`, { chain, gameId, error: (error as Error)?.message })
         }
       })
     } else {
@@ -194,8 +194,8 @@ export async function POST(
     }
 
     return NextResponse.json({ ok: true, moveCount: newLen, move: record })
-  } catch (err) {
-    console.error(`${LOG_PREFIX} POST failed`, { chain, gameId, err: (err as Error)?.message })
+  } catch (error) {
+    console.error(`${LOG_PREFIX} POST failed`, { chain, gameId, error: (error as Error)?.message })
     return NextResponse.json({ error: 'relay unavailable' }, { status: 503 })
   }
 }
