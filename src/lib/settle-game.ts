@@ -12,7 +12,7 @@ import {
 } from '@/lib/celo-server'
 import { recordPlayDay } from '@/lib/streak-store'
 
-const LOG_PREFIX = '[settle-game]'
+const LOG_PREFIX: string = '[settle-game]'
 
 let _redis: Redis | null = null
 function getRedis(): Redis {
