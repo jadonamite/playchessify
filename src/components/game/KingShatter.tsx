@@ -24,7 +24,7 @@ const SHARDS = PERIM.map((p, i) => {
   const mx = (p[0] + q[0]) / 2 - 50
   const my = (p[1] + q[1]) / 2 - 50
   const mag = Math.hypot(mx, my) || 1
-  return { clip, nx: mx / mag, ny: my / mag, spin: (i % 2 ? 1 : -1) * (120 + i * 22) }
+  return { clip, nx: mx / mag, ny: my / mag, spin: (i % 2 ? 1 : -1) * (120 + i * 22) },
 })
 
 const CELL = 12.5 // one square = 1/8 of the board, in %
