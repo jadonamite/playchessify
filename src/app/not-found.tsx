@@ -57,6 +57,10 @@ function Scene() {
 
 import { motion } from 'framer-motion'
 
+/**
+ * NotFound
+ * @returns {*}
+ */
 export default function NotFound() {
   return (
     <main className="min-h-screen bg-[var(--bg)] flex flex-col items-center relative overflow-hidden">
