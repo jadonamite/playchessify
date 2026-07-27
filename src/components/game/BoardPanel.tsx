@@ -56,7 +56,7 @@ function matedKingSquare(game: Chess): string | null {
   for (let r = 0; r < 8; r++) {
     for (let c = 0; c < 8; c++) {
       const p = board[r][c]
-      if (p?.type === 'k' && p.color === loser) {
+      if (p && p.type === 'k' && p.color === loser) {
         return `${'abcdefgh'[c]}${8 - r}`
       }
     }
