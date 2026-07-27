@@ -11,12 +11,6 @@ import { BOTS, type BotProfile } from '@/config/bots'
 
 const accounts = new Map<number, HDAccount>()
 
-function requireMnemonic(): string {
-  const m = process.env.BOT_MNEMONIC
-  if (!m) throw new Error('[bots] BOT_MNEMONIC must be set')
-  return m
-}
-
 export function getBotAccount(profile: BotProfile): HDAccount {
   const cached = accounts.get(profile.index)
   if (cached) return cached
@@ -29,6 +23,12 @@ export function getBotAccount(profile: BotProfile): HDAccount {
   }
   accounts.set(profile.index, account)
   return account
+}
+
+function requireMnemonic(): string {
+  const m = process.env.BOT_MNEMONIC
+  if (!m) throw new Error('[bots] BOT_MNEMONIC must be set')
+  return m
 }
 
 export { BOTS }

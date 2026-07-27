@@ -1,4 +1,7 @@
-// Stub for @wagmi/core's optional Tempo 'accounts' dependency.
-// Turbopack requires all import() targets to resolve; this satisfies it.
-const accountsStub = {}
-export default accountsStub
+const createAccountsStub = () => {
+  // Turbopack requires all import() targets to resolve; this satisfies it.
+  return {};
+};
+
+const accountsStub = createAccountsStub();
+export default accountsStub;
