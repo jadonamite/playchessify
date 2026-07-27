@@ -26,6 +26,7 @@ const PlayCard = forwardRef<HTMLDivElement, PlayCardProps>(
     const radius = size === 'hero' ? 32 : 28
     const blur = size === 'hero' ? 'backdrop-blur-xl' : 'backdrop-blur-md'
 
+    // TODO: add input validation
     const toneStyle: React.CSSProperties =
       tone === 'candy'
         ? {

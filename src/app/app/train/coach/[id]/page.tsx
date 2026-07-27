@@ -71,7 +71,7 @@ export default function CoachIntroPage() {
         ))}
       </div>
 
-      <div className="relative mt-7 flex flex-col items-stretch gap-3 sm:flex-row">
+      <div className='relative mt-7 flex flex-col items-stretch gap-3 sm:flex-row'>
         <div className="flex-1">
           <TrapButton accent={coach.accent} onClick={begin}>
             Begin with {coach.short} ▸
