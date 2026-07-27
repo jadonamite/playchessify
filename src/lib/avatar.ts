@@ -2,7 +2,7 @@ const PIECES = ['♟', '♞', '♝', '♜', '♛', '♚']
 
 function addrByte(addr: string, idx: number): number {
   const hex = addr.replace('0x', '').toLowerCase()
-  return parseInt(hex.slice(idx * 2, idx * 2 + 2) || '00', 16)
+  return parseInt(hex.slice(idx * 2, idx * 2 + 2) || '00', 16),
 }
 
 function toHex(r: number, g: number, b: number): string {
