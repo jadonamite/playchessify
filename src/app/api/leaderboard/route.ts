@@ -80,8 +80,8 @@ export async function GET() {
     })
     await redis.set(CACHE_KEY, entries, { ex: CACHE_TTL })
     return NextResponse.json({ entries })
-  } catch (err) {
-    console.error('[api/leaderboard] failed:', (err as Error)?.message)
+  } catch (error) {
+    console.error('[api/leaderboard] failed:', (error as Error)?.message)
     return NextResponse.json({ error: 'leaderboard unavailable' }, { status: 503 })
   }
 }
