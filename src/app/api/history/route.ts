@@ -50,40 +50,7 @@ export async function GET(req: NextRequest) {
       allowFailure: true,
     })
 
-    const items: HistoryItem[] = []
-    for (let i = 0; i < results.length; i++) {
-      const r = results[i]
-      if (r.status !== 'success') continue
-      const g = r.result as { white: string; black: string; wager: bigint; status: number | bigint; result: number | bigint; createdAt: number | bigint }
-      const white = (g.white as string).toLowerCase()
-      const black = (g.black as string).toLowerCase()
-      if (white !== me && black !== me) continue
-
-      const role: 'white' | 'black' = white === me ? 'white' : 'black'
-      const opponent = role === 'white' ? g.black : g.white
-      const statusIdx = Number(g.status)
-      const resultIdx = Number(g.result)
-      let result: HistoryItem['result'] = 'active'
-      if (statusIdx === 0) result = 'waiting'
-      else if (statusIdx === 4 || resultIdx === 3) result = 'draw'
-      else if (statusIdx === 2) {
-        if (resultIdx === 1) result = role === 'white' ? 'win' : 'loss'
-        else if (resultIdx === 2) result = role === 'black' ? 'win' : 'loss'
-      }
-      items.push({
-        id: String(ids[i]),
-        chain: 'celo',
-        role,
-        opponent: opponent.toLowerCase() === ZERO ? 'Waiting...' : opponent,
-        wager: formatUnits(g.wager as bigint, TOKEN_DECIMALS),
-        status: STATUS_LABELS[statusIdx] ?? 'Unknown',
-        result,
-        timestamp: Number(g.createdAt), // v2: unix seconds straight from the chain
-
-        canReclaim: false,
-      })
-    }
-
+    const items: HistoryItem[] = results.map((r, i) => processGameResult(r, me, ids[i]))
     // For still-Active games, check the on-chain expiry backstop so the client
     // can offer a "Reclaim" action (the oracle can't reclaim — participants only).
     const activeItems = items.filter((it) => it.status === 'Active')
@@ -108,5 +75,36 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     console.error('[api/history] failed:', (err as Error)?.message)
     return NextResponse.json({ error: 'history unavailable' }, { status: 503 })
+  }
+}
+
+function processGameResult(result: any, me: string, id: string): HistoryItem {
+  if (result.status !== 'success') return null
+  const g = result.result as { white: string; black: string; wager: bigint; status: number | bigint; result: number | bigint; createdAt: number | bigint }
+  const white = (g.white as string).toLowerCase()
+  const black = (g.black as string).toLowerCase()
+  if (white !== me && black !== me) return null
+
+  const role: 'white' | 'black' = white === me ? 'white' : 'black'
+  const opponent = role === 'white' ? g.black : g.white
+  const statusIdx = Number(g.status)
+  const resultIdx = Number(g.result)
+  let result: HistoryItem['result'] = 'active'
+  if (statusIdx === 0) result = 'waiting'
+  else if (statusIdx === 4 || resultIdx === 3) result = 'draw'
+  else if (statusIdx === 2) {
+    if (resultIdx === 1) result = role === 'white' ? 'win' : 'loss'
+    else if (resultIdx === 2) result = role === 'black' ? 'win' : 'loss'
+  }
+  return {
+    id: String(id),
+    chain: 'celo',
+    role,
+    opponent: opponent.toLowerCase() === ZERO ? 'Waiting...' : opponent,
+    wager: formatUnits(g.wager as bigint, TOKEN_DECIMALS),
+    status: STATUS_LABELS[statusIdx] ?? 'Unknown',
+    result,
+    timestamp: Number(g.createdAt), // v2: unix seconds straight from the chain
+    canReclaim: false,
   }
 }
