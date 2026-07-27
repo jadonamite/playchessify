@@ -217,10 +217,10 @@ export function getHintMove(game: Chess, depth = 3): Move | null {
 
   for (const move of moves) {
     game.move(move)
-    const value = minimax(game, depth - 1, -Infinity, Infinity, !isWhite)
+    const val = minimax(game, depth - 1, -Infinity, Infinity, !isWhite)
     game.undo()
-    if (isWhite ? value > bestVal : value < bestVal) {
-      bestVal = value
+    if (isWhite ? val > bestVal : val < bestVal) {
+      bestVal = val
       best = move
     }
   }
@@ -287,9 +287,9 @@ export function getCoachMove(game: Chess, engine: CoachEngine): Move | null {
     game.move(m)
     // After the coach moves it's the opponent's turn: White maximizes the
     // White-positive eval, Black minimizes → isMax = (coach is Black).
-    const value = minimax(game, engine.depth - 1, -Infinity, Infinity, coachColor === 'b')
+    const val = minimax(game, engine.depth - 1, -Infinity, Infinity, coachColor === 'b')
     game.undo()
-    const coachVal = coachColor === 'w' ? value : -value // convert to "higher = better for coach"
+    const coachVal = coachColor === 'w' ? val : -val // convert to "higher = better for coach"
     return { m, score: coachVal + styleBonus(m, game, coachColor, engine.style, ahead) }
   })
 
