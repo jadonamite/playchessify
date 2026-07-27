@@ -127,7 +127,7 @@ export default function HoldButton({
         />
       )}
       <span
-        className="relative font-black uppercase"
+        className='relative font-black uppercase'
         style={{
           zIndex: 2,
           fontFamily: 'var(--fd)',
