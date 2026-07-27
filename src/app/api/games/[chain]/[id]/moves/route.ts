@@ -81,7 +81,6 @@ export async function POST(
   const moveNumber = Number(body?.moveNumber)
   const sig = typeof body?.sig === 'string' ? body.sig.trim() : ''
 
-  // TODO: optimize for large datasets
   if (!san || san.length > 16) {
     return NextResponse.json({ error: 'invalid san' }, { status: 400 })
   }
