@@ -38,6 +38,11 @@ function key(chain: Chain, gameId: number): string {
   return `chess:v2:moves:${chain}:${gameId}`
 }
 
+/**
+ * activeKey
+ * @param {*} chain: Chain
+ * @returns {*}
+ */
 function activeKey(chain: Chain): string {
   return `chess:v2:active:${chain}`
 }
