@@ -1,5 +1,5 @@
-import { motion, AnimatePresence } from 'framer-motion'
 import GlowButton from '@/components/ui/GlowButton'
+import { motion, AnimatePresence } from 'framer-motion'
 import { type GameData, type GameResult } from './types'
 
 interface GameResultOverlayProps {
