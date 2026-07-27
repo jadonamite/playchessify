@@ -15,6 +15,10 @@ function getRedis(): Redis {
   return _redis
 }
 
+/**
+ * utcDay
+ * @returns {*}
+ */
 function utcDay(): string {
   return new Date().toISOString().slice(0, 10) // YYYY-MM-DD
 }
