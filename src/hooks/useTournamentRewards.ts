@@ -8,14 +8,14 @@
 // Claims dispatch through useCeloChess.sendWrite, so every wallet tier keeps
 // its usual gas rail (paymaster / USDm fee currency / 2771 meta-tx).
 
-import { usePublicClient } from 'wagmi'
+import { CELO_CONTRACTS, CELO_CHAIN_ID } from '@/config/contracts'
+import { REWARDS_ABI } from '@/config/abis'
 import { formatUnits, type Address } from 'viem'
 import { useCallback, useEffect, useState } from 'react'
-import { REWARDS_ABI } from '@/config/abis'
-import { CELO_CONTRACTS, CELO_CHAIN_ID } from '@/config/contracts'
 import { useCeloChess } from '@/hooks/useCeloChess'
-import { useWallet } from '@/components/wallet-provider'
+import { usePublicClient } from 'wagmi'
 import { useToastStore } from '@/hooks/useToastStore'
+import { useWallet } from '@/components/wallet-provider'
 
 const LOG_PREFIX = '[useTournamentRewards]'
 const USDM_DECIMALS = 18
