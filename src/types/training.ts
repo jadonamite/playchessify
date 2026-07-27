@@ -76,6 +76,12 @@ export interface LearnerModel {
   lastSession: string
 }
 
+/**
+ * emptyLearner
+ * @param {*} address: string
+ * @param {*} coachId
+ * @returns {*}
+ */
 export function emptyLearner(address: string, coachId = 'carlsen'): LearnerModel {
   const now = new Date().toISOString()
   return {
