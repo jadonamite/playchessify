@@ -444,12 +444,12 @@ export default function GameClient() {
       // onSquareClick for the same square. Ignore the echo within a short window.
       const now = Date.now()
       const last = lastTapRef.current
-      if (last && last.square === square && now - last.at < 250) return
+      if (last?.square === square && now - last.at < 250) return
       lastTapRef.current = { square, at: now }
 
       if (!moveFrom) {
         const piece = game.get(square as Square)
-        if (piece && piece.color === game.turn()) setMoveFrom(square)
+        if (piece?.color === game.turn()) setMoveFrom(square)
         return
       }
 
@@ -458,7 +458,7 @@ export default function GameClient() {
 
       // Tapping another of your own pieces reselects.
       const piece = game.get(square as Square)
-      if (piece && piece.color === game.turn()) { setMoveFrom(square); return }
+      if (piece?.color === game.turn()) { setMoveFrom(square); return }
 
       executeMove(moveFrom, square)
       setMoveFrom('')
@@ -494,7 +494,7 @@ export default function GameClient() {
       if (isBotGame && game.turn() === 'b') return false
       if (!isBotGame && !isMyTurn) return false
       const piece = game.get(square as Square)
-      return !!piece && piece.color === game.turn()
+      return !!piece?.color === game.turn()
     },
     [canAct, gameOver, isBotGame, isMyTurn, game]
   )
