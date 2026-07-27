@@ -3,15 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getEngine, type AnalysisResult, type AnalyzeOptions } from '@/lib/analysis/engine'
 
-const initializeEngine = async (mounted: React.MutableRefObject<boolean>, setReady: (ready: boolean) => void) => {
-  try {
-    await getEngine().analyze('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', { depth: 1 })
-    if (mounted.current) setReady(true)
-  } catch (error) {
-    // engine unavailable — teaching falls back to non-analysis paths
-  }
-}
-
 /**
  * React wrapper over the shared Stockfish engine. Returns a stable `analyze`
  * and live `analyzing` flag. The worker is shared app-wide; this hook does not
@@ -24,7 +15,10 @@ export function useAnalysis() {
 
   useEffect(() => {
     mounted.current = true
-    initializeEngine(mounted, setReady)
+    // Warm the engine so the first real analysis isn't paying boot cost.
+    getEngine().analyze('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', { depth: 1 })
+      .then(() => { if (mounted.current) setReady(true) })
+      .catch(() => { /* engine unavailable — teaching falls back to non-analysis paths */ })
     return () => { mounted.current = false }
   }, [])
 

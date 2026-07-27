@@ -28,7 +28,7 @@ const MIN_GAS_CELO = 5_000_000_000_000_000n // 0.005 CELO
 // CELO drip only remains as the fallback rail when it isn't.
 const ZERO_ADDR = '0x0000000000000000000000000000000000000000'
 const FORWARDER_CONFIGURED = CELO_CONTRACTS.forwarder.toLowerCase() !== ZERO_ADDR
-const GAS_POLL_ATTEMPTS: number = 12
+const GAS_POLL_ATTEMPTS = 12
 const GAS_POLL_INTERVAL_MS = 1_000
 
 // Result of provisioning gas for a wallet.

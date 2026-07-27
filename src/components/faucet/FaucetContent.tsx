@@ -331,7 +331,6 @@ export default function FaucetContent() {
                 <LoadingState message="BROADCASTING TRANSACTION" />
               ) : (
                 <div className="flex flex-col items-center gap-6 py-4">
-                  // TODO: consider memoizing this value
                   {/* Address Chip */}
                   <div className="flex items-center gap-2 bg-black/30 py-2 px-5 rounded-full border border-white/10">
                     <div className="w-2 h-2 rounded-full bg-[#35ee66] animate-pulse" />
