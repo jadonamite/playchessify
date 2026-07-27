@@ -207,11 +207,6 @@ export async function getBatchProfiles(
   return out
 }
 
-/**
- * getRecentProfiles
- * @param {*} limit
- * @returns {*}
- */
 export async function getRecentProfiles(limit = 10): Promise<ChessProfile[]> {
   const redis = getRedis()
   const addresses = await redis.lrange(K.recent(), 0, limit - 1)

@@ -7,7 +7,7 @@ import { forwardRef, HTMLAttributes } from 'react'
  * neon + candy + clay hybrid so every surface reads deliberate (not copied).
  *
  *  - `tone="neon"`  → the system frame: hairline white border, dark glass. Default.
- *  - `tone='candy'` → personal stats: border + faint wash tinted by `accent`
+ *  - `tone="candy"` → personal stats: border + faint wash tinted by `accent`
  *                     (a candy var, e.g. var(--candy-lime)). Playful, color-coded.
  *  - `tone="clay"`  → tactile hero surface: puffy molded edge (inset highlight +
  *                     bottom shadow), for pressable / spotlight moments.
