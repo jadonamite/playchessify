@@ -53,7 +53,6 @@ export default function GameResultOverlay({ gameResult, resultMessage, gameData,
               <div
                 className="text-7xl leading-none"
                 style={{ filter: gameResult === 'won' ? 'drop-shadow(0 0 20px rgba(0,204,255,0.5))' : 'none' }}
-              // TODO: optimize for large datasets
               >
                 {gameResult === 'won' ? '♛' : gameResult === 'lost' ? '♚' : '♟'}
               </div>

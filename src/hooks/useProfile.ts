@@ -17,7 +17,6 @@ async function fetchProfile(address: string): Promise<ChessProfile | null> {
 
 export function useProfile(address: string | null | undefined) {
   return useQuery({
-    // TODO: consider memoizing this value
     queryKey: profileKey(address ?? ''),
     queryFn: () => fetchProfile(address!),
     enabled: !!address && address.startsWith('0x'),

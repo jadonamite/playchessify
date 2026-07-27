@@ -37,36 +37,15 @@ function useCountdown(target: number) {
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
-function PrizeCard({ win }: { win: TournamentWindowMeta }) {
-  return (
-    <div
-      className="relative rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8 overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, rgba(12,18,32,0.85), rgba(4,7,14,0.9))',
-        border: '1px solid var(--b2)',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 20px 50px rgba(0,0,0,0.45)',
-      }}
-    >
-      {/* total pool */}
-      <div className="flex flex-col shrink-0">
-        <span className="text-[9px] font-black tracking-[0.25em] uppercase text-[var(--t3)] flex items-center gap-1.5">
-          🏆 Total Prize
-        </span>
-        <span
-          className="font-black leading-none mt-1"
-          style={{
-            fontFamily: 'var(--fd)',
-            fontSize: 44,
-            backgroundImage: `linear-gradient(180deg, #FFF6C2, #FFD24A 55%, #9C6B12)`,
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            filter: 'drop-shadow(0 0 22px rgba(255,215,0,0.35))',
-          }}
-        >
-          ${win.prizePool}
-        </span>
-      </div>
+function fmtDate(ms: number) {
+  return new Date(ms).toLocaleString('en-GB', {
+    timeZone: 'Africa/Lagos',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
 
 // ── countdown strip ─────────────────────────────────────────────────────────
 
@@ -101,6 +80,76 @@ function Countdown({ endsAt }: { endsAt: number }) {
 }
 
 // ── prize pool card (chrome bracket, metallic split rows) ─────────────────────
+
+function PrizeCard({ win }: { win: TournamentWindowMeta }) {
+  return (
+    <div
+      className="relative rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8 overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, rgba(12,18,32,0.85), rgba(4,7,14,0.9))',
+        border: '1px solid var(--b2)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 20px 50px rgba(0,0,0,0.45)',
+      }}
+    >
+      {/* total pool */}
+      <div className="flex flex-col shrink-0">
+        <span className="text-[9px] font-black tracking-[0.25em] uppercase text-[var(--t3)] flex items-center gap-1.5">
+          🏆 Total Prize
+        </span>
+        <span
+          className="font-black leading-none mt-1"
+          style={{
+            fontFamily: 'var(--fd)',
+            fontSize: 44,
+            backgroundImage: `linear-gradient(180deg, #FFF6C2, #FFD24A 55%, #9C6B12)`,
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            filter: 'drop-shadow(0 0 22px rgba(255,215,0,0.35))',
+          }}
+        >
+          ${win.prizePool}
+        </span>
+      </div>
+
+      {/* divider */}
+      <div className="hidden sm:block w-px self-stretch bg-white/10" />
+
+      {/* splits */}
+      <div className="flex-1 grid grid-cols-3 gap-3">
+        {win.splits.map((s) => {
+          const m = MEDAL[(s.place as 1 | 2 | 3)] ?? MEDAL[3]
+          return (
+            <div
+              key={s.place}
+              className="rounded-xl px-3 py-2.5 flex flex-col items-center gap-0.5"
+              style={{ background: m.bg, border: `1px solid ${m.border}`, boxShadow: `inset 0 1px 0 ${m.color}22` }}
+            >
+              <span className="text-[8px] font-black tracking-[0.15em] uppercase" style={{ color: m.color }}>
+                {s.place === 1 ? '1ST' : s.place === 2 ? '2ND' : '3RD'}
+              </span>
+              <span
+                className="font-black leading-none"
+                style={{
+                  fontFamily: 'var(--fd)',
+                  fontSize: 22,
+                  backgroundImage: `linear-gradient(180deg, ${m.mLight}, ${m.mMid} 50%, ${m.mDeep})`,
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                ${s.amount}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ── tournament rank row (4+) ──────────────────────────────────────────────────
 
 function TrophyRow({
   entry,
@@ -153,55 +202,6 @@ function TrophyRow({
           )}
         </div>
       </div>
-
-      {/* divider */}
-      <div className="hidden sm:block w-px self-stretch bg-white/10" />
-
-      {/* splits */}
-      <div className="flex-1 grid grid-cols-3 gap-3">
-        {win.splits.map((s) => {
-          const m = MEDAL[(s.place as 1 | 2 | 3)] ?? MEDAL[3]
-          return (
-            <div
-              key={s.place}
-              className="rounded-xl px-3 py-2.5 flex flex-col items-center gap-0.5"
-              style={{ background: m.bg, border: `1px solid ${m.border}`, boxShadow: `inset 0 1px 0 ${m.color}22` }}
-            >
-              <span className="text-[8px] font-black tracking-[0.15em] uppercase" style={{ color: m.color }}>
-                {s.place === 1 ? '1ST' : s.place === 2 ? '2ND' : '3RD'}
-              </span>
-              <span
-                className="font-black leading-none"
-                style={{
-                  fontFamily: 'var(--fd)',
-                  fontSize: 22,
-                  backgroundImage: `linear-gradient(180deg, ${m.mLight}, ${m.mMid} 50%, ${m.mDeep})`,
-                  WebkitBackgroundClip: 'text',
-                  backgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                ${s.amount}
-              </span>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-// ── tournament rank row (4+) ──────────────────────────────────────────────────
-
-function fmtDate(ms: number) {
-  return new Date(ms).toLocaleString('en-GB', {
-    timeZone: 'Africa/Lagos',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
 
       <div className="flex items-center gap-6 md:gap-10 shrink-0">
         <div className="hidden sm:flex flex-col items-end">
