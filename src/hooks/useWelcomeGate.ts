@@ -5,6 +5,10 @@ import { create } from 'zustand'
 // flag: the identity-link signature must not fire until the welcome is gone.
 export const WELCOME_SEEN_KEY = 'pc-welcome-seen'
 
+/**
+ * initialDismissed
+ * @returns {*}
+ */
 function initialDismissed(): boolean {
   if (typeof window === 'undefined') return true // SSR: never render the gate server-side
   try { return !!localStorage.getItem(WELCOME_SEEN_KEY) } catch { return true }
