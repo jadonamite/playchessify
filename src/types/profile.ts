@@ -17,16 +17,3 @@ export interface ProfileCheckResult {
 export interface BatchProfileResult {
   profiles: Record<string, ChessProfile | null>
 }
-
-function validateProfile(profile: ChessProfile): ProfileCheckResult {
-  if (profile.username.length === 0) {
-    return { available: false, reason: 'Username cannot be empty' };
-  }
-  if (profile.displayName.length > 30) {
-    return { available: false, reason: 'Display name cannot be more than 30 characters' };
-  }
-  if (profile.bio.length > 120) {
-    return { available: false, reason: 'Bio cannot be more than 120 characters' };
-  }
-  return { available: true };
-}
