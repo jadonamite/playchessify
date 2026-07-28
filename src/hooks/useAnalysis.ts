@@ -17,10 +17,7 @@ export function useAnalysis() {
     mounted.current = true
     // Warm the engine so the first real analysis isn't paying boot cost.
     getEngine().analyze('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', { depth: 1 })
-      .then(() => {
-        if (!mounted.current) return
-        setReady(true)
-      })
+      .then(() => { if (mounted.current) setReady(true) })
       .catch(() => { /* engine unavailable — teaching falls back to non-analysis paths */ })
     return () => { mounted.current = false }
   }, [])
@@ -28,13 +25,10 @@ export function useAnalysis() {
   const analyze = useCallback(async (fen: string, opts?: AnalyzeOptions): Promise<AnalysisResult | null> => {
     setAnalyzing(true)
     try {
-      const result = await getEngine().analyze(fen, opts)
-      return result
+      return await getEngine().analyze(fen, opts)
     } catch {
       return null
     } finally {
-      // Guard the state write only — a bare `return` here would override the
-      // try block's result and hand every caller `undefined` instead.
       if (mounted.current) setAnalyzing(false)
     }
   }, [])
