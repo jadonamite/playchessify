@@ -12,11 +12,27 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   try {
     const prev = getLatestConcludedSeason()
-    if (!prev) return NextResponse.json({ seasonId: 0, winners: [] })
-    const final = await getFinalTournament(prev.id)
+    if (!prev) return NextResponse.json({ seasonId: 0, winners: [], frozen: true })
+
+    // A dropped Redis read must never look like "you didn't win". Collapsing a
+    // failed read into an empty winner list tells a real winner they are not
+    // eligible — with claimable money on the line. Retry once, then report the
+    // not-yet-frozen state explicitly instead of implying an empty board.
+    let final = await getFinalTournament(prev.id)
+    if (!final) {
+      await new Promise((r) => setTimeout(r, 250))
+      final = await getFinalTournament(prev.id)
+    }
+
+    if (!final) {
+      console.warn('[api/tournament/rewards] no frozen board for', prev.id)
+      return NextResponse.json({ seasonId: prev.seasonIndex, winners: [], frozen: false })
+    }
+
     return NextResponse.json({
       seasonId: prev.seasonIndex,
-      winners: (final?.winners ?? []).map((w) => ({ address: w.address, amount: w.amount })),
+      frozen: true,
+      winners: final.winners.map((w) => ({ address: w.address, amount: w.amount })),
     })
   } catch (err) {
     console.error('[api/tournament/rewards] failed:', (err as Error)?.message)
