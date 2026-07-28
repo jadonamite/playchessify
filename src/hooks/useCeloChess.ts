@@ -126,7 +126,7 @@ export function useCeloChess() {
       }
       return body.txHash as `0x${string}`
     },
-    [publicClient, playerAddress, signTypedDataAsync],
+    [publicClient, playerAddress, signTypedDataAsync, showToast],
   )
 
   // ── tier-aware write dispatch ────────────────────────────────────────────────
