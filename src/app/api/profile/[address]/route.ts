@@ -11,7 +11,7 @@ type Ctx = { params: Promise<{ address: string }> }
 
 export async function GET(_req: NextRequest, { params }: Ctx) {
   const { address } = await params
-  if (!address || !address.startsWith('0x')) {
+  if (!address?.startsWith('0x')) {
     return NextResponse.json({ error: 'invalid address' }, { status: 400 })
   }
   const profile = await getProfileByAddress(address)
@@ -21,14 +21,12 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   const { address } = await params
-  if (!address || !address.startsWith('0x')) {
+  if (!address?.startsWith('0x')) {
     return NextResponse.json({ error: 'invalid address' }, { status: 400 })
   }
 
   let body: { signature?: string; timestamp?: string; username?: string; displayName?: string; bio?: string }
-  try {
-    body = await req.json()
-  } catch {
+  try { body = await req.json() } catch {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 })
   }
 
@@ -38,18 +36,23 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ error: 'signature and timestamp required' }, { status: 400 })
   }
 
+  // Anti-replay: reject messages older than 5 minutes
   const ts = new Date(timestamp).getTime()
   if (isNaN(ts) || Date.now() - ts > 5 * 60 * 1000) {
     return NextResponse.json({ error: 'timestamp expired — re-sign and try again' }, { status: 400 })
   }
 
+  // Client-based verifier — validates smart-account (EIP-1271/6492) signatures as
+  // well as plain EOA ones, so Tier A profile edits don't silently fail.
   const message = `Chessify Profile Update\n\nAddress: ${address.toLowerCase()}\nTimestamp: ${timestamp}`
   const valid = await verifyWalletSignature(address as `0x${string}`, message, signature as `0x${string}`)
   if (!valid) return NextResponse.json({ error: 'invalid signature' }, { status: 401 })
 
+  // Rate limit: 5 updates per address per hour
   const allowed = await checkRateLimit(address, 'update', 5, 3600)
   if (!allowed) return NextResponse.json({ error: 'rate limit exceeded' }, { status: 429 })
 
+  // Validate username if provided
   if (username) {
     const check = validateUsername(username)
     if (!check.ok) return NextResponse.json({ error: check.reason }, { status: 400 })
