@@ -287,6 +287,7 @@ export default function ChessifyLanding() {
   }, [isConnected, router, connectWallet])
 
   // "TRAIN WITH {coach}" — into the teacher flow, carrying the chosen coach so
+  // the training hub can adopt it. Gated like start: connect first if needed.
   const trainWith = useCallback((coachId: string) => {
     setCoachId(coachId) // populate nav/lobby coach face instantly
     if (isConnected) { router.push(`/app/train/coach/${coachId}`); return }

@@ -20,6 +20,8 @@ export const STATUS_LABELS: Record<string, string> = {
   '0': 'WAITING', '1': 'ACTIVE', '2': 'FINISHED', '3': 'CANCELLED', '4': 'DRAW',
 }
 
+export const norm = (a: string) => (a ?? '').toLowerCase()
+
 // Map the authoritative on-chain result to the viewer's perspective. The single
 // source of truth once a game is settled — so a returning player always sees the
 // real outcome instead of a guess derived from the board / local flags.
@@ -33,6 +35,3 @@ export function resultForColor(
   if (result === '3') return 'draw'                               // DrawResult
   return null
 }
-
-
-export const norm = (a: string) => (a ?? '').toLowerCase()

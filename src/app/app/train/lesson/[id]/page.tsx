@@ -14,6 +14,10 @@ import TrapButton from '@/components/train/TrapButton'
 
 type Phase = 'solving' | 'checking' | 'wrong' | 'right' | 'complete'
 
+/**
+ * LessonPage
+ * @returns {*}
+ */
 export default function LessonPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()

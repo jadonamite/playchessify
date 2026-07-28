@@ -3,6 +3,7 @@ import { Redis } from '@upstash/redis'
 import {
   verifyForwardRequest,
   executeForwardRequest,
+  ensureSponsorGas,
   type ForwardRequestData,
   type Address,
 } from '@/lib/celo-server'
@@ -106,6 +107,19 @@ export async function POST(req: NextRequest) {
     if (!(await verifyForwardRequest(request))) {
       return NextResponse.json({ error: 'forwarder rejected request' }, { status: 401 })
     }
+
+    // The sponsor pays the gas for this — make sure it actually can. A dry
+    // sponsor fails every relay identically, so self-heal before executing and
+    // report it as an unavailable service rather than a generic failure.
+    const gas = await ensureSponsorGas()
+    if (!gas.ok) {
+      console.error(`${LOG_PREFIX} sponsor cannot fund relay`, gas)
+      return NextResponse.json(
+        { error: 'gasless relay temporarily unavailable', reason: 'sponsor-dry' },
+        { status: 503 },
+      )
+    }
+
     const txHash = await executeForwardRequest(request)
     return NextResponse.json({ ok: true, txHash })
   } catch (err) {

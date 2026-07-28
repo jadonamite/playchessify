@@ -1,14 +1,14 @@
-import type { Abi } from 'viem'
-import {
-import { CHESS_GAME_ABI } from '@/config/abis'
 import { Redis } from '@upstash/redis'
+import type { Abi } from 'viem'
+import { getMoves, type Chain } from '@/lib/moves-store'
+import {
   getPublicClient,
   closeStaleOnChain,
   voidOnChain,
   GameStatus,
   GAME_ADDRESS,
 } from '@/lib/celo-server'
-import { getMoves, type Chain } from '@/lib/moves-store'
+import { CHESS_GAME_ABI } from '@/config/abis'
 
 const LOG_PREFIX = '[lifecycle-sweep]'
 

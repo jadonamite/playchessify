@@ -737,7 +737,7 @@ export default function GameClient() {
         pot={potFormatted}
         profileMap={gameProfileMap}
         gameId={gameId}
-        botLabel='PLAYCHESSIFY AI'
+        botLabel="PLAYCHESSIFY AI"
         onDone={finishIntro}
         onLeave={() => router.push('/app/lobby')}
       />
