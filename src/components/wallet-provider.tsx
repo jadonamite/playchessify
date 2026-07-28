@@ -76,10 +76,19 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   // on-chain identity is the smart account, not the embedded EOA. We must not let
   // them act under the EOA in the window before the smart client resolves, or a
   // profile/game gets recorded under the wrong address (the dual-identity split).
-  const hasEmbeddedWallet = wallets.some(
+  const embeddedWallet = wallets.find(
     (w) => w.connectorType === 'embedded' || w.walletClientType === 'privy',
   )
-  const expectsSmartAccount = !isMiniPay && hasEmbeddedWallet
+  // An embedded wallet EXISTING is not the same as the player USING it. Privy
+  // creates one on any social/email login, and it stays in `wallets` forever —
+  // so a player who later connects an external EOA still has one listed. Keying
+  // off mere existence pinned those players to a smart account they never chose,
+  // recording their games (and prize eligibility) under the wrong address.
+  // Only expect a smart account when the connected wallet IS the embedded one.
+  const activeIsEmbedded =
+    !!embeddedWallet &&
+    (!evmAddress || evmAddress.toLowerCase() === embeddedWallet.address.toLowerCase())
+  const expectsSmartAccount = !isMiniPay && activeIsEmbedded
   const smartAccount = smartWalletClient?.account?.address ?? null
 
   // Safety valve: if the smart account never resolves, don't brick the user —

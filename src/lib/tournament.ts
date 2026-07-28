@@ -329,9 +329,45 @@ function prizeWinners(board: BoardEntry[], win: TournamentWindow): PrizeWinner[]
 
 // ── public API ───────────────────────────────────────────────────────────────
 
+/**
+ * Collapse linked addresses onto one identity before scoring.
+ *
+ * A Privy user can hold both an embedded EOA and a smart account, and games can
+ * land under either. Scoring the raw on-chain addresses splits that player in
+ * two — each half carrying part of their games. With a 3-game eligibility floor
+ * a genuinely active player can then qualify under neither half and silently
+ * lose their prize. /api/profile/link already records the pairing; honour it
+ * here so the leaderboard counts a person, not an address.
+ */
+async function resolveAliases(games: WindowGame[]): Promise<WindowGame[]> {
+  const addrs = [...new Set(games.flatMap((g) => [g.white.toLowerCase(), g.black.toLowerCase()]))]
+  if (addrs.length === 0) return games
+
+  const redis = getRedis()
+  let targets: (string | null)[]
+  try {
+    targets = await redis.mget<(string | null)[]>(...addrs.map((a) => `chess:profile:alias:${a}`))
+  } catch (err) {
+    // A failed alias read must not silently re-split identities — score the raw
+    // addresses rather than dropping games, and make the degradation visible.
+    console.error('[tournament] alias resolution failed, scoring raw addresses:', (err as Error)?.message)
+    return games
+  }
+
+  const canonical = new Map<string, string>()
+  addrs.forEach((a, i) => {
+    const t = targets[i]
+    if (t) canonical.set(a, String(t).toLowerCase())
+  })
+  if (canonical.size === 0) return games
+
+  const to = (a: string) => canonical.get(a.toLowerCase()) ?? a.toLowerCase()
+  return games.map((g) => ({ ...g, white: to(g.white), black: to(g.black) }))
+}
+
 async function buildBoard(win: TournamentWindow): Promise<TournamentBoard> {
   const seed = await getSeedRatings(win)
-  const games = await collectWindowGames(win.startsAt, win.endsAt)
+  const games = await resolveAliases(await collectWindowGames(win.startsAt, win.endsAt))
   const board = scoreWindow(games, seed)
   return { window: win, board, winners: prizeWinners(board, win), frozen: false }
 }
