@@ -108,13 +108,25 @@ export function useCeloChess() {
           signature,
         }),
       })
-      const body = (await res.json().catch(() => ({}))) as { ok?: boolean; txHash?: string; error?: string }
+      const body = (await res.json().catch(() => ({}))) as {
+        ok?: boolean; txHash?: string; error?: string; reason?: string
+      }
       if (!res.ok || !body.ok || !body.txHash) {
+        // A relay failure is invisible from the outside — the write simply never
+        // happens. Say so, otherwise the button just looks dead.
+        showToast(
+          res.status === 503 || body.reason === 'sponsor-dry'
+            ? 'Gasless service is temporarily unavailable — please try again shortly.'
+            : res.status === 429
+              ? 'Too many requests — give it a moment and try again.'
+              : 'Could not submit that action — please try again.',
+          'error',
+        )
         throw new Error(`${LOG_PREFIX} relay rejected meta-tx: ${body.error ?? res.status}`)
       }
       return body.txHash as `0x${string}`
     },
-    [publicClient, playerAddress, signTypedDataAsync],
+    [publicClient, playerAddress, signTypedDataAsync, showToast],
   )
 
   // ── tier-aware write dispatch ────────────────────────────────────────────────

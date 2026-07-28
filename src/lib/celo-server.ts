@@ -296,6 +296,59 @@ export async function ensureOracleGas(): Promise<OracleGasStatus> {
   }
 }
 
+// ── Gas-sponsor health (self-healing meta-tx relay) ──────────────────────────
+// The gas sponsor pays native CELO for every ERC-2771 meta-tx it forwards. If
+// it runs dry, executeForwardRequest throws and /api/relay/forward answers 502
+// for EVERY Tier C player action — gasless moves and prize claims alike — while
+// the UI shows nothing but a dead button. Exactly the failure the oracle refill
+// above was written for (that one cost us two weeks of unsettled games); this
+// one landed on the day S1 prizes went claimable. Same fix, same reserve rule.
+
+const SPONSOR_MIN_CELO = parseEther('0.5') // ~4 relayed meta-txs of headroom
+const SPONSOR_TARGET_CELO = parseEther('4') // top up to here when refilling
+
+/** Ensure the gas sponsor can pay for meta-txs; auto-refill from an operator
+ *  wallet if low. Never throws — mirrors ensureOracleGas so a refill failure is
+ *  reported rather than crashing the caller. */
+export async function ensureSponsorGas(): Promise<OracleGasStatus> {
+  const pub = getPublicClient()
+  try {
+    const { account: sponsor } = walletFor('GAS_SPONSOR_PRIVATE_KEY')
+    const balance = await pub.getBalance({ address: sponsor.address })
+    if (balance >= SPONSOR_MIN_CELO) {
+      return { ok: true, balanceCelo: formatEther(balance), refilled: false }
+    }
+
+    const { account: src, client: srcClient } = walletFor(REFILL_SOURCE_ENV)
+    const srcBalance = await pub.getBalance({ address: src.address })
+    const need = SPONSOR_TARGET_CELO - balance
+    const spendable = srcBalance > REFILL_RESERVE_CELO ? srcBalance - REFILL_RESERVE_CELO : 0n
+    const amount = need < spendable ? need : spendable
+
+    if (amount <= 0n) {
+      console.error('[celo-server] GAS SPONSOR LOW and refill source dry', {
+        sponsor: formatEther(balance),
+        source: formatEther(srcBalance),
+      })
+      return {
+        ok: false,
+        balanceCelo: formatEther(balance),
+        refilled: false,
+        note: 'gas sponsor low, refill source below reserve — MANUAL TOP-UP NEEDED',
+      }
+    }
+
+    const hash = await srcClient.sendTransaction({ account: src, chain: CHAIN, to: sponsor.address, value: amount })
+    await pub.waitForTransactionReceipt({ hash })
+    const after = await pub.getBalance({ address: sponsor.address })
+    console.info('[celo-server] gas sponsor auto-refilled', { added: formatEther(amount), now: formatEther(after), tx: hash })
+    return { ok: after >= SPONSOR_MIN_CELO, balanceCelo: formatEther(after), refilled: true, refillTx: hash }
+  } catch (err) {
+    console.error('[celo-server] ensureSponsorGas failed', (err as Error)?.message)
+    return { ok: false, balanceCelo: 'unknown', refilled: false, note: (err as Error)?.message }
+  }
+}
+
 /** Minter provisions CHESS to a recipient (e.g. a fresh MiniPay wallet). */
 export async function mintChessTo(to: Address, amount: bigint): Promise<Hash> {
   const { account, client } = walletFor('MINTER_PRIVATE_KEY')
