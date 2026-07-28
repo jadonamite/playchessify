@@ -229,7 +229,6 @@ export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimM
 
                 <Field
                   label="DISPLAY NAME"
-                  // NOTE: revisit this logic after API migration
                   value={displayName}
                   onChange={setDisplayName}
                   placeholder="Jadon"

@@ -1,6 +1,6 @@
 'use client'
-import { useEffect, useState } from 'react'
 import { motion, useMotionValue, useTransform, animate, useMotionValueEvent } from 'framer-motion'
+import { useEffect, useState } from 'react'
 
 interface TypingHeroTextProps {
   prefix?: string

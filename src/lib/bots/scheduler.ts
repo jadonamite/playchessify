@@ -46,7 +46,7 @@ interface RecentGame {
   white: string
   wager: bigint
   status: number
-  createdAt: number,
+  createdAt: number
 }
 
 async function recentGames(): Promise<RecentGame[]> {
