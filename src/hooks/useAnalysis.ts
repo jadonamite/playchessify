@@ -33,8 +33,9 @@ export function useAnalysis() {
     } catch {
       return null
     } finally {
-      if (!mounted.current) return
-      setAnalyzing(false)
+      // Guard the state write only — a bare `return` here would override the
+      // try block's result and hand every caller `undefined` instead.
+      if (mounted.current) setAnalyzing(false)
     }
   }, [])
 
