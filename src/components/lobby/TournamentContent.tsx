@@ -132,7 +132,7 @@ function PrizeCard({ win }: { win: TournamentWindowMeta }) {
           }}
         >
           <span className="text-[9px] font-black tracking-[0.2em] uppercase text-[var(--t3)]">
-            Top {win.splits.length} paid
+            Top {win.splits.length}
           </span>
           <span
             className="font-black leading-none"
@@ -145,7 +145,7 @@ function PrizeCard({ win }: { win: TournamentWindowMeta }) {
               WebkitTextFillColor: 'transparent',
             }}
           >
-            ${win.splits[0].amount} each
+            ${win.prizePool} prize pool
           </span>
         </div>
       ) : (

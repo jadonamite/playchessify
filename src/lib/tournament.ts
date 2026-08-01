@@ -88,20 +88,12 @@ export interface TournamentBoard {
  * Ratings snapshot for a season, captured once on first read after it opens.
  * Used only for opponent-strength weighting, never for the score itself.
  */
-async function getSeedRatings(win: TournamentWindow): Promise<Record<string, number>> {
-  const redis = getRedis()
-  const existing = await redis.hgetall<Record<string, number>>(K.seed(win.id))
-  if (existing && Object.keys(existing).length > 0) {
-    // Upstash may hand back string values — coerce.
-    const out: Record<string, number> = {}
-    for (const [k, v] of Object.entries(existing)) out[k] = Number(v)
-    return out
-  }
-
+/** Every indexed player's rating as of right now, straight from the chain. */
+async function fetchCurrentRatings(): Promise<Record<string, number>> {
   await syncGameIndex()
   const addresses = await getIndexedPlayers()
-  const seed: Record<string, number> = {}
-  if (addresses.length === 0) return seed
+  const out: Record<string, number> = {}
+  if (addresses.length === 0) return out
 
   const stats = await getPublicClient().multicall({
     contracts: addresses.map((addr) => ({
@@ -116,9 +108,22 @@ async function getSeedRatings(win: TournamentWindow): Promise<Record<string, num
     const r = stats[i]
     if (r.status !== 'success') return
     const rating = Number((r.result as readonly bigint[])[3])
-    seed[addr.toLowerCase()] = rating || BASE_RATING
+    out[addr.toLowerCase()] = rating || BASE_RATING
   })
+  return out
+}
 
+async function getSeedRatings(win: TournamentWindow): Promise<Record<string, number>> {
+  const redis = getRedis()
+  const existing = await redis.hgetall<Record<string, number>>(K.seed(win.id))
+  if (existing && Object.keys(existing).length > 0) {
+    // Upstash may hand back string values — coerce.
+    const out: Record<string, number> = {}
+    for (const [k, v] of Object.entries(existing)) out[k] = Number(v)
+    return out
+  }
+
+  const seed = await fetchCurrentRatings()
   if (Object.keys(seed).length > 0) await redis.hset(K.seed(win.id), seed)
   return seed
 }
@@ -504,6 +509,26 @@ export async function getCurrentTournament(): Promise<TournamentBoard> {
   const result = await buildBoard(win)
   await redis.set(K.board(win.id), result, { ex: BOARD_TTL })
   return result
+}
+
+/**
+ * A rolling XP board over the last `windowMs` — the engine driving the
+ * leaderboard's 24H and 1W views.
+ *
+ * These windows can't rank by ELO the way the all-time board does: the contract
+ * stores one cumulative rating per player and no per-game history, so there is
+ * no such thing as "your rating over the last 24 hours". XP is the only metric
+ * that's actually windowable, and it already carries opponent strength.
+ *
+ * Unlike a season, ratings here are read live rather than snapshotted — a
+ * rolling view has no opening moment to freeze against, and nothing is paid out
+ * on it, so there's no incentive to game the weighting.
+ */
+export async function getRollingBoard(windowMs: number): Promise<BoardEntry[]> {
+  const nowMs = Date.now()
+  const ratings = await fetchCurrentRatings()
+  const games = await resolveAliases(await collectWindowGames(nowMs - windowMs, nowMs))
+  return scoreWindow(games, ratings)
 }
 
 /** A concluded season's frozen final board, if one exists. */

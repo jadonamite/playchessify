@@ -7,7 +7,12 @@ import { useWallet } from '@/components/wallet-provider'
 import GlowButton from '@/components/ui/GlowButton'
 import PlayCard from '@/components/ui/PlayCard'
 import LoadingState from '@/components/ui/LoadingState'
-import { useLeaderboard, type LeaderboardEntry } from '@/hooks/useLeaderboard'
+import {
+  useLeaderboard,
+  RANGE_LABELS,
+  type LeaderboardEntry,
+  type LeaderboardRange,
+} from '@/hooks/useLeaderboard'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
@@ -23,6 +28,12 @@ const RANKS_PER_PAGE = 10
 
 const winRate = (e: LeaderboardEntry) =>
   e.gamesPlayed === 0 ? '—' : `${Math.round((e.wins / e.gamesPlayed) * 100)}%`
+
+// The headline metric depends on the range: rolling windows rank by XP, since
+// the contract holds one cumulative ELO per player and no history to slice.
+const isWindowed = (e: LeaderboardEntry) => e.xp !== undefined
+const metricLabel = (e: LeaderboardEntry) => (isWindowed(e) ? 'XP' : 'ELO')
+const metricValue = (e: LeaderboardEntry) => (isWindowed(e) ? (e.xp ?? 0) : e.rating)
 
 // ── rank row (4+) ────────────────────────────────────────────────────────────
 
@@ -99,12 +110,14 @@ function RankRow({
           </span>
         </div>
         <div className="flex flex-col items-end">
-          <span className="text-[8px] text-gray-500 uppercase tracking-widest font-bold mb-0.5">ELO</span>
+          <span className="text-[8px] text-gray-500 uppercase tracking-widest font-bold mb-0.5">
+            {metricLabel(entry)}
+          </span>
           <span
             className="text-base font-black"
             style={{ fontFamily: 'var(--fd)', color: 'var(--c)' }}
           >
-            {entry.rating}
+            {metricValue(entry)}
           </span>
         </div>
       </div>
@@ -117,7 +130,8 @@ function RankRow({
 export default function LeaderboardContent() {
   const router = useRouter()
   const { playerAddress } = useWallet()
-  const { entries, isLoading, myRank, refresh } = useLeaderboard()
+  const [range, setRange] = useState<LeaderboardRange>('24h')
+  const { entries, isLoading, myRank, refresh } = useLeaderboard(range)
   const { data: profileMap = {} } = useBatchProfiles(entries.map((e) => e.address))
 
   const myAddress = playerAddress?.toLowerCase()
@@ -201,6 +215,40 @@ export default function LeaderboardContent() {
               </div>
             </motion.div>
           </div>
+
+          {/* ── Range toggle ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+            className="flex items-center gap-1.5 p-1.5 rounded-2xl self-start"
+            style={{ background: 'var(--b1)', border: '1px solid var(--b2)' }}
+          >
+            {(Object.keys(RANGE_LABELS) as LeaderboardRange[]).map((r) => {
+              const active = r === range
+              return (
+                <button
+                  key={r}
+                  onClick={() => {
+                    setRange(r)
+                    setPage(1) // a new range is a different board; page 3 of the old one means nothing
+                  }}
+                  className="px-4 py-2 rounded-xl text-[10px] font-black tracking-[0.2em] uppercase transition-colors cursor-pointer"
+                  style={{
+                    fontFamily: 'var(--fd)',
+                    background: active ? 'rgba(0,204,255,0.12)' : 'transparent',
+                    border: active ? '1px solid rgba(0,204,255,0.4)' : '1px solid transparent',
+                    color: active ? 'var(--c)' : 'var(--t3)',
+                  }}
+                >
+                  {RANGE_LABELS[r]}
+                </button>
+              )
+            })}
+            <span className="ml-2 mr-1 text-[9px] font-bold tracking-wide uppercase text-[var(--t3)] hidden sm:inline">
+              {range === 'all' ? 'Ranked by ELO' : 'Ranked by XP earned'}
+            </span>
+          </motion.div>
 
           {/* ── Grand Prix entry ribbon ── */}
           <motion.button
@@ -358,8 +406,8 @@ export default function LeaderboardContent() {
                       isMe={!!myAddress && entry.address === myAddress}
                       delay={0.1 + i * 0.09}
                       profileMap={profileMap}
-                      hero={entry.rating}
-                      heroLabel="ELO"
+                      hero={metricValue(entry)}
+                      heroLabel={metricLabel(entry)}
                       wins={entry.wins}
                       losses={entry.losses}
                       draws={entry.draws}
