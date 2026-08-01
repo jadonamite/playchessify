@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWallet } from '@/components/wallet-provider'
 import GlowButton from '@/components/ui/GlowButton'
@@ -81,6 +81,11 @@ function Countdown({ endsAt }: { endsAt: number }) {
 
 // ── prize pool card (chrome bracket, metallic split rows) ─────────────────────
 
+/** More places than the podium has medals, all paying the same. */
+function isFlatWideSplit(splits: { amount: number }[]): boolean {
+  return splits.length > 3 && splits.every((s) => s.amount === splits[0].amount)
+}
+
 function PrizeCard({ win }: { win: TournamentWindowMeta }) {
   return (
     <div
@@ -115,7 +120,35 @@ function PrizeCard({ win }: { win: TournamentWindowMeta }) {
       {/* divider */}
       <div className="hidden sm:block w-px self-stretch bg-white/10" />
 
-      {/* splits */}
+      {/* splits — a medal podium only reads as one up to three places. A wide
+          flat payout (Qualifiers: 10 × $5) says more as a single band. */}
+      {isFlatWideSplit(win.splits) ? (
+        <div
+          className="flex-1 rounded-xl px-4 py-3 flex items-center justify-between gap-3"
+          style={{
+            background: 'rgba(255,210,74,0.06)',
+            border: '1px solid rgba(255,210,74,0.22)',
+            boxShadow: 'inset 0 1px 0 rgba(255,210,74,0.13)',
+          }}
+        >
+          <span className="text-[9px] font-black tracking-[0.2em] uppercase text-[var(--t3)]">
+            Top {win.splits.length} paid
+          </span>
+          <span
+            className="font-black leading-none"
+            style={{
+              fontFamily: 'var(--fd)',
+              fontSize: 22,
+              backgroundImage: 'linear-gradient(180deg, #FFF6C2, #FFD24A 55%, #9C6B12)',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            ${win.splits[0].amount} each
+          </span>
+        </div>
+      ) : (
       <div className="flex-1 grid grid-cols-3 gap-3">
         {win.splits.map((s) => {
           const m = MEDAL[(s.place as 1 | 2 | 3)] ?? MEDAL[3]
@@ -145,6 +178,7 @@ function PrizeCard({ win }: { win: TournamentWindowMeta }) {
           )
         })}
       </div>
+      )}
     </div>
   )
 }
@@ -244,6 +278,18 @@ export default function TournamentContent() {
     .map((r) => top3.find((e) => e.rank === r))
     .filter((e): e is TournamentBoardEntry => Boolean(e))
   const rest = board.slice(3)
+  // Where the qualification line currently falls. Mirrors qualifiersFromBoard in
+  // src/lib/tournament.ts: the top N eligible players, plus everyone tied on XP
+  // with the one on the line — so the marker sits after the last player who
+  // would advance right now, which is not always rank N.
+  const lastAdvancing = (() => {
+    if (!win?.qualifyTopN) return null
+    const eligible = board.filter((e) => e.eligible)
+    const line = eligible[win.qualifyTopN - 1]
+    if (!line) return null
+    const advancing = eligible.filter((e) => e.xp >= line.xp)
+    return advancing[advancing.length - 1] ?? null
+  })()
   const myEntry = myAddress ? board.find((e) => e.address === myAddress) : null
   const myEntryNotInPodium = myEntry && myEntry.rank > 3
 
@@ -288,11 +334,22 @@ export default function TournamentContent() {
                 className="text-3xl md:text-5xl font-black uppercase tracking-tighter leading-none"
                 style={{ fontFamily: 'var(--fd)', textShadow: 'var(--hero-text-shadow)' }}
               >
-                GRAND{' '}
-                <span style={{ color: 'var(--c)', textShadow: 'var(--king-text-shadow)' }}>
-                  PRIX
-                </span>{' '}
-                <span style={{ color: 'var(--candy-amber)' }}>{win?.id ?? 'S1'}</span>
+                {win?.kind === 'qualifiers' ? (
+                  <>
+                    THE{' '}
+                    <span style={{ color: 'var(--c)', textShadow: 'var(--king-text-shadow)' }}>
+                      QUALIFIERS
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    GRAND{' '}
+                    <span style={{ color: 'var(--c)', textShadow: 'var(--king-text-shadow)' }}>
+                      PRIX
+                    </span>{' '}
+                    <span style={{ color: 'var(--candy-amber)' }}>{win?.id ?? 'S1'}</span>
+                  </>
+                )}
               </h1>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 bg-black/40 py-1.5 px-3 rounded-full border border-white/10 shadow-inner">
@@ -317,12 +374,32 @@ export default function TournamentContent() {
               className="flex flex-col gap-4"
             >
               <PrizeCard win={win} />
+              {win.qualifyTopN && (
+                <div
+                  className="rounded-2xl px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 backdrop-blur-sm"
+                  style={{
+                    background: 'rgba(0,204,255,0.05)',
+                    border: '1px solid rgba(0,204,255,0.25)',
+                  }}
+                >
+                  <span
+                    className="text-[10px] font-black tracking-[0.2em] uppercase shrink-0"
+                    style={{ color: 'var(--c)' }}
+                  >
+                    🎟️ Top {win.qualifyTopN} advance
+                  </span>
+                  <span className="text-[10px] font-bold tracking-wide text-[var(--t3)] uppercase">
+                    Finish in the top {win.qualifyTopN} to take a seat in the next Grand Prix.
+                    Ties at the line all advance.
+                  </span>
+                </div>
+              )}
               <div
                 className="rounded-2xl px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 backdrop-blur-sm"
                 style={{ background: 'var(--b1)', border: '1px solid var(--b2)' }}
               >
                 <span className="text-[10px] font-black tracking-[0.2em] uppercase text-[var(--t3)]">
-                  ⏳ Season ends {fmtDate(win.endsAt)}
+                  ⏳ {win.kind === 'qualifiers' ? 'Qualifiers end' : 'Season ends'} {fmtDate(win.endsAt)}
                 </span>
                 <Countdown endsAt={win.endsAt} />
               </div>
@@ -468,13 +545,29 @@ export default function TournamentContent() {
                     <div className="divide-y divide-white/5">
                       <AnimatePresence mode="popLayout">
                         {rest.map((entry, idx) => (
-                          <TrophyRow
-                            key={entry.address}
-                            entry={entry}
-                            isMe={!!myAddress && entry.address === myAddress}
-                            idx={idx}
-                            profileMap={profileMap}
-                          />
+                          <Fragment key={entry.address}>
+                            <TrophyRow
+                              entry={entry}
+                              isMe={!!myAddress && entry.address === myAddress}
+                              idx={idx}
+                              profileMap={profileMap}
+                            />
+                            {lastAdvancing?.address === entry.address && (
+                              <div
+                                className="flex items-center gap-3 px-6 md:px-8 py-2"
+                                style={{ background: 'rgba(0,204,255,0.05)' }}
+                              >
+                                <div className="flex-1 h-px" style={{ background: 'rgba(0,204,255,0.35)' }} />
+                                <span
+                                  className="text-[9px] font-black tracking-[0.2em] uppercase shrink-0"
+                                  style={{ color: 'var(--c)' }}
+                                >
+                                  ✂ Qualification line · top {win?.qualifyTopN} advance
+                                </span>
+                                <div className="flex-1 h-px" style={{ background: 'rgba(0,204,255,0.35)' }} />
+                              </div>
+                            )}
+                          </Fragment>
                         ))}
                       </AnimatePresence>
                     </div>

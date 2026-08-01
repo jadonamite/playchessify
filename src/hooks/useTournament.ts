@@ -21,7 +21,9 @@ export interface TournamentPrizeWinner {
 
 export interface TournamentWindowMeta {
   seasonIndex: number
+  kind: 'grand-prix' | 'qualifiers'
   id: string
+  contractSeasonId: number
   name: string
   startsAt: number
   endsAt: number
@@ -29,6 +31,10 @@ export interface TournamentWindowMeta {
   prizePool: number
   currency: string
   splits: { place: number; amount: number }[]
+  /** Qualifiers only — seats into the next Grand Prix (ties at the line included). */
+  qualifyTopN?: number
+  /** Grand Prix only — the event whose qualifiers make up this closed field. */
+  qualifiersFrom?: string
 }
 
 export interface TournamentData {

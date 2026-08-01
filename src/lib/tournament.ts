@@ -10,6 +10,7 @@ import {
   getActiveSeason,
   getLatestConcludedSeason,
   getNextSeason,
+  getSeasonById,
   type TournamentWindow,
 } from '@/config/tournaments'
 
@@ -40,6 +41,7 @@ const K = {
   seed: (id: string) => `chess:trn:${id}:seed`,
   board: (id: string) => `chess:trn:${id}:board`,
   final: (id: string) => `chess:trn:${id}:final`,
+  qualifiers: (id: string) => `chess:trn:${id}:qualifiers`,
 }
 
 let _redis: Redis | null = null
@@ -365,10 +367,77 @@ async function resolveAliases(games: WindowGame[]): Promise<WindowGame[]> {
   return games.map((g) => ({ ...g, white: to(g.white), black: to(g.black) }))
 }
 
+// ── qualification ────────────────────────────────────────────────────────────
+
+/**
+ * Who advances from a Qualifiers board: the top `qualifyTopN` eligible players,
+ * **plus everyone tied on XP with the player sitting on that line**.
+ *
+ * The tie clause is not a nicety. XP clusters hard in the tail — S1 had seven
+ * players on 21 XP straddling rank 100 — and the board's tiebreak is "fewer
+ * games played". Cutting strictly at N would hand the last seat to whoever
+ * played least among equals and send the rest home on a rule that has nothing
+ * to do with how they did. So the seat count floats; only the cash is fixed.
+ */
+function qualifiersFromBoard(board: BoardEntry[], topN: number): string[] {
+  const eligible = board.filter((e) => e.eligible)
+  const line = eligible[topN - 1]
+  if (!line) return eligible.map((e) => e.address) // smaller field than the cut
+  return eligible.filter((e) => e.xp >= line.xp).map((e) => e.address)
+}
+
+/**
+ * The qualifier set for an event, as a lowercase address set.
+ *
+ * Written once when the source event's board freezes. Self-healing on read: a
+ * missing set is rebuilt from the frozen board, and a missing frozen board is
+ * rebuilt from chain. Returns null when it genuinely cannot be determined —
+ * callers must treat that as "gate unavailable", never as "nobody qualified".
+ */
+async function getQualifierSet(sourceId: string): Promise<Set<string> | null> {
+  const redis = getRedis()
+
+  const cached = await redis.smembers(K.qualifiers(sourceId))
+  if (cached && cached.length > 0) return new Set(cached.map((a) => String(a).toLowerCase()))
+
+  const source = getSeasonById(sourceId)
+  if (!source || !source.qualifyTopN) return null
+  if (Date.now() < source.endsAt) return null // still running — no set yet
+
+  let final = await redis.get<TournamentBoard>(K.final(sourceId))
+  if (!final) {
+    await freezeSeason(source)
+    final = await redis.get<TournamentBoard>(K.final(sourceId))
+  }
+  if (!final?.board?.length) return null
+
+  const addresses = qualifiersFromBoard(final.board, source.qualifyTopN)
+  if (addresses.length === 0) return null
+  await redis.sadd(K.qualifiers(sourceId), addresses[0], ...addresses.slice(1))
+  return new Set(addresses)
+}
+
 async function buildBoard(win: TournamentWindow): Promise<TournamentBoard> {
   const seed = await getSeedRatings(win)
   const games = await resolveAliases(await collectWindowGames(win.startsAt, win.endsAt))
-  const board = scoreWindow(games, seed)
+  let board = scoreWindow(games, seed)
+
+  // Closed field: only players who came through the named Qualifiers score.
+  // If the gate can't be resolved the event runs open rather than empty — a
+  // Grand Prix with the wrong field is recoverable, one with no field at all
+  // is a dead week that silently looks like nobody played.
+  if (win.qualifiersFrom) {
+    const allowed = await getQualifierSet(win.qualifiersFrom)
+    if (allowed) {
+      board = board.filter((e) => allowed.has(e.address.toLowerCase()))
+      board.forEach((e, i) => (e.rank = i + 1))
+    } else {
+      console.error(
+        `[tournament] ${win.id}: qualifier set '${win.qualifiersFrom}' unavailable — scoring an OPEN field`,
+      )
+    }
+  }
+
   return { window: win, board, winners: prizeWinners(board, win), frozen: false }
 }
 
@@ -380,14 +449,34 @@ async function buildBoard(win: TournamentWindow): Promise<TournamentBoard> {
  */
 async function freezeConcludedIfNeeded(): Promise<void> {
   const prev = getLatestConcludedSeason()
-  if (!prev) return
+  if (prev) await freezeSeason(prev)
+}
+
+/**
+ * Freeze one specific concluded event, once, and derive its qualifier set if it
+ * gates a later one.
+ *
+ * Takes an explicit window rather than reaching for "the latest concluded":
+ * getQualifierSet needs to freeze the *source* Qualifiers, which stops being
+ * the latest concluded event the moment the Grand Prix it feeds ends. Resolving
+ * "latest" in here would both miss that event and recurse — a Grand Prix freeze
+ * would ask for its gate, which would ask to freeze the latest concluded, which
+ * is that same Grand Prix.
+ */
+async function freezeSeason(win: TournamentWindow): Promise<void> {
   const redis = getRedis()
-  if (await redis.exists(K.final(prev.id))) return
-  // Only freezable if the season was actually seeded while it was live.
-  const seeded = await redis.exists(K.seed(prev.id))
+  if (await redis.exists(K.final(win.id))) return
+  // Only freezable if the event was actually seeded while it was live.
+  const seeded = await redis.exists(K.seed(win.id))
   if (!seeded) return
-  const result = await buildBoard(prev)
-  await redis.set(K.final(prev.id), { ...result, frozen: true })
+  const result = await buildBoard(win)
+  await redis.set(K.final(win.id), { ...result, frozen: true })
+
+  // Lock the advancing field in at the same moment the board becomes final.
+  if (win.qualifyTopN) {
+    const addresses = qualifiersFromBoard(result.board, win.qualifyTopN)
+    if (addresses.length > 0) await redis.sadd(K.qualifiers(win.id), addresses[0], ...addresses.slice(1))
+  }
 }
 
 /** The live season's board + prize standings. Cached briefly. */
