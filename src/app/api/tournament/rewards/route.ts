@@ -15,7 +15,10 @@ export async function GET() {
     if (!prev) return NextResponse.json({ seasonId: 0, winners: [] })
     const final = await getFinalTournament(prev.id)
     return NextResponse.json({
-      seasonId: prev.seasonIndex,
+      // The vault keys prizes by contractSeasonId, not the display ordinal —
+      // Qualifiers Q1 is season 2 on-chain. Sending seasonIndex here would make
+      // Q1's winners claim against Grand Prix S1's already-funded allocations.
+      seasonId: prev.contractSeasonId,
       winners: (final?.winners ?? []).map((w) => ({ address: w.address, amount: w.amount })),
     })
   } catch (err) {
