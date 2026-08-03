@@ -36,6 +36,36 @@ export interface TournamentXpRules {
   // a player must have played at least this many games in the window to be
   // eligible for a prize (one lucky win can't take the pot).
   minGamesEligible: number
+  /**
+   * XP multiplier for the 1st, 2nd, 3rd… settled game against the *same*
+   * opponent in one window; the final value repeats for every meeting after.
+   *
+   * Beating the same wallet twenty times is not twenty times the achievement,
+   * and it is the whole shape of a wash-trading ring: two wallets, one always
+   * losing, the wager returning to the same hand. Decaying repeats prices that
+   * in without touching anyone who plays a friend a few times.
+   */
+  repeatOpponentWeights: number[]
+}
+
+/**
+ * Loss-farm ("feeder") detection — accounts that exist only to lose, so a
+ * partner wallet can harvest wins.
+ *
+ * This is enforcement of the published Terms §7 (Fair play: no collusion; "We
+ * may exclude accounts or addresses that violate these rules"), not a new
+ * scoring rule. It is written as thresholds rather than a hand-kept blacklist
+ * so a flagged account can be shown exactly why it was flagged.
+ */
+export interface TournamentFeederRules {
+  /** Zero wins across this many settled games in the window. */
+  minGames: number
+  /** …or zero wins across this many games against at most `maxOpponents`. */
+  narrowGames: number
+  maxOpponents: number
+  /** Addresses always excluded, and addresses never excluded (manual review). */
+  denylist: string[]
+  allowlist: string[]
 }
 
 export interface TournamentConfig {
@@ -44,6 +74,7 @@ export interface TournamentConfig {
   prizePool: number
   splits: TournamentSplit[]
   xp: TournamentXpRules
+  feeder: TournamentFeederRules
   /** Length of one event, in ms. */
   seasonLengthMs: number
   /** Display timezone for start/end labels. */
@@ -71,6 +102,18 @@ export const TOURNAMENT: TournamentConfig = {
     softCapGames: 10,
     diminishingFactor: 0.8,
     minGamesEligible: 3,
+    // 1st meeting full, 2nd half, every one after that a tenth.
+    repeatOpponentWeights: [1, 0.5, 0.1],
+  },
+  feeder: {
+    // 5 games without a single win is already a 3% outcome for a real player;
+    // every ring feeder found in Q1 sat at 6–10 games and zero wins.
+    minGames: 5,
+    // The tight version: a wallet that only ever plays one partner and loses.
+    narrowGames: 3,
+    maxOpponents: 1,
+    denylist: [],
+    allowlist: [],
   },
   seasonLengthMs: WEEK_MS,
   tzLabel: 'WAT',

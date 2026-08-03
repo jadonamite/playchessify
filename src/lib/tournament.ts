@@ -77,6 +77,11 @@ export interface TournamentBoard {
   board: BoardEntry[]
   winners: PrizeWinner[]
   frozen: boolean
+  /**
+   * Addresses excluded as loss-farms under Terms §7, kept on the payload so an
+   * exclusion can be reviewed and challenged rather than silently applied.
+   */
+  excluded?: string[]
   cached?: boolean
   /** Set only when idle, and only once the next season has been scheduled. */
   next?: TournamentWindow | null
@@ -256,10 +261,71 @@ async function collectWindowGames(startMs: number, endMs: number): Promise<Windo
 
 const ZERO = '0x0000000000000000000000000000000000000000'
 
-function scoreWindow(games: WindowGame[], seed: Record<string, number>): BoardEntry[] {
+const settled = (g: WindowGame) =>
+  g.status === STATUS_DRAW || g.result === RESULT_DRAW || g.status === STATUS_FINISHED
+const isDrawGame = (g: WindowGame) => g.status === STATUS_DRAW || g.result === RESULT_DRAW
+const playable = (g: WindowGame) =>
+  Boolean(g.white) && Boolean(g.black) && g.white !== ZERO && g.black !== ZERO
+
+/** Unordered pair key, so A-vs-B and B-vs-A are the same matchup. */
+const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`)
+
+/**
+ * Wallets that exist only to lose, so a partner can harvest wins — Terms §7.
+ *
+ * A real player who has lost five straight has roughly a 3% record; every ring
+ * feeder found in Q1 sat at six to ten games with not one win, several of them
+ * losing to five different "winners", which is what exposed the ring as a ring.
+ * Flagged wallets score nothing, and games against them award nothing, so the
+ * farm stops paying on both sides.
+ */
+export function detectFeeders(games: WindowGame[]): string[] {
+  const f = TOURNAMENT.feeder
+  const allow = new Set(f.allowlist.map((a) => a.toLowerCase()))
+  const deny = f.denylist.map((a) => a.toLowerCase())
+
+  const rec: Record<string, { wins: number; games: number; opps: Set<string> }> = {}
+  const get = (a: string) => (rec[a] ??= { wins: 0, games: 0, opps: new Set() })
+
+  for (const g of games) {
+    if (!settled(g) || !playable(g)) continue
+    for (const [me, them] of [[g.white, g.black], [g.black, g.white]] as const) {
+      const r = get(me)
+      r.games += 1
+      r.opps.add(them)
+    }
+    if (!isDrawGame(g)) get(g.result === RESULT_WHITE_WINS ? g.white : g.black).wins += 1
+  }
+
+  const flagged = new Set(deny)
+  for (const [addr, r] of Object.entries(rec)) {
+    if (r.wins > 0 || allow.has(addr)) continue
+    const broad = r.games >= f.minGames
+    const narrow = r.games >= f.narrowGames && r.opps.size <= f.maxOpponents
+    if (broad || narrow) flagged.add(addr)
+  }
+  return [...flagged]
+}
+
+function scoreWindow(
+  games: WindowGame[],
+  seed: Record<string, number>,
+): { board: BoardEntry[]; excluded: string[] } {
   const x = TOURNAMENT.xp
   const seedOf = (a: string) => seed[a] ?? BASE_RATING
   const clamp = (v: number) => Math.min(x.oppWeightMax, Math.max(x.oppWeightMin, v))
+
+  const excluded = detectFeeders(games)
+  const isExcluded = new Set(excluded)
+
+  // Nth meeting with the same opponent, this window. The final configured
+  // weight repeats, so a 40-game farm never climbs back above it.
+  const rw = x.repeatOpponentWeights
+  const meetings: Record<string, number> = {}
+  const repeatWeight = (a: string, b: string) => {
+    const n = (meetings[pairKey(a, b)] = (meetings[pairKey(a, b)] ?? 0) + 1)
+    return rw[Math.min(n, rw.length) - 1] ?? 1
+  }
 
   interface Acc {
     xp: number
@@ -273,33 +339,34 @@ function scoreWindow(games: WindowGame[], seed: Record<string, number>): BoardEn
   const get = (a: string): Acc =>
     (acc[a] ??= { xp: 0, wins: 0, losses: 0, draws: 0, games: 0, perDay: {} })
 
-  const award = (player: string, opp: string, base: number, day: number) => {
+  const award = (player: string, opp: string, base: number, day: number, repeat: number) => {
     if (!player || player === ZERO) return
     const a = get(player)
     const weight = clamp(1 + (seedOf(opp) - seedOf(player)) / x.oppWeightDivisor)
     const n = (a.perDay[day] = (a.perDay[day] ?? 0) + 1)
     const dim = n <= x.softCapGames ? 1 : Math.pow(x.diminishingFactor, n - x.softCapGames)
-    a.xp += base * weight * dim
+    a.xp += base * weight * dim * repeat
     a.games += 1
   }
 
   for (const g of games) {
-    const isDraw = g.status === STATUS_DRAW || g.result === RESULT_DRAW
-    const settled = isDraw || g.status === STATUS_FINISHED
-    if (!settled) continue
-    if (!g.white || !g.black || g.white === ZERO || g.black === ZERO) continue
+    if (!settled(g) || !playable(g)) continue
+    // A flagged loss-farm scores nothing and pays nothing to whoever played it.
+    if (isExcluded.has(g.white) || isExcluded.has(g.black)) continue
+    const isDraw = isDrawGame(g)
     const day = Math.floor(g.playedAt / 86400)
+    const repeat = repeatWeight(g.white, g.black)
 
     if (isDraw) {
-      award(g.white, g.black, x.draw, day)
-      award(g.black, g.white, x.draw, day)
+      award(g.white, g.black, x.draw, day, repeat)
+      award(g.black, g.white, x.draw, day, repeat)
       get(g.white).draws += 1
       get(g.black).draws += 1
     } else {
       const winner = g.result === RESULT_WHITE_WINS ? g.white : g.black
       const loser = winner === g.white ? g.black : g.white
-      award(winner, loser, x.win, day)
-      award(loser, winner, x.loss, day)
+      award(winner, loser, x.win, day, repeat)
+      award(loser, winner, x.loss, day, repeat)
       get(winner).wins += 1
       get(loser).losses += 1
     }
@@ -321,7 +388,7 @@ function scoreWindow(games: WindowGame[], seed: Record<string, number>): BoardEn
   // Highest XP first; fewer games breaks ties (efficiency over volume).
   board.sort((p, q) => q.xp - p.xp || p.games - q.games)
   board.forEach((e, i) => (e.rank = i + 1))
-  return board
+  return { board, excluded }
 }
 
 function prizeWinners(board: BoardEntry[], win: TournamentWindow): PrizeWinner[] {
@@ -425,7 +492,8 @@ async function getQualifierSet(sourceId: string): Promise<Set<string> | null> {
 async function buildBoard(win: TournamentWindow): Promise<TournamentBoard> {
   const seed = await getSeedRatings(win)
   const games = await resolveAliases(await collectWindowGames(win.startsAt, win.endsAt))
-  let board = scoreWindow(games, seed)
+  const scored = scoreWindow(games, seed)
+  let board = scored.board
 
   // Closed field: only players who came through the named Qualifiers score.
   // If the gate can't be resolved the event runs open rather than empty — a
@@ -443,7 +511,13 @@ async function buildBoard(win: TournamentWindow): Promise<TournamentBoard> {
     }
   }
 
-  return { window: win, board, winners: prizeWinners(board, win), frozen: false }
+  return {
+    window: win,
+    board,
+    winners: prizeWinners(board, win),
+    frozen: false,
+    excluded: scored.excluded,
+  }
 }
 
 /**
@@ -528,7 +602,7 @@ export async function getRollingBoard(windowMs: number): Promise<BoardEntry[]> {
   const nowMs = Date.now()
   const ratings = await fetchCurrentRatings()
   const games = await resolveAliases(await collectWindowGames(nowMs - windowMs, nowMs))
-  return scoreWindow(games, ratings)
+  return scoreWindow(games, ratings).board
 }
 
 /** A concluded season's frozen final board, if one exists. */
