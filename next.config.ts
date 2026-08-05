@@ -19,7 +19,8 @@ const nextConfig: NextConfig = {
     'react-chessboard',
     'wagmi',
     '@wagmi/core',
-    '@wagmi/connectors'
+    '@wagmi/connectors',
+    '@goodagent/widget',
   ],
 };
 

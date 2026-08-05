@@ -19,6 +19,7 @@
     "protocol"
   ],
   "dependencies": {
+    "@goodagent/widget": "^0.3.4",
     "@jadonamite/plugins": "^1.0.0",
     "@privy-io/react-auth": "^3.27.1",
     "@privy-io/wagmi": "^4.0.8",
