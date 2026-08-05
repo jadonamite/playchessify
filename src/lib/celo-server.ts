@@ -10,8 +10,8 @@ import {
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoAlfajores } from 'viem/chains'
-import { CHESS_GAME_ABI, CHESS_TOKEN_ABI, FORWARDER_ABI } from '@/config/abis'
-import { CELO_CONTRACTS } from '@/config/contracts'
+import { CHESS_GAME_ABI, CHESS_GAME_ABI_V1_GET, CHESS_TOKEN_ABI, FORWARDER_ABI } from '@/config/abis'
+import { CELO_CONTRACTS, CELO_MAINNET_HANDOVER } from '@/config/contracts'
 
 // Server-only viem clients + signing wallets for Chessify on Celo.
 // NEVER import this from client components — it reads private keys.
@@ -86,6 +86,36 @@ export interface OnchainGame {
 }
 
 export async function getOnchainGame(gameId: number): Promise<OnchainGame> {
+  const isV1 =
+    GAME_ADDRESS.toLowerCase() === CELO_MAINNET_HANDOVER.game.toLowerCase()
+
+  if (isV1) {
+    const g = (await getPublicClient().readContract({
+      address: GAME_ADDRESS,
+      abi: CHESS_GAME_ABI_V1_GET,
+      functionName: 'getGame',
+      args: [BigInt(gameId)],
+    })) as unknown as {
+      white: Address
+      black: Address
+      wager: bigint
+      status: number
+      result: number
+      createdAt: bigint
+      drawProposer: Address
+    }
+    return {
+      white: g.white,
+      black: g.black,
+      wager: g.wager,
+      status: g.status as GameStatus,
+      result: g.result as GameResult,
+      createdAt: g.createdAt,
+      joinedAt: 0n,
+      drawProposer: g.drawProposer,
+    }
+  }
+
   const g = (await getPublicClient().readContract({
     address: GAME_ADDRESS,
     abi: CHESS_GAME_ABI,

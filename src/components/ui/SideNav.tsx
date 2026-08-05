@@ -38,6 +38,18 @@ type ItemDef = {
   accent: string
 }
 
+function AgentIcon({ size = 24 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="5" y="8" width="14" height="10" rx="3" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="9" cy="13" r="1.2" fill="currentColor" />
+      <circle cx="15" cy="13" r="1.2" fill="currentColor" />
+      <path d="M12 4v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M8 4h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 function GearIcon({ size = 24 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -65,6 +77,7 @@ function GearIcon({ size = 24 }: IconProps) {
 
 const ITEMS: ItemDef[] = [
   { key: 'play', label: 'Play', href: '/app/lobby', match: ['/app/lobby'], Icon: PlayIcon, accent: 'var(--c)' },
+  { key: 'agents', label: 'Agents', href: '/app/agents/deck', match: ['/app/agents', '/app/agents/deck'], Icon: AgentIcon, accent: 'var(--candy-lime)' },
   { key: 'ranks', label: 'Ranks', href: '/app/leaderboard', match: ['/app/leaderboard'], Icon: RankIcon, accent: 'var(--candy-amber)' },
   { key: 'history', label: 'History', href: '/app/history', match: ['/app/history'], Icon: HistoryIcon, accent: 'var(--candy-grape)' },
   { key: 'faucet', label: 'Faucet', href: '/app/faucet', match: ['/app/faucet'], Icon: FaucetIcon, accent: 'var(--candy-lime)' },

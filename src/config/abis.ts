@@ -84,3 +84,25 @@ export const CHESS_GAME_ABI = [
   { "type": "event", "name": "StaleGameClosed", "inputs": [{ "name": "gameId", "type": "uint256", "indexed": true }, { "name": "by", "type": "address", "indexed": true }] },
   { "type": "event", "name": "GameVoided", "inputs": [{ "name": "gameId", "type": "uint256", "indexed": true }] }
 ] as const
+
+/** v1 handover `getGame` — 7 fields, block-based `createdAt`, no `joinedAt`. */
+export const CHESS_GAME_ABI_V1_GET = [
+  {
+    type: 'function',
+    name: 'getGame',
+    stateMutability: 'view',
+    inputs: [{ name: 'gameId', type: 'uint256' }],
+    outputs: [{
+      type: 'tuple',
+      components: [
+        { name: 'white', type: 'address' },
+        { name: 'black', type: 'address' },
+        { name: 'wager', type: 'uint256' },
+        { name: 'status', type: 'uint8' },
+        { name: 'result', type: 'uint8' },
+        { name: 'createdAt', type: 'uint256' },
+        { name: 'drawProposer', type: 'address' },
+      ],
+    }],
+  },
+] as const

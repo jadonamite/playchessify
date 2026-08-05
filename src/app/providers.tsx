@@ -1,5 +1,6 @@
 'use client'
 
+import '@/lib/ethereum-shim-client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 import { WagmiProvider } from '@privy-io/wagmi'
