@@ -61,6 +61,7 @@ export interface BoardEntry {
   losses: number
   draws: number
   games: number
+  distinctOpponents: number
   eligible: boolean
   rank: number
 }
@@ -271,11 +272,10 @@ const playable = (g: WindowGame) =>
 const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`)
 
 /**
- * Wallets that exist only to lose, so a partner can harvest wins — Terms §7.
+ * Loss-farm ("feeder") detection — accounts that exist only to lose, so a
+ * partner wallet can harvest wins — Terms §7.
  *
- * A real player who has lost five straight has roughly a 3% record; every ring
- * feeder found in Q1 sat at six to ten games with not one win, several of them
- * losing to five different "winners", which is what exposed the ring as a ring.
+ * Rule 5: Zero wins across ≥5 games flags all ring feeders; ≥3 games against ≤1 opponent catches narrow rings.
  * Flagged wallets score nothing, and games against them award nothing, so the
  * farm stops paying on both sides.
  */
@@ -318,34 +318,70 @@ function scoreWindow(
   const excluded = detectFeeders(games)
   const isExcluded = new Set(excluded)
 
-  // Nth meeting with the same opponent, this window. The final configured
-  // weight repeats, so a 40-game farm never climbs back above it.
+  // Rule 4 pre-pass: Tally total wins and games per opponent in-window to detect 0-win opponents.
+  const oppStats: Record<string, { wins: number; games: number }> = {}
+  for (const g of games) {
+    if (!settled(g) || !playable(g)) continue
+    if (isExcluded.has(g.white) || isExcluded.has(g.black)) continue
+    const w = (oppStats[g.white] ??= { wins: 0, games: 0 })
+    const b = (oppStats[g.black] ??= { wins: 0, games: 0 })
+    w.games += 1
+    b.games += 1
+    if (!isDrawGame(g)) {
+      const winner = g.result === RESULT_WHITE_WINS ? g.white : g.black
+      oppStats[winner].wins += 1
+    }
+  }
+
+  // Rule 3: Nth meeting with the same opponent, this window. 1st=100%, 2nd=50%, 3rd+=10%.
   const rw = x.repeatOpponentWeights
   const meetings: Record<string, number> = {}
   const repeatWeight = (a: string, b: string) => {
     const n = (meetings[pairKey(a, b)] = (meetings[pairKey(a, b)] ?? 0) + 1)
-    return rw[Math.min(n, rw.length) - 1] ?? 1
+    return rw[Math.min(n, rw.length) - 1] ?? rw[rw.length - 1] ?? 0.1
   }
 
   interface Acc {
-    xp: number
     wins: number
     losses: number
     draws: number
     games: number
+    opponents: Set<string>
+    xpPerOpponent: Record<string, number>
     perDay: Record<number, number>
   }
   const acc: Record<string, Acc> = {}
   const get = (a: string): Acc =>
-    (acc[a] ??= { xp: 0, wins: 0, losses: 0, draws: 0, games: 0, perDay: {} })
+    (acc[a] ??= {
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      games: 0,
+      opponents: new Set(),
+      xpPerOpponent: {},
+      perDay: {},
+    })
 
-  const award = (player: string, opp: string, base: number, day: number, repeat: number) => {
+  const award = (player: string, opp: string, base: number, day: number, repeat: number, isWin: boolean = false) => {
     if (!player || player === ZERO) return
     const a = get(player)
+    a.opponents.add(opp)
     const weight = clamp(1 + (seedOf(opp) - seedOf(player)) / x.oppWeightDivisor)
     const n = (a.perDay[day] = (a.perDay[day] ?? 0) + 1)
     const dim = n <= x.softCapGames ? 1 : Math.pow(x.diminishingFactor, n - x.softCapGames)
-    a.xp += base * weight * dim * repeat
+
+    // Rule 4: Discount wins over opponents with no wins in-window (if opp has >= noWinOpponentMinGames)
+    let winDiscount = 1.0
+    if (isWin) {
+      const oppWinCount = oppStats[opp]?.wins ?? 0
+      const oppGameCount = oppStats[opp]?.games ?? 0
+      if (oppWinCount === 0 && oppGameCount >= x.noWinOpponentMinGames) {
+        winDiscount = x.noWinOpponentDiscount
+      }
+    }
+
+    const earnedXp = base * weight * dim * repeat * winDiscount
+    a.xpPerOpponent[opp] = (a.xpPerOpponent[opp] ?? 0) + earnedXp
     a.games += 1
   }
 
@@ -358,33 +394,50 @@ function scoreWindow(
     const repeat = repeatWeight(g.white, g.black)
 
     if (isDraw) {
-      award(g.white, g.black, x.draw, day, repeat)
-      award(g.black, g.white, x.draw, day, repeat)
+      award(g.white, g.black, x.draw, day, repeat, false)
+      award(g.black, g.white, x.draw, day, repeat, false)
       get(g.white).draws += 1
       get(g.black).draws += 1
     } else {
       const winner = g.result === RESULT_WHITE_WINS ? g.white : g.black
       const loser = winner === g.white ? g.black : g.white
-      award(winner, loser, x.win, day, repeat)
-      award(loser, winner, x.loss, day, repeat)
+      award(winner, loser, x.win, day, repeat, true)
+      award(loser, winner, x.loss, day, repeat, false)
       get(winner).wins += 1
       get(loser).losses += 1
     }
   }
 
-  // Bot opponents award full XP to humans, but bots themselves never board.
+  // Rule 2: Per-opponent XP cap — no single opponent may supply > 25% of your XP.
+  // Rule 1: Distinct-opponent floor — require >= 5 distinct opponents to be prize-eligible.
   const board: BoardEntry[] = Object.entries(acc)
     .filter(([address]) => !isBotAddress(address))
-    .map(([address, a]) => ({
-    address,
-    xp: Math.round(a.xp),
-    wins: a.wins,
-    losses: a.losses,
-    draws: a.draws,
-    games: a.games,
-    eligible: a.games >= x.minGamesEligible,
-    rank: 0,
-  }))
+    .map(([address, a]) => {
+      const rawTotalXp = Object.values(a.xpPerOpponent).reduce((sum, v) => sum + v, 0)
+      let finalXp = 0
+      if (rawTotalXp > 0) {
+        const maxAllowedPerOpp = rawTotalXp * x.maxOpponentXpShare // e.g. 0.25 (25%)
+        finalXp = Object.values(a.xpPerOpponent).reduce(
+          (sum, oppXp) => sum + Math.min(oppXp, maxAllowedPerOpp),
+          0,
+        )
+      }
+      const distinctOpponents = a.opponents.size
+      const eligible = a.games >= x.minGamesEligible && distinctOpponents >= x.minDistinctOpponents
+
+      return {
+        address,
+        xp: Math.round(finalXp),
+        wins: a.wins,
+        losses: a.losses,
+        draws: a.draws,
+        games: a.games,
+        distinctOpponents,
+        eligible,
+        rank: 0,
+      }
+    })
+
   // Highest XP first; fewer games breaks ties (efficiency over volume).
   board.sort((p, q) => q.xp - p.xp || p.games - q.games)
   board.forEach((e, i) => (e.rank = i + 1))
