@@ -36,6 +36,13 @@ export interface TournamentXpRules {
   // a player must have played at least this many games in the window to be
   // eligible for a prize (one lucky win can't take the pot).
   minGamesEligible: number
+  // Rule 1: Distinct-opponent floor — require ≥5 distinct opponents to be prize-eligible.
+  minDistinctOpponents: number
+  // Rule 2: Per-opponent XP cap — no single opponent may supply more than ~25% of your XP.
+  maxOpponentXpShare: number
+  // Rule 4: Discount wins over opponents with no wins in-window.
+  noWinOpponentMinGames: number
+  noWinOpponentDiscount: number
   /**
    * XP multiplier for the 1st, 2nd, 3rd… settled game against the *same*
    * opponent in one window; the final value repeats for every meeting after.
@@ -102,6 +109,10 @@ export const TOURNAMENT: TournamentConfig = {
     softCapGames: 10,
     diminishingFactor: 0.8,
     minGamesEligible: 3,
+    minDistinctOpponents: 5,
+    maxOpponentXpShare: 0.25,
+    noWinOpponentMinGames: 3,
+    noWinOpponentDiscount: 0.2,
     // 1st meeting full, 2nd half, every one after that a tenth.
     repeatOpponentWeights: [1, 0.5, 0.1],
   },
@@ -169,6 +180,14 @@ interface EventEntry {
   splits?: TournamentSplit[]
   qualifyTopN?: number
   qualifiersFrom?: string
+  /**
+   * Window length for this event alone, overriding TOURNAMENT.seasonLengthMs.
+   *
+   * Per-event rather than a change to the shared constant: seasonLengthMs is
+   * applied at read time to every entry in the registry, so editing it would
+   * retroactively move the end of events that have already run and frozen.
+   */
+  lengthMs?: number
 }
 
 /**
@@ -190,8 +209,12 @@ const EVENTS: EventEntry[] = [
     startsAt: Date.UTC(2026, 6, 9, 23, 0, 0),
   },
 
-  // The Qualifiers — Aug 2–9 2026 WAT. Open to everyone: top 10 share $50,
+  // The Qualifiers — Aug 2–12 2026 WAT. Open to everyone: top 10 share $50,
   // top 100 (plus ties at the line) take the Grand Prix S2 field.
+  //
+  // Runs ten days rather than the standard week: the window was extended while
+  // the event was already open, so the board and its qualifier set were unfrozen
+  // and are re-derived at the new close.
   {
     seasonIndex: 1,
     kind: 'qualifiers',
@@ -199,22 +222,25 @@ const EVENTS: EventEntry[] = [
     contractSeasonId: 2,
     name: 'The Qualifiers',
     startsAt: Date.UTC(2026, 7, 1, 23, 0, 0),
+    lengthMs: 10 * 24 * 60 * 60 * 1000, // ends Aug 11 23:00 UTC = Aug 12 00:00 WAT
     prizePool: 50,
     splits: QUALIFIER_SPLITS,
     qualifyTopN: 100,
   },
 
-  // Grand Prix S2 — Aug 10–17 2026 WAT, one day after the Qualifiers close.
-  // Closed field: only Q1 qualifiers score.
-  {
-    seasonIndex: 2,
-    kind: 'grand-prix',
-    id: 'S2',
-    contractSeasonId: 3,
-    name: 'Weekly Grand Prix S2',
-    startsAt: Date.UTC(2026, 7, 9, 23, 0, 0),
-    qualifiersFrom: 'Q1',
-  },
+  // Grand Prix S2 — closed field, gated on Q1. Deliberately NOT listed yet:
+  // it opens when we open it, not on a date set before Q1 finished. Add the
+  // entry below when the call is made.
+  //
+  // {
+  //   seasonIndex: 2,
+  //   kind: 'grand-prix',
+  //   id: 'S2',
+  //   contractSeasonId: 3,
+  //   name: 'Weekly Grand Prix S2',
+  //   startsAt: <decide>,
+  //   qualifiersFrom: 'Q1',
+  // },
 ]
 
 function buildWindow(e: EventEntry, status: TournamentStatus): TournamentWindow {
@@ -225,7 +251,7 @@ function buildWindow(e: EventEntry, status: TournamentStatus): TournamentWindow 
     contractSeasonId: e.contractSeasonId,
     name: e.name,
     startsAt: e.startsAt,
-    endsAt: e.startsAt + TOURNAMENT.seasonLengthMs,
+    endsAt: e.startsAt + (e.lengthMs ?? TOURNAMENT.seasonLengthMs),
     status,
     prizePool: e.prizePool ?? TOURNAMENT.prizePool,
     currency: TOURNAMENT.currency,
