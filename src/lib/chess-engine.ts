@@ -190,7 +190,14 @@ export function getBestMove(game: Chess, depth: number = 3): Move | null {
   if (game.isGameOver() || possibleMoves.length === 0) return null
 
   // The bot always plays Black (enforced by GameClient): Black minimizes.
-  let bestMove: Move | null = null
+  //
+  // Seeded with the best-ordered move rather than null. When the bot is losing
+  // by force every reply scores Infinity — checkmate against Black — and a
+  // strict `<` against an Infinity seed never fires, so the bot returned no
+  // move at all while legal moves were sitting on the board. The caller reads
+  // that as "nothing to play" and the game hangs on the move before mate,
+  // exactly when the player is about to win.
+  let bestMove: Move = possibleMoves[0]
   let bestValue = Infinity
 
   for (const move of possibleMoves) {
@@ -212,7 +219,10 @@ export function getHintMove(game: Chess, depth = 3): Move | null {
   if (game.isGameOver() || moves.length === 0) return null
 
   const isWhite = game.turn() === 'w'
-  let best: Move | null = null
+  // Seeded for the same reason as getBestMove: in a lost position every line
+  // scores ±Infinity, the strict comparison never fires, and the hint button
+  // would come back empty precisely when a player most wants a suggestion.
+  let best: Move = moves[0]
   let bestVal = isWhite ? -Infinity : Infinity
 
   for (const move of moves) {
