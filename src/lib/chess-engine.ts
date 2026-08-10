@@ -146,9 +146,32 @@ function squareValue(type: string, color: 'w' | 'b', row: number, col: number): 
   return color === 'w' ? table[row][col] : table[7 - row][col]
 }
 
-function evaluateBoard(game: Chess): number {
+/**
+ * Score of a checkmate, before the ply penalty. Finite and far beyond any
+ * reachable material total, so mate always outranks material without the
+ * arithmetic hazards of Infinity (Infinity < Infinity is false, and
+ * Infinity - Infinity is NaN).
+ */
+const MATE_SCORE = 1_000_000
+
+/**
+ * @param ply Distance in half-moves from the position being searched, used to
+ * price mate by *distance*: a mate is worth MATE_SCORE - ply, so a shorter mate
+ * scores higher than a longer one.
+ *
+ * Without the penalty every mate is the same number, and the engine is
+ * indifferent between mating now and mating in five — so it dawdles when
+ * winning, and when losing it treats every defence as equally lost and walks
+ * into the quickest one. Subtracting ply makes the winning side finish and the
+ * losing side pick the line that holds out longest.
+ */
+function evaluateBoard(game: Chess, ply: number = 0): number {
   // Terminal-state shortcuts — checkmate is decisive, stalemate / draw is neutral.
-  if (game.isCheckmate()) return game.turn() === 'w' ? -Infinity : Infinity
+  // The side to move is the side that has been mated.
+  if (game.isCheckmate()) {
+    const score = MATE_SCORE - ply
+    return game.turn() === 'w' ? -score : score
+  }
   if (game.isDraw() || game.isStalemate() || game.isThreefoldRepetition()) return 0
 
   let totalEvaluation = 0
@@ -325,9 +348,10 @@ function minimax(
   depth: number,
   alpha: number,
   beta: number,
-  isMaximizingPlayer: boolean
+  isMaximizingPlayer: boolean,
+  ply: number = 1
 ): number {
-  if (depth === 0 || game.isGameOver()) return evaluateBoard(game)
+  if (depth === 0 || game.isGameOver()) return evaluateBoard(game, ply)
 
   const possibleMoves = orderMoves(game.moves({ verbose: true }))
 
@@ -335,7 +359,7 @@ function minimax(
     let bestValue = -Infinity
     for (const move of possibleMoves) {
       game.move(move)
-      bestValue = Math.max(bestValue, minimax(game, depth - 1, alpha, beta, false))
+      bestValue = Math.max(bestValue, minimax(game, depth - 1, alpha, beta, false, ply + 1))
       game.undo()
       alpha = Math.max(alpha, bestValue)
       if (beta <= alpha) break
@@ -345,7 +369,7 @@ function minimax(
     let bestValue = Infinity
     for (const move of possibleMoves) {
       game.move(move)
-      bestValue = Math.min(bestValue, minimax(game, depth - 1, alpha, beta, true))
+      bestValue = Math.min(bestValue, minimax(game, depth - 1, alpha, beta, true, ply + 1))
       game.undo()
       beta = Math.min(beta, bestValue)
       if (beta <= alpha) break
