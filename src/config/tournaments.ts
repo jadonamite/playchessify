@@ -209,12 +209,12 @@ const EVENTS: EventEntry[] = [
     startsAt: Date.UTC(2026, 6, 9, 23, 0, 0),
   },
 
-  // The Qualifiers — Aug 2–12 2026 WAT. Open to everyone: top 10 share $50,
+  // The Qualifiers — Aug 2–13 2026 WAT. Open to everyone: top 10 share $50,
   // top 100 (plus ties at the line) take the Grand Prix S2 field.
   //
-  // Runs ten days rather than the standard week: the window was extended while
-  // the event was already open, so the board and its qualifier set were unfrozen
-  // and are re-derived at the new close.
+  // Runs eleven days rather than the standard week: the window was extended by
+  // four days while the event was already open, so the board and its qualifier
+  // set were unfrozen and are re-derived at the new close.
   {
     seasonIndex: 1,
     kind: 'qualifiers',
@@ -222,7 +222,7 @@ const EVENTS: EventEntry[] = [
     contractSeasonId: 2,
     name: 'The Qualifiers',
     startsAt: Date.UTC(2026, 7, 1, 23, 0, 0),
-    lengthMs: 10 * 24 * 60 * 60 * 1000, // ends Aug 11 23:00 UTC = Aug 12 00:00 WAT
+    lengthMs: 11 * 24 * 60 * 60 * 1000, // ends Aug 12 23:00 UTC = Aug 13 00:00 WAT
     prizePool: 50,
     splits: QUALIFIER_SPLITS,
     qualifyTopN: 100,
