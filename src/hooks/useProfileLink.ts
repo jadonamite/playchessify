@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
 import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
 import { useWelcomeGate } from '@/hooks/useWelcomeGate'
+import { useWallet } from '@/components/wallet-provider'
 
 const LOG_PREFIX = '[useProfileLink]'
 
@@ -23,12 +24,21 @@ export function useProfileLink() {
   const { client: smartClient } = useSmartWallets()
   const { signMessageAsync } = useSignMessage()
   const welcomeDismissed = useWelcomeGate((s) => s.dismissed)
+  const { walletTier } = useWallet()
   const tried = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     // Hold the link signature until the first-timer welcome is dismissed, so a
     // fresh user sees the welcome first — never a signature prompt over it.
     if (!welcomeDismissed) return
+    // Only a player actually operating as their smart account has a split to
+    // heal. useSmartWallets returns a client whenever Privy holds a smart wallet
+    // for the account — which outlives the login that created it — so someone
+    // who later connects an external EOA still resolves one. Asking them to sign
+    // prompts a merge into a smart account they never chose and do not
+    // recognise. walletTier is the provider's answer to "which wallet is this
+    // player actually using"; defer to it rather than to the client existing.
+    if (walletTier !== 'smart') return
     const smart = smartClient?.account?.address
     if (!eoa || !smart) return
     if (eoa.toLowerCase() === smart.toLowerCase()) return
@@ -59,5 +69,5 @@ export function useProfileLink() {
         tried.current.delete(key)
       }
     })()
-  }, [eoa, smartClient, signMessageAsync, welcomeDismissed])
+  }, [eoa, smartClient, signMessageAsync, welcomeDismissed, walletTier])
 }
