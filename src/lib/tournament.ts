@@ -196,6 +196,11 @@ async function getBlockToTimeMapper(): Promise<(block: number) => number> {
  * and stop once a whole chunk predates the window, bounding work to the window
  * size. `toSec` maps raw createdAt to unix seconds (identity on v2, block →
  * time on v1).
+ *
+ * `strict` decides what a failed read means. A dropped `getGame` is
+ * indistinguishable from a game that was never played, so on a lenient read
+ * (the live board) we skip it and keep the page up, while on a strict read (the
+ * freeze, which decides payout) we throw rather than score a partial window.
  */
 async function scanContractWindow(
   game: `0x${string}`,
@@ -203,6 +208,7 @@ async function scanContractWindow(
   toSec: (createdAt: number) => number,
   startMs: number,
   endMs: number,
+  strict = false,
 ): Promise<WindowGame[]> {
   const pub = getPublicClient()
   const nonceRaw = (await pub.readContract({ address: game, abi, functionName: 'gameNonce' })) as bigint
@@ -222,8 +228,12 @@ async function scanContractWindow(
     })
 
     let chunkMaxSec = 0
+    let failures = 0
     results.forEach((r, i) => {
-      if (r.status !== 'success') return
+      if (r.status !== 'success') {
+        failures += 1
+        return
+      }
       const g = r.result as { white: string; black: string; status: number; result: number; createdAt: bigint }
       const playedAt = toSec(Number(g.createdAt))
       if (playedAt > chunkMaxSec) chunkMaxSec = playedAt
@@ -238,18 +248,31 @@ async function scanContractWindow(
       })
     })
 
-    // Whole chunk predates the window — nothing older can qualify.
-    if (chunkMaxSec > 0 && chunkMaxSec < startSec) break
+    if (failures > 0) {
+      const range = `${start}–${end}`
+      if (strict) {
+        throw new Error(
+          `[tournament] strict scan of ${game}: ${failures}/${ids.length} getGame reads failed in id range ${range}`,
+        )
+      }
+      console.warn(`[tournament] scan of ${game}: ${failures}/${ids.length} getGame reads failed in id range ${range} — games may be missing`)
+    }
+
+    // Whole chunk predates the window — nothing older can qualify. A partially
+    // failed chunk can understate its own max, so never break on one: the
+    // dropped reads could be the in-window games we are looking for.
+    if (failures === 0 && chunkMaxSec > 0 && chunkMaxSec < startSec) break
   }
   return games
 }
 
 /** All settled games played within [startMs, endMs] — v2, plus the retired v1
- *  contract for windows that opened before the cutover. */
-async function collectWindowGames(startMs: number, endMs: number): Promise<WindowGame[]> {
-  const scans = [scanContractWindow(GAME, CHESS_GAME_ABI as Abi, (t) => t, startMs, endMs)]
+ *  contract for windows that opened before the cutover. `strict` propagates to
+ *  the scans: see scanContractWindow. */
+async function collectWindowGames(startMs: number, endMs: number, strict = false): Promise<WindowGame[]> {
+  const scans = [scanContractWindow(GAME, CHESS_GAME_ABI as Abi, (t) => t, startMs, endMs, strict)]
   if (startMs < V2_CUTOVER_MS) {
-    scans.push(getBlockToTimeMapper().then((toSec) => scanContractWindow(V1_GAME, V1_GAME_ABI as Abi, toSec, startMs, endMs)))
+    scans.push(getBlockToTimeMapper().then((toSec) => scanContractWindow(V1_GAME, V1_GAME_ABI as Abi, toSec, startMs, endMs, strict)))
   }
   const games = (await Promise.all(scans)).flat()
 
@@ -531,7 +554,14 @@ async function getQualifierSet(sourceId: string): Promise<Set<string> | null> {
 
   let final = await redis.get<TournamentBoard>(K.final(sourceId))
   if (!final) {
-    await freezeSeason(source)
+    // A strict freeze throws rather than write a board off unreliable reads.
+    // That must not take the live board down with it — fall through to the
+    // "gate unavailable" path below, which the caller already handles.
+    try {
+      await freezeSeason(source)
+    } catch (err) {
+      console.error(`[tournament] freeze of gate source '${sourceId}' failed:`, (err as Error)?.message)
+    }
     final = await redis.get<TournamentBoard>(K.final(sourceId))
   }
   if (!final?.board?.length) return null
@@ -542,9 +572,9 @@ async function getQualifierSet(sourceId: string): Promise<Set<string> | null> {
   return new Set(addresses)
 }
 
-async function buildBoard(win: TournamentWindow): Promise<TournamentBoard> {
+async function buildBoard(win: TournamentWindow, strict = false): Promise<TournamentBoard> {
   const seed = await getSeedRatings(win)
-  const games = await resolveAliases(await collectWindowGames(win.startsAt, win.endsAt))
+  const games = await resolveAliases(await collectWindowGames(win.startsAt, win.endsAt, strict))
   const scored = scoreWindow(games, seed)
   let board = scored.board
 
@@ -574,6 +604,20 @@ async function buildBoard(win: TournamentWindow): Promise<TournamentBoard> {
 }
 
 /**
+ * Everything a payout depends on, as one comparable string — used to check two
+ * builds of the same closed window against each other before freezing.
+ */
+function boardFingerprint(b: TournamentBoard): string {
+  const rows = b.board
+    .map((e) => [e.rank, e.address, e.xp, e.wins, e.losses, e.draws, e.games, e.distinctOpponents, e.eligible].join(':'))
+    .join('|')
+  const winners = b.winners.map((w) => `${w.place}:${w.address}:${w.amount}`).join('|')
+  // detectFeeders builds its set from game order, so sort before comparing.
+  const excluded = [...(b.excluded ?? [])].sort().join('|')
+  return `${rows}#${winners}#${excluded}`
+}
+
+/**
  * Freeze the most recently concluded season's final board, once. Runs
  * opportunistically on any board read — including during a rest week, which is
  * exactly when a season has just ended. The frozen board is the source of
@@ -594,6 +638,14 @@ async function freezeConcludedIfNeeded(): Promise<void> {
  * "latest" in here would both miss that event and recurse — a Grand Prix freeze
  * would ask for its gate, which would ask to freeze the latest concluded, which
  * is that same Grand Prix.
+ *
+ * The board is built **twice, strictly, and only written if the two agree**.
+ * The window is already closed by the time we get here, so no new game can
+ * enter it — two honest reads of a closed window must produce the same board,
+ * and any disagreement means the chain reads themselves are unreliable right
+ * now. Bailing is safe and self-healing: the freeze simply retries on the next
+ * board read. Writing is not, because K.final is written once and never
+ * revisited, so a board frozen off a bad read decides payout permanently.
  */
 async function freezeSeason(win: TournamentWindow): Promise<void> {
   const redis = getRedis()
@@ -601,7 +653,16 @@ async function freezeSeason(win: TournamentWindow): Promise<void> {
   // Only freezable if the event was actually seeded while it was live.
   const seeded = await redis.exists(K.seed(win.id))
   if (!seeded) return
-  const result = await buildBoard(win)
+
+  const result = await buildBoard(win, true)
+  const confirm = await buildBoard(win, true)
+  if (boardFingerprint(result) !== boardFingerprint(confirm)) {
+    console.error(
+      `[tournament] ${win.id}: freeze aborted — two strict builds of a closed window disagreed; retrying on next read`,
+    )
+    return
+  }
+
   await redis.set(K.final(win.id), { ...result, frozen: true })
 
   // Lock the advancing field in at the same moment the board becomes final.
