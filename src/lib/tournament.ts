@@ -64,6 +64,8 @@ export interface BoardEntry {
   distinctOpponents: number
   eligible: boolean
   rank: number
+  /** Manually flagged for underhanded play (Terms §7) — xp is a fixed override, never earned. */
+  flagged?: boolean
 }
 
 export interface PrizeWinner {
@@ -448,16 +450,20 @@ function scoreWindow(
       const distinctOpponents = a.opponents.size
       const eligible = a.games >= x.minGamesEligible && distinctOpponents >= x.minDistinctOpponents
 
+      const flaggedScore = TOURNAMENT.flagged[address]
+      const flagged = flaggedScore !== undefined
+
       return {
         address,
-        xp: Math.round(finalXp),
+        xp: flagged ? flaggedScore : Math.round(finalXp),
         wins: a.wins,
         losses: a.losses,
         draws: a.draws,
         games: a.games,
         distinctOpponents,
-        eligible,
+        eligible: flagged ? false : eligible,
         rank: 0,
+        ...(flagged ? { flagged: true } : {}),
       }
     })
 
@@ -680,9 +686,18 @@ export async function getCurrentTournament(): Promise<TournamentBoard> {
   // Rest week (or before S1 ever opened): nothing is running. Still take the
   // chance to lock in the season that just ended.
   if (!win) {
-    freezeConcludedIfNeeded().catch((e) =>
+    await freezeConcludedIfNeeded().catch((e) =>
       console.error('[tournament] freeze concluded failed:', (e as Error)?.message),
     )
+
+    // Show the just-ended season's frozen board (static winners page) in place
+    // of the empty idle state, until the next season opens over it.
+    const prev = getLatestConcludedSeason()
+    if (prev) {
+      const final = await redis.get<TournamentBoard>(K.final(prev.id))
+      if (final) return { ...final, window: prev, next: getNextSeason() }
+    }
+
     return { window: null, board: [], winners: [], frozen: false, next: getNextSeason() }
   }
 

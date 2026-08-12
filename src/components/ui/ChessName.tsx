@@ -13,6 +13,8 @@ interface ChessNameProps {
   className?: string
   style?: React.CSSProperties
   asLink?: boolean   // wraps in Link → /app/profile/{address}
+  /** Terms §7 — flagged for underhanded play; scored on a fixed override, not earned XP. */
+  flagged?: boolean
 }
 
 function fmtAddr(addr: string) {
@@ -27,23 +29,39 @@ export default function ChessName({
   className = '',
   style,
   asLink = false,
+  flagged = false,
 }: ChessNameProps) {
   const skip = preloaded !== undefined
   const { data: fetched, isLoading } = useProfile(skip ? null : address)
 
   const profile = skip ? preloaded : fetched
 
+  const flagBadge = flagged && (
+    <span
+      title="Flagged — Terms §7, score is a fixed penalty"
+      style={{ marginLeft: '4px', color: '#ef4444', fontSize: '0.75em' }}
+    >
+      ⚑
+    </span>
+  )
+
   const inner = (() => {
     if (isLoading) {
       return (
         <span className={className} style={{ ...style, opacity: 0.5 }}>
           {fmtAddr(address)}
+          {flagBadge}
         </span>
       )
     }
 
     if (!profile) {
-      return <span className={className} style={style}>{fmtAddr(address)}</span>
+      return (
+        <span className={className} style={style}>
+          {fmtAddr(address)}
+          {flagBadge}
+        </span>
+      )
     }
 
     const display = short ? profile.username : `${profile.username}.chess`
@@ -59,6 +77,7 @@ export default function ChessName({
             ✦
           </span>
         )}
+        {flagBadge}
       </span>
     )
   })()

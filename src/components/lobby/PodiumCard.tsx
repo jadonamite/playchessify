@@ -61,6 +61,8 @@ export interface PodiumCardProps {
   title?: string
   /** Optional prize badge, shown under the title. */
   prize?: string
+  /** Terms §7 — flagged for underhanded play; xp is a fixed override, never earned. */
+  flagged?: boolean
 }
 
 // ── podium card (rank 1–3) ───────────────────────────────────────────────────
@@ -77,6 +79,7 @@ export default function PodiumCard({
   draws,
   title,
   prize,
+  flagged,
 }: PodiumCardProps) {
   const m = MEDAL[rank]
   const isFirst = rank === 1
@@ -238,6 +241,7 @@ export default function PodiumCard({
             address={address}
             profile={profileMap[address.toLowerCase()]}
             badge
+            flagged={flagged}
             asLink
             className="font-bold text-[10px] sm:text-xs tracking-wide truncate max-w-full text-center"
             style={{ color: isMe ? 'var(--c)' : 'var(--t1)' }}

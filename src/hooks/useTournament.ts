@@ -11,6 +11,7 @@ export interface TournamentBoardEntry {
   games: number
   eligible: boolean
   rank: number
+  flagged?: boolean
 }
 
 export interface TournamentPrizeWinner {
@@ -56,7 +57,7 @@ export function useTournament() {
     try {
       const res = await fetch('/api/tournament/current')
       const body = (await res.json().catch(() => null)) as TournamentData | null
-      if (body && body.window) setData(body)
+      if (body) setData(body)
     } catch (err) {
       console.error('[useTournament] fetch failed:', err)
     } finally {

@@ -37,6 +37,38 @@ function useCountdown(target: number) {
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
+// ── confetti burst (final-results state only) ──────────────────────────────
+
+const CONFETTI_ICONS = ['🎉', '🎊', '✨', '♛', '🏆']
+
+function Confetti() {
+  const pieces = Array.from({ length: 24 }, (_, i) => ({
+    id: i,
+    icon: CONFETTI_ICONS[i % CONFETTI_ICONS.length],
+    left: (i * 41) % 100,
+    delay: (i % 8) * 0.12,
+    duration: 2.6 + (i % 5) * 0.4,
+    drift: ((i % 7) - 3) * 14,
+    size: 14 + (i % 3) * 6,
+  }))
+  return (
+    <div aria-hidden className="fixed inset-0 pointer-events-none z-20 overflow-hidden">
+      {pieces.map((p) => (
+        <motion.span
+          key={p.id}
+          initial={{ y: '-10vh', x: 0, opacity: 0, rotate: 0 }}
+          animate={{ y: '110vh', x: p.drift, opacity: [0, 1, 1, 0], rotate: 360 }}
+          transition={{ duration: p.duration, delay: p.delay, ease: 'linear', repeat: Infinity, repeatDelay: 3 }}
+          className="absolute select-none"
+          style={{ left: `${p.left}%`, fontSize: p.size }}
+        >
+          {p.icon}
+        </motion.span>
+      ))}
+    </div>
+  )
+}
+
 function fmtDate(ms: number) {
   return new Date(ms).toLocaleString('en-GB', {
     timeZone: 'Africa/Lagos',
@@ -225,14 +257,21 @@ function TrophyRow({
             address={entry.address}
             profile={profileMap[entry.address.toLowerCase()]}
             badge
+            flagged={entry.flagged}
             asLink
             className="font-bold text-sm tracking-wide truncate"
             style={{ color: isMe ? 'var(--c)' : 'var(--t1)' }}
           />
-          {!entry.eligible && (
-            <span className="text-[8px] font-bold tracking-wide text-[var(--t3)] mt-0.5">
-              {entry.games}/3 games to qualify
+          {entry.flagged ? (
+            <span className="text-[8px] font-bold tracking-wide text-red-400 mt-0.5">
+              Flagged — score locked
             </span>
+          ) : (
+            !entry.eligible && (
+              <span className="text-[8px] font-bold tracking-wide text-[var(--t3)] mt-0.5">
+                {entry.games}/3 games to qualify
+              </span>
+            )
           )}
         </div>
       </div>
@@ -271,6 +310,7 @@ export default function TournamentContent() {
   const myAddress = playerAddress?.toLowerCase()
   const win = data?.window
   const nextWin = data?.next
+  const isFrozen = data?.frozen === true
   const winnerAmount = (addr: string) => data?.winners.find((w) => w.address === addr)?.amount
 
   const top3 = board.slice(0, 3)
@@ -296,6 +336,7 @@ export default function TournamentContent() {
   return (
     <main className="min-h-screen w-full bg-[var(--bg)] text-[var(--t1)] relative overflow-x-hidden flex flex-col">
       <PageBackground hero="king" />
+      {isFrozen && <Confetti />}
 
       {/* Ambient blobs */}
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -365,8 +406,23 @@ export default function TournamentContent() {
             </motion.div>
           </div>
 
-          {/* ── Prize pool + countdown ── */}
-          {win && (
+          {/* ── Prize pool + countdown, or final-results banner once frozen ── */}
+          {win && isFrozen ? (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="rounded-2xl px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 backdrop-blur-sm"
+              style={{ background: 'rgba(255,215,0,0.05)', border: '1px solid rgba(255,215,0,0.3)' }}
+            >
+              <span className="text-[10px] font-black tracking-[0.2em] uppercase" style={{ color: '#FFD700' }}>
+                🏆 Final results — {fmtDate(win.endsAt)}
+              </span>
+              <span className="text-[10px] font-bold tracking-wide text-[var(--t3)] uppercase">
+                {win.kind === 'qualifiers' ? 'Qualifiers closed' : 'Season closed'} · board locked
+              </span>
+            </motion.div>
+          ) : win ? (
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -404,7 +460,7 @@ export default function TournamentContent() {
                 <Countdown endsAt={win.endsAt} />
               </div>
             </motion.div>
-          )}
+          ) : null}
 
           {/* ── My tournament position ── */}
           <AnimatePresence>
@@ -522,6 +578,7 @@ export default function TournamentContent() {
                       draws={entry.draws}
                       title={PLACE_TITLE[entry.rank]}
                       prize={winnerAmount(entry.address) != null ? `$${winnerAmount(entry.address)}` : undefined}
+                      flagged={entry.flagged}
                     />
                   ))}
                 </div>
@@ -533,14 +590,16 @@ export default function TournamentContent() {
                   <PlayCard size="hero">
                     <div className="px-6 md:px-8 py-4 border-b border-white/5 flex items-center justify-between">
                       <span className="text-[10px] font-black tracking-[0.25em] text-[var(--t3)] uppercase" style={{ fontFamily: 'var(--fd)' }}>
-                        Challengers
+                        {isFrozen ? 'Final Standings' : 'Challengers'}
                       </span>
-                      <button
-                        onClick={refresh}
-                        className="text-[9px] font-black tracking-widest uppercase text-[var(--t3)] hover:text-[var(--c)] transition-colors cursor-pointer"
-                      >
-                        ↻ REFRESH
-                      </button>
+                      {!isFrozen && (
+                        <button
+                          onClick={refresh}
+                          className="text-[9px] font-black tracking-widest uppercase text-[var(--t3)] hover:text-[var(--c)] transition-colors cursor-pointer"
+                        >
+                          ↻ REFRESH
+                        </button>
+                      )}
                     </div>
                     <div className="divide-y divide-white/5">
                       <AnimatePresence mode="popLayout">
@@ -575,19 +634,21 @@ export default function TournamentContent() {
                 </motion.div>
               )}
 
-              {/* How XP works */}
-              <div className="rounded-2xl px-6 py-5 backdrop-blur-sm" style={{ background: 'var(--b1)', border: '1px solid var(--b2)' }}>
-                <span className="text-[10px] font-black tracking-[0.2em] uppercase text-[var(--t3)]">How XP works</span>
-                <p className="text-xs text-[var(--t2)] mt-2 leading-relaxed">
-                  Everyone starts each season at <span className="font-bold text-[var(--t1)]">0 XP</span>. Every ranked
-                  game this week earns XP — a <span className="text-green-400 font-bold">win</span> is worth the most, a{' '}
-                  <span className="text-gray-300 font-bold">draw</span> less. Beating a{' '}
-                  <span className="font-bold text-[var(--candy-amber)]">higher-rated</span> player is worth up to 2×,
-                  while grinding much weaker opponents is worth less. Play at least{' '}
-                  <span className="font-bold text-[var(--t1)]">3 games</span> to qualify for a prize. Whoever tops the
-                  board when the timer hits zero takes the pot.
-                </p>
-              </div>
+              {/* How XP works — live seasons only; a frozen board needs no explainer */}
+              {!isFrozen && (
+                <div className="rounded-2xl px-6 py-5 backdrop-blur-sm" style={{ background: 'var(--b1)', border: '1px solid var(--b2)' }}>
+                  <span className="text-[10px] font-black tracking-[0.2em] uppercase text-[var(--t3)]">How XP works</span>
+                  <p className="text-xs text-[var(--t2)] mt-2 leading-relaxed">
+                    Everyone starts each season at <span className="font-bold text-[var(--t1)]">0 XP</span>. Every ranked
+                    game this week earns XP — a <span className="text-green-400 font-bold">win</span> is worth the most, a{' '}
+                    <span className="text-gray-300 font-bold">draw</span> less. Beating a{' '}
+                    <span className="font-bold text-[var(--candy-amber)]">higher-rated</span> player is worth up to 2×,
+                    while grinding much weaker opponents is worth less. Play at least{' '}
+                    <span className="font-bold text-[var(--t1)]">3 games</span> to qualify for a prize. Whoever tops the
+                    board when the timer hits zero takes the pot.
+                  </p>
+                </div>
+              )}
             </>
           )}
         </div>

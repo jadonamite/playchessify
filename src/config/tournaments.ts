@@ -82,6 +82,14 @@ export interface TournamentConfig {
   splits: TournamentSplit[]
   xp: TournamentXpRules
   feeder: TournamentFeederRules
+  /**
+   * Manual score override for addresses flagged for underhanded play (Terms
+   * §7) that aren't caught by the feeder heuristics — e.g. engine assistance
+   * rather than loss-farming. Unlike `feeder.denylist`, these wallets stay
+   * visible on the board at the fixed XP given here (never their computed
+   * XP), always ineligible for a prize, and carry the flagged badge in the UI.
+   */
+  flagged: Record<string, number>
   /** Length of one event, in ms. */
   seasonLengthMs: number
   /** Display timezone for start/end labels. */
@@ -125,6 +133,9 @@ export const TOURNAMENT: TournamentConfig = {
     maxOpponents: 1,
     denylist: [],
     allowlist: [],
+  },
+  flagged: {
+    '0x9037f734e7a5a2c5e4d54c029d38f0982e48e817': 149,
   },
   seasonLengthMs: WEEK_MS,
   tzLabel: 'WAT',
