@@ -122,7 +122,11 @@ export function useCeloChess() {
               : 'Could not submit that action — please try again.',
           'error',
         )
-        throw new Error(`${LOG_PREFIX} relay rejected meta-tx: ${body.error ?? res.status}`)
+        // Not "rejected" — that word is reserved for a genuine wallet-side
+        // signature cancellation below, which must NOT fall back to self-pay.
+        // A server-side relay decline (dry sponsor, rate limit, bad request)
+        // is the opposite: it should degrade gracefully to a self-paid write.
+        throw new Error(`${LOG_PREFIX} relay declined meta-tx: ${body.error ?? res.status}`)
       }
       return body.txHash as `0x${string}`
     },
