@@ -76,6 +76,48 @@ export function CrownIcon({ size = 24, className, style }: IconProps) {
   ])
 }
 
+// Confirmed — circle with a checkmark
+export function CheckCircleIcon({ size = 24, className, style }: IconProps) {
+  return svg(size, className, style, [
+    <path key="s" opacity={0.5} d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10" />,
+    <path key="p" fillRule="evenodd" clipRule="evenodd" d="M16.03 8.97a.75.75 0 0 1 0 1.06l-5 5a.75.75 0 0 1-1.06 0l-2-2a.75.75 0 1 1 1.06-1.06l1.47 1.47l2.235-2.235L14.97 8.97a.75.75 0 0 1 1.06 0" />,
+  ])
+}
+
+// Error — circle with a cross
+export function CloseCircleIcon({ size = 24, className, style }: IconProps) {
+  return svg(size, className, style, [
+    <path key="s" opacity={0.5} d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10" />,
+    <path key="p" fillRule="evenodd" clipRule="evenodd" d="M9.53 8.47a.75.75 0 0 0-1.06 1.06L10.94 12l-2.47 2.47a.75.75 0 1 0 1.06 1.06L12 13.06l2.47 2.47a.75.75 0 1 0 1.06-1.06L13.06 12l2.47-2.47a.75.75 0 0 0-1.06-1.06L12 10.94z" />,
+  ])
+}
+
+// Info — circle with an i
+export function InfoCircleIcon({ size = 24, className, style }: IconProps) {
+  return svg(size, className, style, [
+    <path key="s" opacity={0.5} d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10" />,
+    <circle key="d" cx="12" cy="8.25" r="1.125" />,
+    <path key="p" fillRule="evenodd" clipRule="evenodd" d="M12 10.75a.75.75 0 0 1 .75.75v5a.75.75 0 0 1-1.5 0v-5a.75.75 0 0 1 .75-.75" />,
+  ])
+}
+
+// Illegal move — warning triangle
+export function DangerTriangleIcon({ size = 24, className, style }: IconProps) {
+  return svg(size, className, style, [
+    <path key="s" opacity={0.5} d="M10.442 3.442c.887-1.256 2.229-1.256 3.116 0l7.532 10.664c.887 1.256.348 2.394-1.196 2.394H4.106c-1.544 0-2.083-1.138-1.196-2.394z" />,
+    <circle key="d" cx="12" cy="15.5" r="1.125" />,
+    <path key="p" fillRule="evenodd" clipRule="evenodd" d="M12 8a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 12 8" />,
+  ])
+}
+
+// Draw — even split
+export function DrawIcon({ size = 24, className, style }: IconProps) {
+  return svg(size, className, style, [
+    <path key="s" opacity={0.5} d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10" />,
+    <path key="p" fillRule="evenodd" clipRule="evenodd" d="M6.75 9.5A.75.75 0 0 1 7.5 8.75h9a.75.75 0 0 1 0 1.5h-9a.75.75 0 0 1-.75-.75m0 5a.75.75 0 0 1 .75-.75h9a.75.75 0 0 1 0 1.5h-9a.75.75 0 0 1-.75-.75" />,
+  ])
+}
+
 // Hint — lightbulb with optional glow
 export function HintBulbIcon({ size = 24, className, style, glow = true }: IconProps & { glow?: boolean }) {
   return (
