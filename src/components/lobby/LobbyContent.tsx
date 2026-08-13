@@ -22,7 +22,7 @@ import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import PageBackground from '@/components/ui/PageBackground'
 import ClaimModal from '@/components/ui/ClaimModal'
-// import RewardsClaimCard from '@/components/lobby/RewardsClaimCard' // re-enable with the banner below
+import RewardsClaimCard from '@/components/lobby/RewardsClaimCard'
 import LoadingState from '@/components/ui/LoadingState'
 import { CrownIcon, RankIcon, FlameIcon } from '@/components/ui/icons'
 import { useReadContract } from 'wagmi'
@@ -228,12 +228,11 @@ export default function LobbyContent() {
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-full box-border px-4 md:px-8 py-6 md:py-10">
 
         {/* ── Grand Prix prize claim banner (everyone sees it; only winners can claim) ──
-            Hidden while no concluded season is actually seeded in the rewards
-            vault. The banner reads its winners from the frozen board, which goes
-            public the moment a season closes — well before the vault is funded —
-            so leaving it up invites players to claim a prize that cannot pay out.
-            Restore this line once the season on the banner is seeded on-chain. */}
-        {/* {playerAddress && <RewardsClaimCard />} */}
+            The banner reads its winners from the frozen board and overlays
+            on-chain claimStatus, so it only shows a live CLAIM button once the
+            season is actually seeded in the rewards vault (Q1/season 2, seeded
+            2026-08-13). */}
+        {playerAddress && <RewardsClaimCard />}
 
         {/* ── .chess onboarding banner ── */}
         {showClaimBanner && playerAddress && (
