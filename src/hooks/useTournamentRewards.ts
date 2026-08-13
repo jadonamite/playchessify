@@ -108,28 +108,35 @@ export function useTournamentRewards() {
     void refresh()
   }, [refresh])
 
-  // forwardTo — the vault only ever pays msg.sender, so "claim to another
-  // address" is two txns: claim() lands the prize in the winner's own wallet,
-  // then a plain USDm transfer forwards it on. One button click, one loading
-  // state; if the forward leg fails the claim has still landed, so that's
-  // reported as a distinct (recoverable) error rather than a claim failure.
-  const claim = useCallback(async (forwardTo?: string) => {
-    if (!status || status.claimed || !publicClient) return
-
-    // Everyone gets the same button — the answer only lands after a beat of
-    // "checking", so the banner never spoils who's on the whitelist up front.
+  // Everyone gets the same CLAIM button — the answer only lands after a beat
+  // of "checking", so the page never spoils who's on the whitelist up front.
+  // Returns whether the wallet can actually claim, so the caller can open the
+  // "you're eligible" step only when it's true.
+  const checkEligibility = useCallback(async (): Promise<boolean> => {
+    if (!status || status.claimed) return false
+    setIsClaiming(true)
+    await new Promise((r) => setTimeout(r, 1800))
+    setIsClaiming(false)
     if (!status.isWinner || !status.funded) {
-      setIsClaiming(true)
-      await new Promise((r) => setTimeout(r, 1800))
-      setIsClaiming(false)
       showToast(
         !status.isWinner
           ? 'Sorry, you are not eligible — try again next season.'
           : 'Contract not yet funded — try again later.',
         'error',
       )
-      return
+      return false
     }
+    return true
+  }, [status, showToast])
+
+  // forwardTo — the vault only ever pays msg.sender, so "claim to another
+  // address" is two txns: claim() lands the prize in the winner's own wallet,
+  // then a plain USDm transfer forwards it on. One button click, one loading
+  // state; if the forward leg fails the claim has still landed, so that's
+  // reported as a distinct (recoverable) error rather than a claim failure.
+  // Assumes checkEligibility() already passed — this only re-guards defensively.
+  const claim = useCallback(async (forwardTo?: string) => {
+    if (!status || status.claimed || !publicClient || !status.isWinner || !status.funded) return
     const forward =
       forwardTo && isAddress(forwardTo) && forwardTo.toLowerCase() !== playerAddress?.toLowerCase()
         ? (forwardTo as Address)
@@ -177,5 +184,5 @@ export function useTournamentRewards() {
     }
   }, [status, publicClient, playerAddress, ensureGasSponsored, assertCanSelfPay, sendWrite, showToast, refresh])
 
-  return { status, claim, isClaiming, refresh }
+  return { status, checkEligibility, claim, isClaiming, refresh }
 }
