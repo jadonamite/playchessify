@@ -9,10 +9,10 @@
 // its usual gas rail (paymaster / USDm fee currency / 2771 meta-tx).
 
 import { usePublicClient } from 'wagmi'
-import { formatUnits, type Address } from 'viem'
+import { formatUnits, isAddress, type Address } from 'viem'
 import { useCallback, useEffect, useState } from 'react'
 import { REWARDS_ABI } from '@/config/abis'
-import { CELO_CONTRACTS, CELO_CHAIN_ID } from '@/config/contracts'
+import { CELO_CONTRACTS, CELO_CHAIN_ID, USDM_ADDRESS } from '@/config/contracts'
 import { useCeloChess } from '@/hooks/useCeloChess'
 import { useWallet } from '@/components/wallet-provider'
 import { useToastStore } from '@/hooks/useToastStore'
@@ -20,10 +20,19 @@ import { useToastStore } from '@/hooks/useToastStore'
 const LOG_PREFIX = '[useTournamentRewards]'
 const USDM_DECIMALS = 18
 
+// Minimal ERC20 fragment — forwarding a claimed prize on to another address is
+// a plain transfer() after claim() lands the funds in the winner's own wallet
+// (the vault only ever pays msg.sender, so there's no "claim to" on-chain).
+const ERC20_TRANSFER_ABI = [
+  { type: 'function', name: 'transfer', stateMutability: 'nonpayable', inputs: [{ name: 'to', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [{ type: 'bool' }] },
+] as const
+
 export interface RewardStatus {
   seasonId: number
   /** Prize in whole USDm, '' when not a winner. */
   prize: string
+  /** Same amount, raw — needed to forward the exact sum on to another address. */
+  amountWei: bigint
   isWinner: boolean
   claimed: boolean
   /** Season has been seeded on-chain — a winner's claim would succeed. */
@@ -62,6 +71,7 @@ export function useTournamentRewards() {
       let funded = false
       let claimed = false
       let prize = mine ? String(mine.amount) : ''
+      let amountWei = 0n
       if (publicClient) {
         try {
           const [amount, claimed_, open] = (await publicClient.readContract({
@@ -72,7 +82,10 @@ export function useTournamentRewards() {
           })) as readonly [bigint, boolean, boolean]
           funded = open
           claimed = claimed_
-          if (amount > 0n) prize = formatUnits(amount, USDM_DECIMALS)
+          if (amount > 0n) {
+            prize = formatUnits(amount, USDM_DECIMALS)
+            amountWei = amount
+          }
         } catch (err) {
           console.warn(`${LOG_PREFIX} on-chain overlay failed`, err)
         }
@@ -81,6 +94,7 @@ export function useTournamentRewards() {
       setStatus({
         seasonId: api.seasonId,
         prize,
+        amountWei,
         isWinner: Boolean(mine),
         claimed,
         funded,
@@ -94,7 +108,12 @@ export function useTournamentRewards() {
     void refresh()
   }, [refresh])
 
-  const claim = useCallback(async () => {
+  // forwardTo — the vault only ever pays msg.sender, so "claim to another
+  // address" is two txns: claim() lands the prize in the winner's own wallet,
+  // then a plain USDm transfer forwards it on. One button click, one loading
+  // state; if the forward leg fails the claim has still landed, so that's
+  // reported as a distinct (recoverable) error rather than a claim failure.
+  const claim = useCallback(async (forwardTo?: string) => {
     if (!status || status.claimed || !publicClient) return
 
     // Everyone gets the same button — the answer only lands after a beat of
@@ -111,6 +130,11 @@ export function useTournamentRewards() {
       )
       return
     }
+    const forward =
+      forwardTo && isAddress(forwardTo) && forwardTo.toLowerCase() !== playerAddress?.toLowerCase()
+        ? (forwardTo as Address)
+        : undefined
+
     setIsClaiming(true)
     try {
       const gas = await ensureGasSponsored()
@@ -124,6 +148,24 @@ export function useTournamentRewards() {
       await publicClient.waitForTransactionReceipt({ hash })
       showToast(`$${status.prize} prize claimed — congrats, champion!`, 'success')
       await refresh()
+
+      if (forward) {
+        try {
+          const fwdGas = await ensureGasSponsored()
+          await assertCanSelfPay(fwdGas)
+          const fwdHash = await sendWrite({
+            address: USDM_ADDRESS as Address,
+            abi: ERC20_TRANSFER_ABI,
+            functionName: 'transfer',
+            args: [forward, status.amountWei],
+          })
+          await publicClient.waitForTransactionReceipt({ hash: fwdHash })
+          showToast(`$${status.prize} forwarded to ${forward.slice(0, 6)}…${forward.slice(-4)}`, 'success')
+        } catch (err) {
+          console.error(`${LOG_PREFIX} forward failed`, err)
+          showToast('Prize claimed, but the forward transfer failed — it is sitting in your wallet.', 'error')
+        }
+      }
     } catch (err) {
       console.error(`${LOG_PREFIX} claim failed`, err)
       const m = (err instanceof Error ? err.message : '').toLowerCase()
@@ -133,7 +175,7 @@ export function useTournamentRewards() {
     } finally {
       setIsClaiming(false)
     }
-  }, [status, publicClient, ensureGasSponsored, assertCanSelfPay, sendWrite, showToast, refresh])
+  }, [status, publicClient, playerAddress, ensureGasSponsored, assertCanSelfPay, sendWrite, showToast, refresh])
 
   return { status, claim, isClaiming, refresh }
 }
