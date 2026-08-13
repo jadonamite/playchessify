@@ -59,7 +59,7 @@ function Confetti() {
     }
   })
   return (
-    <div aria-hidden className="fixed inset-0 pointer-events-none z-20 overflow-hidden">
+    <div aria-hidden className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
       {pieces.map((p) => (
         <motion.span
           key={p.id}
@@ -274,13 +274,9 @@ function TrophyRow({
             flagged={entry.flagged}
             asLink
             className="font-bold text-sm tracking-wide truncate"
-            style={{ color: isMe ? 'var(--c)' : 'var(--t1)' }}
+            style={{ color: entry.flagged ? '#ef4444' : isMe ? 'var(--c)' : 'var(--t1)' }}
           />
-          {entry.flagged ? (
-            <span className="text-[8px] font-bold tracking-wide text-red-400 mt-0.5">
-              Flagged — score locked
-            </span>
-          ) : (
+          {!entry.flagged && (
             !entry.eligible && (
               <span className="text-[8px] font-bold tracking-wide text-[var(--t3)] mt-0.5">
                 {entry.games}/3 games to qualify

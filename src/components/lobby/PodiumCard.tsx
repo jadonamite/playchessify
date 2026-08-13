@@ -244,7 +244,7 @@ export default function PodiumCard({
             flagged={flagged}
             asLink
             className="font-bold text-[10px] sm:text-xs tracking-wide truncate max-w-full text-center"
-            style={{ color: isMe ? 'var(--c)' : 'var(--t1)' }}
+            style={{ color: flagged ? '#ef4444' : isMe ? 'var(--c)' : 'var(--t1)' }}
           />
           {isMe && (
             <span
