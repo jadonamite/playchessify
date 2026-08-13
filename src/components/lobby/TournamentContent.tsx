@@ -37,33 +37,47 @@ function useCountdown(target: number) {
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
-// ── confetti burst (final-results state only) ──────────────────────────────
+// ── confetti scatter (final-results state only) ────────────────────────────
+// Static paper-confetti pieces — scattered once on mount, no falling loop.
 
-const CONFETTI_ICONS = ['🎉', '🎊', '✨', '♛', '🏆']
+const CONFETTI_COLORS = ['#FFD700', '#00CCFF', '#FF5C8A', '#7CE38B', '#DBE2EA', '#E0954E']
 
 function Confetti() {
-  const pieces = Array.from({ length: 24 }, (_, i) => ({
-    id: i,
-    icon: CONFETTI_ICONS[i % CONFETTI_ICONS.length],
-    left: (i * 41) % 100,
-    delay: (i % 8) * 0.12,
-    duration: 2.6 + (i % 5) * 0.4,
-    drift: ((i % 7) - 3) * 14,
-    size: 14 + (i % 3) * 6,
-  }))
+  const pieces = Array.from({ length: 60 }, (_, i) => {
+    // Deterministic pseudo-scatter so SSR/CSR markup matches.
+    const seed = i * 137.5
+    return {
+      id: i,
+      left: (seed * 1.7) % 100,
+      top: (seed * 0.9) % 100,
+      rotate: (seed * 3.3) % 360,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      w: i % 3 === 0 ? 5 : 8,
+      h: i % 3 === 0 ? 12 : 5,
+      round: i % 4 === 0,
+      delay: (i % 10) * 0.03,
+    }
+  })
   return (
     <div aria-hidden className="fixed inset-0 pointer-events-none z-20 overflow-hidden">
       {pieces.map((p) => (
         <motion.span
           key={p.id}
-          initial={{ y: '-10vh', x: 0, opacity: 0, rotate: 0 }}
-          animate={{ y: '110vh', x: p.drift, opacity: [0, 1, 1, 0], rotate: 360 }}
-          transition={{ duration: p.duration, delay: p.delay, ease: 'linear', repeat: Infinity, repeatDelay: 3 }}
-          className="absolute select-none"
-          style={{ left: `${p.left}%`, fontSize: p.size }}
-        >
-          {p.icon}
-        </motion.span>
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 0.9, scale: 1 }}
+          transition={{ delay: p.delay, duration: 0.35, ease: 'easeOut' }}
+          className="absolute"
+          style={{
+            left: `${p.left}%`,
+            top: `${p.top}%`,
+            width: p.w,
+            height: p.h,
+            background: p.color,
+            borderRadius: p.round ? '50%' : 2,
+            transform: `rotate(${p.rotate}deg)`,
+            boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
+          }}
+        />
       ))}
     </div>
   )

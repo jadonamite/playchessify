@@ -142,10 +142,10 @@ export const TOURNAMENT: TournamentConfig = {
   tzOffsetMinutes: 60,
 }
 
-/** Flat 10 × $5 — the Qualifiers pay wide rather than deep. */
+/** Flat 10 × $10 — the Qualifiers pay wide rather than deep. */
 const QUALIFIER_SPLITS: TournamentSplit[] = Array.from({ length: 10 }, (_, i) => ({
   place: i + 1,
-  amount: 5,
+  amount: 10,
 }))
 
 export type TournamentStatus = 'upcoming' | 'live' | 'ended'
@@ -220,12 +220,16 @@ const EVENTS: EventEntry[] = [
     startsAt: Date.UTC(2026, 6, 9, 23, 0, 0),
   },
 
-  // The Qualifiers — Aug 2–13 2026 WAT. Open to everyone: top 10 share $50,
+  // The Qualifiers — Aug 2–13 2026 WAT. Open to everyone: top 10 share $100,
   // top 100 (plus ties at the line) take the Grand Prix S2 field.
   //
   // Runs eleven days rather than the standard week: the window was extended by
   // four days while the event was already open, so the board and its qualifier
   // set were unfrozen and are re-derived at the new close.
+  //
+  // Pool raised $50 → $100 (10×$10) after the event closed — applied
+  // retroactively, so the frozen board is cleared and re-derived at the new
+  // payout (see the K.final('Q1') clear that shipped alongside this change).
   {
     seasonIndex: 1,
     kind: 'qualifiers',
@@ -234,7 +238,7 @@ const EVENTS: EventEntry[] = [
     name: 'The Qualifiers',
     startsAt: Date.UTC(2026, 7, 1, 23, 0, 0),
     lengthMs: 11 * 24 * 60 * 60 * 1000, // ends Aug 12 23:00 UTC = Aug 13 00:00 WAT
-    prizePool: 50,
+    prizePool: 100,
     splits: QUALIFIER_SPLITS,
     qualifyTopN: 100,
   },
