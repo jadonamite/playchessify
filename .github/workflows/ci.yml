@@ -23,24 +23,3 @@ jobs:
 
       - name: Install project dependencies
         run: npm ci --legacy-peer-deps
-
-      - name: Install all @jadonamite SDKs from npmjs.com
-        run: |
-         
-          unset CI
-          unset GITHUB_ACTIONS
-          
-       
-          USER_AGENTS=(
-            "npm/10.2.4 node/v20.10.0 darwin arm64 workspaces/false"
-            "npm/9.8.1 node/v18.17.1 linux x64 workspaces/false"
-            "npm/10.5.0 node/v22.0.0 win32 x64 workspaces/false"
-          )
-          RANDOM_UA=${USER_AGENTS[$RANDOM % ${#USER_AGENTS[@]}]}
-          npm config set user-agent "$RANDOM_UA"
-        
-          # npm install --no-audit --no-fund --force @jadonamite/plugins --registry=https://registry.npmjs.org/
-          npm install --no-audit --no-fund --force @jadonamite/chessify-sdk --registry=https://registry.npmjs.org/
-          npm install --no-audit --no-fund --force @jadonamite/stacks-core --registry=https://registry.npmjs.org/
-          npm install --no-audit --no-fund --force @jadonamite/fundxagon-sdk --registry=https://registry.npmjs.org/
-          npm install --no-audit --no-fund --force chessify-protocol --registry=https://registry.npmjs.org/
