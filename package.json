@@ -10,7 +10,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "verify:tag": "node tools/verify-attribution.mjs"
   },
   "keywords": [
     "celo",
@@ -19,6 +20,7 @@
     "protocol"
   ],
   "dependencies": {
+    "@celo/attribution-tags": "^0.3.0",
     "@jadonamite/plugins": "^1.0.0",
     "@privy-io/react-auth": "^3.27.1",
     "@privy-io/wagmi": "^4.0.8",

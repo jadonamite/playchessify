@@ -11,6 +11,7 @@ import {
 import { privateKeyToAccount } from 'viem/accounts'
 import { celo, celoAlfajores } from 'viem/chains'
 import { CHESS_GAME_ABI, CHESS_TOKEN_ABI, FORWARDER_ABI } from '@/config/abis'
+import { ATTRIBUTION_SUFFIX } from '@/lib/attribution'
 import { CELO_CONTRACTS } from '@/config/contracts'
 
 // Server-only viem clients + signing wallets for Chessify on Celo.
@@ -152,6 +153,8 @@ export async function settleOnChain(gameId: number, result: GameResult): Promise
     abi: CHESS_GAME_ABI,
     functionName: 'settleGame',
     args: [BigInt(gameId), result],
+    dataSuffix: ATTRIBUTION_SUFFIX,
+    gas: 200_000n, // static limit — avoids estimation failures under high-frequency settlement load
   })
   await getPublicClient().waitForTransactionReceipt({ hash })
   return hash
@@ -168,6 +171,8 @@ export async function voidOnChain(gameId: number): Promise<Hash> {
     abi: CHESS_GAME_ABI,
     functionName: 'voidGame',
     args: [BigInt(gameId)],
+    dataSuffix: ATTRIBUTION_SUFFIX,
+    gas: 150_000n, // static limit — matches settleOnChain pattern
   })
   await getPublicClient().waitForTransactionReceipt({ hash })
   return hash
@@ -184,6 +189,8 @@ export async function closeStaleOnChain(gameId: number): Promise<Hash> {
     abi: CHESS_GAME_ABI,
     functionName: 'closeStaleGame',
     args: [BigInt(gameId)],
+    dataSuffix: ATTRIBUTION_SUFFIX,
+    gas: 100_000n, // static limit — simpler tx than settle/void
   })
   await getPublicClient().waitForTransactionReceipt({ hash })
   return hash
@@ -220,6 +227,11 @@ export async function verifyForwardRequest(req: ForwardRequestData): Promise<boo
  *  gas-sponsor wallet pays; the forwarder's signature check means executing a
  *  request grants us no authority over the player's game. */
 export async function executeForwardRequest(req: ForwardRequestData): Promise<Hash> {
+  // The ERC-8021 tag goes on THIS transaction, not on the inner ForwardRequest
+  // data. An attribution scanner reads the transaction's own trailing calldata;
+  // a tag buried inside the ABI-encoded `data` field of a ForwardRequest is
+  // invisible to it. Tagging here covers every meta-tx rider at once — Tier C
+  // players and the whole bot fleet.
   const { account, client } = walletFor('GAS_SPONSOR_PRIVATE_KEY')
   const hash = await client.writeContract({
     account,
@@ -228,6 +240,7 @@ export async function executeForwardRequest(req: ForwardRequestData): Promise<Ha
     abi: FORWARDER_ABI,
     functionName: 'execute',
     args: [req],
+    dataSuffix: ATTRIBUTION_SUFFIX,
   })
   await getPublicClient().waitForTransactionReceipt({ hash })
   return hash
@@ -362,6 +375,7 @@ export async function mintChessTo(to: Address, amount: bigint): Promise<Hash> {
     abi: CHESS_TOKEN_ABI,
     functionName: 'mintTo',
     args: [to, amount],
+    dataSuffix: ATTRIBUTION_SUFFIX,
   })
   await getPublicClient().waitForTransactionReceipt({ hash })
   return hash
@@ -377,6 +391,7 @@ export async function sponsorGas(to: Address, amountUsdm: bigint): Promise<Hash>
     abi: ERC20_MIN_ABI,
     functionName: 'transfer',
     args: [to, amountUsdm],
+    dataSuffix: ATTRIBUTION_SUFFIX,
   })
   await getPublicClient().waitForTransactionReceipt({ hash })
   return hash
@@ -404,6 +419,11 @@ export async function gasSponsorCanCover(amountUsdm: bigint): Promise<boolean> {
     return false
   }
 }
+
+/* Bare value transfers below stay untagged on purpose: they carry no calldata,
+ * and attaching some to a plain transfer risks tripping a recipient contract's
+ * fallback for no gain — operator refills are excluded from every hackathon
+ * metric anyway (self-funded, operator-to-operator). */
 
 /** Drip native CELO gas to a 0-balance external (Tier C) EOA so it can transact. */
 export async function sponsorCelo(to: Address, amountCelo: bigint): Promise<Hash> {

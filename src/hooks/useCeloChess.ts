@@ -6,6 +6,7 @@ import { decodeEventLog, encodeFunctionData, type Abi, type Address } from 'viem
 import { CHESS_GAME_ABI, CHESS_TOKEN_ABI, FORWARDER_ABI } from '@/config/abis'
 import { CELO_CONTRACTS, TOKEN_DECIMALS, CELO_CHAIN_ID, USDM_ADDRESS } from '@/config/contracts'
 import { forwarderDomain, FORWARD_REQUEST_TYPES, buildForwardRequestMessage } from '@/lib/meta-tx'
+import { ATTRIBUTION_SUFFIX, withAttribution } from '@/lib/attribution'
 import { parseUnits } from 'viem'
 import { useCallback, useState } from 'react'
 import { useToastStore } from '@/hooks/useToastStore'
@@ -143,11 +144,15 @@ export function useCeloChess() {
   const sendWrite = useCallback(
     async (req: WriteRequest): Promise<`0x${string}`> => {
       if (walletTier === 'smart' && smartClient) {
-        const data = encodeFunctionData({
-          abi: req.abi,
-          functionName: req.functionName,
-          args: req.args,
-        })
+        // ERC-8021 tag rides in trailing calldata; the account contract passes
+        // it through to the target untouched.
+        const data = withAttribution(
+          encodeFunctionData({
+            abi: req.abi,
+            functionName: req.functionName,
+            args: req.args,
+          }),
+        )
         // Graceful degradation for Tier A: a Privy hosted paymaster can't be
         // disabled per-call (so we can't "self-pay" a smart account), but most
         // sponsorship failures are transient bundler/paymaster hiccups — retry once
@@ -170,6 +175,7 @@ export function useCeloChess() {
           functionName: req.functionName,
           args: req.args,
           feeCurrency: USDM_ADDRESS,
+          dataSuffix: ATTRIBUTION_SUFFIX,
         } as Parameters<typeof writeContractAsync>[0])
       }
 
@@ -190,6 +196,7 @@ export function useCeloChess() {
         abi: req.abi,
         functionName: req.functionName,
         args: req.args,
+        dataSuffix: ATTRIBUTION_SUFFIX,
       } as Parameters<typeof writeContractAsync>[0])
     },
     [walletTier, smartClient, writeContractAsync, sendMetaTx],
