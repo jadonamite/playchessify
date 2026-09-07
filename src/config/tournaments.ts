@@ -243,19 +243,20 @@ const EVENTS: EventEntry[] = [
     qualifyTopN: 100,
   },
 
-  // Grand Prix S2 — closed field, gated on Q1. Deliberately NOT listed yet:
-  // it opens when we open it, not on a date set before Q1 finished. Add the
-  // entry below when the call is made.
+  // Grand Prix S2 — Sep 9–16 2026 WAT. Closed field: only Q1's top 100 (plus
+  // everyone tied at the line) can score, per `qualifiersFrom`.
   //
-  // {
-  //   seasonIndex: 2,
-  //   kind: 'grand-prix',
-  //   id: 'S2',
-  //   contractSeasonId: 3,
-  //   name: 'Weekly Grand Prix S2',
-  //   startsAt: <decide>,
-  //   qualifiersFrom: 'Q1',
-  // },
+  // contractSeasonId is 3, not 2 — the vault keys prizes by a single uint that
+  // must be unique across every event, and Q1 already took 2.
+  {
+    seasonIndex: 2,
+    kind: 'grand-prix',
+    id: 'S2',
+    contractSeasonId: 3,
+    name: 'Weekly Grand Prix S2',
+    startsAt: Date.UTC(2026, 8, 9, 22, 59, 0), // Sep 9 23:59 WAT
+    qualifiersFrom: 'Q1',
+  },
 ]
 
 function buildWindow(e: EventEntry, status: TournamentStatus): TournamentWindow {
