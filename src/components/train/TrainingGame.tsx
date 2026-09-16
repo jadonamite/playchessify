@@ -33,21 +33,44 @@ const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
 // Persist the coach game so it survives a reload (bot games do the same via their
 // own key). Only stable learner-to-move positions are saved (see the persist
 // effect), so a restore never lands the board on the coach's turn and stalls.
+//
+// Saved as PGN, not FEN. A FEN is a position with no past, and this component
+// leans on the move list for the move number, opening recognition and banter —
+// all of which silently degrade to "move 1, no opening" when the history is gone.
 const TRAIN_SAVE_KEY = 'chess:train:save'
 
-function loadSavedFen(): string {
-  const fresh = new Chess().fen()
-  if (typeof window === 'undefined') return fresh
+/** Copy a game WITH its move list. `new Chess(g.fen())` throws the history away. */
+function cloneWithHistory(g: Chess): Chess {
+  const c = new Chess()
+  try {
+    c.loadPgn(g.pgn())
+  } catch {
+    // A position reached some other way is better than no position at all.
+    c.load(g.fen())
+  }
+  return c
+}
+
+function loadSavedGame(): Chess {
+  if (typeof window === 'undefined') return new Chess()
   try {
     const raw = localStorage.getItem(TRAIN_SAVE_KEY)
-    if (!raw) return fresh
-    const parsed = JSON.parse(raw) as { fen?: unknown }
+    if (!raw) return new Chess()
+    const parsed = JSON.parse(raw) as { pgn?: unknown; fen?: unknown }
+    if (typeof parsed.pgn === 'string') {
+      const g = new Chess()
+      g.loadPgn(parsed.pgn) // throws on a corrupt pgn
+      return g
+    }
+    // Saves written before this component persisted PGN. The position is
+    // recoverable, the history is not — honour the board, accept the blank past.
     if (typeof parsed.fen === 'string') {
-      new Chess(parsed.fen) // validates — throws on a corrupt fen
-      return parsed.fen
+      const g = new Chess()
+      g.load(parsed.fen)
+      return g
     }
   } catch { /* corrupt / blocked — start fresh */ }
-  return fresh
+  return new Chess()
 }
 
 export default function TrainingGame() {
@@ -59,15 +82,18 @@ export default function TrainingGame() {
   const level = learner?.level ?? 'basics'
 
   const [mode, setMode] = useState<Mode>('guided')
-  const [game, setGame] = useState(() => new Chess(loadSavedFen()))
+  const [game, setGame] = useState(loadSavedGame)
   const [phase, setPhase] = useState<Phase>('learner')
   const [note, setNote] = useState<string>('Make your move — I\'ll guide you.')
 
-  const preFenRef = useRef<string>(loadSavedFen())
+  // The position before the learner's pending move — a game object, so taking a
+  // move back restores the history along with the board.
+  const preGameRef = useRef<Chess>(game)
   // A practice session counts toward the daily play streak (source 'puzzle'),
   // recorded once on the learner's first move. Idempotent per UTC day server-side.
   const streakDoneRef = useRef(false)
   const pendingRef = useRef<string | null>(null) // learner's move fen, awaiting play-anyway
+  const pendingGameRef = useRef<Chess | null>(null) // the same move, with its history
   const announcedOpeningRef = useRef<string | null>(null)
   const evalBeforeRef = useRef<number>(20)
   const liveRef = useRef(true)
@@ -109,7 +135,7 @@ export default function TrainingGame() {
     if (r) evalBeforeRef.current = r.whiteCp
   }, [analyze])
 
-  useEffect(() => { void refreshBeforeEval(preFenRef.current) }, [refreshBeforeEval])
+  useEffect(() => { void refreshBeforeEval(preGameRef.current.fen()) }, [refreshBeforeEval])
 
   // Persist the board so a reload resumes the same coach game. Only save when it's
   // the learner's turn (white) and the game is live — never a coach-to-move or
@@ -117,7 +143,7 @@ export default function TrainingGame() {
   useEffect(() => {
     try {
       if (phase === 'over' || game.isGameOver()) { localStorage.removeItem(TRAIN_SAVE_KEY); return }
-      if (game.turn() === 'w') localStorage.setItem(TRAIN_SAVE_KEY, JSON.stringify({ fen: game.fen() }))
+      if (game.turn() === 'w') localStorage.setItem(TRAIN_SAVE_KEY, JSON.stringify({ pgn: game.pgn() }))
     } catch { /* storage blocked / quota */ }
   }, [game, phase])
 
@@ -138,23 +164,25 @@ export default function TrainingGame() {
   }, [learner, update, mode, coach.id])
 
   // Coach plays its own move (local, fast). Shared by both modes.
-  const coachMove = useCallback((fromFen: string, after: () => void) => {
-    const g = new Chess(fromFen)
+  // Takes and returns a game carrying its move list — `after` needs it to name
+  // the opening and to know what move number we are on.
+  const coachMove = useCallback((from: Chess, after: (g: Chess) => void) => {
+    const g = cloneWithHistory(from)
     const engine = mode === 'match' ? coach.engine : coachEngineForLevel(coach.engine, level)
     const move = getCoachMove(g, engine)
     if (!move) { endGame(g); return }
     g.move(move)
     setGame(g)
     playChime(true)
-    preFenRef.current = g.fen()
+    preGameRef.current = g
     if (g.isGameOver()) { endGame(g); return }
-    after()
+    after(g)
     void refreshBeforeEval(g.fen())
   }, [mode, coach.engine, level, endGame, playChime, refreshBeforeEval])
 
   // ── guided: coach reply after the think beat ─────────────────────────────────
-  const guidedReply = useCallback((movedFen: string) => {
-    coachMove(movedFen, () => {
+  const guidedReply = useCallback((moved: Chess) => {
+    coachMove(moved, () => {
       setNote('Your move — I\'m watching.')
       setPhase('learner')
     })
@@ -163,10 +191,10 @@ export default function TrainingGame() {
   const onMove = useCallback((from: string, to: string): boolean => {
     if (phase !== 'learner') return false
     const preFen = game.fen()
-    const probe = new Chess(preFen)
+    const probe = cloneWithHistory(game)
     const move = probe.move({ from, to, promotion: 'q' })
     if (!move) return false
-    preFenRef.current = preFen
+    preGameRef.current = game
     setSuggested(null) // clear any "play this instead" highlight once they retry
     liveRef.current = true
     setGame(probe)
@@ -183,10 +211,12 @@ export default function TrainingGame() {
       void (async () => {
         await delay(THINK_MS + 150)
         if (!liveRef.current) return
-        coachMove(movedFen, () => {
-          const op = recognizeOpening(new Chess(preFenRef.current).history())
+        coachMove(probe, (g) => {
+          // g.history() is the real move list. Reading it off a FEN gave [] on
+          // every move, so no opening was ever recognised and banter never fired.
+          const op = recognizeOpening(g.history())
           if (op && op.name !== announcedOpeningRef.current) { announcedOpeningRef.current = op.name; setNote(op.note) }
-          else if (moveNumber(probe) % 4 === 0) setNote(banter(moveNumber(probe)))
+          else if (moveNumber(g) % 4 === 0) setNote(banter(moveNumber(g)))
           else setNote('Your move.')
           setPhase('learner')
         })
@@ -207,6 +237,7 @@ export default function TrainingGame() {
         conceptDeltaRef.current[lossCp >= 400 ? 'hanging-piece' : 'calculation'] =
           (conceptDeltaRef.current[lossCp >= 400 ? 'hanging-piece' : 'calculation'] ?? 0) - 0.05
         pendingRef.current = movedFen
+        pendingGameRef.current = probe
         setPhase('intercept')
 
         const attempts = (attemptRef.current[preFen] ?? 0) + 1
@@ -247,34 +278,39 @@ export default function TrainingGame() {
         return
       }
       if (post && lossCp <= 30) conceptDeltaRef.current.calculation = (conceptDeltaRef.current.calculation ?? 0) + 0.02
-      guidedReply(movedFen)
+      guidedReply(probe)
     })()
     return true
   }, [phase, game, mode, analyze, coach, level, coachMove, guidedReply, endGame, playChime, recordStreak])
 
   const takeBack = useCallback(() => {
-    setGame(new Chess(preFenRef.current))
+    // Restore the game object, not a FEN rebuilt from it: a take-back that wiped
+    // the move list reset the coach to "move 1" for the rest of the session.
+    setGame(cloneWithHistory(preGameRef.current))
     pendingRef.current = null
+    pendingGameRef.current = null
     liveRef.current = true
     setPhase('learner')
     setNote('Good call — let\'s find a better one.')
   }, [])
 
   const playAnyway = useCallback(() => {
-    const fen = pendingRef.current
+    const moved = pendingGameRef.current
     pendingRef.current = null
+    pendingGameRef.current = null
     setSuggested(null)
-    if (!fen) { setPhase('learner'); return }
+    if (!moved) { setPhase('learner'); return }
     setPhase('thinking')
-    guidedReply(fen)
+    guidedReply(moved)
   }, [guidedReply])
 
   const reset = useCallback((toMode?: Mode) => {
     const g = new Chess()
     const m = toMode ?? mode
     setGame(g)
-    preFenRef.current = g.fen()
+    preGameRef.current = g
     pendingRef.current = null
+    pendingGameRef.current = null
     announcedOpeningRef.current = null
     evalBeforeRef.current = 20
     liveRef.current = true
@@ -342,9 +378,21 @@ export default function TrainingGame() {
               <span className="font-bold text-white">{coach.name}</span>
               <span className="text-[11px] uppercase tracking-wide" style={{ color: coach.accent }}>{mode === 'match' ? 'opponent' : 'coach'}</span>
             </div>
-            <p className="mt-0.5 text-[15px] leading-snug text-slate-200">
-              {thinking ? <span className="text-slate-400">{coach.name} is thinking…</span> : note}
-            </p>
+            {/* The reaction to YOUR move is set and the phase flips to 'thinking'
+                in the same batch, so rendering one INSTEAD of the other meant the
+                reaction never reached the screen — the coach's whole response to
+                your move was computed every time and discarded. They coexist now:
+                the line stays, the thinking state sits under it. */}
+            <p className="mt-0.5 text-[15px] leading-snug text-slate-200">{note}</p>
+            {thinking && (
+              <span className="mt-1.5 flex items-center gap-1.5 text-[11px] text-slate-400">
+                <span
+                  className="h-1.5 w-1.5 shrink-0 rounded-full animate-pulse"
+                  style={{ background: coach.accent }}
+                />
+                {coach.name} is thinking…
+              </span>
+            )}
           </div>
         </div>
       </div>
