@@ -12,6 +12,11 @@ import GlowButton from '@/components/ui/GlowButton'
 import LoadingState from '@/components/ui/LoadingState'
 import PromotionModal, { PromotionPiece } from '@/components/ui/PromotionModal'
 import { getBestMove, getHintMove, getCaptureSummary } from '@/lib/chess-engine'
+import { getCoach } from '@/config/coaches'
+import { coachReaction } from '@/lib/coach/reactions'
+import { useLearner } from '@/hooks/useLearner'
+import { useCoachStore } from '@/hooks/useCoachStore'
+import CoachPanel from '@/components/coach/CoachPanel'
 import { playMoveChime } from '@/lib/audio'
 import { useGameMoves } from '@/hooks/useGameMoves'
 import { useToastStore } from '@/hooks/useToastStore'
@@ -66,6 +71,19 @@ export default function GameClient() {
   // being listed as a dependency (avoids a rebuild → setHistory → rebuild loop).
   const moveHistoryRef = useRef(moveHistory)
   useEffect(() => { moveHistoryRef.current = moveHistory }, [moveHistory])
+
+  // ── the coach at your shoulder ───────────────────────────────────────────
+  // The same coach you picked in settings, reacting to your moves here rather
+  // than only in training. The reaction is free; the ask is metered.
+  const { learner } = useLearner()
+  const storeCoachId = useCoachStore((s) => s.coachId)
+  const coach = getCoach(storeCoachId ?? learner?.coachId ?? null)
+  const [coachNote, setCoachNote] = useState('Your move. I am watching.')
+  const [lastMoveSan, setLastMoveSan] = useState<string | undefined>(undefined)
+  // A bot game has no on-chain id, so it gets a minted key that resets with the
+  // board — otherwise one player's ten asks would have to last across every bot
+  // game they ever play.
+  const [botGameKey, setBotGameKey] = useState(() => `train:bot${Math.random().toString(36).slice(2, 10)}`)
 
   const [moveFrom, setMoveFrom] = useState('')
   const [pendingPromotion, setPendingPromotion] = useState<{
@@ -330,6 +348,9 @@ export default function GameClient() {
     setGame(new Chess())
     setMoveHistory([])
     setMoveFrom('')
+    setLastMoveSan(undefined)
+    setCoachNote('New board. Your move.')
+    setBotGameKey(`train:bot${Math.random().toString(36).slice(2, 10)}`)
     setIntroDone(false)   // replay the VS intro for the new bot match
   }, [])
 
@@ -359,6 +380,8 @@ export default function GameClient() {
       setGame(next)
       const newHistory = [...moveHistoryRef.current, move.san]
       setMoveHistory(newHistory)
+      setLastMoveSan(move.san)
+      setCoachNote(coachReaction(coach, move, next, Math.ceil(newHistory.length / 2)))
       setHintMove(null)
       if (soundOnRef.current) { const ctx = getCtx(); if (ctx) playMoveChime(ctx, false) }
 
@@ -414,7 +437,7 @@ export default function GameClient() {
       showToast(game.inCheck() ? 'Your King is in check — resolve it first.' : "You can't move there.", 'invalid')
       return false
     }
-  }, [game, isBotGame, playerAddress, relaySubmitMove, showToast, getCtx])
+  }, [game, isBotGame, playerAddress, relaySubmitMove, showToast, getCtx, coach])
 
   // ── board event handlers ─────────────────────────────────────────────────────
 
@@ -637,6 +660,17 @@ export default function GameClient() {
           <div className={`grid grid-cols-1 gap-4 md:gap-8 items-start ${isBotGame ? 'max-w-3xl mx-auto' : 'lg:grid-cols-12'}`}>
 
             <div className={isBotGame ? '' : 'lg:col-span-8'}>
+              <div className="mb-3">
+                <CoachPanel
+                  coach={coach}
+                  note={coachNote}
+                  gameKey={isBotGame ? botGameKey : gameId > 0 ? `celo:${gameId}` : null}
+                  fen={game.fen()}
+                  lastMoveSan={lastMoveSan}
+                  learnerLevel={learner?.level ?? 'basics'}
+                  canAsk={!gameOver}
+                />
+              </div>
               <BoardPanel
                 game={game}
                 customPieces={customPieces}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Chess } from 'chess.js'
+import { Chess, type Move } from 'chess.js'
 import TrainingBoard from '@/components/train/TrainingBoard'
 import TrapButton from '@/components/train/TrapButton'
 import { useAnalysis } from '@/hooks/useAnalysis'
@@ -12,6 +12,7 @@ import { playMoveChime } from '@/lib/audio'
 import { fetchCoachVoice } from '@/lib/coach/client'
 import { taunt, banter } from '@/lib/coach/lines'
 import { coachReaction } from '@/lib/coach/reactions'
+import CoachPanel from '@/components/coach/CoachPanel'
 import { getCoach, type CoachEngine } from '@/config/coaches'
 import { getCoachMove } from '@/lib/chess-engine'
 import { recognizeOpening } from '@/config/openings'
@@ -21,6 +22,9 @@ type Phase = 'learner' | 'thinking' | 'intercept' | 'over'
 type Mode = 'guided' | 'match'
 
 const BLUNDER_CP = 150
+/** Above this you are winning comfortably enough that a dip is not worth an
+ *  interruption — the lesson lands better when you are actually in trouble. */
+const WINNING_CP = 300
 const THINK_MS = 450 // coach "thinking" beat — masks the blunder analysis
 
 function coachEngineForLevel(base: CoachEngine, level: LearnerLevel): CoachEngine {
@@ -81,6 +85,12 @@ export default function TrainingGame() {
   const soundEnabled = useSettingsStore((s) => s.soundEnabled)
   const coach = getCoach(learner?.coachId)
   const level = learner?.level ?? 'basics'
+
+  // The meter is per game, so a practice board needs an id of its own. Minted
+  // once per game and re-minted on reset, which is what makes "ten per game"
+  // mean the same thing here as it does in a real game.
+  const [gameKey, setGameKey] = useState(() => `train:${Math.random().toString(36).slice(2, 12)}`)
+  const [lastMoveSan, setLastMoveSan] = useState<string | undefined>(undefined)
 
   const [mode, setMode] = useState<Mode>('guided')
   const [game, setGame] = useState(loadSavedGame)
@@ -184,7 +194,9 @@ export default function TrainingGame() {
   // ── guided: coach reply after the think beat ─────────────────────────────────
   const guidedReply = useCallback((moved: Chess) => {
     coachMove(moved, () => {
-      setNote('Your move — I\'m watching.')
+      // Deliberately does NOT touch the note. What is on screen is the coach's
+      // reaction to the move you just played, and you should still be reading
+      // it while you choose your next one — that is the whole hook.
       setPhase('learner')
     })
   }, [coachMove])
@@ -193,9 +205,18 @@ export default function TrainingGame() {
     if (phase !== 'learner') return false
     const preFen = game.fen()
     const probe = cloneWithHistory(game)
-    const move = probe.move({ from, to, promotion: 'q' })
+    // chess.js v1 THROWS on an illegal move rather than returning null, so the
+    // null check below never fired and an illegal tap threw out through the
+    // React event handler instead of being refused quietly.
+    let move: Move | null = null
+    try {
+      move = probe.move({ from, to, promotion: 'q' })
+    } catch {
+      return false
+    }
     if (!move) return false
     preGameRef.current = game
+    setLastMoveSan(move.san)
     setSuggested(null) // clear any "play this instead" highlight once they retry
     liveRef.current = true
     setGame(probe)
@@ -233,8 +254,13 @@ export default function TrainingGame() {
       if (!liveRef.current) return
       const lossCp = post ? evalBeforeRef.current - post.whiteCp : 0
       const alreadyLost = evalBeforeRef.current < -300
+      // Nor is it a blunder if you are still plainly winning. The coach's own
+      // move can swing the eval hard in your favour, and without this a normal
+      // developing move that "gives back" 150cp of a +400 position was being
+      // intercepted as a mistake. Observed on 1. e4 e5 2. Nf3.
+      const stillWinning = !!post && post.whiteCp > WINNING_CP
 
-      if (post && lossCp >= BLUNDER_CP && !alreadyLost) {
+      if (post && lossCp >= BLUNDER_CP && !alreadyLost && !stillWinning) {
         conceptDeltaRef.current[lossCp >= 400 ? 'hanging-piece' : 'calculation'] =
           (conceptDeltaRef.current[lossCp >= 400 ? 'hanging-piece' : 'calculation'] ?? 0) - 0.05
         pendingRef.current = movedFen
@@ -320,6 +346,8 @@ export default function TrainingGame() {
     conceptDeltaRef.current = {}
     attemptRef.current = {}
     setSuggested(null)
+    setLastMoveSan(undefined)
+    setGameKey(`train:${Math.random().toString(36).slice(2, 12)}`)
     try { localStorage.removeItem(TRAIN_SAVE_KEY) } catch { /* ignore */ }
     void refreshBeforeEval(g.fen())
     setPhase('learner')
@@ -368,34 +396,17 @@ export default function TrainingGame() {
           </button>
         </div>
 
-        <div className="flex items-start gap-3 rounded-2xl border p-3"
-             style={{ borderColor: phase === 'intercept' ? '#fb718566' : coach.accent + '40', background: `linear-gradient(160deg, ${coach.accent}10, rgba(9,15,30,0.5))` }}>
-          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border-2" style={{ borderColor: coach.accent }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={encodeURI(coach.img)} alt={coach.name} className="h-full w-full object-cover object-top" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-white">{coach.name}</span>
-              <span className="text-[11px] uppercase tracking-wide" style={{ color: coach.accent }}>{mode === 'match' ? 'opponent' : 'coach'}</span>
-            </div>
-            {/* The reaction to YOUR move is set and the phase flips to 'thinking'
-                in the same batch, so rendering one INSTEAD of the other meant the
-                reaction never reached the screen — the coach's whole response to
-                your move was computed every time and discarded. They coexist now:
-                the line stays, the thinking state sits under it. */}
-            <p className="mt-0.5 text-[15px] leading-snug text-slate-200">{note}</p>
-            {thinking && (
-              <span className="mt-1.5 flex items-center gap-1.5 text-[11px] text-slate-400">
-                <span
-                  className="h-1.5 w-1.5 shrink-0 rounded-full animate-pulse"
-                  style={{ background: coach.accent }}
-                />
-                {coach.name} is thinking…
-              </span>
-            )}
-          </div>
-        </div>
+        <CoachPanel
+          coach={coach}
+          note={note}
+          thinking={thinking}
+          gameKey={gameKey}
+          fen={game.fen()}
+          lastMoveSan={lastMoveSan}
+          learnerLevel={level}
+          role={mode === 'match' ? 'opponent' : 'coach'}
+          canAsk={phase !== 'over'}
+        />
       </div>
 
       {/* ── Board, full-width (matches the real game board) ── */}
