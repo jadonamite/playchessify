@@ -10,7 +10,8 @@ import { useRecordStreak } from '@/hooks/useStreak'
 import { useSettingsStore } from '@/hooks/useSettingsStore'
 import { playMoveChime } from '@/lib/audio'
 import { fetchCoachVoice } from '@/lib/coach/client'
-import { coachingComment, taunt, banter } from '@/lib/coach/lines'
+import { taunt, banter } from '@/lib/coach/lines'
+import { coachReaction } from '@/lib/coach/reactions'
 import { getCoach, type CoachEngine } from '@/config/coaches'
 import { getCoachMove } from '@/lib/chess-engine'
 import { recognizeOpening } from '@/config/openings'
@@ -216,8 +217,8 @@ export default function TrainingGame() {
           // every move, so no opening was ever recognised and banter never fired.
           const op = recognizeOpening(g.history())
           if (op && op.name !== announcedOpeningRef.current) { announcedOpeningRef.current = op.name; setNote(op.note) }
-          else if (moveNumber(g) % 4 === 0) setNote(banter(moveNumber(g)))
-          else setNote('Your move.')
+          else if (moveNumber(g) % 5 === 0) setNote(banter(moveNumber(g)))
+          else setNote(coachReaction(coach, move, probe, moveNumber(probe)))
           setPhase('learner')
         })
       })()
@@ -225,7 +226,7 @@ export default function TrainingGame() {
     }
 
     // GUIDED — react to YOUR move instantly, then think (masking the analysis).
-    setNote(coachingComment(move, probe, moveNumber(probe), coach.teaching.specialty))
+    setNote(coachReaction(coach, move, probe, moveNumber(probe)))
     setPhase('thinking')
     void (async () => {
       const [post] = await Promise.all([analyze(movedFen, { movetime: 200 }), delay(THINK_MS)])

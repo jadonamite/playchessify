@@ -19,6 +19,10 @@ if (typeof window !== 'undefined') {
 
 type AIMessage = { role: 'system' | 'user' | 'assistant'; content: string }
 
+/** Per-attempt deadline. Two attempts across three providers is the worst case,
+ *  so this bounds a completion at roughly 6 x this before the template wins. */
+const PROVIDER_TIMEOUT_MS = Number(process.env.COACH_LLM_TIMEOUT_MS ?? 4000)
+
 interface Provider {
   name: string
   client: OpenAI
@@ -59,14 +63,30 @@ function providers(): Provider[] {
   return cachedProviders
 }
 
-async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+/**
+ * Run one provider call under a real deadline.
+ *
+ * The previous version built an AbortController, fired it on a timer, and never
+ * gave the signal to anything — the request had already been created by the time
+ * this function received the promise, and nothing raced it. So `await p` waited
+ * as long as the provider felt like taking, and a single hung provider stalled
+ * the whole chain until the platform killed the function.
+ *
+ * Two mechanisms now, because one is not enough: the signal cancels a well-
+ * behaved client, and the race rejects regardless in case a provider ignores it.
+ */
+function withTimeout<T>(make: (signal: AbortSignal) => Promise<T>, ms: number): Promise<T> {
   const ctrl = new AbortController()
-  const timer = setTimeout(() => ctrl.abort(), ms)
-  try {
-    return await p
-  } finally {
-    clearTimeout(timer)
-  }
+  let timer: ReturnType<typeof setTimeout> | undefined
+
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      ctrl.abort()
+      reject(new Error(`timed out after ${ms}ms`))
+    }, ms)
+  })
+
+  return Promise.race([make(ctrl.signal), deadline]).finally(() => clearTimeout(timer))
 }
 
 /**
@@ -84,8 +104,12 @@ async function complete(messages: AIMessage[], opts: { maxTokens?: number; tempe
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const res = await withTimeout(
-          p.client.chat.completions.create({ model: p.model, messages, max_tokens: maxTokens, temperature }),
-          4000,
+          (signal) =>
+            p.client.chat.completions.create(
+              { model: p.model, messages, max_tokens: maxTokens, temperature },
+              { signal },
+            ),
+          PROVIDER_TIMEOUT_MS,
         )
         const text = res.choices[0]?.message?.content?.trim()
         if (text) return text
