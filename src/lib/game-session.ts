@@ -26,8 +26,16 @@ export const NONCE_TTL_MS = 5 * 60 * 1000 // 5 min to complete the sign-in
 /** Enforcement is opt-in — see the MiniPay note above. */
 export const MOVE_AUTH_ENFORCED = process.env.MOVE_AUTH_ENFORCE === '1'
 
-function secret(): string {
-  const s = process.env.MOVE_SESSION_SECRET
+// Deliberately split: minting a session without a secret is impossible and must
+// fail loudly, but VERIFYING runs on every single move POST. If that threw when
+// the secret was unset, one missing env var would 500 the relay and take live
+// games down — so verification degrades to "no session" instead.
+function secretOrNull(): string | null {
+  return process.env.MOVE_SESSION_SECRET || null
+}
+
+function requireSecret(): string {
+  const s = secretOrNull()
   if (!s) throw new Error('[game-session] MOVE_SESSION_SECRET must be set')
   return s
 }
@@ -51,13 +59,15 @@ export function issueToken(address: string, now = Date.now()): string {
   const addr = address.toLowerCase()
   const exp = now + TOKEN_TTL_MS
   const body = `${addr}.${exp}`
-  const mac = createHmac('sha256', secret()).update(body).digest('hex')
+  const mac = createHmac('sha256', requireSecret()).update(body).digest('hex')
   return `${body}.${mac}`
 }
 
 /** The address this token proves control of, or null if absent/forged/expired. */
 export function verifyToken(token: string | undefined, now = Date.now()): string | null {
   if (!token) return null
+  const key = secretOrNull()
+  if (!key) return null // unconfigured → nobody is authenticated, nothing crashes
   const parts = token.split('.')
   if (parts.length !== 3) return null
   const [addr, expRaw, mac] = parts
@@ -65,7 +75,7 @@ export function verifyToken(token: string | undefined, now = Date.now()): string
   const exp = Number(expRaw)
   if (!Number.isFinite(exp) || exp < now) return null
 
-  const expected = createHmac('sha256', secret()).update(`${addr}.${exp}`).digest('hex')
+  const expected = createHmac('sha256', key).update(`${addr}.${exp}`).digest('hex')
   // Constant-time compare — a length mismatch can't reach timingSafeEqual.
   if (mac.length !== expected.length) return null
   if (!timingSafeEqual(Buffer.from(mac, 'hex'), Buffer.from(expected, 'hex'))) return null
