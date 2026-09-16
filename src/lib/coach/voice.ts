@@ -7,8 +7,21 @@
  * down or rate-limited, `renderTemplate` produces a correct (plainer) lesson
  * with zero network — so a lesson can never crash or lie.
  *
- * Provider chain (all free tiers): NVIDIA NIM → Gemini Flash → Groq → template.
+ * Provider chain (all free tiers): Groq → Gemini Flash → NVIDIA NIM → template.
  * SERVER ONLY — never import into client code; keys must never be NEXT_PUBLIC.
+ *
+ * The order and the per-provider options below are measured, not guessed:
+ *   Groq   openai/gpt-oss-120b returns an EMPTY string unless reasoning_effort
+ *          is lowered — the reasoning tokens consume the whole budget. With it,
+ *          ~550ms, which is the only latency in this list that suits a game.
+ *   Gemini gemini-flash-latest counts thinking against max_tokens, so a 200-token
+ *          budget came back truncated mid-word. It needs room and ~8s.
+ *   NVIDIA 410 Gone means the MODEL id is retired, not that the key is bad —
+ *          every older llama/nemotron id now answers 410. deepseek-v4-flash is
+ *          current and good (~13.6s). gemma-4-31b works but takes 45s;
+ *          nemotron-3.5-lightning leaks "Here's a thinking process:" into the
+ *          reply; glm-5.3-flash and muse-glimmer return empty. Check
+ *          build.nvidia.com/models before changing this id.
  */
 
 import OpenAI from 'openai'
@@ -27,31 +40,44 @@ interface Provider {
   name: string
   client: OpenAI
   model: string
+  /** Extra body params this provider needs to produce usable output. */
+  extra?: Record<string, unknown>
+  /** Per-provider deadline — they are not remotely comparable in speed. */
+  timeoutMs?: number
 }
 
 /** Build the provider chain from whichever keys are present, in priority order. */
 function buildProviders(): Provider[] {
   const providers: Provider[] = []
 
-  if (process.env.NVIDIA_API_KEY) {
+  if (process.env.GROQ_API_KEY) {
     providers.push({
-      name: 'nvidia-nim',
-      client: new OpenAI({ apiKey: process.env.NVIDIA_API_KEY, baseURL: 'https://integrate.api.nvidia.com/v1' }),
-      model: process.env.NIM_MODEL || 'meta/llama-3.3-70b-instruct',
+      name: 'groq',
+      client: new OpenAI({ apiKey: process.env.GROQ_API_KEY, baseURL: 'https://api.groq.com/openai/v1' }),
+      model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
+      // Without this the model spends its whole budget reasoning and returns
+      // an empty string, which the chain then treats as a failure.
+      extra: { reasoning_effort: 'low' },
+      timeoutMs: 6000,
     })
   }
   if (process.env.GEMINI_API_KEY) {
     providers.push({
       name: 'gemini-flash',
       client: new OpenAI({ apiKey: process.env.GEMINI_API_KEY, baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/' }),
-      model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+      model: process.env.GEMINI_MODEL || 'gemini-flash-latest',
+      // Thinking counts against max_tokens here, so the cap has to leave room
+      // for it or the coaching line comes back cut off mid-word.
+      extra: { reasoning_effort: 'none', max_tokens: 600 },
+      timeoutMs: 14000,
     })
   }
-  if (process.env.GROQ_API_KEY) {
+  if (process.env.NVIDIA_API_KEY) {
     providers.push({
-      name: 'groq',
-      client: new OpenAI({ apiKey: process.env.GROQ_API_KEY, baseURL: 'https://api.groq.com/openai/v1' }),
-      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+      name: 'nvidia-nim',
+      client: new OpenAI({ apiKey: process.env.NVIDIA_API_KEY, baseURL: 'https://integrate.api.nvidia.com/v1' }),
+      model: process.env.NIM_MODEL || 'deepseek-ai/deepseek-v4-flash-0731',
+      timeoutMs: 20000,
     })
   }
   return providers
@@ -90,9 +116,10 @@ function withTimeout<T>(make: (signal: AbortSignal) => Promise<T>, ms: number): 
 }
 
 /**
- * Run the provider chain. Each provider gets a 4s timeout + 1 retry; on
- * failure we drop to the next. Throws only if EVERY provider fails — callers
- * (coachExplain) catch that and fall back to the template.
+ * Run the provider chain. Each provider gets its own deadline plus one retry,
+ * then we drop to the next. An empty completion counts as a failure — a model
+ * that answers with nothing is no more useful than one that times out. Throws
+ * only if EVERY provider fails; coachExplain catches that and uses the template.
  */
 async function complete(messages: AIMessage[], opts: { maxTokens?: number; temperature?: number } = {}): Promise<string> {
   const { maxTokens = 160, temperature = 0.5 } = opts
@@ -106,10 +133,10 @@ async function complete(messages: AIMessage[], opts: { maxTokens?: number; tempe
         const res = await withTimeout(
           (signal) =>
             p.client.chat.completions.create(
-              { model: p.model, messages, max_tokens: maxTokens, temperature },
+              { model: p.model, messages, max_tokens: maxTokens, temperature, ...p.extra },
               { signal },
             ),
-          PROVIDER_TIMEOUT_MS,
+          p.timeoutMs ?? PROVIDER_TIMEOUT_MS,
         )
         const text = res.choices[0]?.message?.content?.trim()
         if (text) return text
@@ -126,7 +153,7 @@ async function complete(messages: AIMessage[], opts: { maxTokens?: number; tempe
 /* ── lesson facts ───────────────────────────────────────────────────────────
  * Everything the voice layer needs is supplied by the engine + learner model.
  * The LLM adds no chess knowledge of its own. */
-export type ExplainKind = 'blunder' | 'good' | 'coach-move' | 'review'
+export type ExplainKind = 'blunder' | 'good' | 'coach-move' | 'review' | 'position'
 export type LearnerLevel = 'basics' | 'intermediate' | 'expert'
 
 export interface ExplainFacts {
@@ -138,6 +165,10 @@ export interface ExplainFacts {
   bestMoveSan?: string   // Stockfish's best move in SAN
   evalDeltaCp?: number   // centipawns lost by the learner's move (+ = worse)
   concept?: string       // tag, e.g. 'hanging piece', 'missed fork'
+  /** 'position' only: the move the OPPONENT just played, as context. It is not
+   *  an alternative to bestMoveSan — they belong to different sides, and saying
+   *  "you should have played X instead of Y" across that boundary is nonsense. */
+  opponentMoveSan?: string
   detail?: string        // factual phrase from analysis, e.g. 'the knight on f6 is undefended'
   movesPlayed?: number   // for review framing
 }
@@ -167,6 +198,13 @@ export function renderTemplate(f: ExplainFacts): string {
       const head = f.movesPlayed ? `Nice work over ${f.movesPlayed} moves.` : 'Nice work.'
       return f.concept ? `${head} Next, let's sharpen your ${f.concept}.` : `${head} Let's keep building.`
     }
+    case 'position': {
+      const bits: string[] = []
+      if (f.detail) bits.push(`${f.detail[0].toUpperCase()}${f.detail.slice(1)}.`)
+      if (f.bestMoveSan) bits.push(`I would play ${f.bestMoveSan}.`)
+      if (f.concept) bits.push(`Watch for ${f.concept}.`)
+      return bits.length ? bits.join(' ') : 'Nothing forcing here. Improve your worst piece.'
+    }
   }
 }
 
@@ -179,16 +217,30 @@ export async function coachExplain(f: ExplainFacts): Promise<{ text: string; sou
   const fallback = renderTemplate(f)
   if (providers().length === 0) return { text: fallback, source: 'template' }
 
-  const facts = [
-    `Coach: ${f.coachName}`,
-    `Student level: ${f.learnerLevel}`,
-    `Situation: ${f.kind}`,
-    f.playerMoveSan && `Student move: ${f.playerMoveSan}`,
-    f.bestMoveSan && `Engine's best move: ${f.bestMoveSan}`,
-    f.evalDeltaCp != null && `Centipawns lost: ${Math.round(f.evalDeltaCp)}`,
-    f.concept && `Concept: ${f.concept}`,
-    f.detail && `Engine note: ${f.detail}`,
-  ].filter(Boolean).join('\n')
+  const facts = (
+    f.kind === 'position'
+      ? [
+          `Coach: ${f.coachName}`,
+          `Student level: ${f.learnerLevel}`,
+          'Situation: the student has asked what you think of the position they are about to move in',
+          f.opponentMoveSan && `The opponent just played: ${f.opponentMoveSan}`,
+          f.bestMoveSan && `The move you would play now: ${f.bestMoveSan}`,
+          f.evalDeltaCp != null && `Position evaluation in centipawns for the student (+ good, - bad): ${Math.round(f.evalDeltaCp)}`,
+          f.concept && `Note: ${f.concept}`,
+          f.detail && `Engine note: ${f.detail}`,
+          'Advise them on THIS position. Nothing has been lost or blundered — do not scold them for a move they have not made.',
+        ]
+      : [
+          `Coach: ${f.coachName}`,
+          `Student level: ${f.learnerLevel}`,
+          `Situation: ${f.kind}`,
+          f.playerMoveSan && `Student move: ${f.playerMoveSan}`,
+          f.bestMoveSan && `Engine's best move: ${f.bestMoveSan}`,
+          f.evalDeltaCp != null && `Centipawns lost: ${Math.round(f.evalDeltaCp)}`,
+          f.concept && `Concept: ${f.concept}`,
+          f.detail && `Engine note: ${f.detail}`,
+        ]
+  ).filter(Boolean).join('\n')
 
   const messages: AIMessage[] = [
     {

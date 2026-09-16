@@ -38,5 +38,9 @@ function localTemplate(f: ExplainFacts): string {
       return f.playerMoveSan ? `I'll play ${f.playerMoveSan}.` : 'My move.'
     case 'review':
       return 'Nice work — let\'s keep building.'
+    case 'position':
+      return f.bestMoveSan
+        ? `${f.detail ? f.detail[0].toUpperCase() + f.detail.slice(1) + '. ' : ''}I would play ${f.bestMoveSan}.`
+        : 'Nothing forcing here. Improve your worst piece.'
   }
 }

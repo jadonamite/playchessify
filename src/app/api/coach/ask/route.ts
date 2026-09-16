@@ -133,15 +133,20 @@ export async function POST(req: NextRequest) {
     const toMove = position.turn() === 'w' ? 1 : -1
     const advantageCp = analysis.whiteCp * toMove // + = good for whoever is to move
 
+    // An ask is about the position in front of you, not a verdict on a move
+    // already played. `lastMoveSan` belongs to the OTHER side, so feeding it in
+    // as "student move" alongside a best move for the side to move produced
+    // advice like "you should have played Nf6 instead of Bc4" — two different
+    // players' moves presented as alternatives.
     const { text, source } = await coachExplain({
       coachName: coach.name,
       coachVoice: coach.teaching.voice,
       learnerLevel,
-      kind: advantageCp < -150 ? 'blunder' : 'good',
-      playerMoveSan: lastMoveSan,
+      kind: 'position',
+      opponentMoveSan: lastMoveSan,
       bestMoveSan: bestSan ?? undefined,
-      evalDeltaCp: advantageCp < 0 ? -advantageCp : undefined,
-      concept: analysis.mate != null ? 'a forced mate' : undefined,
+      evalDeltaCp: advantageCp,
+      concept: analysis.mate != null ? 'a forced mate on the board' : undefined,
       detail: `the position is ${describe(advantageCp)} for the side to move`,
     })
 
