@@ -28,6 +28,10 @@ export interface MoveRecord {
   // cannot sign messages — those moves rely on the relay's participant/turn binding.
   sig?: string
   signer?: string
+  // 'session' when the POST carried a valid move-session cookie for `player`.
+  // Absent means the move was accepted on turn binding alone — see
+  // src/lib/game-session.ts for why that is still possible.
+  auth?: 'session'
 }
 
 const TTL_SECONDS = 60 * 60 * 24 * 30 // 30 days — long enough for any reasonable game

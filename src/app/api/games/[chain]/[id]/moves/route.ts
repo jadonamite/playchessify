@@ -17,6 +17,7 @@ import {
   type Address,
 } from '@/lib/celo-server'
 import { canonicalMoveMessage, MOVE_TIMEOUT_MS } from '@/lib/settlement'
+import { SESSION_COOKIE, MOVE_AUTH_ENFORCED, verifyToken } from '@/lib/game-session'
 import { settleGameById } from '@/lib/settle-game'
 
 export const runtime = 'nodejs'
@@ -137,6 +138,30 @@ export async function POST(
       return NextResponse.json({ error: 'not your turn' }, { status: 403 })
     }
 
+    // ── Prove the caller controls `player` ──
+    // Turn binding above says the move is the right player's to make; it says
+    // nothing about who is asking, and `player` is a string in the request body.
+    // The session cookie is the only thing here that authenticates the sender.
+    //
+    // MiniPay cannot sign messages, so it can never hold a session — enforcing
+    // unconditionally would lock out the primary audience. MOVE_AUTH_ENFORCE
+    // gates that cutover; until it is on, an unauthenticated move is recorded
+    // and logged, so the true cost of enforcing is measurable before it bites.
+    const sessionAddress = verifyToken(req.cookies.get(SESSION_COOKIE)?.value)
+    const authenticated = sessionAddress === player.toLowerCase()
+    if (!authenticated) {
+      if (MOVE_AUTH_ENFORCED) {
+        return NextResponse.json(
+          { error: sessionAddress ? 'session does not match player' : 'move session required' },
+          { status: 401 },
+        )
+      }
+      console.warn(
+        `[moves] UNAUTHENTICATED move accepted (enforcement off): game=${gameId} player=${player} ` +
+          `session=${sessionAddress ?? 'none'}`,
+      )
+    }
+
     // The move itself must be legal from the current position.
     let fen: string
     try {
@@ -158,7 +183,7 @@ export async function POST(
       signer = player
     }
 
-    const record: MoveRecord = { san, player, moveNumber, ts: Date.now(), ...(sig ? { sig, signer } : {}) }
+    const record: MoveRecord = { san, player, moveNumber, ts: Date.now(), ...(authenticated ? { auth: 'session' as const } : {}), ...(sig ? { sig, signer } : {}) }
     // Atomic, conditional on the history still being `existing.length` long.
     // If we lost a race to another writer for this slot, the move we validated is
     // no longer legal at the new tip — reject and let the client resync rather

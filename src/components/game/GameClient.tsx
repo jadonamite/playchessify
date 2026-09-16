@@ -18,6 +18,7 @@ import { useToastStore } from '@/hooks/useToastStore'
 import { useSettingsStore, AI_DEPTH } from '@/hooks/useSettingsStore'
 import { buildPieces } from '@/lib/chessPieces'
 import { useGameData } from '@/hooks/useGameData'
+import { useMoveSession } from '@/hooks/useMoveSession'
 import { useRecordStreak, dispatchStreak, type RecordResult } from '@/hooks/useStreak'
 import AmbientBackground from './AmbientBackground'
 import GameHeader from './GameHeader'
@@ -87,6 +88,10 @@ export default function GameClient() {
     gameIsWaiting, contractActive, payoutSettled, chainResult, canJoinFromPage,
     wagerFormatted, statusLabel, gameProfileMap,
   } = useGameData({ gameId, isBotGame, celoAddress: playerAddress, isConnected })
+
+  // One signature per PvP game authenticates every move that follows (see
+  // useMoveSession). Bot games never touch the relay, so they need no session.
+  useMoveSession(playerAddress ?? undefined, !isBotGame && gameId > 0 && isConnected)
 
   // ── opponent turn timer (5 min) ─────────────────────────────────────────────
   const [turnSecondsLeft, setTurnSecondsLeft] = useState(TURN_TIMEOUT_SECS)
