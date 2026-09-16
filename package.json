@@ -11,7 +11,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "verify:tag": "node tools/verify-attribution.mjs"
+    "verify:tag": "node tools/verify-attribution.mjs",
+    "register:agent": "node tools/register-agent.mjs"
   },
   "keywords": [
     "celo",
