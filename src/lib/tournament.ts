@@ -548,6 +548,45 @@ function qualifiersFromBoard(board: BoardEntry[], topN: number): string[] {
  * rebuilt from chain. Returns null when it genuinely cannot be determined —
  * callers must treat that as "gate unavailable", never as "nobody qualified".
  */
+/**
+ * Whether a closed-field event will score this address, and how big its field
+ * is — the read side of `qualifiersFrom`.
+ *
+ * Scoring already silently drops games played by anyone outside the field
+ * (see buildBoard). Silent is correct for the scorer and wrong for a player:
+ * without this, a non-qualifier plays a whole season, scores nothing, and is
+ * never told why. Mirrors the scorer's own fallback — a gate that cannot be
+ * resolved reports an OPEN field rather than an empty one, because a wrongly
+ * open event is recoverable and a wrongly closed one turns players away.
+ */
+export interface FieldStatus {
+  /** The event whose qualifiers gate this one; null when the field is open. */
+  from: string | null
+  /** Size of the closed field, or null when open/unavailable. */
+  size: number | null
+  /** Whether the gate resolved. False means "treat as open", never "nobody in". */
+  resolved: boolean
+  /** Membership for the queried address; null when none was asked for. */
+  inField: boolean | null
+}
+
+export async function getFieldStatus(address?: string): Promise<FieldStatus> {
+  const win = getActiveSeason() ?? getNextSeason()
+  const open: FieldStatus = { from: null, size: null, resolved: true, inField: null }
+  if (!win?.qualifiersFrom) return open
+
+  const allowed = await getQualifierSet(win.qualifiersFrom)
+  if (!allowed) {
+    return { from: win.qualifiersFrom, size: null, resolved: false, inField: null }
+  }
+  return {
+    from: win.qualifiersFrom,
+    size: allowed.size,
+    resolved: true,
+    inField: address ? allowed.has(address.toLowerCase()) : null,
+  }
+}
+
 async function getQualifierSet(sourceId: string): Promise<Set<string> | null> {
   const redis = getRedis()
 

@@ -13,6 +13,7 @@ import PageBackground from '@/components/ui/PageBackground'
 import PodiumCard, { MEDAL } from '@/components/lobby/PodiumCard'
 import { useTournament, type TournamentBoardEntry, type TournamentWindowMeta } from '@/hooks/useTournament'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
+import { useTournamentField } from '@/hooks/useTournamentField'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -318,6 +319,7 @@ export default function TournamentContent() {
   const { data: profileMap = {} } = useBatchProfiles(board.map((e) => e.address))
 
   const myAddress = playerAddress?.toLowerCase()
+  const field = useTournamentField(playerAddress ?? undefined)
   const win = data?.window
   const nextWin = data?.next
   const isFrozen = data?.frozen === true
@@ -440,6 +442,41 @@ export default function TournamentContent() {
               className="flex flex-col gap-4"
             >
               <PrizeCard win={win} />
+              {win.qualifiersFrom && field?.resolved && (
+                <div
+                  className="rounded-2xl px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 backdrop-blur-sm"
+                  style={{
+                    background:
+                      field.inField === false ? 'rgba(255,107,107,0.05)' : 'rgba(0,204,255,0.05)',
+                    border:
+                      field.inField === false
+                        ? '1px solid rgba(255,107,107,0.3)'
+                        : '1px solid rgba(0,204,255,0.25)',
+                  }}
+                >
+                  <span
+                    className="text-[10px] font-black tracking-[0.2em] uppercase shrink-0"
+                    style={{ color: field.inField === false ? '#FF6B6B' : 'var(--c)' }}
+                  >
+                    {field.inField === false ? '🔒 Not in the field' : '🎟️ Closed field'}
+                  </span>
+                  <span className="text-[10px] font-bold tracking-wide text-[var(--t3)] uppercase">
+                    {field.inField === false ? (
+                      <>
+                        This season is closed to the {field.size ?? ''} players who came through
+                        the Qualifiers. Your games still count for Elo — the next Qualifiers is
+                        your way in.
+                      </>
+                    ) : (
+                      <>
+                        {field.size ?? ''} seats · only players who came through the Qualifiers
+                        score here
+                        {field.inField ? ' — you hold a seat.' : '.'}
+                      </>
+                    )}
+                  </span>
+                </div>
+              )}
               {win.qualifyTopN && (
                 <div
                   className="rounded-2xl px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 backdrop-blur-sm"
