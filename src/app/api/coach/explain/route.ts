@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Redis } from '@upstash/redis'
 import { coachExplain, type ExplainFacts } from '@/lib/coach/voice'
+import { paidFetch, paymentsEnabled, BudgetExhausted } from '@/lib/coach/paid-fetch'
+import { toMicro } from '@/lib/coach/budget'
 
 /**
  * Coach voice endpoint. Input = engine facts (the caller already ran Stockfish);
@@ -45,7 +47,42 @@ export async function POST(req: NextRequest) {
     if (cached) return NextResponse.json({ ...cached, cached: true })
   }
 
-  const result = await coachExplain(body)
+  // ── the coach pays for its own analysis ──
+  // When an x402 endpoint and an agent wallet are configured, the lesson is
+  // bought by the coach from its own balance rather than billed invisibly to a
+  // platform key. Every failure path — no funds, provider down, malformed
+  // reply — falls through to coachExplain, so paying is an upgrade and never a
+  // dependency.
+  let result: Awaited<ReturnType<typeof coachExplain>> | null = null
+  const endpoint = process.env.COACH_X402_ENDPOINT
+
+  if (endpoint && paymentsEnabled()) {
+    const price = toMicro(Number(process.env.COACH_ANALYSIS_PRICE ?? '0.002'))
+    try {
+      const paid = await paidFetch(
+        body.coachName,
+        endpoint,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(body),
+        },
+        price,
+      )
+      const text = ((await paid.response.json()) as { text?: string })?.text
+      if (typeof text === 'string' && text.trim()) {
+        result = { text, source: 'llm' }
+      }
+    } catch (err) {
+      if (err instanceof BudgetExhausted) {
+        console.warn(`[coach] ${body.coachName} is out of budget — falling back`)
+      } else {
+        console.error('[coach] paid analysis failed:', (err as Error)?.message)
+      }
+    }
+  }
+
+  result ??= await coachExplain(body)
 
   // Only cache LLM results (templates are free to recompute and may improve once
   // keys are added).
