@@ -16,6 +16,7 @@ import ClayCard from '@/components/ui/ClayCard'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import ClaimModal from '@/components/ui/ClaimModal'
 import PageBackground from '@/components/ui/PageBackground'
+import ExportWalletCard from '@/components/settings/ExportWalletCard'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -384,6 +385,14 @@ export default function SettingsPage() {
               </ClayCard>
             )}
           </Section>
+
+          {/* ── EXPORT ── last section on purpose: a key reveal is not something
+               to stumble into while changing the board theme ── */}
+          {isConnected && (
+            <Section title="Export Wallet">
+              <ExportWalletCard />
+            </Section>
+          )}
 
         </div>
       </div>

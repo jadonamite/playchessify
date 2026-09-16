@@ -18,6 +18,13 @@ interface WalletContextType {
   playerAddress: string | null
   isConnected: boolean
   isReady: boolean
+  // Tier A only. The two halves of a Privy account, kept separate because they
+  // are NOT interchangeable: `smartAddress` is the ERC-4337 contract account that
+  // holds the balance and plays the games; `embeddedAddress` is the EOA whose key
+  // signs for it — the only one of the two that HAS a key, and so the only one
+  // that can be exported. Both null for MiniPay and external wallets.
+  smartAddress: string | null
+  embeddedAddress: string | null
   // True once the user's real on-chain identity is resolved (the smart account for
   // embedded users). Gate create/join/claim on this to avoid the EOA-split bug.
   identityReady: boolean
@@ -37,6 +44,8 @@ const WalletContext = createContext<WalletContextType>({
   playerAddress: null,
   isConnected: false,
   isReady: false,
+  smartAddress: null,
+  embeddedAddress: null,
   identityReady: false,
   isMiniPay: false,
   walletTier: 'eoa',
@@ -187,6 +196,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         playerAddress,
         isConnected,
         isReady,
+        smartAddress: expectsSmartAccount ? smartAccount : null,
+        embeddedAddress: expectsSmartAccount ? embeddedWallet?.address ?? null : null,
         identityReady,
         isMiniPay,
         walletTier,
