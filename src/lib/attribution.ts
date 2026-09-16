@@ -28,8 +28,36 @@ export const ATTRIBUTION_CODES: readonly string[] = RAW
  * tag is configured. Pass straight to viem's `dataSuffix` — viem treats
  * `undefined` as "no suffix", so an unset tag is a clean no-op.
  */
-export const ATTRIBUTION_SUFFIX: Hex | undefined =
-  ATTRIBUTION_CODES.length > 0 ? (toDataSuffix(ATTRIBUTION_CODES) as Hex) : undefined
+// ERC-8021 codes are lowercase [a-z0-9_], max 32 chars. toDataSuffix THROWS on
+// anything else — and this module is evaluated at import, so a malformed tag
+// would take down every route and page that touches a write path. A registration
+// or confirmation code pasted in here by mistake is exactly that shape, so it is
+// caught and reported rather than allowed to crash the app.
+const CODE_RE = /^[a-z0-9_]{1,32}$/
+
+function buildSuffix(): Hex | undefined {
+  if (ATTRIBUTION_CODES.length === 0) return undefined
+
+  const bad = ATTRIBUTION_CODES.filter((c) => !CODE_RE.test(c))
+  if (bad.length > 0) {
+    console.error(
+      `[attribution] ignoring NEXT_PUBLIC_ATTRIBUTION_TAG — ${bad.map((c) => JSON.stringify(c)).join(', ')} ` +
+        `is not an ERC-8021 code (lowercase a-z 0-9 _, max 32 chars). ` +
+        `The hackathon tag looks like "celo_…"; a CELO-XXXXX-… string is a registration code, not a tag. ` +
+        `Transactions will go out UNTAGGED and uncounted until this is fixed.`,
+    )
+    return undefined
+  }
+
+  try {
+    return toDataSuffix(ATTRIBUTION_CODES) as Hex
+  } catch (err) {
+    console.error('[attribution] toDataSuffix rejected the configured tag:', (err as Error)?.message)
+    return undefined
+  }
+}
+
+export const ATTRIBUTION_SUFFIX: Hex | undefined = buildSuffix()
 
 /**
  * Append the suffix to already-encoded calldata, for the paths that don't take
