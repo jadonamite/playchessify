@@ -7,21 +7,13 @@ import ClayCard from '@/components/ui/ClayCard'
 import HoldButton from '@/components/ui/HoldButton'
 
 /**
- * Export the key behind a Privy account.
+ * Export the signer key behind a Privy account.
  *
- * The thing users ask for ("export my smart wallet") cannot be done literally: a
- * smart account is a contract deployed at an address, and a contract has no
- * private key to hand over. What it has is a signer — the embedded EOA Privy
- * created at login — whose key authorises everything the contract does. That key
- * is what exports.
- *
- * The trap this card exists to defuse: the two have DIFFERENT addresses, and the
- * balance sits on the contract one. A player who exports the key, imports it into
- * MetaMask and sees 0 CHESS will assume the funds are gone. So both addresses are
- * shown, labelled by what each one actually does, before the key is ever revealed.
- *
- * Privy renders the key inside an iframe on its own domain. Chessify never sees
- * it, which is also why there is nothing here to store, clear, or leak.
+ * A smart account is a contract and has no key; what exports is the embedded
+ * EOA that signs for it. The two have different addresses and the balance is on
+ * the contract, so both are shown and labelled before the key is revealed —
+ * otherwise MetaMask shows an empty wallet and the player assumes the worst.
+ * Privy renders the key in its own iframe; we never see it.
  */
 
 function AddressRow({ label, note, address }: { label: string; note: string; address: string }) {

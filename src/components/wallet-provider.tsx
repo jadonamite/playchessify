@@ -18,11 +18,9 @@ interface WalletContextType {
   playerAddress: string | null
   isConnected: boolean
   isReady: boolean
-  // Tier A only. The two halves of a Privy account, kept separate because they
-  // are NOT interchangeable: `smartAddress` is the ERC-4337 contract account that
-  // holds the balance and plays the games; `embeddedAddress` is the EOA whose key
-  // signs for it — the only one of the two that HAS a key, and so the only one
-  // that can be exported. Both null for MiniPay and external wallets.
+  // Tier A only, and not interchangeable: smartAddress is the contract holding
+  // the balance and the game record; embeddedAddress is the EOA that signs for
+  // it, and the only one with a key to export.
   smartAddress: string | null
   embeddedAddress: string | null
   // True once the user's real on-chain identity is resolved (the smart account for

@@ -195,9 +195,8 @@ export default function TrainingGame() {
   // ── guided: coach reply after the think beat ─────────────────────────────────
   const guidedReply = useCallback((moved: Chess) => {
     coachMove(moved, () => {
-      // Deliberately does NOT touch the note. What is on screen is the coach's
-      // reaction to the move you just played, and you should still be reading
-      // it while you choose your next one — that is the whole hook.
+      // Leaves the note alone: the reaction to your move should still be on
+      // screen while you pick your next one.
       setPhase('learner')
     })
   }, [coachMove])
@@ -206,9 +205,7 @@ export default function TrainingGame() {
     if (phase !== 'learner') return false
     const preFen = game.fen()
     const probe = cloneWithHistory(game)
-    // chess.js v1 THROWS on an illegal move rather than returning null, so the
-    // null check below never fired and an illegal tap threw out through the
-    // React event handler instead of being refused quietly.
+    // chess.js v1 throws on an illegal move rather than returning null.
     let move: Move | null = null
     try {
       move = probe.move({ from, to, promotion: 'q' })
@@ -255,10 +252,8 @@ export default function TrainingGame() {
       if (!liveRef.current) return
       const lossCp = post ? evalBeforeRef.current - post.whiteCp : 0
       const alreadyLost = evalBeforeRef.current < -300
-      // Nor is it a blunder if you are still plainly winning. The coach's own
-      // move can swing the eval hard in your favour, and without this a normal
-      // developing move that "gives back" 150cp of a +400 position was being
-      // intercepted as a mistake. Observed on 1. e4 e5 2. Nf3.
+      // Not a blunder while still plainly winning — the coach's own move can
+      // swing the eval, and 1. e4 e5 2. Nf3 was being flagged.
       const stillWinning = !!post && post.whiteCp > WINNING_CP
 
       if (post && lossCp >= BLUNDER_CP && !alreadyLost && !stillWinning) {

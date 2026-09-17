@@ -2,29 +2,16 @@ import type { Move, Chess } from 'chess.js'
 import { COACHES, type CoachProfile } from '@/config/coaches'
 
 /**
- * The archetype reaction engine.
+ * Archetype reactions — the free half of the coach.
  *
- * After every one of your moves the coach says something. It is deterministic,
- * local, and costs nothing — no engine call, no network, no key. That matters:
- * this fires on every move of every game, so it can never be the thing that is
- * slow, rate-limited or down.
- *
- * The rule that makes it worth having: the SAME move must read differently
- * depending on who is watching. A quiet rook shuffle is cowardice to Kasparov,
- * patience to Karpov, and a wasted tempo to Fischer. If you could swap two
- * coaches' output without noticing, this file has failed.
- *
- * It is also the demand generator. Half of these lines are written to end in an
- * unanswered question, because the product is the player wanting a second
- * opinion badly enough to spend an ask on it.
+ * Deterministic and local, because this fires on every move of every game.
+ * The same move must read differently per coach; if two coaches' lines are
+ * interchangeable, this file has failed. Half the lines end on a question,
+ * to make the metered ask worth spending.
  */
 
-/* ── situations ──────────────────────────────────────────────────────────────
- * Derived from the move and the resulting position only. Deliberately NOT from
- * Stockfish: engine truth costs time and (later) money, and a reaction has to
- * land the instant a piece is dropped. Reactions may be wrong about the merit
- * of a move. That is fine — they are a personality, not a verdict. The verdict
- * is what you pay to ask for. */
+/* Classified from the move and position only, never Stockfish — a reaction has
+ * to land instantly. It is a personality, not a verdict; the verdict is the ask. */
 export type Situation =
   | 'checkmate' | 'check' | 'promotion' | 'castle'
   | 'captureUp' | 'captureTrade' | 'captureDown'
@@ -63,10 +50,8 @@ export function classify(move: Move, after: Chess, moveNumber: number): Situatio
   return 'quiet'
 }
 
-/* ── the voices ─────────────────────────────────────────────────────────────
- * Two lines per situation per coach. Kept short: this renders in a single line
- * above the board, and a coach who monologues after every move stops being a
- * presence and becomes noise. */
+/* Two lines per situation per coach. Short on purpose — this renders on one
+ * line above the board. */
 type Bank = Record<Situation, [string, string]>
 
 const KASPAROV: Bank = {

@@ -2,21 +2,10 @@ import path from 'node:path'
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
 
 /**
- * Stockfish on the server, in a process of its own.
+ * Stockfish on the server — metered analysis can't run in the player's tab.
  *
- * The browser engine (lib/analysis/engine.ts) stays where it is — it drives
- * training hints and costs nothing. Anything METERED has to be computed here,
- * because a cap over an engine running in the player's own tab is decoration:
- * open devtools, talk to the worker, and the analysis is free and unlimited.
- *
- * Why a child process and not an import. The emscripten build assigns
- * `fetch = null` on the global when it detects Node, to force its own file
- * shim for loading the .wasm. In-process that removes fetch from the whole
- * runtime, and every later Upstash call — the ask meter included — fails with
- * "fetch is not a function". Restoring fetch afterwards is worse: the engine's
- * next boot then takes the streaming-instantiate path against a filesystem
- * path and aborts with a WebAssembly LinkError, taking the server with it.
- * Both were observed, in that order. The engine gets its own process.
+ * Runs as a child process: the emscripten build nulls the global `fetch` on
+ * Node (breaking Upstash) and cannot be booted twice in one process.
  */
 
 export interface ServerAnalysis {

@@ -2,19 +2,11 @@
 /**
  * Stockfish in its own process, speaking JSON lines.
  *
- * It has to be its own process. The emscripten build assigns `fetch = null` on
- * the global when it detects Node — that is how it forces its own file-reading
- * shim for the .wasm — which removes fetch from whatever process hosts it and
- * breaks every later Upstash call in the same runtime. It also cannot be
- * initialised twice in one process: the second boot sees fetch restored, takes
- * the streaming-instantiate path against a filesystem path, and dies with a
- * WebAssembly LinkError.
+ * Isolated because the emscripten build nulls the global `fetch` on Node and
+ * cannot be initialised twice in one process.
  *
- * Both problems disappear when the engine owns its process.
- *
- * Protocol, one JSON object per line:
  *   in   { id, fen, movetime }
- *   out  { id, bestMove, cp, mate, depth, pv }  |  { id, error }
+ *   out  { id, bestMove, cp, mate, depth, pv } | { id, error }
  */
 const initEngine = require('stockfish')
 

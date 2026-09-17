@@ -1,16 +1,8 @@
 import { Redis } from '@upstash/redis'
 
 /**
- * How many opinions you may ask the coach for in one game.
- *
- * This is the meter the payment layer will eventually sit on top of. It lives
- * server-side and is keyed to the game and the asker, never to client state —
- * a counter in the browser is a suggestion, and the whole point of a cap is
- * that it holds against someone who does not want it to.
- *
- * Free this iteration. When asks become payable, the charge goes exactly here,
- * between `consume` returning ok and the analysis running, so switching from
- * free to paid is a change of policy and not a change of shape.
+ * Asks per game. Server-side and keyed to (game, asker) — a browser counter
+ * is a suggestion. Free for now; the charge will go inside `consume`.
  */
 
 export const ASKS_PER_GAME = Number(process.env.COACH_ASKS_PER_GAME ?? 10)
@@ -48,18 +40,12 @@ export async function peek(gameKey: string, asker: string): Promise<QuotaState> 
   return { used, limit, remaining: Math.max(0, limit - used) }
 }
 
-/**
- * Take one ask. Increment first, then check: two requests firing together must
- * not both read "9 used" and both be allowed through. An increment that went
- * past the limit is rolled back and refused.
- */
+/** Increment then check, so two concurrent asks can't both spend the last one. */
 export async function consume(gameKey: string, asker: string): Promise<{ ok: boolean } & QuotaState> {
   const redis = getRedis()
   const limit = ASKS_PER_GAME
 
-  // No Redis means no meter. Refuse rather than hand out unlimited asks — a
-  // metered feature that silently stops being metered is worse than one that
-  // is briefly unavailable.
+  // No Redis means no meter — refuse rather than hand out unlimited asks.
   if (!redis) return { ok: false, used: limit, limit, remaining: 0 }
 
   const k = key(gameKey, asker)

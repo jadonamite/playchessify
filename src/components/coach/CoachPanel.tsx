@@ -5,14 +5,9 @@ import { useCoachAsk } from '@/hooks/useCoachAsk'
 import type { CoachProfile } from '@/config/coaches'
 
 /**
- * The coach at your shoulder. One component for every board in the app —
- * training, bot games, wagered games — so the coach is the same presence
- * everywhere rather than a training-only feature.
+ * The coach at your shoulder — one component for every board in the app.
  *
- * Two layers, and the split is the product:
- *   the REACTION is free, instant and local, and is written to leave you
- *   wanting a second opinion;
- *   the ASK is metered, served from the server, and is the second opinion.
+ * The reaction is free, instant and local. The ask is metered and served.
  */
 
 interface CoachPanelProps {
@@ -46,9 +41,8 @@ export default function CoachPanel({
 }: CoachPanelProps) {
   const { remaining, limit, asking, answer, error, ask, dismiss, clearOnPositionChange } = useCoachAsk(gameKey)
 
-  // Drop the previous answer as soon as the board moves on. Advice about a
-  // position you have left is worse than no advice, because it still looks
-  // authoritative. The ref keeps the first render from clearing a fresh answer.
+  // Advice about a position you have left still looks authoritative, so drop
+  // it when the board moves on.
   const seenFen = useRef(fen)
   useEffect(() => {
     if (seenFen.current === fen) return
@@ -99,9 +93,7 @@ export default function CoachPanel({
         <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2.5">
           <p className="text-[15px] leading-snug text-white">{answer.text}</p>
           <div className="mt-2 flex items-center justify-between gap-3">
-            {/* NOT uppercased. Chess notation is case sensitive — B is a bishop
-                and b is the b-file — so text-transform turns Nxe4 into NXE4 and
-                destroys the very thing the parentheses are there to teach. */}
+            {/* Not uppercased — notation is case sensitive (B bishop, b file). */}
             <span className="text-[11px] text-slate-400">
               <span className="uppercase tracking-wider text-slate-500">Engine line</span>
               {' '}

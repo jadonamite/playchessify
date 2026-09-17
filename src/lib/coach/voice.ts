@@ -10,18 +10,8 @@
  * Provider chain (all free tiers): Groq → Gemini Flash → NVIDIA NIM → template.
  * SERVER ONLY — never import into client code; keys must never be NEXT_PUBLIC.
  *
- * The order and the per-provider options below are measured, not guessed:
- *   Groq   openai/gpt-oss-120b returns an EMPTY string unless reasoning_effort
- *          is lowered — the reasoning tokens consume the whole budget. With it,
- *          ~550ms, which is the only latency in this list that suits a game.
- *   Gemini gemini-flash-latest counts thinking against max_tokens, so a 200-token
- *          budget came back truncated mid-word. It needs room and ~8s.
- *   NVIDIA 410 Gone means the MODEL id is retired, not that the key is bad —
- *          every older llama/nemotron id now answers 410. deepseek-v4-flash is
- *          current and good (~13.6s). gemma-4-31b works but takes 45s;
- *          nemotron-3.5-lightning leaks "Here's a thinking process:" into the
- *          reply; glm-5.3-flash and muse-glimmer return empty. Check
- *          build.nvidia.com/models before changing this id.
+ * Order and per-provider options are measured: Groq ~550ms, Gemini ~8s,
+ * NVIDIA ~13.6s. See the notes on each below before changing a model id.
  */
 
 import OpenAI from 'openai'
@@ -91,16 +81,8 @@ function providers(): Provider[] {
 }
 
 /**
- * Run one provider call under a real deadline.
- *
- * The previous version built an AbortController, fired it on a timer, and never
- * gave the signal to anything — the request had already been created by the time
- * this function received the promise, and nothing raced it. So `await p` waited
- * as long as the provider felt like taking, and a single hung provider stalled
- * the whole chain until the platform killed the function.
- *
- * Two mechanisms now, because one is not enough: the signal cancels a well-
- * behaved client, and the race rejects regardless in case a provider ignores it.
+ * One provider call under a real deadline. Signal plus race, because a provider
+ * that ignores the signal still has to lose.
  */
 function withTimeout<T>(make: (signal: AbortSignal) => Promise<T>, ms: number): Promise<T> {
   const ctrl = new AbortController()
@@ -233,11 +215,8 @@ export async function coachExplain(f: ExplainFacts): Promise<{ text: string; sou
   const fallback = renderTemplate(f)
   if (providers().length === 0) return { text: fallback, source: 'template' }
 
-  // Facts go over as finished English. Every value the model has to interpret
-  // is a value it can interpret wrongly — handing it "Bc4" and "-27" is how it
-  // produced "you should have played Nf6 instead of Bc4" and "costing you 27
-  // centipawns". It is given sentences now, and its only remaining job is to
-  // perform them in character.
+  // Finished English, not notation and raw centipawns. Anything the model has
+  // to interpret is something it can interpret wrongly.
   const facts = (
     f.kind === 'position'
       ? [

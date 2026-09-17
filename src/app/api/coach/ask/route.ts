@@ -12,16 +12,11 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 /**
- * POST /api/coach/ask — buy one opinion from your coach.
+ * POST /api/coach/ask — buy one opinion, metered per player per game.
+ * GET reads the meter without spending one.
  *
- * The reaction layer is free and runs in the browser. This is the thing it
- * makes you want: the coach actually looking at the position and telling you
- * what it thinks. Metered at ASKS_PER_GAME per player per game.
- *
- * The analysis runs HERE, not in the player's tab. That is the whole reason
- * this route exists — a cap over a client-side engine caps nothing.
- *
- * GET with the same query params reads the meter without spending an ask.
+ * Analysis runs here, not in the player's tab: a cap over a client-side
+ * engine caps nothing.
  */
 
 interface AskBody {
@@ -35,13 +30,9 @@ interface AskBody {
 }
 
 /**
- * Who is asking.
- *
- * A signed move session is the real answer. Without one — a practice board, or
- * a MiniPay wallet that cannot sign at all — fall back to the anonymous cookie
- * the browser already carries. That is weaker, and deliberately so: the asks it
- * guards are free and unwagered, and locking MiniPay users out of coaching to
- * protect a free counter would be the wrong trade.
+ * Who is asking. A signed move session when there is one; otherwise the anon
+ * cookie, then IP. Weaker on purpose — MiniPay cannot sign, and locking it out
+ * to protect a free counter is the wrong trade.
  */
 async function askerFrom(req: NextRequest): Promise<string | null> {
   const jar = await cookies()
@@ -134,11 +125,8 @@ export async function POST(req: NextRequest) {
     const toMove = position.turn() === 'w' ? 1 : -1
     const advantageCp = analysis.whiteCp * toMove // + = good for whoever is to move
 
-    // An ask is about the position in front of you, not a verdict on a move
-    // already played. `lastMoveSan` belongs to the OTHER side, so feeding it in
-    // as "student move" alongside a best move for the side to move produced
-    // advice like "you should have played Nf6 instead of Bc4" — two different
-    // players' moves presented as alternatives.
+    // `lastMoveSan` is the OPPONENT's move, so it must not be framed as an
+    // alternative to bestMoveSan — they belong to different sides.
     const { text, source } = await coachExplain({
       coachName: coach.name,
       coachVoice: coach.teaching.voice,

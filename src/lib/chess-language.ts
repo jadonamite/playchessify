@@ -1,19 +1,9 @@
 /**
- * Chess in words a beginner can read.
+ * Chess in words a beginner can read: "Knight to f6", not "Nf6".
  *
- * "Bc4" is a lookup: you either have it memorised or the sentence containing it
- * is wasted on you. Most of our players are new, on a phone, and playing for
- * free — so every coaching line that leans on notation is a line that lands on
- * nobody. Same for "27 centipawns", which is worse, because it looks like it
- * means something.
- *
- * The notation is kept in parentheses rather than dropped. Every chess book and
- * video on earth uses it, so showing both teaches it in context and a player who
- * outgrows us can read anything else. The one place this does NOT belong is the
- * move log — that is a scoresheet, and forty rows of prose is unreadable.
- *
- * Isomorphic on purpose: the server wordings the facts, the client renders the
- * same phrases in the offline template, and they must not drift apart.
+ * Notation stays in parentheses so it is still taught. Not for the move log,
+ * which is a scoresheet. Isomorphic so server facts and the client's offline
+ * template cannot drift.
  */
 
 const PIECE: Record<string, string> = {
