@@ -7,52 +7,75 @@
 // every write already funnels through (`useCeloChess.sendWrite` on the client,
 // `celo-server.ts` on the server) rather than call site by call site.
 //
-// Absent env var = no suffix = ordinary untagged transactions. Nothing here can
-// change what a transaction does; the suffix is trailing calldata the contract
-// never reads.
+// Nothing here can change what a transaction does; the suffix is trailing
+// calldata the contract never reads.
 import { toDataSuffix } from '@celo/attribution-tags'
 import type { Hex } from 'viem'
 
-// NEXT_PUBLIC_ so the browser bundle can tag client-signed writes too. The tag
-// is a public identifier printed on a public dashboard — it is not a secret.
-// Comma-separated to allow our own code alongside the assigned one; the
-// hackathon credits only the assigned tag but keeps the rest intact.
-const RAW = process.env.NEXT_PUBLIC_ATTRIBUTION_TAG?.trim()
+// The tag assigned at registration, derived from the `jadonamite/playchessify`
+// GitHub slug and locked permanently at first draft save.
+//
+// It is a literal, not an env var, and that is deliberate. This shipped as
+// NEXT_PUBLIC_ATTRIBUTION_TAG first and produced zero tagged transactions for a
+// full day: the value was set "Sensitive" in Vercel, which means it cannot be
+// read back by anyone, so there was no way to tell a correct tag from a missing
+// one — and an unset tag degrades to an ordinary untagged write, which looks
+// exactly like normal operation. The tag is public (it is printed on the
+// hackathon's own Dune dashboard), so there is nothing to protect and no reason
+// to accept a failure mode that is invisible from the outside.
+const ASSIGNED_CODE = 'celo_5d5a7df8d3aa'
 
-export const ATTRIBUTION_CODES: readonly string[] = RAW
-  ? RAW.split(',').map((c) => c.trim()).filter(Boolean)
-  : []
-
-/**
- * The calldata suffix to append to every transaction, or `undefined` when no
- * tag is configured. Pass straight to viem's `dataSuffix` — viem treats
- * `undefined` as "no suffix", so an unset tag is a clean no-op.
- */
-// ERC-8021 codes are lowercase [a-z0-9_], max 32 chars. toDataSuffix THROWS on
-// anything else — and this module is evaluated at import, so a malformed tag
-// would take down every route and page that touches a write path. A registration
-// or confirmation code pasted in here by mistake is exactly that shape, so it is
-// caught and reported rather than allowed to crash the app.
+// ERC-8021 codes are lowercase [a-z0-9_], max 32 chars; toDataSuffix THROWS on
+// anything else. A registration code (CELO-XXXXX-…) pasted in by mistake is
+// exactly that shape, so bad codes are dropped and reported rather than allowed
+// to crash the app at import.
 const CODE_RE = /^[a-z0-9_]{1,32}$/
 
-function buildSuffix(): Hex | undefined {
-  if (ATTRIBUTION_CODES.length === 0) return undefined
+// Optional extra codes. ERC-8021 lets one suffix carry several, so our own
+// code can ride alongside the assigned one — but only the assigned tag is
+// credited, and a typo here must never be able to take it down with it.
+function envCodes(): string[] {
+  const raw = process.env.NEXT_PUBLIC_ATTRIBUTION_TAG?.trim()
+  if (!raw) return []
 
-  const bad = ATTRIBUTION_CODES.filter((c) => !CODE_RE.test(c))
+  const parsed = raw.split(',').map((c) => c.trim()).filter(Boolean)
+  const bad = parsed.filter((c) => !CODE_RE.test(c))
   if (bad.length > 0) {
     console.error(
-      `[attribution] ignoring NEXT_PUBLIC_ATTRIBUTION_TAG — ${bad.map((c) => JSON.stringify(c)).join(', ')} ` +
-        `is not an ERC-8021 code (lowercase a-z 0-9 _, max 32 chars). ` +
-        `The hackathon tag looks like "celo_…"; a CELO-XXXXX-… string is a registration code, not a tag. ` +
-        `Transactions will go out UNTAGGED and uncounted until this is fixed.`,
+      `[attribution] dropping ${bad.map((c) => JSON.stringify(c)).join(', ')} from ` +
+        `NEXT_PUBLIC_ATTRIBUTION_TAG — not an ERC-8021 code (lowercase a-z 0-9 _, max 32 chars). ` +
+        `A CELO-XXXXX-… string is a registration code, not a tag. ` +
+        `${ASSIGNED_CODE} is unaffected and still tags every transaction.`,
     )
-    return undefined
   }
+  return parsed.filter((c) => CODE_RE.test(c))
+}
 
+/** Every code carried in the suffix. The assigned tag is always first. */
+export const ATTRIBUTION_CODES: readonly string[] = [
+  ...new Set([ASSIGNED_CODE, ...envCodes()]),
+]
+
+/**
+ * The calldata suffix appended to every transaction. Pass straight to viem's
+ * `dataSuffix`.
+ *
+ * This is `undefined` only if the SDK rejects the codes outright — a state that
+ * should be unreachable, since the assigned tag is a validated literal. The
+ * fallback exists so a broken suffix degrades to an untagged (but working)
+ * write rather than a dead app.
+ */
+function buildSuffix(): Hex | undefined {
   try {
     return toDataSuffix(ATTRIBUTION_CODES) as Hex
   } catch (err) {
-    console.error('[attribution] toDataSuffix rejected the configured tag:', (err as Error)?.message)
+    console.error(
+      '[attribution] toDataSuffix rejected',
+      ATTRIBUTION_CODES,
+      '—',
+      (err as Error)?.message,
+      '— transactions will go out UNTAGGED and uncounted.',
+    )
     return undefined
   }
 }
