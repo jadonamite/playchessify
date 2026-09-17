@@ -90,14 +90,16 @@ Zero financial risk — CHESS has no monetary value.
 
 ## 📖 Deployed contracts
 
-**Live on Celo mainnet (`42220`).** The app reads these from `NEXT_PUBLIC_CELO_TOKEN` /
-`NEXT_PUBLIC_CELO_GAME` in env; `config/contracts.ts` still *defaults* to the old pre-oracle
-addresses for safety, so the live values come from env, not the default.
+**Live on Celo mainnet (`42220`).** The app reads these from `NEXT_PUBLIC_CELO_*` in env;
+`config/contracts.ts` still *defaults* to the old pre-oracle addresses for safety, so the live
+values come from env, not the default.
 
 | Contract | Address |
 | :--- | :--- |
-| ChessToken | [`0x3f7efdfc8a76f76f22512fcd2bddc5fca36e55a3`](https://celoscan.io/address/0x3f7efdfc8a76f76f22512fcd2bddc5fca36e55a3) |
-| ChessGame | [`0xb37877a9ebd6c3169b2eaaa3e16852839785ae85`](https://celoscan.io/address/0xb37877a9ebd6c3169b2eaaa3e16852839785ae85) |
+| ChessGame | [`0xA576321eB523FFb1e5FE568b317F9E7a7374fDdf`](https://celoscan.io/address/0xA576321eB523FFb1e5FE568b317F9E7a7374fDdf) |
+| ChessToken | [`0x607590fC7ba3F17b6B3274fF281528a131E9b015`](https://celoscan.io/address/0x607590fC7ba3F17b6B3274fF281528a131E9b015) |
+| Rewards | [`0xd867C2467c41Ccbe315eF4fFa3B9eBFa0C2D8d24`](https://celoscan.io/address/0xd867C2467c41Ccbe315eF4fFa3B9eBFa0C2D8d24) |
+| Forwarder (ERC-2771) | [`0xd29618312668007d1Da3B9eB591B7209E1A06cC5`](https://celoscan.io/address/0xd29618312668007d1Da3B9eB591B7209E1A06cC5) |
 
 Operators (dedicated single-purpose keys): oracle `0x4d68…C6c9` · minter `0x4548…5AB9` ·
 gas-sponsor `0xc26f…D0f2`. Owner/deployer `0xF679…7638`. See **handover.md** for the full
