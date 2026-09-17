@@ -115,3 +115,6 @@ foundry.lock
 
 # local screenshot helper (never commit)
 /pc-shot.mjs
+
+# hackathon session handover (local only)
+/handover-agents-at-work.md
