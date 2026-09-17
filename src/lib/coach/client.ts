@@ -1,6 +1,7 @@
 'use client'
 
 import type { ExplainFacts } from '@/lib/coach/voice'
+import { describeMove, describeEval, sentence } from '@/lib/chess-language'
 
 /**
  * Client helper to fetch a coach-voiced lesson. The caller supplies engine
@@ -30,17 +31,17 @@ function localTemplate(f: ExplainFacts): string {
     case 'blunder':
       return [
         f.detail ? `Careful — ${f.detail}.` : 'Careful — that move gives something away.',
-        f.bestMoveSan ? `A stronger try is ${f.bestMoveSan}.` : '',
+        f.bestMoveSan ? `A stronger try is ${describeMove(f.bestMoveSan)}.` : '',
       ].filter(Boolean).join(' ')
     case 'good':
-      return f.playerMoveSan ? `Good — ${f.playerMoveSan} is the right idea.` : 'Good — that\'s the right idea.'
+      return f.playerMoveSan ? `Good — ${describeMove(f.playerMoveSan)} is the right idea.` : 'Good — that\'s the right idea.'
     case 'coach-move':
-      return f.playerMoveSan ? `I'll play ${f.playerMoveSan}.` : 'My move.'
+      return f.playerMoveSan ? `I'll play ${describeMove(f.playerMoveSan)}.` : 'My move.'
     case 'review':
       return 'Nice work — let\'s keep building.'
     case 'position':
       return f.bestMoveSan
-        ? `${f.detail ? f.detail[0].toUpperCase() + f.detail.slice(1) + '. ' : ''}I would play ${f.bestMoveSan}.`
+        ? `${f.evalDeltaCp != null ? sentence(describeEval(f.evalDeltaCp)) + '. ' : ''}I would play ${describeMove(f.bestMoveSan)}.`
         : 'Nothing forcing here. Improve your worst piece.'
   }
 }

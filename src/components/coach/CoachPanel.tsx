@@ -99,8 +99,13 @@ export default function CoachPanel({
         <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2.5">
           <p className="text-[15px] leading-snug text-white">{answer.text}</p>
           <div className="mt-2 flex items-center justify-between gap-3">
-            <span className="text-[10px] uppercase tracking-wider text-slate-500">
-              {answer.bestMoveSan ? `Engine line: ${answer.bestMoveSan}` : 'Engine consulted'}
+            {/* NOT uppercased. Chess notation is case sensitive — B is a bishop
+                and b is the b-file — so text-transform turns Nxe4 into NXE4 and
+                destroys the very thing the parentheses are there to teach. */}
+            <span className="text-[11px] text-slate-400">
+              <span className="uppercase tracking-wider text-slate-500">Engine line</span>
+              {' '}
+              {answer.bestMovePhrase ?? answer.bestMoveSan ?? 'consulted'}
             </span>
             <button onClick={dismiss} className="text-[10px] uppercase tracking-wider text-slate-400 hover:text-slate-200">
               Dismiss

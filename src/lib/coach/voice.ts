@@ -25,6 +25,7 @@
  */
 
 import OpenAI from 'openai'
+import { describeMove, describeEval, sentence } from '@/lib/chess-language'
 
 if (typeof window !== 'undefined') {
   throw new Error('coach/voice.ts is server-only — do not import it in the browser')
@@ -181,18 +182,19 @@ export function renderTemplate(f: ExplainFacts): string {
       const bits: string[] = []
       bits.push(f.detail ? `Careful — ${f.detail}.` : 'Careful — that move gives something away.')
       if (f.concept) bits.push(`This is about ${f.concept}.`)
-      if (f.bestMoveSan) bits.push(`A stronger try is ${f.bestMoveSan}.`)
-      if (lost != null && lost >= 1) bits.push(`It costs roughly ${lost.toFixed(1)} points of advantage.`)
+      if (f.bestMoveSan) bits.push(`A stronger try is ${describeMove(f.bestMoveSan)}.`)
+      if (lost != null && lost >= 1) bits.push(`It costs you ${pawnsLost(lost)}.`)
       return bits.join(' ')
     }
     case 'good': {
-      const head = f.playerMoveSan ? `Good — ${f.playerMoveSan} is the right idea.` : 'Good — that\'s the right idea.'
+      const head = f.playerMoveSan
+        ? `Good — ${describeMove(f.playerMoveSan)} is the right idea.`
+        : 'Good — that\'s the right idea.'
       return f.concept ? `${head} You spotted the ${f.concept}.` : head
     }
     case 'coach-move': {
-      return f.detail
-        ? `I'll play ${f.playerMoveSan ?? 'this'} — ${f.detail}.`
-        : `I'll play ${f.playerMoveSan ?? 'this'}.`
+      const mine = f.playerMoveSan ? describeMove(f.playerMoveSan) : 'this'
+      return f.detail ? `I'll play ${mine} — ${f.detail}.` : `I'll play ${mine}.`
     }
     case 'review': {
       const head = f.movesPlayed ? `Nice work over ${f.movesPlayed} moves.` : 'Nice work.'
@@ -200,12 +202,26 @@ export function renderTemplate(f: ExplainFacts): string {
     }
     case 'position': {
       const bits: string[] = []
-      if (f.detail) bits.push(`${f.detail[0].toUpperCase()}${f.detail.slice(1)}.`)
-      if (f.bestMoveSan) bits.push(`I would play ${f.bestMoveSan}.`)
+      if (f.evalDeltaCp != null) bits.push(`${sentence(describeEval(f.evalDeltaCp))}.`)
+      else if (f.detail) bits.push(`${sentence(f.detail)}.`)
+      if (f.bestMoveSan) bits.push(`I would play ${describeMove(f.bestMoveSan)}.`)
       if (f.concept) bits.push(`Watch for ${f.concept}.`)
       return bits.length ? bits.join(' ') : 'Nothing forcing here. Improve your worst piece.'
     }
   }
+}
+
+/** "1.4" points of advantage means nothing. Pawns do. */
+function pawnsLost(pawns: number): string {
+  const p = Math.abs(pawns)
+  if (p < 1.25) return 'about a pawn'
+  if (p < 1.75) return 'about a pawn and a half'
+  const halves = Math.round(p * 2) / 2
+  const whole = Math.floor(halves)
+  const WORDS = ['', 'one', 'two', 'three', 'four', 'five', 'six']
+  if (whole > 6) return 'a decisive amount'
+  if (halves % 1 !== 0) return `about ${WORDS[whole]} and a half pawns`
+  return `about ${WORDS[whole]} pawns`
 }
 
 /**
@@ -217,28 +233,35 @@ export async function coachExplain(f: ExplainFacts): Promise<{ text: string; sou
   const fallback = renderTemplate(f)
   if (providers().length === 0) return { text: fallback, source: 'template' }
 
+  // Facts go over as finished English. Every value the model has to interpret
+  // is a value it can interpret wrongly — handing it "Bc4" and "-27" is how it
+  // produced "you should have played Nf6 instead of Bc4" and "costing you 27
+  // centipawns". It is given sentences now, and its only remaining job is to
+  // perform them in character.
   const facts = (
     f.kind === 'position'
       ? [
           `Coach: ${f.coachName}`,
           `Student level: ${f.learnerLevel}`,
           'Situation: the student has asked what you think of the position they are about to move in',
-          f.opponentMoveSan && `The opponent just played: ${f.opponentMoveSan}`,
-          f.bestMoveSan && `The move you would play now: ${f.bestMoveSan}`,
-          f.evalDeltaCp != null && `Position evaluation in centipawns for the student (+ good, - bad): ${Math.round(f.evalDeltaCp)}`,
-          f.concept && `Note: ${f.concept}`,
-          f.detail && `Engine note: ${f.detail}`,
+          f.opponentMoveSan && `Your opponent just played ${describeMove(f.opponentMoveSan)}.`,
+          f.bestMoveSan && `The strongest move for you here is ${describeMove(f.bestMoveSan)}.`,
+          f.evalDeltaCp != null && `${sentence(describeEval(f.evalDeltaCp))}.`,
+          f.concept && `Note: ${f.concept}.`,
+          f.detail && `Engine note: ${f.detail}.`,
           'Advise them on THIS position. Nothing has been lost or blundered — do not scold them for a move they have not made.',
+          'Name pieces in words the way the facts above do (for example "Knight to f6"), not in notation.',
         ]
       : [
           `Coach: ${f.coachName}`,
           `Student level: ${f.learnerLevel}`,
           `Situation: ${f.kind}`,
-          f.playerMoveSan && `Student move: ${f.playerMoveSan}`,
-          f.bestMoveSan && `Engine's best move: ${f.bestMoveSan}`,
-          f.evalDeltaCp != null && `Centipawns lost: ${Math.round(f.evalDeltaCp)}`,
-          f.concept && `Concept: ${f.concept}`,
-          f.detail && `Engine note: ${f.detail}`,
+          f.playerMoveSan && `The student played ${describeMove(f.playerMoveSan)}.`,
+          f.bestMoveSan && `The stronger move was ${describeMove(f.bestMoveSan)}.`,
+          f.evalDeltaCp != null && `That cost them ${describeEval(-Math.abs(f.evalDeltaCp)).replace(/^you are /, '').replace(/ behind.*$/, '')}.`,
+          f.concept && `Concept: ${f.concept}.`,
+          f.detail && `Engine note: ${f.detail}.`,
+          'Name pieces in words the way the facts above do (for example "Knight to f6"), not in notation.',
         ]
   ).filter(Boolean).join('\n')
 

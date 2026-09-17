@@ -15,6 +15,8 @@ export interface AskResult {
   text: string
   source: 'llm' | 'template'
   bestMoveSan: string | null
+  /** The same move in words, e.g. "Knight to f6 (Nf6)". */
+  bestMovePhrase: string | null
   evalCp: number
   mate: number | null
   remaining: number

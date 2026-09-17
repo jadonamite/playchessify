@@ -5,6 +5,7 @@ import { analyzeOnServer } from '@/lib/analysis/server-engine'
 import { coachExplain } from '@/lib/coach/voice'
 import { consume, peek, refund, ASKS_PER_GAME } from '@/lib/coach/ask-quota'
 import { getCoach } from '@/config/coaches'
+import { describeMove } from '@/lib/chess-language'
 import { SESSION_COOKIE, verifyToken } from '@/lib/game-session'
 
 export const runtime = 'nodejs'
@@ -154,6 +155,9 @@ export async function POST(req: NextRequest) {
       text,
       source,
       bestMoveSan: bestSan,
+      // The UI shows the words; the notation rides along in parentheses so a
+      // player picks it up without having to already know it.
+      bestMovePhrase: bestSan ? describeMove(bestSan) : null,
       evalCp: advantageCp,
       mate: analysis.mate,
       depth: analysis.depth,

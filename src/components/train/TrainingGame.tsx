@@ -12,6 +12,7 @@ import { playMoveChime } from '@/lib/audio'
 import { fetchCoachVoice } from '@/lib/coach/client'
 import { taunt, banter } from '@/lib/coach/lines'
 import { coachReaction } from '@/lib/coach/reactions'
+import { describeMove } from '@/lib/chess-language'
 import CoachPanel from '@/components/coach/CoachPanel'
 import { getCoach, type CoachEngine } from '@/config/coaches'
 import { getCoachMove } from '@/lib/chess-engine'
@@ -290,7 +291,7 @@ export default function TrainingGame() {
           }
           const why = lossCp >= 400 ? 'it leaves a piece undefended' : 'it hands back the advantage'
           const floor = bestSan
-            ? `Twice now — ${why}. Take it back and play ${bestSan} instead (highlighted).`
+            ? `Twice now — ${why}. Take it back and play ${describeMove(bestSan)} instead (highlighted).`
             : `Twice now — ${why}. Take it back and look for a safer square.`
           if (liveRef.current && pendingRef.current === movedFen) setNote(floor)
           const v = await fetchCoachVoice({
