@@ -42,8 +42,10 @@ export default function HoldButton({
     if (timer.current) { clearTimeout(timer.current); timer.current = null }
   }, [])
 
-  const startHold = useCallback(() => {
+  const startHold = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     if (timer.current || disabled || loading) return
+    // Capture the pointer so a few pixels of finger drift don't cancel the hold.
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* unsupported */ }
     fired.current = false
     setHolding(true)
     timer.current = setTimeout(() => {
@@ -69,8 +71,13 @@ export default function HoldButton({
       type="button"
       onPointerDown={startHold}
       onPointerUp={cancelHold}
-      onPointerLeave={cancelHold}
       onPointerCancel={cancelHold}
+      // A tap is never the action here — only a completed hold is. Without this
+      // the tap that ends the hold still dispatches a click, which on mobile
+      // lands on whatever onComplete just opened.
+      onClick={(e) => { e.preventDefault(); e.stopPropagation() }}
+      // Long-press on mobile otherwise raises the native context menu.
+      onContextMenu={(e) => e.preventDefault()}
       whileTap={inactive ? undefined : { scale: 0.985 }}
       disabled={inactive}
       aria-label={label}
