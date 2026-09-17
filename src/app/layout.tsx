@@ -36,7 +36,14 @@ export const metadata: Metadata = {
     title: "Chessify — Learn, Play & Stake Chess On-Chain",
     description:
       "Train with grandmaster AI coaches, wager CHESS tokens on real games, and keep every coin you win.",
-    images: [{ url: "/chessify.png", width: 1522, height: 294, alt: "Chessify" }],
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 711,
+        alt: "Chessify: learn, play, stake, checkmate. On-chain chess on Celo.",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
@@ -45,7 +52,7 @@ export const metadata: Metadata = {
     title: "Chessify — Learn, Play & Stake Chess On-Chain",
     description:
       "Train with grandmaster AI coaches, wager CHESS tokens on real games, and keep every coin you win.",
-    images: ["/chessify.png"],
+    images: ["/og-image.jpg"],
   },
   robots: {
     index: true,
