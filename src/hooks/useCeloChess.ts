@@ -1,6 +1,6 @@
 'use client'
 
-import { useWriteContract, usePublicClient, useSignTypedData } from 'wagmi'
+import { useWriteContract, usePublicClient, useSignTypedData, useSwitchChain, useAccount } from 'wagmi'
 import { useSmartWallets } from '@privy-io/react-auth/smart-wallets'
 import { decodeEventLog, encodeFunctionData, type Abi, type Address } from 'viem'
 import { CHESS_GAME_ABI, CHESS_TOKEN_ABI, FORWARDER_ABI } from '@/config/abis'
@@ -63,6 +63,8 @@ interface WriteRequest {
 export function useCeloChess() {
   const { writeContractAsync } = useWriteContract()
   const { signTypedDataAsync } = useSignTypedData()
+  const { switchChainAsync } = useSwitchChain()
+  const { chainId: connectedChainId } = useAccount()
   const publicClient = usePublicClient({ chainId: CELO_CHAIN_ID })
   const { walletTier, playerAddress: pinnedAddress } = useWallet()
   const { client: smartClient } = useSmartWallets()
@@ -141,8 +143,23 @@ export function useCeloChess() {
   //   minipay → legacy tx with feeCurrency = USDm (gas paid from the server drip)
   //   eoa     → ERC-2771 meta-tx via the forwarder (truly gasless); plain
   //             self-paid write when the forwarder is unset or the relay declines
+  // wagmi targets the connector's CURRENT chain when no chainId is given, and
+  // `mainnet` is a configured chain — so an unpinned write addresses our Celo
+  // contracts on Ethereum, where they don't exist. Switch first, pin second.
+  const ensureCeloChain = useCallback(async () => {
+    if (walletTier === 'smart' || connectedChainId === CELO_CHAIN_ID) return
+    try {
+      await switchChainAsync({ chainId: CELO_CHAIN_ID })
+    } catch (err) {
+      showToast('Switch your wallet to Celo to continue.', 'error')
+      throw err
+    }
+  }, [walletTier, connectedChainId, switchChainAsync, showToast])
+
   const sendWrite = useCallback(
     async (req: WriteRequest): Promise<`0x${string}`> => {
+      await ensureCeloChain()
+
       if (walletTier === 'smart' && smartClient) {
         // ERC-8021 tag rides in trailing calldata; the account contract passes
         // it through to the target untouched.
@@ -174,6 +191,7 @@ export function useCeloChess() {
           abi: req.abi,
           functionName: req.functionName,
           args: req.args,
+          chainId: CELO_CHAIN_ID,
           feeCurrency: USDM_ADDRESS,
           dataSuffix: ATTRIBUTION_SUFFIX,
         } as Parameters<typeof writeContractAsync>[0])
@@ -196,10 +214,11 @@ export function useCeloChess() {
         abi: req.abi,
         functionName: req.functionName,
         args: req.args,
+        chainId: CELO_CHAIN_ID,
         dataSuffix: ATTRIBUTION_SUFFIX,
       } as Parameters<typeof writeContractAsync>[0])
     },
-    [walletTier, smartClient, writeContractAsync, sendMetaTx],
+    [walletTier, smartClient, writeContractAsync, sendMetaTx, ensureCeloChain],
   )
 
   // Read a wallet's current USDm (gas) balance.
