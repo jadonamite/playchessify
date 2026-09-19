@@ -20,6 +20,7 @@ import {
   FaucetIcon,
   ProfileIcon,
   FlameIcon,
+  CrownIcon,
   type IconProps,
 } from '@/components/ui/icons'
 
@@ -65,6 +66,7 @@ function GearIcon({ size = 24 }: IconProps) {
 
 const ITEMS: ItemDef[] = [
   { key: 'play', label: 'Play', href: '/app/lobby', match: ['/app/lobby'], Icon: PlayIcon, accent: 'var(--c)' },
+  { key: 'campaign', label: 'Campaign', href: '/app/tournaments', match: ['/app/tournaments'], Icon: CrownIcon, accent: '#FFD24A' },
   { key: 'ranks', label: 'Ranks', href: '/app/leaderboard', match: ['/app/leaderboard'], Icon: RankIcon, accent: 'var(--candy-amber)' },
   { key: 'history', label: 'History', href: '/app/history', match: ['/app/history'], Icon: HistoryIcon, accent: 'var(--candy-grape)' },
   { key: 'faucet', label: 'Faucet', href: '/app/faucet', match: ['/app/faucet'], Icon: FaucetIcon, accent: 'var(--candy-lime)' },

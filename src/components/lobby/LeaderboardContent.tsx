@@ -14,6 +14,7 @@ import {
   type LeaderboardRange,
 } from '@/hooks/useLeaderboard'
 import { useBatchProfiles } from '@/hooks/useBatchProfiles'
+import { useTournament } from '@/hooks/useTournament'
 import ChessName from '@/components/ui/ChessName'
 import ChessAvatar from '@/components/ui/ChessAvatar'
 import PageBackground from '@/components/ui/PageBackground'
@@ -132,6 +133,7 @@ export default function LeaderboardContent() {
   const { playerAddress } = useWallet()
   const [range, setRange] = useState<LeaderboardRange>('24h')
   const { entries, isLoading, myRank, refresh } = useLeaderboard(range)
+  const { data: tourney } = useTournament()
   const { data: profileMap = {} } = useBatchProfiles(entries.map((e) => e.address))
 
   const myAddress = playerAddress?.toLowerCase()
@@ -250,43 +252,52 @@ export default function LeaderboardContent() {
             </span>
           </motion.div>
 
-          {/* ── Grand Prix entry ribbon ── */}
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            onClick={() => router.push('/app/tournaments')}
-            className="group relative w-full rounded-2xl px-5 py-3.5 flex items-center justify-between gap-3 overflow-hidden cursor-pointer text-left"
-            style={{
-              background: 'linear-gradient(135deg, rgba(255,215,0,0.10), rgba(0,204,255,0.06))',
-              border: '1px solid rgba(255,215,0,0.30)',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
-            }}
-          >
-            <div
-              aria-hidden
-              className="absolute inset-y-0 -left-1/3 w-1/3 pointer-events-none -skew-x-12 opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)' }}
-            />
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="text-2xl leading-none shrink-0">🏆</span>
-              <div className="min-w-0">
-                <div className="text-sm font-black tracking-wide truncate" style={{ fontFamily: 'var(--fd)', color: 'var(--t1)' }}>
-                  WEEKLY GRAND PRIX{' '}
-                  <span style={{ color: '#FFD24A' }}>· $100 POT</span>
+          {/* ── Active Tournament / Campaign entry ribbon ── */}
+          {(() => {
+            const activeOrNext = (tourney?.window && tourney.window.status === 'live') ? tourney.window : (tourney?.next ?? tourney?.window)
+            return (
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                onClick={() => router.push('/app/tournaments')}
+                className="group relative w-full rounded-2xl px-5 py-3.5 flex items-center justify-between gap-3 overflow-hidden cursor-pointer text-left"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,215,0,0.10), rgba(0,204,255,0.06))',
+                  border: '1px solid rgba(255,215,0,0.30)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+                }}
+              >
+                <div
+                  aria-hidden
+                  className="absolute inset-y-0 -left-1/3 w-1/3 pointer-events-none -skew-x-12 opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)' }}
+                />
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-2xl leading-none shrink-0">🏆</span>
+                  <div className="min-w-0">
+                    <div className="text-sm font-black tracking-wide truncate uppercase" style={{ fontFamily: 'var(--fd)', color: 'var(--t1)' }}>
+                      {activeOrNext?.name ?? 'COMMUNITY CHESS CAMPAIGN'}{' '}
+                      <span style={{ color: '#FFD24A' }}>· ${activeOrNext?.prizePool ?? 100} POT</span>
+                    </div>
+                    <div className="text-[10px] font-bold tracking-widest uppercase text-[var(--t3)] mt-0.5">
+                      {activeOrNext?.kind === 'community'
+                        ? activeOrNext.status === 'live'
+                          ? 'Sept 19 – 25 · 24/7 GMT · Top 10 win $10 each'
+                          : 'Opens today at 18:00 GMT · Top 10 win $10 each'
+                        : 'Climb from zero · win the pot'}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-[10px] font-bold tracking-widest uppercase text-[var(--t3)] mt-0.5">
-                  Climb from zero · win the pot
-                </div>
-              </div>
-            </div>
-            <span
-              className="text-[10px] font-black tracking-widest uppercase shrink-0 px-3 py-1.5 rounded-full"
-              style={{ color: '#04070e', background: 'linear-gradient(180deg, #FFF6C2, #FFD24A 55%, #9C6B12)' }}
-            >
-              ENTER →
-            </span>
-          </motion.button>
+                <span
+                  className="text-[10px] font-black tracking-widest uppercase shrink-0 px-3 py-1.5 rounded-full"
+                  style={{ color: '#04070e', background: 'linear-gradient(180deg, #FFF6C2, #FFD24A 55%, #9C6B12)' }}
+                >
+                  ENTER →
+                </span>
+              </motion.button>
+            )
+          })()}
 
           {/* ── My rank callout (if connected + not in top 3) ── */}
           <AnimatePresence>

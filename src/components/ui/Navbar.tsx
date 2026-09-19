@@ -15,6 +15,7 @@ import { useStreak } from '@/hooks/useStreak'
 import { stopAmbient } from '@/lib/audio'
 
 const NAV_LINKS = [
+  { label: 'Campaign',    path: '/app/tournaments' },
   { label: 'Leaderboard', path: '/app/leaderboard' },
   { label: 'History',     path: '/app/history' },
   { label: 'Faucet',      path: '/app/faucet' },

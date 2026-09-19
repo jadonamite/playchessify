@@ -22,7 +22,7 @@ export interface TournamentPrizeWinner {
 
 export interface TournamentWindowMeta {
   seasonIndex: number
-  kind: 'grand-prix' | 'qualifiers'
+  kind: 'grand-prix' | 'qualifiers' | 'community'
   id: string
   contractSeasonId: number
   name: string

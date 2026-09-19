@@ -23,6 +23,7 @@ import ChessAvatar from '@/components/ui/ChessAvatar'
 import PageBackground from '@/components/ui/PageBackground'
 import ClaimModal from '@/components/ui/ClaimModal'
 import RewardsClaimCard from '@/components/lobby/RewardsClaimCard'
+import { useTournament } from '@/hooks/useTournament'
 import LoadingState from '@/components/ui/LoadingState'
 import { CrownIcon, RankIcon, FlameIcon } from '@/components/ui/icons'
 import { useReadContract } from 'wagmi'
@@ -154,6 +155,8 @@ export default function LobbyContent() {
   }, [playerAddress, streakLoading, streak.current, streak.longest])
   const [claimModalOpen, setClaimModalOpen] = useState(false)
   const showClaimBanner = isConnected && !!playerAddress && myProfile === null
+  const { data: tourney } = useTournament()
+  const tourneyWin = tourney?.window
 
   const handleCreateGame = async () => {
     if (MAINTENANCE_MODE) return setIsComingSoonOpen(true)
@@ -262,6 +265,77 @@ export default function LobbyContent() {
             </motion.div>
           </div>
         )}
+
+        {/* ── Active or Upcoming Campaign Banner ── */}
+        {(() => {
+          const bannerWin = (tourneyWin && tourneyWin.status === 'live') ? tourneyWin : tourney?.next
+          if (!bannerWin) return null
+          const isLive = bannerWin.status === 'live'
+          return (
+            <div className="w-full max-w-7xl mx-auto mb-6">
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={() => router.push('/app/tournaments')}
+                className="group relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-2xl border border-[var(--c)]/30 px-5 py-4 cursor-pointer overflow-hidden transition-all hover:border-[var(--c)]/60"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0,204,255,0.12) 0%, rgba(12,18,32,0.92) 55%, rgba(255,210,74,0.08) 100%)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)',
+                }}
+              >
+                <div
+                  aria-hidden
+                  className="absolute inset-y-0 -left-1/3 w-1/3 pointer-events-none -skew-x-12 opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)' }}
+                />
+                <div className="flex items-center gap-4 min-w-0">
+                  <div
+                    className="flex items-center justify-center w-11 h-11 rounded-xl shrink-0"
+                    style={{
+                      background: 'rgba(0,204,255,0.15)',
+                      border: '1px solid rgba(0,204,255,0.35)',
+                      color: 'var(--c)',
+                    }}
+                  >
+                    <CrownIcon size={24} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className="flex items-center gap-1.5 text-[9px] font-black tracking-widest uppercase text-[var(--c)] bg-[var(--c)]/10 px-2 py-0.5 rounded-full border border-[var(--c)]/25">
+                        <span className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-[var(--c)] animate-pulse' : 'bg-amber-400'}`} />
+                        {isLive ? 'LIVE NOW' : 'OPENS TODAY · 18:00 GMT'}
+                      </span>
+                      <span className="text-[9px] font-black tracking-widest uppercase text-[var(--candy-amber)] bg-[var(--candy-amber)]/10 px-2 py-0.5 rounded-full border border-[var(--candy-amber)]/25">
+                        ${bannerWin.prizePool} PRIZE POOL
+                      </span>
+                      <span className="text-[9px] font-bold tracking-widest uppercase text-[var(--t3)]">
+                        SEPT 19 – 25 · 24/7 GMT
+                      </span>
+                    </div>
+                    <h2 className="text-base sm:text-lg font-black tracking-wide uppercase leading-tight" style={{ fontFamily: 'var(--fd)', color: 'var(--t1)' }}>
+                      {bannerWin.name}
+                    </h2>
+                    <p className="text-xs text-[var(--t3)] mt-0.5 truncate">
+                      {bannerWin.kind === 'community'
+                        ? 'Play ranked games 24/7. Climb from 0 XP. Top 10 players share $100 equally ($10 each)!'
+                        : 'Play ranked games to climb the board and take the pot!'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 shrink-0 self-end md:self-center">
+                  <GlowButton
+                    variant="brand"
+                    size="sm"
+                    parallelogram
+                    className="shrink-0 pointer-events-none"
+                  >
+                    {isLive ? 'VIEW CAMPAIGN →' : 'PREVIEW CAMPAIGN →'}
+                  </GlowButton>
+                </div>
+              </motion.div>
+            </div>
+          )
+        })()}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6 items-start w-full max-w-7xl mx-auto box-border">
 

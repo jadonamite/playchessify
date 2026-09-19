@@ -168,19 +168,24 @@ function PrizeCard({ win }: { win: TournamentWindowMeta }) {
       <div className="hidden sm:block w-px self-stretch bg-white/10" />
 
       {/* splits — a medal podium only reads as one up to three places. A wide
-          flat payout (Qualifiers: 10 × $5) says more as a single band. */}
+          flat payout (Qualifiers / Community: 10 × $10) says more as a single band. */}
       {isFlatWideSplit(win.splits) ? (
         <div
-          className="flex-1 rounded-xl px-4 py-3 flex items-center justify-between gap-3"
+          className="flex-1 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
           style={{
             background: 'rgba(255,210,74,0.06)',
             border: '1px solid rgba(255,210,74,0.22)',
             boxShadow: 'inset 0 1px 0 rgba(255,210,74,0.13)',
           }}
         >
-          <span className="text-[9px] font-black tracking-[0.2em] uppercase text-[var(--t3)]">
-            Top {win.splits.length}
-          </span>
+          <div className="flex flex-col">
+            <span className="text-[9px] font-black tracking-[0.2em] uppercase text-[var(--t3)]">
+              Top {win.splits.length} · Equal Payout
+            </span>
+            <span className="text-xs font-bold text-[#FFD24A] mt-0.5">
+              ${win.splits[0]?.amount ?? 10} USDm each · Distributed across Top {win.splits.length} equally
+            </span>
+          </div>
           <span
             className="font-black leading-none"
             style={{
@@ -192,7 +197,7 @@ function PrizeCard({ win }: { win: TournamentWindowMeta }) {
               WebkitTextFillColor: 'transparent',
             }}
           >
-            ${win.prizePool} prize pool
+            ${win.prizePool} pool
           </span>
         </div>
       ) : (
@@ -237,11 +242,13 @@ function TrophyRow({
   isMe,
   idx,
   profileMap,
+  prize,
 }: {
   entry: TournamentBoardEntry
   isMe: boolean
   idx: number
   profileMap: Record<string, import('@/types/profile').ChessProfile | null>
+  prize?: string
 }) {
   return (
     <motion.div
@@ -298,6 +305,14 @@ function TrophyRow({
             <span className="text-gray-400">{entry.draws}</span>
           </span>
         </div>
+        {prize && (
+          <div className="flex flex-col items-end">
+            <span className="text-[8px] uppercase tracking-widest font-bold mb-0.5" style={{ color: '#FFD24A' }}>PRIZE</span>
+            <span className="text-sm font-black" style={{ fontFamily: 'var(--fd)', color: '#FFD24A' }}>
+              {prize}
+            </span>
+          </div>
+        )}
         <div className="flex flex-col items-end">
           <span className="text-[8px] text-gray-500 uppercase tracking-widest font-bold mb-0.5">XP</span>
           <span className="text-base font-black" style={{ fontFamily: 'var(--fd)', color: 'var(--candy-amber)' }}>
@@ -387,7 +402,14 @@ export default function TournamentContent() {
                 className="text-3xl md:text-5xl font-black uppercase tracking-tighter leading-none"
                 style={{ fontFamily: 'var(--fd)', textShadow: 'var(--hero-text-shadow)' }}
               >
-                {win?.kind === 'qualifiers' ? (
+                {win?.kind === 'community' ? (
+                  <>
+                    COMMUNITY{' '}
+                    <span style={{ color: 'var(--c)', textShadow: 'var(--king-text-shadow)' }}>
+                      CHESS CAMPAIGN
+                    </span>
+                  </>
+                ) : win?.kind === 'qualifiers' ? (
                   <>
                     THE{' '}
                     <span style={{ color: 'var(--c)', textShadow: 'var(--king-text-shadow)' }}>
@@ -412,7 +434,7 @@ export default function TournamentContent() {
                   </span>
                 </div>
                 <span className="text-[10px] font-bold tracking-[0.2em] text-[var(--t3)] uppercase">
-                  WEEKLY · VERIFIED ON-CHAIN
+                  {win?.kind === 'community' ? 'COMMUNITY CAMPAIGN · 24/7 GMT' : 'WEEKLY · VERIFIED ON-CHAIN'}
                 </span>
               </div>
             </motion.div>
@@ -431,7 +453,7 @@ export default function TournamentContent() {
                 🏆 Final results — {fmtDate(win.endsAt)}
               </span>
               <span className="text-[10px] font-bold tracking-wide text-[var(--t3)] uppercase">
-                {win.kind === 'qualifiers' ? 'Qualifiers closed' : 'Season closed'} · board locked
+                {win.kind === 'qualifiers' ? 'Qualifiers closed' : win.kind === 'community' ? 'Campaign closed' : 'Season closed'} · board locked
               </span>
             </motion.div>
           ) : win ? (
@@ -442,6 +464,36 @@ export default function TournamentContent() {
               className="flex flex-col gap-4"
             >
               <PrizeCard win={win} />
+              {win.kind === 'community' && (
+                <div
+                  className="rounded-2xl px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 backdrop-blur-sm"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(0,204,255,0.08), rgba(255,210,74,0.05))',
+                    border: '1px solid rgba(0,204,255,0.25)',
+                    boxShadow: 'inset 0 1px 0 rgba(0,204,255,0.1)',
+                  }}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-xl shrink-0">⚡</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[10px] font-black tracking-[0.2em] uppercase text-[var(--c)]" style={{ fontFamily: 'var(--fd)' }}>
+                        MORE GAMES · MORE PLAYERS · BIGGER COMMUNITY
+                      </span>
+                      <span className="text-xs text-[var(--t2)] mt-0.5">
+                        Open to all players. Play 24/7 GMT through Sept 25. $100 pot split equally among the top 10 ($10 each).
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[9px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full bg-[var(--c)]/10 text-[var(--c)] border border-[var(--c)]/20">
+                      OPEN FIELD
+                    </span>
+                    <span className="text-[9px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/20">
+                      TOP 10 EQUAL
+                    </span>
+                  </div>
+                </div>
+              )}
               {win.qualifiersFrom && field?.resolved && (
                 <div
                   className="rounded-2xl px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 backdrop-blur-sm"
@@ -502,7 +554,7 @@ export default function TournamentContent() {
                 style={{ background: 'var(--b1)', border: '1px solid var(--b2)' }}
               >
                 <span className="text-[10px] font-black tracking-[0.2em] uppercase text-[var(--t3)]">
-                  ⏳ {win.kind === 'qualifiers' ? 'Qualifiers end' : 'Season ends'} {fmtDate(win.endsAt)}
+                  ⏳ {win.kind === 'qualifiers' ? 'Qualifiers end' : win.kind === 'community' ? 'Campaign ends' : 'Season ends'} {fmtDate(win.endsAt)}
                 </span>
                 <Countdown endsAt={win.endsAt} />
               </div>
@@ -657,6 +709,7 @@ export default function TournamentContent() {
                               isMe={!!myAddress && entry.address === myAddress}
                               idx={idx}
                               profileMap={profileMap}
+                              prize={winnerAmount(entry.address) != null ? `$${winnerAmount(entry.address)}` : undefined}
                             />
                             {lastAdvancing?.address === entry.address && (
                               <div
@@ -687,12 +740,15 @@ export default function TournamentContent() {
                   <span className="text-[10px] font-black tracking-[0.2em] uppercase text-[var(--t3)]">How XP works</span>
                   <p className="text-xs text-[var(--t2)] mt-2 leading-relaxed">
                     Everyone starts each season at <span className="font-bold text-[var(--t1)]">0 XP</span>. Every ranked
-                    game this week earns XP — a <span className="text-green-400 font-bold">win</span> is worth the most, a{' '}
+                    game earns XP — a <span className="text-green-400 font-bold">win</span> is worth the most, a{' '}
                     <span className="text-gray-300 font-bold">draw</span> less. Beating a{' '}
                     <span className="font-bold text-[var(--candy-amber)]">higher-rated</span> player is worth up to 2×,
                     while grinding much weaker opponents is worth less. Play at least{' '}
-                    <span className="font-bold text-[var(--t1)]">3 games</span> to qualify for a prize. Whoever tops the
-                    board when the timer hits zero takes the pot.
+                    <span className="font-bold text-[var(--t1)]">3 games</span> across at least{' '}
+                    <span className="font-bold text-[var(--t1)]">5 distinct opponents</span> to qualify for a prize.{' '}
+                    {isFlatWideSplit(win.splits)
+                      ? `The top ${win.splits.length} players when the timer hits zero each win an equal $${win.splits[0].amount} share of the $${win.prizePool} pot.`
+                      : 'Whoever tops the board when the timer hits zero takes the pot.'}
                   </p>
                 </div>
               )}

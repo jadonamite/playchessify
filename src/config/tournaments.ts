@@ -142,14 +142,17 @@ export const TOURNAMENT: TournamentConfig = {
   tzOffsetMinutes: 60,
 }
 
-/** Flat 10 × $10 — the Qualifiers pay wide rather than deep. */
-const QUALIFIER_SPLITS: TournamentSplit[] = Array.from({ length: 10 }, (_, i) => ({
+/** Flat 10 × $10 — $100 distributed equally across top 10. */
+const COMMUNITY_SPLITS: TournamentSplit[] = Array.from({ length: 10 }, (_, i) => ({
   place: i + 1,
   amount: 10,
 }))
 
+/** Flat 10 × $10 — the Qualifiers pay wide rather than deep. */
+const QUALIFIER_SPLITS: TournamentSplit[] = COMMUNITY_SPLITS
+
 export type TournamentStatus = 'upcoming' | 'live' | 'ended'
-export type TournamentKind = 'grand-prix' | 'qualifiers'
+export type TournamentKind = 'grand-prix' | 'qualifiers' | 'community'
 
 export interface TournamentWindow {
   /** Display ordinal within its own kind: Grand Prix S2 → 2, Qualifiers Q1 → 1. */
@@ -256,6 +259,22 @@ const EVENTS: EventEntry[] = [
     name: 'Weekly Grand Prix S2',
     startsAt: Date.UTC(2026, 8, 9, 22, 59, 0), // Sep 9 23:59 WAT
     qualifiersFrom: 'Q1',
+  },
+
+  // Community Chess Campaign — Sep 19–25 2026 GMT.
+  // Open field: "More Games / More Players / Bigger Community".
+  // 24/7 games starting at 18:00 GMT throughout the 7-day window.
+  // $100 total prize pool distributed equally across the top 10 ($10 USDm each).
+  {
+    seasonIndex: 1,
+    kind: 'community',
+    id: 'C1',
+    contractSeasonId: 4,
+    name: 'Community Chess Campaign',
+    startsAt: Date.UTC(2026, 8, 19, 18, 0, 0), // Sep 19 18:00 GMT
+    lengthMs: 7 * 24 * 60 * 60 * 1000,
+    prizePool: 100,
+    splits: COMMUNITY_SPLITS,
   },
 ]
 
