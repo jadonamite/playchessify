@@ -165,6 +165,19 @@ export const TOURNAMENT: TournamentConfig = {
       '0x22f3ad9dd7fd2555a8af9ae9b3b3eb202cec4966', // e33c feeder 10
       '0x8b7fd63055f7ac3ce3d9d24d70bdf227a49829ce', // e33c feeder 11
       '0xa6598fee5f05ba0cdf4d09e7f04e2e3411590fef', // e33c feeder 12
+
+      // 45d1's one-game resigning feeders
+      '0xdfa396393c1d93329ff086e86e816ec726a383db', // 45d1 feeder 1
+      '0x84daa2a935281b9d0fc1a3edaa4117fdd19af636', // 45d1 feeder 2
+      '0x85c4dc34df108c8e324becf2d46f897ed909ef92', // 45d1 feeder 3
+      '0x4ced7711223a0ff931ffb650575295de0be5b149', // 45d1 feeder 4
+      '0x51db02df2df0d70b807fd1ae97d2c96719218aea', // 45d1 feeder 5
+      '0x8f06ce22a813011a5e78f12e337df65129d164fc', // 45d1 feeder 6
+      '0xaeae90e2b862ec8bc473f3d85f26abfd4af1514e', // 45d1 feeder 7
+      '0x0966f626bbcce25ea514a3682a77bde0b295a97d', // 45d1 feeder 8
+      '0xeb7020e3ec38c685d3ebf3283da4eeea752102e1', // 45d1 feeder 9
+      '0xeb4a06e019a41790ec4e061a70b7ab04ed6aa287', // 45d1 feeder 10
+      '0x52d902ef47f6ff2a1dcff89236e8bc8e9b48d7c1', // 45d1 feeder 11
     ],
     allowlist: [],
   },
@@ -210,6 +223,9 @@ export const TOURNAMENT: TournamentConfig = {
 
     // Shares funder 0x796d34ec with 0x9037f734, nagasa, tena; 12-0 vs 12 one-game resigning feeders
     '0xe33c3a0e78cca2c4df6128a69c8f8ec1b60f1470': 114, // e33c
+
+    // Same pattern as e33c, starting 5 min after it stopped: 11-0 vs 11 one-game feeders
+    '0x45d169192b8dd88fbda769fb125bde35a29fed51': 108, // 45d1
   },
   seasonLengthMs: WEEK_MS,
   tzLabel: 'WAT',
