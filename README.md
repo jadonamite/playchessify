@@ -33,8 +33,6 @@ Off-chain services:
   wallets use an ERC-4337 Pimlico paymaster; external EOAs get an interim native-CELO drip;
   everything degrades gracefully to self-pay.
 
-See **handover.md** for the full system reference and **DEPLOY.md** for the release runbook.
-
 ---
 
 ## 🔥 Economic model
@@ -88,22 +86,53 @@ Zero financial risk — CHESS has no monetary value.
 
 ---
 
-## 📖 Deployed contracts
+## 📖 Deployed Contracts
 
-**Live on Celo mainnet (`42220`).** The app reads these from `NEXT_PUBLIC_CELO_*` in env;
-`config/contracts.ts` still *defaults* to the old pre-oracle addresses for safety, so the live
-values come from env, not the default.
+### Celo Mainnet (`42220`)
 
-| Contract | Address |
-| :--- | :--- |
-| ChessGame | [`0xA576321eB523FFb1e5FE568b317F9E7a7374fDdf`](https://celoscan.io/address/0xA576321eB523FFb1e5FE568b317F9E7a7374fDdf) |
-| ChessToken | [`0x607590fC7ba3F17b6B3274fF281528a131E9b015`](https://celoscan.io/address/0x607590fC7ba3F17b6B3274fF281528a131E9b015) |
-| Rewards | [`0xd867C2467c41Ccbe315eF4fFa3B9eBFa0C2D8d24`](https://celoscan.io/address/0xd867C2467c41Ccbe315eF4fFa3B9eBFa0C2D8d24) |
-| Forwarder (ERC-2771) | [`0xd29618312668007d1Da3B9eB591B7209E1A06cC5`](https://celoscan.io/address/0xd29618312668007d1Da3B9eB591B7209E1A06cC5) |
+| Contract | Address | Celoscan |
+| :--- | :--- | :--- |
+| **ChessToken (CHESS)** | `0x607590fC7ba3F17b6B3274fF281528a131E9b015` | [View on Celoscan](https://celoscan.io/address/0x607590fC7ba3F17b6B3274fF281528a131E9b015) |
+| **ChessGame (Engine)** | `0xA576321eB523FFb1e5FE568b317F9E7a7374fDdf` | [View on Celoscan](https://celoscan.io/address/0xA576321eB523FFb1e5FE568b317F9E7a7374fDdf) |
+| **Forwarder (ERC-2771)** | `0xd29618312668007d1Da3B9eB591B7209E1A06cC5` | [View on Celoscan](https://celoscan.io/address/0xd29618312668007d1Da3B9eB591B7209E1A06cC5) |
+| **TournamentRewards (Vault)** | `0xd867C2467c41Ccbe315eF4fFa3B9eBFa0C2D8d24` | [View on Celoscan](https://celoscan.io/address/0xd867C2467c41Ccbe315eF4fFa3B9eBFa0C2D8d24) |
+| **USDm (cUSD)** | `0x765DE816845861e75A25fCA122bb6898B8B1282a` | [View on Celoscan](https://celoscan.io/address/0x765DE816845861e75A25fCA122bb6898B8B1282a) |
 
-Operators (dedicated single-purpose keys): oracle `0x4d68…C6c9` · minter `0x4548…5AB9` ·
-gas-sponsor `0xc26f…D0f2`. Owner/deployer `0xF679…7638`. See **handover.md** for the full
-account and **DEPLOY.md** for the redeploy runbook.
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js >= 18.18 (Node 20 or 22 LTS recommended)
+- npm >= 9
+
+### Installation
+
+```bash
+git clone https://github.com/jadonamite/playchessify.git
+cd playchessify
+npm install --legacy-peer-deps
+```
+
+### Environment Configuration
+
+Copy the example environment file and configure the values:
+
+```bash
+cp .env.example .env.local
+```
+
+### Development Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Launch local development server with hot-reload |
+| `npm run build` | Build optimized production bundle with type validation |
+| `npm run start` | Start the production server |
+| `npm run lint` | Run ESLint across codebase |
+| `npm run typecheck` | Validate TypeScript types (`tsc --noEmit`) |
+| `npm run verify:tag` | Verify Celo attribution tag on deployed contracts |
+| `npm run register:agent` | Register ERC-8004 agent on Celo |
 
 ---
 

@@ -450,7 +450,7 @@ function scoreWindow(
       const distinctOpponents = a.opponents.size
       const eligible = a.games >= x.minGamesEligible && distinctOpponents >= x.minDistinctOpponents
 
-      const flaggedScore = TOURNAMENT.flagged[address]
+      const flaggedScore = TOURNAMENT.flagged[address.toLowerCase()] ?? TOURNAMENT.flagged[address]
       const flagged = flaggedScore !== undefined
 
       return {

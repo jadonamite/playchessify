@@ -144,15 +144,17 @@ export default function LobbyContent() {
   // streak prompt. Strictly once per UTC day: we skip the dispatch outright if
   // it's already been shown today, so navigating away and back won't re-fire it.
   const nudgeFired = useRef(false)
+  const streakCurrent = streak?.current
+  const streakLongest = streak?.longest
   useEffect(() => {
     if (nudgeFired.current) return
-    if (!playerAddress || streakLoading || streak.current > 0) return
+    if (!playerAddress || streakLoading || (streakCurrent ?? 0) > 0) return
     nudgeFired.current = true
     try {
       if (localStorage.getItem(STREAK_NUDGE_KEY) === streakDay()) return
     } catch { /* storage blocked — fall through and let the overlay guard */ }
-    dispatchStreak({ mode: 'nudge', current: 0, longest: streak.longest })
-  }, [playerAddress, streakLoading, streak.current, streak.longest])
+    dispatchStreak({ mode: 'nudge', current: 0, longest: streakLongest ?? 0 })
+  }, [playerAddress, streakLoading, streakCurrent, streakLongest])
   const [claimModalOpen, setClaimModalOpen] = useState(false)
   const showClaimBanner = isConnected && !!playerAddress && myProfile === null
   const { data: tourney } = useTournament()

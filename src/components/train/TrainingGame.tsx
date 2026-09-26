@@ -173,7 +173,7 @@ export default function TrainingGame() {
       concepts[c as Concept] = Math.max(0, Math.min(1, cur + (d as number)))
     }
     if (Object.keys(concepts).length > 0) void update({ concepts }).catch(() => {})
-  }, [learner, update, mode, coach.id])
+  }, [learner, update, mode])
 
   // Coach plays its own move (local, fast). Shared by both modes.
   // Takes and returns a game carrying its move list — `after` needs it to name

@@ -49,7 +49,10 @@ function getRedis(): Redis {
 }
 
 // Helper function to process player stats results and create leaderboard entries
-function createLeaderboardEntries(addresses: string[], statsResults: any[]): LeaderboardEntry[] {
+function createLeaderboardEntries(
+  addresses: string[],
+  statsResults: readonly { status: string; result?: unknown }[],
+): LeaderboardEntry[] {
   const entries: LeaderboardEntry[] = []
   for (let i = 0; i < addresses.length; i++) {
     const result = statsResults[i]

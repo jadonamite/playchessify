@@ -131,11 +131,45 @@ export const TOURNAMENT: TournamentConfig = {
     // The tight version: a wallet that only ever plays one partner and loses.
     narrowGames: 3,
     maxOpponents: 1,
-    denylist: [],
+    denylist: [
+      '0xd3bbad8431fb443cb2d53adffb5ba0fbd44e317e', // proxy bridge
+      '0x2a2aa51984757e5bd51b9a22614a79335527c896', // siji (feeder 1)
+      '0x66e01a76bc1c9cb9aa21427b5cfce14a573d0ecb', // loro (feeder 2)
+      '0x962afbe06d02532c8e85ea1a4561baa17223d3cf', // telu (feeder 3)
+      '0xea9fe572c60bf97c42cf347f65b6823a731dd9f1', // papat (feeder 4)
+      '0x830c68a242fcccfc180e51d67b1d014f198ad6c3', // limo (feeder 5)
+      '0x2f9cef1820e65219c9bc61be381110d4cb74d68c', // enem (feeder 6)
+      '0xe698048f4f90a54ff49914a6ff9743cb4ecc8921', // pitu (feeder 7)
+      '0xb41c5227e571d7775de374e04710cb786bd92895', // wolu (feeder 8)
+      '0x14b69a513a4ad83e6c5bdaa05e97e8ece5446c27', // songo (feeder 9)
+    ],
     allowlist: [],
   },
   flagged: {
     '0x9037f734e7a5a2c5e4d54c029d38f0982e48e817': 149,
+
+    // Sybil & wash-trading ring (controller + contender puppets + feeders)
+    // XP ban: locked at 0 XP, ineligible for prizes, can still play games but earn no XP
+    '0xe7d84b6535e89981293a96305e301c15bc908390': 0, // blueexilez (ring controller)
+    '0x1188c60ce601904b784ac0c8b8250771633a9489': 0, // igna
+    '0xd651bc501f77a7c7e02052b7e391138cebc4dd07': 0, // borg
+    '0xa5b5e11cbfc3473e38e4a0914b8d412af9cd4fda': 0, // zenn
+    '0x6942f35d74cdd792d90047b38977b26b3a5b0d4b': 0, // warden
+    '0x278a13b53d84cc4dbadd9fc9e591f0b6e6f7703d': 0, // vija
+    '0x8104d346b7a10d63153289681aebcf17ef9655b5': 0, // mikk
+    '0x483b3be25c0916a80e3e5b95bf6ebe9096448d56': 0, // pinay
+    '0x0f23b615668495b46c2b34c69ea3112b1a3150b6': 0, // twdlast
+    '0xa097878e68bb6b029e73fc9ab7de90fa8e84130e': 0, // miguy
+    '0xd3bbad8431fb443cb2d53adffb5ba0fbd44e317e': 0, // proxy bridge
+    '0x2a2aa51984757e5bd51b9a22614a79335527c896': 0, // siji
+    '0x66e01a76bc1c9cb9aa21427b5cfce14a573d0ecb': 0, // loro
+    '0x962afbe06d02532c8e85ea1a4561baa17223d3cf': 0, // telu
+    '0xea9fe572c60bf97c42cf347f65b6823a731dd9f1': 0, // papat
+    '0x830c68a242fcccfc180e51d67b1d014f198ad6c3': 0, // limo
+    '0x2f9cef1820e65219c9bc61be381110d4cb74d68c': 0, // enem
+    '0xe698048f4f90a54ff49914a6ff9743cb4ecc8921': 0, // pitu
+    '0xb41c5227e571d7775de374e04710cb786bd92895': 0, // wolu
+    '0x14b69a513a4ad83e6c5bdaa05e97e8ece5446c27': 0, // songo
   },
   seasonLengthMs: WEEK_MS,
   tzLabel: 'WAT',

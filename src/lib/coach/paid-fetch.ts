@@ -8,10 +8,9 @@
 // Nothing here throws at import. An unconfigured coach agent simply reports
 // "not enabled" and the caller falls back to the existing free path, exactly
 // like the platform-key behaviour it replaces.
-import { createWalletClient, http, type WalletClient } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { celo } from 'viem/chains'
-import { wrapFetchWithPayment, decodeXPaymentResponse } from 'x402-fetch'
+import type { LocalAccount } from 'viem'
+import { x402 } from '@celo/buy-core'
 import { reserve, release, recordSpend, toMicro } from '@/lib/coach/budget'
 
 /** Hard ceiling per request, independent of the coach's balance — a runaway
@@ -24,6 +23,8 @@ export interface PaidResult {
   spent: number
   /** x402 settlement reference, when the facilitator returned one. */
   ref?: string
+  /** True only on a 2xx paid response — a 4xx or 5xx may still have settled. */
+  confirmed?: boolean
 }
 
 export class BudgetExhausted extends Error {
@@ -33,38 +34,37 @@ export class BudgetExhausted extends Error {
   }
 }
 
-let _wallet: WalletClient | null = null
+let _account: LocalAccount | null = null
 let _resolved = false
 
-function wallet(): WalletClient | null {
-  if (_resolved) return _wallet
+function account(): LocalAccount | null {
+  if (_resolved) return _account
   _resolved = true
   const key = process.env.COACH_AGENT_PRIVATE_KEY
-  if (!key) return (_wallet = null)
+  if (!key) return (_account = null)
   try {
-    _wallet = createWalletClient({
-      account: privateKeyToAccount(key.startsWith('0x') ? (key as `0x${string}`) : `0x${key}`),
-      chain: celo,
-      transport: http(process.env.CELO_RPC_URL || 'https://forno.celo.org'),
-    })
+    _account = privateKeyToAccount(key.startsWith('0x') ? (key as `0x${string}`) : `0x${key}`)
   } catch (err) {
     console.error('[coach/paid-fetch] bad COACH_AGENT_PRIVATE_KEY:', (err as Error)?.message)
-    _wallet = null
+    _account = null
   }
-  return _wallet
+  return _account
 }
 
 /** Whether the coach can pay at all. Callers use this to choose the free path. */
 export function paymentsEnabled(): boolean {
-  return Boolean(wallet() && process.env.COACH_X402_ENDPOINT)
+  return Boolean(account() && process.env.COACH_X402_ENDPOINT)
 }
 
 /**
  * Spend from `coach`'s balance to make one paid request.
  *
- * The reservation is taken BEFORE the call and released if it never settles, so
- * a request that fails mid-flight cannot leave the coach silently poorer — and
- * two concurrent analyses cannot both spend the same last cent.
+ * The reservation is taken in `onBeforePayment` — after the challenge has been
+ * parsed, priced and signed, so a 402 we decline to pay never charges the
+ * budget. It is released only when no paid request ever left: once the payment
+ * header is on the wire even a 4xx may have settled, and refunding those would
+ * drift the ledger away from the chain. Two concurrent analyses cannot both
+ * spend the same last cent.
  */
 export async function paidFetch(
   coach: string,
@@ -72,38 +72,48 @@ export async function paidFetch(
   init: RequestInit,
   priceMicro: number,
 ): Promise<PaidResult> {
-  const w = wallet()
-  if (!w) throw new Error('[coach/paid-fetch] no agent wallet configured')
+  const acct = account()
+  if (!acct) throw new Error('[coach/paid-fetch] no agent wallet configured')
   if (priceMicro <= 0 || priceMicro > MAX_PER_CALL_MICRO) {
     throw new Error(`[coach/paid-fetch] price out of bounds: ${priceMicro} micro`)
   }
 
-  if (!(await reserve(coach, priceMicro))) throw new BudgetExhausted(coach)
+  let reserved = false
+  let ref: string | undefined
+  let attempted = false
+  let confirmed = false
 
   try {
-    // maxValue is x402's own ceiling on what it will agree to pay for this
-    // request; ours is the reservation. Both are enforced.
-    const fetchWithPay = wrapFetchWithPayment(fetch, w as never, BigInt(priceMicro))
-    const response = await fetchWithPay(url, init)
+    const response = await x402.payingFetch(
+      { account: acct, network: 'celo' },
+      url,
+      {
+        ...init,
+        // Our ceiling on the challenge; the budget reservation is the other one.
+        maxAmount: BigInt(priceMicro),
+        onBeforePayment: async () => {
+          if (!(await reserve(coach, priceMicro))) throw new BudgetExhausted(coach)
+          reserved = true
+        },
+        onPayment: (info) => {
+          attempted = true
+          ref = info.txHash
+          confirmed = info.outcome === 'confirmed'
+        },
+      },
+    )
 
-    if (!response.ok) {
+    if (!reserved) return { response, spent: 0 }
+
+    if (!attempted) {
       await release(coach, priceMicro)
       return { response, spent: 0 }
     }
 
-    let ref: string | undefined
-    try {
-      const header = response.headers.get('x-payment-response')
-      if (header) ref = decodeXPaymentResponse(header)?.transaction
-    } catch {
-      // A settled payment with an undecodable receipt is still a settled
-      // payment — losing the reference must not undo the spend.
-    }
-
     await recordSpend(coach, { ts: Date.now(), amount: priceMicro, endpoint: url, ref })
-    return { response, spent: priceMicro, ref }
+    return { response, spent: priceMicro, ref, confirmed }
   } catch (err) {
-    await release(coach, priceMicro)
+    if (reserved && !attempted) await release(coach, priceMicro)
     throw err
   }
 }

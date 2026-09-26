@@ -428,13 +428,18 @@ export async function gasSponsorCanCover(amountUsdm: bigint): Promise<boolean> {
 /** Drip native CELO gas to a 0-balance external (Tier C) EOA so it can transact. */
 export async function sponsorCelo(to: Address, amountCelo: bigint): Promise<Hash> {
   const { account, client } = walletFor('GAS_SPONSOR_PRIVATE_KEY')
+  const pub = getPublicClient()
+  // A bare value send carries no calldata, so this drip went out untagged. Only an
+  // EOA can take the suffix safely — a contract would run it as fallback data.
+  const code = await pub.getCode({ address: to })
   const hash = await client.sendTransaction({
     account,
     chain: CHAIN,
     to,
     value: amountCelo,
+    data: !code || code === '0x' ? ATTRIBUTION_SUFFIX : undefined,
   })
-  await getPublicClient().waitForTransactionReceipt({ hash })
+  await pub.waitForTransactionReceipt({ hash })
   return hash
 }
 

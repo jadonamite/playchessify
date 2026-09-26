@@ -1,15 +1,5 @@
-**/settings/Mainnet.toml
-**/settings/Testnet.toml
-.cache/**
-history.txt
-Elite.cjs
-logs
-*.log
-npm-debug.log*
-coverage
-*.info
-costs-reports.json
-/node_modules
+# ── Dependencies ─────────────────────────────────────────────────────────────
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -18,86 +8,56 @@ costs-reports.json
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# ── Next.js & Build Outputs ──────────────────────────────────────────────────
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+.vercel/
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
+# ── Environment & Secrets ────────────────────────────────────────────────────
+# Ignore all env files by default, but always track .env.example
+.env*
+!.env.example
 *.pem
+*.key
 
-# debug
+# ── Testing & Coverage ───────────────────────────────────────────────────────
+coverage/
+*.info
+
+# ── Logs & Debugging ─────────────────────────────────────────────────────────
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# ── OS & Editor Artifacts ───────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+.claude/
 
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-ELite.js
-artist.js
-artist.cjs
-simulate.js
-simulate-celo.cjs
-Stacks Repo.txt
-*.log
-fetch_celo_balances.js
-distribute_celo.js
-scripts*
-distributestacks.js
-distribute-stacks.js
-distribute-stacks-test.js
-simulate-stacks.js
-play-chess.js   
-icarus.js
-simulate-automata.js
-FundTalos.cjs
+# ── Scratch Dumps & Local Tooling ───────────────────────────────────────────
+scratch/
+public/scratch/
+history.txt
+costs-reports.json
 .distribution-state.json
-topup-stacks.cjs
 .topup-state.json
-fetch-stacks-balances.cjs
-rebalance-stacks.cjs
-repair-nonces.cjs
-repair-master.cjs
-artist.cjs
-Elite.cjs
-rebased.cjs
-themechanic.cjs
-TheQueenGambit.cjs
-simulate-celo.cjs
-fix_env.js
-# scratch reference images / design dumps (never commit)
-/public/scratch/
-/*.jpeg
-/*.jpg
-/*.png
-
-# large files
-*.deb
+*handover-agents-at-work.md
 *.crdownload
-*.zip
-*.tar.gz
-*.iso
 
-# Rust / Soroban
-stellar-contracts/target/
-.soroban/
-
-
-# Foundry
+# ── Foundry / Smart Contracts ───────────────────────────────────────────────
 celo-contracts/lib/
 celo-contracts/out/
 celo-contracts/cache/

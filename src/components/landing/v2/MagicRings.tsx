@@ -120,12 +120,14 @@ export default function MagicRings({
   const isHoveredRef = useRef(false)
   const burstRef = useRef(0)
 
-  propsRef.current = {
-    color, colorTwo, speed, ringCount, attenuation, lineThickness,
-    baseRadius, radiusStep, scaleRate, opacity, blur, noiseAmount,
-    rotation, ringGap, fadeIn, fadeOut, followMouse, mouseInfluence,
-    hoverScale, parallax, clickBurst,
-  }
+  useEffect(() => {
+    propsRef.current = {
+      color, colorTwo, speed, ringCount, attenuation, lineThickness,
+      baseRadius, radiusStep, scaleRate, opacity, blur, noiseAmount,
+      rotation, ringGap, fadeIn, fadeOut, followMouse, mouseInfluence,
+      hoverScale, parallax, clickBurst,
+    }
+  })
 
   useEffect(() => {
     const mount = mountRef.current
@@ -263,10 +265,20 @@ export default function MagicRings({
     }
     const io = new IntersectionObserver(([e]) => {
       inView = e.isIntersecting
-      inView ? startLoop() : stopLoop()
+      if (inView) {
+        startLoop()
+      } else {
+        stopLoop()
+      }
     }, { threshold: 0.01 })
     io.observe(mount)
-    const onVisibility = () => { document.hidden ? stopLoop() : startLoop() }
+    const onVisibility = () => {
+      if (document.hidden) {
+        stopLoop()
+      } else {
+        startLoop()
+      }
+    }
     document.addEventListener('visibilitychange', onVisibility)
 
     startLoop()

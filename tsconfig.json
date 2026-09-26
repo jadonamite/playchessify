@@ -3,7 +3,7 @@
     "target": "ESNext",
     "useDefineForClassFields": true,
     "module": "ESNext",
-"lib": [
+    "lib": [
       "dom",
       "dom.iterable",
       "ESNext"
@@ -21,6 +21,7 @@
     "noFallthroughCasesInSwitch": true,
     "allowJs": true,
     "incremental": true,
+    "tsBuildInfoFile": ".next/cache/tsconfig.tsbuildinfo",
     "esModuleInterop": true,
     "jsx": "react-jsx",
     "plugins": [

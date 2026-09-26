@@ -101,15 +101,15 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   // Safety valve: if the smart account never resolves, don't brick the user —
   // after a grace period fall back to the EOA (the alias self-heal covers the
   // rare split that creates).
-  const [smartTimedOut, setSmartTimedOut] = useState(false)
+  const [smartTimedOutKey, setSmartTimedOutKey] = useState<string | null>(null)
+  const currentTimeoutKey = expectsSmartAccount && !smartAccount ? (evmAddress ?? 'waiting') : null
+  const smartTimedOut = currentTimeoutKey !== null && smartTimedOutKey === currentTimeoutKey
+
   useEffect(() => {
-    if (!expectsSmartAccount || smartAccount) {
-      if (smartTimedOut) setSmartTimedOut(false)
-      return
-    }
-    const t = setTimeout(() => setSmartTimedOut(true), 8_000)
+    if (!currentTimeoutKey) return
+    const t = setTimeout(() => setSmartTimedOutKey(currentTimeoutKey), 8_000)
     return () => clearTimeout(t)
-  }, [expectsSmartAccount, smartAccount, smartTimedOut])
+  }, [currentTimeoutKey])
 
   // Capability tier — MiniPay first; an embedded user is 'smart' (even while the
   // account is still resolving) unless we've given up waiting; else external EOA.
