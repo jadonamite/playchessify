@@ -11,7 +11,6 @@ export interface TournamentBoardEntry {
   games: number
   eligible: boolean
   rank: number
-  flagged?: boolean
 }
 
 export interface TournamentPrizeWinner {

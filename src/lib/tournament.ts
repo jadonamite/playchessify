@@ -64,8 +64,6 @@ export interface BoardEntry {
   distinctOpponents: number
   eligible: boolean
   rank: number
-  /** Manually flagged for underhanded play (Terms §7) — xp is a fixed override, never earned. */
-  flagged?: boolean
 }
 
 export interface PrizeWinner {
@@ -642,12 +640,7 @@ async function buildBoard(win: TournamentWindow, strict = false): Promise<Tourna
 
   for (const entry of board) {
     const isFlagged = (TOURNAMENT.flagged[entry.address.toLowerCase()] ?? TOURNAMENT.flagged[entry.address]) !== undefined
-    if (isFlagged && isEnded) {
-      if (entry.rank <= 10) {
-        entry.flagged = true
-      }
-      entry.eligible = false
-    }
+    if (isFlagged && isEnded) entry.eligible = false
   }
 
   return {

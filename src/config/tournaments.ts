@@ -216,6 +216,15 @@ export const TOURNAMENT: TournamentConfig = {
   tzOffsetMinutes: 60,
 }
 
+/**
+ * Flagged under Terms §7 (score override or feeder denylist). The UI shows this
+ * only to the wallet itself, never to other viewers.
+ */
+export function isFlaggedAddress(address: string): boolean {
+  const a = address.toLowerCase()
+  return a in TOURNAMENT.flagged || TOURNAMENT.feeder.denylist.includes(a)
+}
+
 /** Flat 10 × $10 — $100 distributed equally across top 10. */
 const COMMUNITY_SPLITS: TournamentSplit[] = Array.from({ length: 10 }, (_, i) => ({
   place: i + 1,

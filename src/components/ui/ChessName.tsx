@@ -4,6 +4,8 @@ import type React from 'react'
 import Link from 'next/link'
 import { useProfile } from '@/hooks/useProfile'
 import { useFlagNotice } from '@/components/ui/FlagNotice'
+import { useWallet } from '@/components/wallet-provider'
+import { isFlaggedAddress } from '@/config/tournaments'
 import { InfoCircleIcon } from '@/components/ui/icons'
 import type { ChessProfile } from '@/types/profile'
 
@@ -15,8 +17,6 @@ interface ChessNameProps {
   className?: string
   style?: React.CSSProperties
   asLink?: boolean   // wraps in Link → /app/profile/{address}
-  /** Terms §7 — flagged for underhanded play; scored on a fixed override, not earned XP. */
-  flagged?: boolean
 }
 
 function fmtAddr(addr: string) {
@@ -31,15 +31,18 @@ export default function ChessName({
   className = '',
   style,
   asLink = false,
-  flagged = false,
 }: ChessNameProps) {
   const skip = preloaded !== undefined
   const { data: fetched, isLoading } = useProfile(skip ? null : address)
 
   const profile = skip ? preloaded : fetched
   const showFlagNotice = useFlagNotice((s) => s.show)
+  const { playerAddress } = useWallet()
 
-  const flagBadge = flagged && (
+  // Terms §7 flag: shown to the flagged wallet itself, never to anyone else.
+  const showFlag = playerAddress?.toLowerCase() === address.toLowerCase() && isFlaggedAddress(address)
+
+  const flagBadge = showFlag && (
     <span
       title="Flagged — Terms §7, score is a fixed penalty"
       style={{ marginLeft: '4px', color: '#ef4444', display: 'inline-flex', alignItems: 'center' }}

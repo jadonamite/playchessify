@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Fragment, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWallet } from '@/components/wallet-provider'
+import { isFlaggedAddress } from '@/config/tournaments'
 import GlowButton from '@/components/ui/GlowButton'
 import PlayCard from '@/components/ui/PlayCard'
 import LoadingState from '@/components/ui/LoadingState'
@@ -279,12 +280,11 @@ function TrophyRow({
             address={entry.address}
             profile={profileMap[entry.address.toLowerCase()]}
             badge
-            flagged={entry.flagged}
             asLink
             className="font-bold text-sm tracking-wide truncate"
-            style={{ color: entry.flagged ? '#ef4444' : isMe ? 'var(--c)' : 'var(--t1)' }}
+            style={{ color: isMe && isFlaggedAddress(entry.address) ? '#ef4444' : isMe ? 'var(--c)' : 'var(--t1)' }}
           />
-          {!entry.flagged && (
+          {!(isMe && isFlaggedAddress(entry.address)) && entry.games < 3 && (
             !entry.eligible && (
               <span className="text-[8px] font-bold tracking-wide text-[var(--t3)] mt-0.5">
                 {entry.games}/3 games to qualify
@@ -681,7 +681,6 @@ export default function TournamentContent() {
                       draws={entry.draws}
                       title={PLACE_TITLE[entry.rank]}
                       prize={winnerAmount(entry.address) != null ? `$${winnerAmount(entry.address)}` : undefined}
-                      flagged={entry.flagged}
                     />
                   ))}
                 </div>
