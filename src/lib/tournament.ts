@@ -461,9 +461,8 @@ function scoreWindow(
         draws: a.draws,
         games: a.games,
         distinctOpponents,
-        eligible: flagged ? false : eligible,
+        eligible,
         rank: 0,
-        ...(flagged ? { flagged: true } : {}),
       }
     })
 
@@ -636,6 +635,18 @@ async function buildBoard(win: TournamentWindow, strict = false): Promise<Tourna
       console.error(
         `[tournament] ${win.id}: qualifier set '${win.qualifiersFrom}' unavailable — scoring an OPEN field`,
       )
+    }
+  }
+
+  const isEnded = Date.now() >= win.endsAt || win.status === 'ended'
+
+  for (const entry of board) {
+    const isFlagged = (TOURNAMENT.flagged[entry.address.toLowerCase()] ?? TOURNAMENT.flagged[entry.address]) !== undefined
+    if (isFlagged && isEnded) {
+      if (entry.rank <= 10) {
+        entry.flagged = true
+      }
+      entry.eligible = false
     }
   }
 
