@@ -3,6 +3,8 @@
 import type React from 'react'
 import Link from 'next/link'
 import { useProfile } from '@/hooks/useProfile'
+import { useFlagNotice } from '@/components/ui/FlagNotice'
+import { InfoCircleIcon } from '@/components/ui/icons'
 import type { ChessProfile } from '@/types/profile'
 
 interface ChessNameProps {
@@ -35,6 +37,7 @@ export default function ChessName({
   const { data: fetched, isLoading } = useProfile(skip ? null : address)
 
   const profile = skip ? preloaded : fetched
+  const showFlagNotice = useFlagNotice((s) => s.show)
 
   const flagBadge = flagged && (
     <span
@@ -42,6 +45,20 @@ export default function ChessName({
       style={{ marginLeft: '4px', color: '#ef4444', display: 'inline-flex', alignItems: 'center' }}
     >
       <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></svg>
+      <button
+        type="button"
+        aria-label="Why this player is flagged"
+        onClick={(e) => {
+          // Sits inside the profile Link — keep the tap from navigating.
+          e.preventDefault()
+          e.stopPropagation()
+          showFlagNotice()
+        }}
+        className="relative inline-flex items-center cursor-pointer after:absolute after:-inset-4 after:content-['']"
+        style={{ marginLeft: '3px', color: 'inherit', background: 'none', border: 0, padding: 0 }}
+      >
+        <InfoCircleIcon size={12} />
+      </button>
     </span>
   )
 

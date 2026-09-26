@@ -151,6 +151,20 @@ export const TOURNAMENT: TournamentConfig = {
       '0xbe46dec85666b80d75057517bc41eebb002485aa', // hirj (feeder 16)
       '0x1f2cccd00138f007a48c1be3f98d2b67f8b5a688', // linz (feeder 17)
       '0x6fe82e97f11d71f2faccb5cf0314f1ace593c217', // allianz (feeder 18)
+
+      // e33c's one-game resigning feeders
+      '0xeee02e3fe19fe8e445688bd6428952965d825083', // e33c feeder 1
+      '0x21a518f5f2135146511c7258b735e4624e24074d', // e33c feeder 2
+      '0x8fa8b7d301dd76e486f515cbf03924db43641310', // e33c feeder 3
+      '0xef3508e8884f287aeffb74eda5bf01bdd7b2a224', // e33c feeder 4
+      '0xb99e38551b687087f8c3ef3ebdefa1f787ad1d21', // e33c feeder 5
+      '0x4d396819f6e72506d8dff148f6be7af16f034785', // e33c feeder 6
+      '0xf4b22deb5f197e73215ec941c9a12cd24186ef82', // e33c feeder 7
+      '0x5cadc6bca0ea30635204b7b4053f43825fdcda98', // e33c feeder 8
+      '0x5d0107d19e5540bad29198dcb3a61bea937cc607', // e33c feeder 9
+      '0x22f3ad9dd7fd2555a8af9ae9b3b3eb202cec4966', // e33c feeder 10
+      '0x8b7fd63055f7ac3ce3d9d24d70bdf227a49829ce', // e33c feeder 11
+      '0xa6598fee5f05ba0cdf4d09e7f04e2e3411590fef', // e33c feeder 12
     ],
     allowlist: [],
   },
@@ -193,6 +207,9 @@ export const TOURNAMENT: TournamentConfig = {
     '0x6fe82e97f11d71f2faccb5cf0314f1ace593c217': 2,  // allianz
     '0xbe46dec85666b80d75057517bc41eebb002485aa': 1,  // hirj
     '0xfe745623957e8e2547140b6d6e557a589d441aee': 0,  // tena
+
+    // Shares funder 0x796d34ec with 0x9037f734, nagasa, tena; 12-0 vs 12 one-game resigning feeders
+    '0xe33c3a0e78cca2c4df6128a69c8f8ec1b60f1470': 114, // e33c
   },
   seasonLengthMs: WEEK_MS,
   tzLabel: 'WAT',

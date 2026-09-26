@@ -89,7 +89,7 @@ export default function TermsPage() {
         in-game CHESS. By using the Service you acknowledge that some opponents may be automated.
       </p>
 
-      <h2>7. Fair play</h2>
+      <h2 id="fair-play">7. Fair play</h2>
       <p>You agree not to:</p>
       <ul>
         <li>use external chess engines, assistance, or automation to gain an unfair advantage in matches;</li>

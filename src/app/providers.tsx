@@ -10,6 +10,7 @@ import { celo } from 'viem/chains'
 import { wagmiConfig } from '@/config/wagmi'
 import { ThemeProvider } from 'next-themes'
 import CenterToast from '@/components/ui/CenterToast'
+import FlagNotice from '@/components/ui/FlagNotice'
 
 const WalletProvider = dynamic(
   () => import('@/components/wallet-provider').then(mod => mod.WalletProvider),
@@ -59,6 +60,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 <AudioManager />
                 {children}
                 <CenterToast />
+                <FlagNotice />
               </WalletProvider>
             </ThemeProvider>
           </SmartWalletsProvider>
