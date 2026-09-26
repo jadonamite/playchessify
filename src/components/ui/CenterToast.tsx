@@ -3,6 +3,7 @@
 import { useToastStore, type ToastType } from '@/hooks/useToastStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect } from 'react'
+import NoticeCard, { noticeActionClass, noticeActionStyle } from '@/components/ui/NoticeCard'
 import {
   CheckCircleIcon, CloseCircleIcon, InfoCircleIcon, DangerTriangleIcon,
   DrawIcon, CrownIcon, RankIcon, type IconProps,
@@ -105,7 +106,24 @@ export default function CenterToast() {
 
   return (
     <AnimatePresence>
-      {toast && cfg && (
+      {toast && toast.type === 'info' && (
+        <div key="info" className="fixed inset-0 pointer-events-none z-[9999] flex items-center justify-center px-4">
+          <NoticeCard
+            key={toast.message}
+            idPrefix="heads-up"
+            tag="Heads up"
+            tint="#818cf8"
+            body={toast.message}
+            onClose={hideToast}
+            action={
+              <button type="button" onClick={hideToast} className={noticeActionClass()} style={noticeActionStyle}>
+                Got it
+              </button>
+            }
+          />
+        </div>
+      )}
+      {toast && cfg && toast.type !== 'info' && (
         <div className="fixed inset-0 pointer-events-none z-[9999] flex items-center justify-center px-4">
           <motion.div
             key={toast.type + toast.message}
