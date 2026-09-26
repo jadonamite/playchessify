@@ -142,6 +142,15 @@ export const TOURNAMENT: TournamentConfig = {
       '0xe698048f4f90a54ff49914a6ff9743cb4ecc8921', // pitu (feeder 7)
       '0xb41c5227e571d7775de374e04710cb786bd92895', // wolu (feeder 8)
       '0x14b69a513a4ad83e6c5bdaa05e97e8ece5446c27', // songo (feeder 9)
+      '0x55088fd101df849f5224a95ffc26e4eb5a0bd931', // hdsrh (feeder 10)
+      '0x52347fff516cdd327e219d5ac2455fbd3ce1faff', // fnaf (feeder 11 - accumulator)
+      '0xee73204d7782614dae4f32b2b8ccdd675385aa8c', // ee73 (feeder 12 - sweeper)
+      '0xfe745623957e8e2547140b6d6e557a589d441aee', // tena (feeder 13)
+      '0x3f86d3c41a5f13cd86f28052082cf04faabb20ab', // neoa (feeder 14)
+      '0xdabe0dbb27903e97210e7a0f3b4644b1f5bd8bd7', // nagasa (feeder 15)
+      '0xbe46dec85666b80d75057517bc41eebb002485aa', // hirj (feeder 16)
+      '0x1f2cccd00138f007a48c1be3f98d2b67f8b5a688', // linz (feeder 17)
+      '0x6fe82e97f11d71f2faccb5cf0314f1ace593c217', // allianz (feeder 18)
     ],
     allowlist: [],
   },
@@ -171,6 +180,19 @@ export const TOURNAMENT: TournamentConfig = {
     '0x55088fd101df849f5224a95ffc26e4eb5a0bd931': 10,  // hdsrh
     '0xb41c5227e571d7775de374e04710cb786bd92895': 0,   // wolu
     '0xd3bbad8431fb443cb2d53adffb5ba0fbd44e317e': 4,   // proxy bridge
+
+    // Secondary tier contenders, wash accounts & accumulators
+    '0xad004f81a0a010f7a2e3f65f6eda2fc827d55d48': 76, // cipunk
+    '0x8bcf57c66f614ad78ac8fbce98d7d058ada717f8': 70, // werdaas
+    '0x3f86d3c41a5f13cd86f28052082cf04faabb20ab': 16, // neoa
+    '0xee73204d7782614dae4f32b2b8ccdd675385aa8c': 16, // ee73
+    '0x52347fff516cdd327e219d5ac2455fbd3ce1faff': 11, // fnaf
+    '0x105f3a5016f23680e046381a569877fa0dad7fdf': 6,  // rwa
+    '0xdabe0dbb27903e97210e7a0f3b4644b1f5bd8bd7': 3,  // nagasa
+    '0x1f2cccd00138f007a48c1be3f98d2b67f8b5a688': 2,  // linz
+    '0x6fe82e97f11d71f2faccb5cf0314f1ace593c217': 2,  // allianz
+    '0xbe46dec85666b80d75057517bc41eebb002485aa': 1,  // hirj
+    '0xfe745623957e8e2547140b6d6e557a589d441aee': 0,  // tena
   },
   seasonLengthMs: WEEK_MS,
   tzLabel: 'WAT',
