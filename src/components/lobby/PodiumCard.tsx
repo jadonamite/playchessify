@@ -251,7 +251,7 @@ export default function PodiumCard({
               className="text-[7px] font-black tracking-widest uppercase -mt-0.5"
               style={{ color: 'var(--c)', fontFamily: 'var(--fd)' }}
             >
-              ⚡ YOU
+              YOU
             </span>
           )}
 

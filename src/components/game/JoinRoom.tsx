@@ -48,10 +48,10 @@ export default function JoinRoom({
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1, type: 'spring', stiffness: 260, damping: 20 }}
-          className="text-5xl"
+          className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-[var(--c)]"
           style={{ filter: 'drop-shadow(0 4px 12px rgba(0,204,255,0.3))' }}
         >
-          ⚔️
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="m13 19 6-6"/><path d="M16 16l4 4"/><path d="m19 21 2-2"/><path d="M9.5 17.5 21 6V3h-3L6.5 14.5"/><path d="m11 19-6-6"/><path d="M8 16l-4 4"/><path d="m5 21-2-2"/></svg>
         </motion.div>
 
         {/* heading */}

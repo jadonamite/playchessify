@@ -61,7 +61,7 @@ interface GameStatusModalProps {
 
 const STATUS_CONFIG = {
   invalid_move: {
-    badge: '⚠ INVALID',
+    badge: 'INVALID',
     badgeColor: '#ffb400',
     title: 'ILLEGAL',
     titleAccent: 'MOVE',
@@ -72,7 +72,7 @@ const STATUS_CONFIG = {
     Scene: WarningScene,
   },
   check: {
-    badge: '⚔ THREAT DETECTED',
+    badge: 'THREAT DETECTED',
     badgeColor: '#ff4466',
     title: 'KING IN',
     titleAccent: 'CHECK',
@@ -83,7 +83,7 @@ const STATUS_CONFIG = {
     Scene: CheckScene,
   },
   checkmate: {
-    badge: '☠ CRITICAL FAILURE',
+    badge: 'CRITICAL FAILURE',
     badgeColor: '#6a0dad',
     title: 'CHECK',
     titleAccent: 'MATE',
@@ -94,7 +94,7 @@ const STATUS_CONFIG = {
     Scene: CheckmateScene,
   },
   draw: {
-    badge: '🤝 STALEMATE',
+    badge: 'STALEMATE',
     badgeColor: '#00ccff',
     title: 'MATCH',
     titleAccent: 'DRAWN',

@@ -146,7 +146,7 @@ function PrizeCard({ win }: { win: TournamentWindowMeta }) {
       {/* total pool */}
       <div className="flex flex-col shrink-0">
         <span className="text-[9px] font-black tracking-[0.25em] uppercase text-[var(--t3)] flex items-center gap-1.5">
-          🏆 Total Prize
+          Total Prize
         </span>
         <span
           className="font-black leading-none mt-1"
@@ -450,7 +450,7 @@ export default function TournamentContent() {
               style={{ background: 'rgba(255,215,0,0.05)', border: '1px solid rgba(255,215,0,0.3)' }}
             >
               <span className="text-[10px] font-black tracking-[0.2em] uppercase" style={{ color: '#FFD700' }}>
-                🏆 Final results — {fmtDate(win.endsAt)}
+                Final results — {fmtDate(win.endsAt)}
               </span>
               <span className="text-[10px] font-bold tracking-wide text-[var(--t3)] uppercase">
                 {win.kind === 'qualifiers' ? 'Qualifiers closed' : win.kind === 'community' ? 'Campaign closed' : 'Season closed'} · board locked
@@ -510,7 +510,7 @@ export default function TournamentContent() {
                     className="text-[10px] font-black tracking-[0.2em] uppercase shrink-0"
                     style={{ color: field.inField === false ? '#FF6B6B' : 'var(--c)' }}
                   >
-                    {field.inField === false ? '🔒 Not in the field' : '🎟️ Closed field'}
+                    {field.inField === false ? 'Not in the field' : 'Closed field'}
                   </span>
                   <span className="text-[10px] font-bold tracking-wide text-[var(--t3)] uppercase">
                     {field.inField === false ? (
@@ -541,7 +541,7 @@ export default function TournamentContent() {
                     className="text-[10px] font-black tracking-[0.2em] uppercase shrink-0"
                     style={{ color: 'var(--c)' }}
                   >
-                    🎟️ Top {win.qualifyTopN} advance
+                    Top {win.qualifyTopN} advance
                   </span>
                   <span className="text-[10px] font-bold tracking-wide text-[var(--t3)] uppercase">
                     Finish in the top {win.qualifyTopN} to take a seat in the next Grand Prix.
@@ -554,7 +554,7 @@ export default function TournamentContent() {
                 style={{ background: 'var(--b1)', border: '1px solid var(--b2)' }}
               >
                 <span className="text-[10px] font-black tracking-[0.2em] uppercase text-[var(--t3)]">
-                  ⏳ {win.kind === 'qualifiers' ? 'Qualifiers end' : win.kind === 'community' ? 'Campaign ends' : 'Season ends'} {fmtDate(win.endsAt)}
+                  {win.kind === 'qualifiers' ? 'Qualifiers end' : win.kind === 'community' ? 'Campaign ends' : 'Season ends'} {fmtDate(win.endsAt)}
                 </span>
                 <Countdown endsAt={win.endsAt} />
               </div>
@@ -629,7 +629,9 @@ export default function TournamentContent() {
             /* Rest week — the Grand Prix runs one week on, one week off, so
                "no season" is the healthy idle state, not an empty board. */
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-32 text-center flex flex-col items-center gap-5">
-              <div className="text-5xl opacity-40">🛡️</div>
+              <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center opacity-40 text-[var(--t3)]">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
               <p className="text-sm font-bold tracking-widest text-[var(--t3)] uppercase">
                 No season running right now
               </p>
@@ -646,7 +648,9 @@ export default function TournamentContent() {
             </motion.div>
           ) : board.length === 0 ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-32 text-center flex flex-col items-center gap-5">
-              <div className="text-5xl opacity-40">🏆</div>
+              <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center opacity-40" style={{ color: '#FFD24A' }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2ZM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8Zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1Z"/></svg>
+              </div>
               <p className="text-sm font-bold tracking-widest text-[var(--t3)] uppercase">
                 No games played this season yet
               </p>
@@ -721,7 +725,7 @@ export default function TournamentContent() {
                                   className="text-[9px] font-black tracking-[0.2em] uppercase shrink-0"
                                   style={{ color: 'var(--c)' }}
                                 >
-                                  ✂ Qualification line · top {win?.qualifyTopN} advance
+                                  Qualification line · top {win?.qualifyTopN} advance
                                 </span>
                                 <div className="flex-1 h-px" style={{ background: 'rgba(0,204,255,0.35)' }} />
                               </div>

@@ -297,7 +297,7 @@ export default function StreakCelebration() {
                     ? 'Your streak begins. Play tomorrow to keep the flame alive.'
                     : `${data.current} days strong — don't let it burn out!`}
                   {data.current >= data.longest && data.current > 1 && (
-                    <span className="block mt-1 font-bold" style={{ color: FLAME }}>🏆 New personal best!</span>
+                    <span className="block mt-1 font-bold" style={{ color: FLAME }}>New personal best!</span>
                   )}
                 </p>
 

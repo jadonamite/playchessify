@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { useReadContract } from 'wagmi'
 import { useWallet } from '@/components/wallet-provider'
-import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
+import { useProfile, useUpdateProfile, useCheckUsername } from '@/hooks/useProfile'
 import { useStreak } from '@/hooks/useStreak'
 import { useIdentitySigner } from '@/hooks/useIdentitySigner'
 import GlowButton from '@/components/ui/GlowButton'
@@ -108,6 +108,7 @@ export default function ProfilePage() {
   const { mutateAsync: updateProfile, isPending: isUpdating } = useUpdateProfile()
 
   const [editing, setEditing] = useState(false)
+  const [editUsername, setEditUsername] = useState('')
   const [editDisplayName, setEditDisplayName] = useState('')
   const [editBio, setEditBio] = useState('')
   const [editError, setEditError] = useState('')
@@ -138,6 +139,30 @@ export default function ProfilePage() {
   const isOwn = !!(myPlayerAddress || myAddress) && !!profileAddress &&
     ((myPlayerAddress?.toLowerCase() === profileAddress.toLowerCase()) ||
      (myAddress?.toLowerCase() === profileAddress.toLowerCase()))
+
+  // 30-day username cooldown calculation
+  const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000
+  const lastChange = profile ? (profile.usernameChangedAt ?? profile.createdAt) : 0
+  const daysSinceChange = profile ? Date.now() - lastChange : 0
+  const canChangeUsername = !profile?.usernameChangedAt || daysSinceChange >= THIRTY_DAYS
+  const daysUntilChange = Math.ceil((THIRTY_DAYS - daysSinceChange) / (24 * 60 * 60 * 1000))
+
+  const debouncedUsername = editUsername.trim().toLowerCase()
+  const isSameUsername = profile ? debouncedUsername === profile.username.toLowerCase() : false
+  const { data: checkResult, isLoading: isCheckingUsername } = useCheckUsername(
+    editing && !isSameUsername && debouncedUsername.length >= 3 ? debouncedUsername : ''
+  )
+
+  const usernameStatus = (() => {
+    if (!debouncedUsername) return null
+    if (isSameUsername) return 'current'
+    if (debouncedUsername.length < 3) return 'Too short (min 3 characters)'
+    if (isCheckingUsername) return 'checking'
+    if (!checkResult) return null
+    return checkResult.available ? 'available' : checkResult.reason ?? 'taken'
+  })()
+
+  const isUsernameInvalid = !isSameUsername && (usernameStatus !== 'available' && usernameStatus !== 'checking')
 
   // Canonical read address. On the OWN profile, always read from the smart-account
   // player identity (playerAddress) — stats, history and streaks are all recorded
@@ -174,6 +199,7 @@ export default function ProfilePage() {
   )
 
   const startEdit = () => {
+    setEditUsername(profile?.username ?? '')
     setEditDisplayName(profile?.displayName ?? '')
     setEditBio(profile?.bio ?? '')
     setEditError('')
@@ -185,6 +211,10 @@ export default function ProfilePage() {
     // profile is keyed to — not the embedded EOA — and sign with the matching
     // wallet. Address lowercased to match the server's message exactly.
     if (!myPlayerAddress || !profile) return
+    if (isUsernameInvalid || usernameStatus === 'checking') {
+      setEditError(typeof usernameStatus === 'string' && usernameStatus !== 'checking' ? usernameStatus : 'Invalid username')
+      return
+    }
     setEditError('')
     try {
       const timestamp = new Date().toISOString()
@@ -192,12 +222,16 @@ export default function ProfilePage() {
       const signature = await signIdentity(message)
       await updateProfile({
         address: myPlayerAddress,
+        username: !isSameUsername ? debouncedUsername : undefined,
         displayName: editDisplayName.trim(),
         bio: editBio.trim(),
         signature,
         timestamp,
       })
       setEditing(false)
+      if (!isSameUsername) {
+        router.replace(`/app/profile/${debouncedUsername}`)
+      }
     } catch (e) {
       setEditError(e instanceof Error ? e.message : 'Update failed')
     }
@@ -310,6 +344,44 @@ export default function ProfilePage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="mt-6 flex flex-col gap-4 border-t border-white/5 pt-6"
                 >
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] font-black tracking-[0.2em] uppercase text-[var(--t3)]">.CHESS USERNAME</label>
+                      <span className="text-[9px] text-[var(--t3)]">{editUsername.length}/20</span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        value={editUsername}
+                        disabled={!canChangeUsername}
+                        onChange={(e) => setEditUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 20))}
+                        placeholder={profile?.username}
+                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium text-[var(--t1)] placeholder:text-[var(--t3)] focus:outline-none focus:border-[var(--c)] transition-colors pr-20 disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      <span
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black pointer-events-none"
+                        style={{ color: 'var(--c)' }}
+                      >
+                        .chess
+                      </span>
+                    </div>
+                    {!canChangeUsername ? (
+                      <p className="text-[9px] text-amber-400/80 leading-relaxed">
+                        Username can only be changed once every 30 days ({daysUntilChange} day{daysUntilChange === 1 ? '' : 's'} remaining).
+                      </p>
+                    ) : !isSameUsername && debouncedUsername.length >= 3 ? (
+                      <p className={`text-[9px] font-bold ${
+                        usernameStatus === 'available' ? 'text-green-400' :
+                        usernameStatus === 'checking' ? 'text-[var(--t3)]' : 'text-red-400'
+                      }`}>
+                        {usernameStatus === 'available' ? 'Available' :
+                         usernameStatus === 'checking' ? 'Checking availability…' :
+                         usernameStatus}
+                      </p>
+                    ) : (
+                      <p className="text-[9px] text-[var(--t3)]">3–20 characters. Lowercase letters, numbers, and hyphens.</p>
+                    )}
+                  </div>
+
                   <EditField
                     label="DISPLAY NAME"
                     value={editDisplayName}
@@ -327,7 +399,14 @@ export default function ProfilePage() {
                   {editError && <p className="text-xs text-red-400 font-bold">{editError}</p>}
                   <div className="flex gap-3">
                     <GlowButton variant="ghost" fullWidth onClick={() => setEditing(false)}>CANCEL</GlowButton>
-                    <GlowButton variant="brand" fullWidth parallelogram loading={isUpdating} onClick={saveEdit}>
+                    <GlowButton
+                      variant="brand"
+                      fullWidth
+                      parallelogram
+                      loading={isUpdating}
+                      disabled={isUsernameInvalid || usernameStatus === 'checking'}
+                      onClick={saveEdit}
+                    >
                       SAVE
                     </GlowButton>
                   </div>
@@ -462,7 +541,7 @@ export default function ProfilePage() {
                   className="text-[9px] font-black tracking-widest uppercase transition-colors shrink-0"
                   style={{ color: copied ? 'var(--c)' : 'var(--t3)' }}
                 >
-                  {copied ? '✓ COPIED' : 'COPY'}
+                  {copied ? 'COPIED' : 'COPY'}
                 </button>
               </div>
             )}

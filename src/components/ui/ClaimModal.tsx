@@ -219,9 +219,9 @@ export default function ClaimModal({ open, address, onClose, onSuccess }: ClaimM
                       usernameStatus === 'available' ? 'text-green-400' :
                       usernameStatus === 'checking' ? 'text-[var(--t3)]' : 'text-red-400'
                     }`}>
-                      {usernameStatus === 'available' ? '✓ Available' :
+                      {usernameStatus === 'available' ? 'Available' :
                        usernameStatus === 'checking' ? 'Checking…' :
-                       `✗ ${usernameStatus}`}
+                       usernameStatus}
                     </p>
                   )}
                   <p className="text-[9px] text-[var(--t3)]">3–20 characters. Letters, numbers, hyphens only.</p>

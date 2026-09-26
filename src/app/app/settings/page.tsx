@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useWallet } from '@/components/wallet-provider'
-import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
+import { useProfile, useUpdateProfile, useCheckUsername } from '@/hooks/useProfile'
 import { useIdentitySigner } from '@/hooks/useIdentitySigner'
 import { useLearner } from '@/hooks/useLearner'
 import { useCoachStore } from '@/hooks/useCoachStore'
@@ -75,6 +75,7 @@ export default function SettingsPage() {
   }
 
   const [claimOpen, setClaimOpen] = useState(false)
+  const [editUsername, setEditUsername] = useState('')
   const [editDisplayName, setEditDisplayName] = useState('')
   const [editBio, setEditBio] = useState('')
   const [editDirty, setEditDirty] = useState(false)
@@ -85,13 +86,41 @@ export default function SettingsPage() {
   useEffect(() => {
     if (profile && !editDirty) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- sync form fields from loaded profile
+      setEditUsername(profile.username ?? '')
       setEditDisplayName(profile.displayName ?? '')
       setEditBio(profile.bio ?? '')
     }
   }, [profile, editDirty])
 
+  const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000
+  const lastChange = profile ? (profile.usernameChangedAt ?? profile.createdAt) : 0
+  const daysSinceChange = profile ? Date.now() - lastChange : 0
+  const canChangeUsername = !profile?.usernameChangedAt || daysSinceChange >= THIRTY_DAYS
+  const daysUntilChange = Math.ceil((THIRTY_DAYS - daysSinceChange) / (24 * 60 * 60 * 1000))
+
+  const debouncedUsername = editUsername.trim().toLowerCase()
+  const isSameUsername = profile ? debouncedUsername === profile.username.toLowerCase() : false
+  const { data: checkResult, isLoading: isCheckingUsername } = useCheckUsername(
+    !isSameUsername && debouncedUsername.length >= 3 ? debouncedUsername : ''
+  )
+
+  const usernameStatus = (() => {
+    if (!debouncedUsername) return null
+    if (isSameUsername) return 'current'
+    if (debouncedUsername.length < 3) return 'Too short (min 3 characters)'
+    if (isCheckingUsername) return 'checking'
+    if (!checkResult) return null
+    return checkResult.available ? 'available' : checkResult.reason ?? 'taken'
+  })()
+
+  const isUsernameInvalid = !isSameUsername && (usernameStatus !== 'available' && usernameStatus !== 'checking')
+
   const handleSaveProfile = async () => {
     if (!playerAddress || !profile) return
+    if (isUsernameInvalid || usernameStatus === 'checking') {
+      setEditError(typeof usernameStatus === 'string' && usernameStatus !== 'checking' ? usernameStatus : 'Invalid username')
+      return
+    }
     setEditError('')
     try {
       const timestamp = new Date().toISOString()
@@ -100,7 +129,14 @@ export default function SettingsPage() {
       // signature verification.
       const message = `Chessify Profile Update\n\nAddress: ${playerAddress.toLowerCase()}\nTimestamp: ${timestamp}`
       const signature = await signIdentity(message)
-      await updateProfile({ address: playerAddress, displayName: editDisplayName.trim(), bio: editBio.trim(), signature, timestamp })
+      await updateProfile({
+        address: playerAddress,
+        username: !isSameUsername ? debouncedUsername : undefined,
+        displayName: editDisplayName.trim(),
+        bio: editBio.trim(),
+        signature,
+        timestamp,
+      })
       setEditDirty(false)
       setEditSaved(true)
       setTimeout(() => setEditSaved(false), 3000)
@@ -334,6 +370,49 @@ export default function SettingsPage() {
                 {/* Edit fields */}
                 <div className="flex flex-col gap-4 border-t border-white/5 pt-4">
                   <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] font-black tracking-[0.2em] uppercase text-[var(--t3)]">.CHESS USERNAME</label>
+                      <span className="text-[9px] text-[var(--t3)]">{editUsername.length}/20</span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        value={editUsername}
+                        disabled={!canChangeUsername}
+                        onChange={(e) => {
+                          const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 20)
+                          setEditUsername(val)
+                          setEditDirty(true)
+                          setEditSaved(false)
+                        }}
+                        placeholder={profile.username}
+                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium text-[var(--t1)] placeholder:text-[var(--t3)] focus:outline-none focus:border-[var(--c)] transition-colors pr-20 disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      <span
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black pointer-events-none"
+                        style={{ color: 'var(--c)' }}
+                      >
+                        .chess
+                      </span>
+                    </div>
+                    {!canChangeUsername ? (
+                      <p className="text-[9px] text-amber-400/80 leading-relaxed">
+                        Username can only be changed once every 30 days ({daysUntilChange} day{daysUntilChange === 1 ? '' : 's'} remaining).
+                      </p>
+                    ) : !isSameUsername && debouncedUsername.length >= 3 ? (
+                      <p className={`text-[9px] font-bold ${
+                        usernameStatus === 'available' ? 'text-green-400' :
+                        usernameStatus === 'checking' ? 'text-[var(--t3)]' : 'text-red-400'
+                      }`}>
+                        {usernameStatus === 'available' ? 'Available' :
+                         usernameStatus === 'checking' ? 'Checking availability…' :
+                         usernameStatus}
+                      </p>
+                    ) : (
+                      <p className="text-[9px] text-[var(--t3)]">3–20 characters. Lowercase letters, numbers, and hyphens.</p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
                     <div className="flex justify-between">
                       <label className="text-[10px] font-black tracking-[0.2em] uppercase text-[var(--t3)]">DISPLAY NAME</label>
                       <span className="text-[9px] text-[var(--t3)]">{editDisplayName.length}/30</span>
@@ -361,14 +440,14 @@ export default function SettingsPage() {
                   </div>
 
                   {editError && <p className="text-xs text-red-400 font-bold">{editError}</p>}
-                  {editSaved && <p className="text-xs text-green-400 font-bold">✓ Saved</p>}
+                  {editSaved && <p className="text-xs text-green-400 font-bold">Saved</p>}
 
                   <GlowButton
                     variant="brand"
                     fullWidth
                     parallelogram
                     loading={isUpdating}
-                    disabled={!editDirty}
+                    disabled={!editDirty || isUsernameInvalid || usernameStatus === 'checking'}
                     onClick={handleSaveProfile}
                   >
                     SAVE CHANGES

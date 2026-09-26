@@ -456,7 +456,7 @@ export default function ChessifyLanding() {
           <section id="hero" className="ccv-hero" style={css('position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 24px 70px;overflow:hidden;')}>
 
             <div className="ccv-social-rail" style={css('position:absolute;left:30px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:12px;z-index:20;')}>
-              {['𝕏', '✦', '✈', '◎'].map((g, i) => (
+              {['𝕏', '✦', '◈', '◎'].map((g, i) => (
                 <div key={i} className="ccv-icon" style={css('width:42px;height:42px;border-radius:11px;border:1px solid rgba(120,200,255,.18);background:rgba(10,18,32,.7);display:flex;align-items:center;justify-content:center;color:#9fb2c8;cursor:pointer;font-size:16px;')}>{g}</div>
               ))}
             </div>
@@ -725,7 +725,9 @@ export default function ChessifyLanding() {
               <div style={css('position:relative;overflow:hidden;padding:34px 30px;clip-path:polygon(0 0,100% 0,100% 100%,30px 100%,0 calc(100% - 30px));border-top-left-radius:28px;background:linear-gradient(155deg,rgba(56,232,255,.16),rgba(8,14,28,.9));border:1px solid rgba(56,232,255,.3);')}>
                 <div style={css('display:flex;align-items:center;justify-content:space-between;')}>
                   <div style={css("font-family:'Anton';font-size:56px;color:#5ce1ff;line-height:1;text-shadow:0 0 26px rgba(56,232,255,.5);")}>01</div>
-                  <div style={css('width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(56,232,255,.12);border:1px solid rgba(56,232,255,.3);font-size:22px;color:#5ce1ff;')}>⛓</div>
+                  <div style={css('width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(56,232,255,.12);border:1px solid rgba(56,232,255,.3);color:#5ce1ff;')}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  </div>
                 </div>
                 <h3 style={css("font-family:'Chakra Petch';font-weight:700;font-size:22px;color:#fff;margin:18px 0 8px;")}>Connect your wallet</h3>
                 <p style={css('color:#b7c5d8;font-size:15px;line-height:1.6;margin:0;')}>MiniPay, MetaMask, or any EVM wallet. New here? Grab 1,000 free CHESS to start.</p>

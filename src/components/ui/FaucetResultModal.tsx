@@ -70,7 +70,7 @@ interface FaucetResultModalProps {
 /* ── RESULT CONFIGS ── */
 const RESULT_CONFIG = {
   success: {
-    badge: '✓ CLAIMED',
+    badge: 'CLAIMED',
     badgeColor: '#35ee66',
     title: 'TOKENS',
     titleAccent: 'RECEIVED',
@@ -82,7 +82,7 @@ const RESULT_CONFIG = {
     showConfetti: true,
   },
   error: {
-    badge: '✕ FAILED',
+    badge: 'FAILED',
     badgeColor: '#ff4466',
     title: 'CLAIM',
     titleAccent: 'FAILED',
@@ -94,7 +94,7 @@ const RESULT_CONFIG = {
     showConfetti: false,
   },
   timeout: {
-    badge: '⏱ TIMEOUT',
+    badge: 'TIMEOUT',
     badgeColor: '#ffb400',
     title: 'REQUEST',
     titleAccent: 'TIMED OUT',
@@ -106,7 +106,7 @@ const RESULT_CONFIG = {
     showConfetti: false,
   },
   cooldown: {
-    badge: '⏳ COOLDOWN',
+    badge: 'COOLDOWN',
     badgeColor: '#ffb400',
     title: 'FAUCET',
     titleAccent: 'LOCKED',

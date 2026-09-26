@@ -60,11 +60,11 @@ export default function RewardsClaimCard() {
           style={{ background: 'linear-gradient(90deg,rgba(245,197,66,0.08) 0%,rgba(6,6,15,0.7) 100%)' }}
         >
           <div className="flex items-center gap-3 min-w-0">
-            <span className="text-lg shrink-0">🏆</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="shrink-0" style={{ color: '#f5c542' }}><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2ZM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8Zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1Z"/></svg>
             <div className="min-w-0">
               <p className="text-xs font-black tracking-wide text-white">
                 Grand Prix <span style={{ color: '#f5c542' }}>S{seasonId}</span> has concluded
-                {isWinner && claimed && <> — ${prize} claimed ✓</>}
+                {isWinner && claimed && <> — ${prize} claimed</>}
               </p>
               <p className="text-[10px] text-[var(--t3)] truncate">
                 {isWinner && claimed
@@ -108,7 +108,9 @@ export default function RewardsClaimCard() {
             >
               {step === 'eligible' ? (
                 <div className="p-8 flex flex-col items-center gap-6 text-center">
-                  <div className="text-5xl">🎉</div>
+                  <div className="w-16 h-16 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-400">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2ZM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8Zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1Z"/></svg>
+                  </div>
                   <div>
                     <p className="text-[10px] font-black tracking-[0.3em] uppercase text-[#f5c542] mb-2">
                       Congratulations
