@@ -243,13 +243,11 @@ function TrophyRow({
   isMe,
   idx,
   profileMap,
-  prize,
 }: {
   entry: TournamentBoardEntry
   isMe: boolean
   idx: number
   profileMap: Record<string, import('@/types/profile').ChessProfile | null>
-  prize?: string
 }) {
   return (
     <motion.div
@@ -305,14 +303,6 @@ function TrophyRow({
             <span className="text-gray-400">{entry.draws}</span>
           </span>
         </div>
-        {prize && (
-          <div className="flex flex-col items-end">
-            <span className="text-[8px] uppercase tracking-widest font-bold mb-0.5" style={{ color: '#FFD24A' }}>PRIZE</span>
-            <span className="text-sm font-black" style={{ fontFamily: 'var(--fd)', color: '#FFD24A' }}>
-              {prize}
-            </span>
-          </div>
-        )}
         <div className="flex flex-col items-end">
           <span className="text-[8px] text-gray-500 uppercase tracking-widest font-bold mb-0.5">XP</span>
           <span className="text-base font-black" style={{ fontFamily: 'var(--fd)', color: 'var(--candy-amber)' }}>
@@ -712,7 +702,6 @@ export default function TournamentContent() {
                               isMe={!!myAddress && entry.address === myAddress}
                               idx={idx}
                               profileMap={profileMap}
-                              prize={winnerAmount(entry.address) != null ? `$${winnerAmount(entry.address)}` : undefined}
                             />
                             {lastAdvancing?.address === entry.address && (
                               <div
